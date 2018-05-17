@@ -1,0 +1,50 @@
+{
+  "index" : "core1",
+  "collection_file": "cars.json",
+  "information_needs" : [
+      {
+        "description": "A description of the information need",
+        "query_groups": [
+          {
+            "name": "Query group #1",
+            "description": "This is the functional description of the group #1. A query group is a set of queries (or query variants) which are supposed to return the same results. ",
+            "queries": [
+              {
+                "template": "t1.json",
+                "placeholders": {
+                  "$query": "Pippo",
+                  "$language": "dutch"
+                }
+              },
+              {
+                "template": "t1.json",
+                "placeholders": {
+                  "$query": "value_1"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Query group #2",
+            "description": "This is the functional description of the group #2.",
+            "queries": [
+              {
+                "template": "t1.json",
+                "placeholders": {
+                  "placeholder_1": "value_1",
+                  "placeholder_2": "value_2"
+                }
+              },
+              {
+                "template": "t1.json",
+                "placeholders": {
+                  "placeholder_1": "value_1",
+                  "placeholder_2": "value_2"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+}

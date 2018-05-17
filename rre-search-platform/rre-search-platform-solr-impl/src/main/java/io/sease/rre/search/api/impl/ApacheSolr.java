@@ -1,0 +1,139 @@
+package io.sease.rre.search.api.impl;
+
+import io.sease.rre.search.api.QueryOrSearchResponse;
+import io.sease.rre.search.api.SearchPlatform;
+import org.apache.htrace.fasterxml.jackson.databind.JsonNode;
+import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
+
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Optional.of;
+
+import static java.util.Optional.ofNullable;
+import static java.util.stream.StreamSupport.stream;
+
+/**
+ * Apache Solr search platform API implementation.
+ *
+ * @author agazzarini
+ * @since 1.0
+ */
+public class ApacheSolr implements SearchPlatform {
+
+    private EmbeddedSolrServer proxy;
+    private File solrHome;
+
+    @Override
+    public void beforeStart(final Map<String, Object> configuration) {
+        solrHome = new File((String) configuration.getOrDefault("solr.home", "/tmp"));
+        prepareSolrHome(solrHome);
+
+        final File parentDataDir = new File((String) configuration.getOrDefault("solr.data.dir", "/tmp"));
+        System.setProperty(
+                "solr.data.dir",
+                new File(parentDataDir, String.valueOf(System.currentTimeMillis())).getAbsolutePath());
+
+        proxy = new EmbeddedSolrServer(solrHome.toPath(), "dummy");
+    }
+
+    @Override
+    public void load(final File data, final File configFolder, final String targetIndexName) {
+        proxy.getCoreContainer().create(targetIndexName, configFolder.toPath(), emptyMap(), true);
+
+        try {
+            new JsonUpdateRequest(new FileInputStream(data)).process(proxy, targetIndexName);
+        } catch (final Exception exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    @Override
+    public void start() {
+        // Nothing to be done here, the embedded server doesn't need an explicit start command.
+    }
+
+    @Override
+    public void afterStart() {
+        // Nothing to be done here.
+    }
+
+    @Override
+    public void beforeStop() {
+        ofNullable(proxy).ifPresent(solr -> {
+            try {
+                solr.deleteByQuery("*:*");
+                solr.commit();
+            } catch (final Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public void close() {
+        ofNullable(proxy).ifPresent(solr -> {
+            try {
+                solr.close();
+            } catch (final Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+
+        proxy.getCoreContainer().getAllCoreNames()
+                .stream()
+                .forEach(coreName -> proxy.getCoreContainer().unload(coreName,true,true, false));
+
+        solrHome.deleteOnExit();
+    }
+
+    @Override
+    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString) {
+        try {
+            final SolrQuery query = new SolrQuery();
+            final ObjectMapper mapper = new ObjectMapper();
+            final JsonNode queryDef = mapper.readTree(queryString);
+
+            for (Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext();) {
+                final Map.Entry<String, JsonNode> field = iterator.next();
+                query.add(field.getKey(), field.getValue().asText());
+            }
+            return of(proxy.query(coreName, query))
+                    .map(response ->
+                        new QueryOrSearchResponse(
+                            response.getResults().getNumFound(),
+                            response.getResults()
+                                .stream()
+                                .collect(Collectors.toList())))
+                    .get();
+        } catch (final Exception exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    private void prepareSolrHome(final File folder) {
+        try(final BufferedWriter writer = new BufferedWriter(new FileWriter(new File(folder, "solr.xml")))) {
+            folder.mkdirs();
+            writer.write("<solr/>");
+
+            final File dummyCoreHome = new File(folder, "dummy");
+            final File dummyCoreConf = new File(dummyCoreHome , "conf");
+            dummyCoreConf.mkdirs();
+
+            Files.copy(getClass().getResourceAsStream("/schema.xml"), new File(dummyCoreConf, "schema.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(getClass().getResourceAsStream("/solrconfig.xml"), new File(dummyCoreConf, "solrconfig.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(getClass().getResourceAsStream("/core.properties"), new File(dummyCoreHome, "core.properties").toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        } catch (final Exception exception) {
+            folder.deleteOnExit();
+            throw new RuntimeException(exception);
+        }
+    }
+}

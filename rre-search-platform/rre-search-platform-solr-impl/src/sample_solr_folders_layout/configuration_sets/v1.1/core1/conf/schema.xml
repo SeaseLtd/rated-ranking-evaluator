@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<schema name="Dummy schema" version="1.2">
+    <types>
+        <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+        <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true" omitNorms="true"/>
+        <fieldType name="int" class="solr.TrieIntField" precisionStep="0" positionIncrementGap="0" omitNorms="true"/>
+    </types>
+    <fields>
+        <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
+        <field name="name" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
+    </fields>
+    <uniqueKey>id</uniqueKey>
+</schema>
