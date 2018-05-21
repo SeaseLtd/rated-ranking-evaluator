@@ -11,7 +11,13 @@
     <artifactId>rre-maven-solr-plugin</artifactId>
     <version>7.1.0</version>
     <name>RRE - Maven Apache Solr Plugin</name>
+    <packaging>maven-plugin</packaging>
     <dependencies>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.3</version>
+        </dependency>
         <dependency>
             <groupId>io.sease</groupId>
             <artifactId>rre-search-platform-api</artifactId>

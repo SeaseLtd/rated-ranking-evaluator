@@ -1,48 +1,59 @@
 {
   "index" : "core1",
-  "collection_file": "cars.json",
-  "information_needs" : [
+  "collection_file": "electric_basses.json",
+  "id_field": "id",
+  "topics" : [
       {
-        "description": "A description of the information need",
+        "description": "Fender basses",
         "query_groups": [
           {
-            "name": "Query group #1",
-            "description": "This is the functional description of the group #1. A query group is a set of queries (or query variants) which are supposed to return the same results. ",
+            "name": "Brand search",
+            "description": "The group tests several searches on the Fender brand",
             "queries": [
               {
-                "template": "t1.json",
+                "template": "only_q.json",
                 "placeholders": {
-                  "$query": "Pippo",
-                  "$language": "dutch"
+                  "$query": "fender"
                 }
               },
               {
-                "template": "t1.json",
+                "template": "only_q.json",
                 "placeholders": {
-                  "$query": "value_1"
+                  "$query": "Fender"
                 }
               }
-            ]
+            ],
+            "relevant_documents": {
+              "1": {
+                "gain": 3
+              },
+              "2": {
+                "gain": 3
+              }
+            }
           },
           {
-            "name": "Query group #2",
-            "description": "This is the functional description of the group #2.",
+            "name": "Jazz bass search",
+            "description": "Several searches on a given model (Jazz bass)",
             "queries": [
               {
-                "template": "t1.json",
+                "template": "only_q.json",
                 "placeholders": {
-                  "placeholder_1": "value_1",
-                  "placeholder_2": "value_2"
+                  "$query": "jazz"
                 }
               },
               {
-                "template": "t1.json",
+                "template": "only_q.json",
                 "placeholders": {
-                  "placeholder_1": "value_1",
-                  "placeholder_2": "value_2"
+                  "$query": "Jazz"
                 }
               }
-            ]
+            ],
+            "relevant_documents": {
+              "1": {
+                "gain": 3
+              }
+            }
           }
         ]
       }

@@ -7,18 +7,19 @@ import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.of;
-
 import static java.util.Optional.ofNullable;
-import static java.util.stream.StreamSupport.stream;
 
 /**
  * Apache Solr search platform API implementation.
@@ -33,7 +34,9 @@ public class ApacheSolr implements SearchPlatform {
 
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
-        solrHome = new File((String) configuration.getOrDefault("solr.home", "/tmp"));
+        solrHome = new File(
+                (String) configuration.getOrDefault("solr.home", "/tmp"),
+                String.valueOf(System.currentTimeMillis()));
         prepareSolrHome(solrHome);
 
         final File parentDataDir = new File((String) configuration.getOrDefault("solr.data.dir", "/tmp"));
@@ -88,7 +91,6 @@ public class ApacheSolr implements SearchPlatform {
         });
 
         proxy.getCoreContainer().getAllCoreNames()
-                .stream()
                 .forEach(coreName -> proxy.getCoreContainer().unload(coreName,true,true, false));
 
         solrHome.deleteOnExit();
@@ -101,26 +103,30 @@ public class ApacheSolr implements SearchPlatform {
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode queryDef = mapper.readTree(queryString);
 
-            for (Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext();) {
+            for (final Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext();) {
                 final Map.Entry<String, JsonNode> field = iterator.next();
                 query.add(field.getKey(), field.getValue().asText());
             }
+
             return of(proxy.query(coreName, query))
                     .map(response ->
                         new QueryOrSearchResponse(
                             response.getResults().getNumFound(),
-                            response.getResults()
-                                .stream()
-                                .collect(Collectors.toList())))
+                            new ArrayList<Map<String, Object>>(response.getResults())))
                     .get();
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
     }
 
+    /**
+     * Setup the Solr instance by preparing a minimal solr.home directory.
+     *
+     * @param folder the folder where the temporary solr.home will be created.
+     */
     private void prepareSolrHome(final File folder) {
+        folder.mkdirs();
         try(final BufferedWriter writer = new BufferedWriter(new FileWriter(new File(folder, "solr.xml")))) {
-            folder.mkdirs();
             writer.write("<solr/>");
 
             final File dummyCoreHome = new File(folder, "dummy");
