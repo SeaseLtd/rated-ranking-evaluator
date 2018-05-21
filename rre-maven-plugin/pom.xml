@@ -14,6 +14,9 @@
         <module>rre-maven-solr-plugin</module>
     </modules>
     <packaging>pom</packaging>
+    <properties>
+        <maven.version>3.5.0</maven.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.maven.reporting</groupId>
@@ -21,14 +24,14 @@
             <version>3.0.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.maven.reporting</groupId>
-            <artifactId>maven-reporting-api</artifactId>
-            <version>3.0</version>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>${maven.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>3.5.2</version>
+            <version>${maven.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
@@ -39,12 +42,53 @@
         <dependency>
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-shared-utils</artifactId>
-            <version>3.2.0</version>
+            <version>3.2.1</version>
         </dependency>
         <dependency>
             <groupId>io.sease</groupId>
             <artifactId>rre-core</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugin-testing</groupId>
+            <artifactId>maven-plugin-testing-harness</artifactId>
+            <version>3.3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-aether-provider</artifactId>
+            <version>3.3.9</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-compat</artifactId>
+            <version>${maven.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.doxia</groupId>
+            <artifactId>doxia-core</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>${maven.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-container-default</artifactId>
+            <version>1.7.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
