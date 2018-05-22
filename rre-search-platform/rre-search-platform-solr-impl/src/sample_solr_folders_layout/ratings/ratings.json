@@ -1,6 +1,6 @@
 {
   "index" : "core1",
-  "collection_file": "electric_basses.json",
+  "corpora_file": "electric_basses.json",
   "id_field": "id",
   "topics" : [
       {
