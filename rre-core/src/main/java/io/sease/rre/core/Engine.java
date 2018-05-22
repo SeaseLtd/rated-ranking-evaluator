@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.toList;
  */
 public class Engine {
     private final File configurationsFolder;
-    private final File collectionsFolder;
+    private final File corporaFolder;
     private final File ratingsFolder;
     private final File templatesFolder;
 
@@ -51,7 +51,7 @@ public class Engine {
             final String ratingsFolderPath,
             final String templatesFolderPath) {
         this.configurationsFolder = new File(configurationsFolderPath);
-        this.collectionsFolder = new File(corporaFolderPath);
+        this.corporaFolder = new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
         this.templatesFolder = new File(templatesFolderPath);
         this.platform = platform;
@@ -71,15 +71,15 @@ public class Engine {
                     .map(this::newMetricInstance)
                     .collect(toList());
 
-        final JsonNode ratings = ratings();
+        final JsonNode ratingsNode = ratings();
 
         platform.beforeStart(configuration);
         platform.start();
         platform.afterStart();
 
-        final String indexName = ratings.get("index").asText();
-        final String idFieldName = ratings.get("id_field").asText("id");
-        final File data = new File(collectionsFolder, ratings.get("collection_file").asText());
+        final String indexName = ratingsNode.get("index").asText();
+        final String idFieldName = ratingsNode.get("id_field").asText("id");
+        final File data = new File(corporaFolder, ratingsNode.get("corpora_file").asText());
         if (!data.canRead()) {
             throw new IllegalArgumentException("Unable to read the corpus file " + data.getAbsolutePath());
         }
@@ -87,8 +87,8 @@ public class Engine {
         final Evaluation evaluation = new Evaluation();
         final Corpus corpus = evaluation.add(new Corpus(data.getName()));
 
-        stream(safe(configurationsFolder.listFiles()))
-                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles())))
+        stream(safe(configurationsFolder.listFiles(file -> file.isDirectory() && !file.isHidden())))
+                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(file -> file.isDirectory() && !file.isHidden()))))
                 .filter(folder -> folder.getName().equals(indexName))
                 .forEach(folder -> {
                     final String version = folder.getParentFile().getName();
@@ -97,7 +97,7 @@ public class Engine {
                     final Configuration configurationVersion = corpus.add(new Configuration(folder.getName()));
                     platform.load(data, folder, internalIndexName);
 
-                    all(ratings.get("topics"))
+                    all(ratingsNode.get("topics"))
                             .forEach(topicNode -> {
                                 final Topic topic = configurationVersion.add(new Topic(topicNode.get("description").asText()));
 

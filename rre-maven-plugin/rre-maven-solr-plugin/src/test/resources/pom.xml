@@ -6,10 +6,10 @@
                 <artifactId>rre-maven-solr-plugin</artifactId>
                 <version>7.1.0</version>
                 <configuration>
-                    <configurations-folder>/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-search-platform/rre-search-platform-solr-impl/src/sample_solr_folders_layout/configuration_sets</configurations-folder>
-                    <collectionsFolder>/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-search-platform/rre-search-platform-solr-impl/src/sample_solr_folders_layout/collection_sets</collectionsFolder>
-                    <ratingsFolder>/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-search-platform/rre-search-platform-solr-impl/src/sample_solr_folders_layout/ratings</ratingsFolder>
-                    <templatesFolder>/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-search-platform/rre-search-platform-solr-impl/src/sample_solr_folders_layout/templates</templatesFolder>
+                    <configurations-folder>/Users/agazzarini/Projects/rre/configuration_sets</configurations-folder>
+                    <corporaFolder>/Users/agazzarini/Projects/rre/collection_sets</corporaFolder>
+                    <ratingsFolder>/Users/agazzarini/Projects/rre/ratings</ratingsFolder>
+                    <templatesFolder>/Users/agazzarini/Projects/rre/templates</templatesFolder>
                     <metrics>
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtOne</param>
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo</param>

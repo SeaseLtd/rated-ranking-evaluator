@@ -1,6 +1,7 @@
 package io.sease.rre.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.sease.rre.core.EventCollector;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * @author agazzarini
  * @since 1.0
  */
-public class Evaluation extends DomainMember<Corpus> {
+public class Evaluation extends DomainMember<Corpus> implements EventCollector<QueryEvaluation> {
     /**
      * Builds a new {@link Evaluation} instance.
      */
@@ -21,5 +22,10 @@ public class Evaluation extends DomainMember<Corpus> {
     @JsonProperty("corpora")
     public List<Corpus> getChildren() {
         return super.getChildren();
+    }
+
+    @Override
+    public void collect(final QueryEvaluation event) {
+        // TODO
     }
 }

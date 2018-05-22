@@ -25,8 +25,8 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name="configurations-folder", defaultValue = "${basedir}/src/etc/configurations")
     private String configurationsFolder;
 
-    @Parameter(name="collections-folder", defaultValue = "${basedir}/src/etc/datasets")
-    private String collectionsFolder;
+    @Parameter(name="corpora-folder", defaultValue = "${basedir}/src/etc/datasets")
+    private String corporaFolder;
 
     @Parameter(name="ratings-folder", defaultValue = "${basedir}/src/etc/ratings)")
     private String ratingsFolder;
@@ -43,7 +43,7 @@ public class RREvaluateMojo extends AbstractMojo {
             final Engine engine = new Engine(
                 platform,
                 configurationsFolder,
-                    collectionsFolder,
+                    corporaFolder,
                     ratingsFolder,
                     templatesFolder);
 
