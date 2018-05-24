@@ -11,11 +11,9 @@
                     <ratingsFolder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/ratings</ratingsFolder>
                     <templatesFolder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/templates</templatesFolder>
                     <metrics>
-                       <!--
                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtOne</param>
                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo</param>
                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtThree</param>
-                       -->
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTen</param>
                         <param>io.sease.rre.core.domain.metrics.impl.NDCG</param>
                     </metrics>

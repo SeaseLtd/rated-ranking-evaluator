@@ -33,7 +33,7 @@ public class NDCG extends RankMetric {
                             break;
                         default:
                             final double gain = judgment.get("gain").doubleValue();
-                            dcg = dcg.add(new BigDecimal(gain / (Math.log(rank + 1) / Math.log(2))));
+                            dcg = dcg.add(new BigDecimal(gain / (Math.log(rank) / Math.log(2))));
                     }
                 });
     }
