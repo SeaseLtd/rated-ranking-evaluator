@@ -121,9 +121,8 @@ public class Engine {
                                                         final QueryOrSearchResponse response = platform.executeQuery(internalIndexName, query);
                                                         final JsonNode relevantDocuments = queryGroup.get("relevant_documents");
 
-                                                        final List<Metric> metrics = availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits());
-                                                        queryEvaluation.addAll(metrics);
-                                                        response.hits().forEach(hit -> metrics.forEach(metric -> metric.collect(hit)));
+                                                        queryEvaluation.addAll(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits()));
+                                                        response.hits().forEach(hit -> queryEvaluation.stream().forEach(metric -> metric.collect(hit)));
                                                     });
                                         });
                             });

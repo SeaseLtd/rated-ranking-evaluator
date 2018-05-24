@@ -12,6 +12,8 @@
     <name>RRE - Maven Plugins</name>
     <modules>
         <module>rre-maven-solr-plugin</module>
+        <module>rre-maven-report-plugin</module>
+        <module>rre-maven-elasticsearch-plugin</module>
     </modules>
     <packaging>pom</packaging>
     <properties>
