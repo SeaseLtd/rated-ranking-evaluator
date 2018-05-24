@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * Supertype layer for all evaluation metrics.
@@ -62,6 +65,16 @@ public abstract class Metric implements HitsCollector {
      * @return the value of this metric.
      */
     public abstract BigDecimal value();
+
+    /**
+     * Returns the judgment associated with the given identifier.
+     *
+     * @param id the document identifier.
+     * @return an optional describing the judgment associated with the given identifier. 
+     */
+    public Optional<JsonNode> judgment(final String id) {
+        return ofNullable(relevantDocuments).map(judgements -> judgements.get(id));
+    }
 
     /**
      * Extracts the id field value from the given document.

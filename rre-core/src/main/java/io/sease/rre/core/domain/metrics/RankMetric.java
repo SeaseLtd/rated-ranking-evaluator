@@ -26,7 +26,7 @@ public abstract class RankMetric extends Metric {
 
     @Override
     public final void collect(final Map<String, Object> hit) {
-        accumulate(hit, rank.incrementAndGet());
+        collect(hit, rank.incrementAndGet());
     }
 
     /**
@@ -35,5 +35,5 @@ public abstract class RankMetric extends Metric {
      * @param hit the search hit.
      * @param rank the hit rank.
      */
-    public abstract void accumulate(Map<String, Object> hit, int rank);
+    public abstract void collect(Map<String, Object> hit, int rank);
 }

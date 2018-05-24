@@ -1,7 +1,11 @@
 package io.sease.rre.core.domain;
 
+import io.sease.rre.core.domain.metrics.Metric;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -13,6 +17,7 @@ import java.util.stream.Stream;
  */
 public abstract class DomainMember<T> {
     private String name;
+    private Map<String, List<Metric>> childrenMetrics = new HashMap<>();
     private List<T> children = new ArrayList<>();
 
     /**
@@ -50,5 +55,14 @@ public abstract class DomainMember<T> {
      */
     public List<T> getChildren() {
         return children;
+    }
+
+    /**
+     * Returns the name of this entity.
+     *
+     * @return the name of this entity.
+     */
+    public String getName() {
+        return name;
     }
 }
