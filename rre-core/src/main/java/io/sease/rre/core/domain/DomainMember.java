@@ -32,7 +32,7 @@ public abstract class DomainMember<C extends DomainMember> {
     }
 
     public C findOrCreate(final String name, final Supplier<C> factory) {
-        return add(childrenLookupCache.computeIfAbsent(name, key -> (C) factory.get().setName(name)));
+        return childrenLookupCache.computeIfAbsent(name, key -> add((C) factory.get().setName(name)));
     }
 
     public DomainMember setName(final String name) {
