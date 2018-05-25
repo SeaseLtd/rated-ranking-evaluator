@@ -6,8 +6,6 @@ import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import java.io.File;
 
 public class RREEvaluateTestCase extends AbstractMojoTestCase {
-    Renderer renderer;
-
     @Override
     protected void setUp() throws Exception {
         super.setUp();
