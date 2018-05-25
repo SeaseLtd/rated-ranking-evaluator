@@ -29,10 +29,12 @@ public class NDCG extends RankMetric {
                 .ifPresent(judgment -> {
                     switch(rank) {
                         case 1:
-                            dcg = judgment.get("gain").decimalValue();
+                            dcg = judgment.get("gain") == null || judgment.get("gain").isNull()
+                                    ? new BigDecimal(2)
+                                    : judgment.get("gain").decimalValue();
                             break;
                         default:
-                            final double gain = judgment.get("gain").doubleValue();
+                            final double gain = judgment.get("gain").asDouble(2);
                             dcg = dcg.add(new BigDecimal(gain / (Math.log(rank) / Math.log(2))));
                     }
                 });
@@ -46,20 +48,23 @@ public class NDCG extends RankMetric {
     }
 
     private BigDecimal idealDcg(final JsonNode relevantDocuments) {
-        final int windowSize = Math.min(relevantDocuments.size(), 10);
+        final int windowSize = Math.min(relevantDocuments.size(), 10); // TODO make it dynamic
         final int [] gains = new int [windowSize];
 
-        final Map<Integer, List<JsonNode>> groups = StreamSupport.stream(relevantDocuments.spliterator(), false).collect(groupingBy(doc -> doc.get("gain").asInt()));
+        final Map<Integer, List<JsonNode>> groups = StreamSupport.stream(relevantDocuments.spliterator(), false).collect(groupingBy(doc -> doc.get("gain").intValue()));
+
+        final int veryVeryRelevantDocsCount= groups.getOrDefault(3, emptyList()).size();
+        final int howManyVeryVeryRelevantDocs = Math.min(veryVeryRelevantDocsCount, windowSize);
 
         final int veryRelevantDocsCount= groups.getOrDefault(2, emptyList()).size();
-        final int howManyVeryRelevantDocs = Math.min(veryRelevantDocsCount, windowSize);
+        final int howManyVeryRelevantDocs = Math.min(veryRelevantDocsCount, windowSize - howManyVeryVeryRelevantDocs);
 
         final int marginallyRelevantDocsCount = groups.getOrDefault(1, emptyList()).size();
         final int howManyMarginallyRelevantDocs = Math.max(Math.min(marginallyRelevantDocsCount - howManyVeryRelevantDocs, 0), 0);
 
-        Arrays.fill(gains, 0, howManyVeryRelevantDocs, 2);
-        if (howManyVeryRelevantDocs < windowSize) {
-            Arrays.fill(gains, howManyVeryRelevantDocs, howManyVeryRelevantDocs + Math.min((windowSize - howManyVeryRelevantDocs), howManyMarginallyRelevantDocs), 1);
+        Arrays.fill(gains, 0, howManyVeryVeryRelevantDocs, 3);
+        if (howManyVeryVeryRelevantDocs < windowSize) {
+            Arrays.fill(gains, howManyVeryVeryRelevantDocs, howManyVeryVeryRelevantDocs + Math.min((windowSize - howManyVeryVeryRelevantDocs), howManyVeryRelevantDocs), 1);
         }
 
         BigDecimal result = new BigDecimal(gains[0]);

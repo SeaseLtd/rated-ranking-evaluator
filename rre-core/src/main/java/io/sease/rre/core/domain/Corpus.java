@@ -2,7 +2,9 @@ package io.sease.rre.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Object representation of the documents which compose the test collection.
@@ -10,18 +12,9 @@ import java.util.List;
  * @author agazzarini
  * @since 1.0
  */
-public class Corpus extends DomainMember<Configuration> {
-    /**
-     * Builds a new {@link Corpus} instance with the given name or identifier.
-     *
-     * @param name the entity name or identifier.
-     */
-    public Corpus(final String name) {
-        super(name);
-    }
-
-    @JsonProperty("version")
-    public List<Configuration> getChildren() {
+public class Corpus extends DomainMember<Topic> {
+    @JsonProperty("topics")
+    public List<Topic> getChildren() {
         return super.getChildren();
     }
 }

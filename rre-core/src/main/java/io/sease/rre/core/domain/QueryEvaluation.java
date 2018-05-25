@@ -1,10 +1,8 @@
 package io.sease.rre.core.domain;
 
-import io.sease.rre.core.domain.metrics.Metric;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * An evaluation (i.e. a set of measures / metrics) at query-level.
@@ -12,28 +10,22 @@ import java.util.stream.Stream;
  * @author agazzarini
  * @since 1.0
  */
-public class QueryEvaluation {
-    private final String query;
+public class QueryEvaluation extends DomainMember<ConfigurationVersion> {
 
-    private List<Metric> metrics = new ArrayList<>();
-
-    public QueryEvaluation(final String query) {
-        this.query = query;
+    @Override
+    public DomainMember setName(final String query) {
+        return super.setName(query);
     }
 
-    public void addAll(final List<Metric> data) {
-        metrics.addAll(data);
+    @Override
+    @JsonProperty("query")
+    public String getName() {
+        return super.getName();
     }
 
-    public Stream<Metric> stream() {
-        return metrics.stream();
-    }
-
-    public String getQuery() {
-        return query;
-    }
-
-    public List<Metric> getMetrics() {
-        return metrics;
+    @Override
+    @JsonProperty("versions")
+    public List<ConfigurationVersion> getChildren() {
+        return super.getChildren();
     }
 }
