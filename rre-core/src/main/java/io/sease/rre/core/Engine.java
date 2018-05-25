@@ -85,7 +85,7 @@ public class Engine {
         }
 
         final Evaluation evaluation = new Evaluation();
-        final Corpus corpus = evaluation.add(new Corpus(data.getName()));
+        final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
 
         stream(safe(configurationsFolder.listFiles(file -> file.isDirectory() && !file.isHidden())))
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(file -> file.isDirectory() && !file.isHidden()))))
@@ -94,20 +94,17 @@ public class Engine {
                     final String version = folder.getParentFile().getName();
                     final String internalIndexName = indexName + "_" + version;
 
-                    final Configuration configurationVersion = corpus.add(new Configuration(folder.getName()));
+                   // final ConfigurationVersion configurationVersion = corpus.add(new ConfigurationVersion(folder.getParentFile().getName()));
                     platform.load(data, folder, internalIndexName);
 
                     all(ratingsNode.get("topics"))
                             .forEach(topicNode -> {
-                                final Topic topic = configurationVersion.add(new Topic(topicNode.get("description").asText()));
+                                final Topic topic =
+                                        corpus.findOrCreate(topicNode.get("description").asText(), Topic::new);
 
                                 all(topicNode.get("query_groups"))
                                         .forEach(queryGroup -> {
-                                            final QueryGroup group =
-                                                    topic.add(
-                                                        new QueryGroup(
-                                                            queryGroup.get("name").asText(),
-                                                            queryGroup.get("description").asText()));
+                                            final QueryGroup group = topic.findOrCreate(queryGroup.get("name").asText(), QueryGroup::new);
                                             all(queryGroup.get("queries"))
                                                     .forEach(queryNode -> {
                                                         String query = queryTemplate(queryNode.get("template").asText());
@@ -116,13 +113,14 @@ public class Engine {
                                                             query = query.replace(name, queryNode.get("placeholders").get(name).asText());
                                                         }
 
-                                                        final QueryEvaluation queryEvaluation = group.add(new QueryEvaluation(query));
+                                                        final QueryEvaluation queryEvaluation = group.findOrCreate(query, QueryEvaluation::new);
+                                                        final ConfigurationVersion configurationVersion = queryEvaluation.findOrCreate(version, ConfigurationVersion::new);
 
                                                         final QueryOrSearchResponse response = platform.executeQuery(internalIndexName, query);
                                                         final JsonNode relevantDocuments = queryGroup.get("relevant_documents");
 
-                                                        queryEvaluation.addAll(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits()));
-                                                        response.hits().forEach(hit -> queryEvaluation.stream().forEach(metric -> metric.collect(hit)));
+                                                        configurationVersion.addAll(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits()));
+                                                        response.hits().forEach(hit -> configurationVersion.stream().forEach(metric -> metric.collect(hit)));
                                                     });
                                         });
                             });

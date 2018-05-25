@@ -13,15 +13,6 @@ import java.util.List;
  * @see <a href="https://en.wikipedia.org/wiki/Information_needs">Information Need (Wikipedia)</a>
  */
 public class Topic extends DomainMember<QueryGroup> {
-    /**
-     * Builds a new {@link Topic} instance with the given name or identifier.
-     *
-     * @param name the topic name or identifier.
-     */
-    public Topic(final String name) {
-        super(name);
-    }
-
     @JsonProperty("query-groups")
     public List<QueryGroup> getChildren() {
         return super.getChildren();

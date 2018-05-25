@@ -1,11 +1,10 @@
 package io.sease.rre.core.domain;
 
-import io.sease.rre.core.domain.metrics.Metric;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -15,28 +14,30 @@ import java.util.stream.Stream;
  * @author agazzarini
  * @since 1.0
  */
-public abstract class DomainMember<T> {
+public abstract class DomainMember<C extends DomainMember> {
     private String name;
-    private Map<String, List<Metric>> childrenMetrics = new HashMap<>();
-    private List<T> children = new ArrayList<>();
 
-    /**
-     * Builds a new {@link DomainMember} instance with the given entity name or identifier.
-     *
-     * @param name the given entity name or identifier.
-     */
-    public DomainMember(final String name) {
-        this.name = name;
-    }
+    private Map<String, C> childrenLookupCache = new HashMap<>();
+
+    private List<C> children = new ArrayList<>();
 
     /**
      * Adds the given child to this entity.
      *
      * @param child the child entity.
      */
-    public T add(final T child) {
+    public C add(final C child) {
         children.add(child);
         return child;
+    }
+
+    public C findOrCreate(final String name, final Supplier<C> factory) {
+        return add(childrenLookupCache.computeIfAbsent(name, key -> (C) factory.get().setName(name)));
+    }
+
+    public DomainMember setName(final String name) {
+        this.name = name;
+        return this;
     }
 
     /**
@@ -44,7 +45,7 @@ public abstract class DomainMember<T> {
      *
      * @return the children stream.
      */
-    public Stream<T> childrenStream() {
+    public Stream<C> childrenStream() {
         return children.stream();
     }
 
@@ -53,7 +54,7 @@ public abstract class DomainMember<T> {
      *
      * @return the children of this entity.
      */
-    public List<T> getChildren() {
+    public List<C> getChildren() {
         return children;
     }
 
