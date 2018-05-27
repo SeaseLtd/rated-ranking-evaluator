@@ -19,7 +19,7 @@ import static java.util.Optional.ofNullable;
 public abstract class Metric implements HitsCollector {
     private final String name;
 
-    private String idFieldName;
+    private String idFieldName = "id";
     protected JsonNode relevantDocuments;
     protected long totalHits;
 
