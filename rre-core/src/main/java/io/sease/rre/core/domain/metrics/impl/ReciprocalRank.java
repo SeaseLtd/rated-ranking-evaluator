@@ -17,7 +17,7 @@ public class ReciprocalRank extends RankMetric {
     /**
      * Builds a new ReciprocalRank at X metric.
      */
-    ReciprocalRank() {
+    public ReciprocalRank() {
         super("RR@10");
     }
 
