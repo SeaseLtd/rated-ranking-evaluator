@@ -16,7 +16,7 @@ public class PrecisionAtK extends RankMetric {
     private final int k;
 
     /**
-     * Builds a new Precision at X metric.
+     * Builds a new ReciprocalRank at X metric.
      *
      * @param k the precision bound.
      */

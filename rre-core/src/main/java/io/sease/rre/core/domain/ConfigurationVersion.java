@@ -10,13 +10,16 @@ import java.util.stream.Stream;
 
 /**
  * A configuration version.
- * Each version is supposed to be a configuration "instance" of a given domain, which will be
- * compared with the same set of metrics coming from the other versions.
+ * Since a configuration is supposed to be immutable, when we change something on it, even a bit,
+ * the RRE approach encourages to create a new version, which will be represented by this class.
+ * On top of that, when RRE will run, it will compute the configured set of metrics, for each query, for each
+ * {@link ConfigurationVersion}.
  *
  * @author agazzarini
  * @since 1.0
  */
 public class ConfigurationVersion extends DomainMember {
+    @JsonProperty("metrics")
     private List<Metric> metrics = new ArrayList<>();
 
     @Override
@@ -25,15 +28,22 @@ public class ConfigurationVersion extends DomainMember {
         return super.getChildren();
     }
 
-    public void addAll(final List<Metric> data) {
-        metrics.addAll(data);
+    /**
+     * Adds to this {@link ConfigurationVersion} the given list of metrics.
+     * Note that at this stage the metrics are empty, without data and value.
+     *
+     * @param metrics the metric instances associated with this instance.
+     */
+    public void prepare(final List<Metric> metrics) {
+        this.metrics.addAll(metrics);
     }
 
+    /**
+     * Returns a stream of all metrics associated with this {@link ConfigurationVersion}.
+     *
+     * @return a stream of all metrics associated with this configuration.
+     */
     public Stream<Metric> stream() {
         return metrics.stream();
-    }
-
-    public List<Metric> getMetrics() {
-        return metrics;
     }
 }
