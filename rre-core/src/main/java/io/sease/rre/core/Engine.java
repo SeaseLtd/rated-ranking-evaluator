@@ -21,7 +21,7 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
 /**
- * RRE core component.
+ * RRE core engine.
  * The engine is responsible for the whole evaluation process execution.
  *
  * @author agazzarini
@@ -119,7 +119,7 @@ public class Engine {
                                                         final QueryOrSearchResponse response = platform.executeQuery(internalIndexName, query);
                                                         final JsonNode relevantDocuments = queryGroup.get("relevant_documents");
 
-                                                        configurationVersion.addAll(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits()));
+                                                        configurationVersion.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits()));
                                                         response.hits().forEach(hit -> configurationVersion.stream().forEach(metric -> metric.collect(hit)));
                                                     });
                                         });
