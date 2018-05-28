@@ -6,15 +6,16 @@
                 <artifactId>rre-maven-solr-plugin</artifactId>
                 <version>7.1.0</version>
                 <configuration>
-                    <configurations-folder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/configuration_sets</configurations-folder>
-                    <corporaFolder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/corpora</corporaFolder>
-                    <ratingsFolder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/ratings</ratingsFolder>
-                    <templatesFolder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/templates</templatesFolder>
+                    <configurations-folder>/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-search-platform/rre-search-platform-solr-impl/src/sample_solr_folders_layout/configuration_sets</configurations-folder>
+                    <corporaFolder>/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-search-platform/rre-search-platform-solr-impl/src/sample_solr_folders_layout/corpora</corporaFolder>
+                    <ratingsFolder>/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-search-platform/rre-search-platform-solr-impl/src/sample_solr_folders_layout/ratings</ratingsFolder>
+                    <templatesFolder>/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-search-platform/rre-search-platform-solr-impl/src/sample_solr_folders_layout/templates</templatesFolder>
                     <metrics>
-                       <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtOne</param>
-                       <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo</param>
-                       <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtThree</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtOne</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtThree</param>
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTen</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.ReciprocalRank</param>
                         <param>io.sease.rre.core.domain.metrics.impl.NDCG</param>
                     </metrics>
                 </configuration>
