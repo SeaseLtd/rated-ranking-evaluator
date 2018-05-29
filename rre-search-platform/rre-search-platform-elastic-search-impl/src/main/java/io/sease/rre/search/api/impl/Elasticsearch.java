@@ -6,7 +6,6 @@ import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -28,14 +27,11 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
-import static org.elasticsearch.client.Requests.createIndexRequest;
-import static org.elasticsearch.client.Requests.deleteIndexRequest;
-import static org.elasticsearch.client.Requests.indicesExistsRequest;
+import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.node.InternalSettingsPreparer.prepareEnvironment;
 
 /**
@@ -148,8 +144,8 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String indexName, final String query) {
-        final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(query));
+    public QueryOrSearchResponse executeQuery(final String indexName, final String query, final int maxRows) {
+        final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(query)).size(maxRows);
         final SearchResponse qresponse = proxy.search(new SearchRequest(indexName).source(qBuilder)).actionGet();
         return new QueryOrSearchResponse(
                 qresponse.getHits().totalHits,

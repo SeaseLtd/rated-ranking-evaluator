@@ -13,18 +13,19 @@ import java.util.stream.StreamSupport;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 
-public class NDCG extends RankMetric {
+public class NDCGAtTen extends RankMetric {
     private BigDecimal dcg = BigDecimal.ZERO;
 
     /**
-     * Builds a new NDCG metric.
+     * Builds a new NDCGAtTen metric.
      */
-    public NDCG() {
-        super("NDCG");
+    public NDCGAtTen() {
+        super("NDCG@10");
     }
 
     @Override
     public void collect(final Map<String, Object> hit, final int rank) {
+        if (rank > 10) return;
         judgment(id(hit))
                 .ifPresent(judgment -> {
                     switch(rank) {

@@ -1,6 +1,5 @@
 package io.sease.rre.maven.plugin.solr;
 
-import org.apache.maven.doxia.siterenderer.Renderer;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
 import java.io.File;
