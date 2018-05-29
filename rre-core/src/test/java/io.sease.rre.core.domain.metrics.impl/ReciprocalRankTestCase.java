@@ -1,15 +1,12 @@
 package io.sease.rre.core.domain.metrics.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.sease.rre.core.BaseTestCase;
 import io.sease.rre.core.TestData;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
@@ -21,9 +18,7 @@ import static org.junit.Assert.assertEquals;
  * @author agazzarini
  * @since 1.0
  */
-public class ReciprocalRankTestCase {
-
-    private final ObjectMapper mapper = new ObjectMapper();
+public class ReciprocalRankTestCase extends BaseTestCase {
     private ReciprocalRank cut;
 
     /**
@@ -38,8 +33,7 @@ public class ReciprocalRankTestCase {
      * If there are no relevant results in the resultset, then RR must be 0.
      */
     @Test
-    public void noRelevantResults() {
-        // having empty judgements in this case is equal to having no relevant judgment matchings
+    public void noRelevantDocuments() {
         cut.setRelevantDocuments(mapper.createObjectNode());
         cut.setTotalHits(TestData.randomLong());
 
@@ -82,7 +76,7 @@ public class ReciprocalRankTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(BigDecimal.ONE, cut.value().setScale(0));
+        assertEquals(BigDecimal.ONE.doubleValue(), cut.value().doubleValue(), 0);
     }
 
     /**
@@ -108,7 +102,7 @@ public class ReciprocalRankTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(new BigDecimal(1/4d).setScale(2), cut.value().setScale(2));
+        assertEquals(1/4d, cut.value().doubleValue(), 0);
     }
 
     /**
@@ -132,7 +126,7 @@ public class ReciprocalRankTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(BigDecimal.ONE, cut.value().setScale(0));
+        assertEquals(BigDecimal.ONE.doubleValue(), cut.value().doubleValue(), 0);
     }
 
     /**
@@ -156,7 +150,7 @@ public class ReciprocalRankTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(new BigDecimal(0.5), cut.value().setScale(1));
+        assertEquals(0.5d, cut.value().doubleValue(), 0);
     }
 
     /**
@@ -180,18 +174,6 @@ public class ReciprocalRankTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(new BigDecimal(0.5), cut.value().setScale(1));
-    }
-
-    private JsonNode createJudgmentNode(final int gain) {
-        final ObjectNode judgment = mapper.createObjectNode();
-        judgment.put("gain", gain);
-        return judgment;
-    }
-
-    private Map<String, Object> searchHit(final String id) {
-        final Map<String, Object> doc = new HashMap<>();
-        doc.put("id", id);
-        return doc;
+        assertEquals(0.5d, cut.value().doubleValue(), 0);
     }
 }

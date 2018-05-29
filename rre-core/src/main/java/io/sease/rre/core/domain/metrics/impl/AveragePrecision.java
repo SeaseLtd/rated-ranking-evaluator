@@ -9,9 +9,9 @@ import java.util.Map;
 import static io.sease.rre.Calculator.*;
 
 public class AveragePrecision extends RankMetric {
-    private BigDecimal relevantItemsFound;
+    private BigDecimal relevantItemsFound = BigDecimal.ZERO;
 
-    private BigDecimal howManyRelevantDocuments;
+    private BigDecimal howManyRelevantDocuments = BigDecimal.ZERO;
 
     private BigDecimal value = BigDecimal.ZERO;
     private BigDecimal lastCollectedRecallLevel = BigDecimal.ZERO;
@@ -28,7 +28,10 @@ public class AveragePrecision extends RankMetric {
         relevantItemsFound = sum(relevantItemsFound, judgment(id(hit)).isPresent() ? BigDecimal.ONE : BigDecimal.ZERO);
 
         final BigDecimal currentPrecision = divide(relevantItemsFound, new BigDecimal(rank));
-        final BigDecimal currentRecall = divide(relevantItemsFound, howManyRelevantDocuments);
+        final BigDecimal currentRecall =
+                howManyRelevantDocuments.equals(BigDecimal.ZERO)
+                    ? BigDecimal.ZERO
+                    : divide(relevantItemsFound, howManyRelevantDocuments);
         value = sum(
                     value,
                     multiply(
@@ -40,6 +43,7 @@ public class AveragePrecision extends RankMetric {
 
     @Override
     public BigDecimal value() {
+        if (totalHits == 0) { return hits.isEmpty() ? BigDecimal.ONE : BigDecimal.ZERO; }
         return value;
     }
 
