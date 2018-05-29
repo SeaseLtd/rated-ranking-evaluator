@@ -6,7 +6,7 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="org.apache" level="INFO"/>
+        <Logger name="org.apache" level="ERROR"/>
         <Root level="ERROR">
             <AppenderRef ref="Console"/>
         </Root>

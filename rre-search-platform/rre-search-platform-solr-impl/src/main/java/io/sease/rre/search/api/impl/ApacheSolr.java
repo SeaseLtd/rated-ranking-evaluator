@@ -97,9 +97,9 @@ public class ApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString) {
+    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString, final int maxRows) {
         try {
-            final SolrQuery query = new SolrQuery();
+            final SolrQuery query = new SolrQuery().setRows(maxRows);
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode queryDef = mapper.readTree(queryString);
 

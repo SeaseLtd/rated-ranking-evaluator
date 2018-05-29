@@ -48,8 +48,10 @@ public interface SearchPlatform extends Closeable {
      * Executes the given query.
      * The semantic of the input query may change between concrete platforms
      *
+     * @param indexName the index name that holds the data.
      * @param query the query.
+     * @param maxRows the maximum number of rows that will be returned.
      * @return the response of the query execution.
      */
-    QueryOrSearchResponse executeQuery(String indexName, String query);
+    QueryOrSearchResponse executeQuery(String indexName, String query, int maxRows);
 }
