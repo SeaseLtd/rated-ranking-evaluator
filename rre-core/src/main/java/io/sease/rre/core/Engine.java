@@ -116,8 +116,8 @@ public class Engine {
                                                         final QueryEvaluation queryEvaluation = group.findOrCreate(query, QueryEvaluation::new);
                                                         final ConfigurationVersion configurationVersion = queryEvaluation.findOrCreate(version, ConfigurationVersion::new);
 
-                                                        final QueryOrSearchResponse response = platform.executeQuery(internalIndexName, query);
                                                         final JsonNode relevantDocuments = queryGroup.get("relevant_documents");
+                                                        final QueryOrSearchResponse response = platform.executeQuery(internalIndexName, query, Math.max(10, relevantDocuments.size()));
 
                                                         configurationVersion.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits()));
                                                         response.hits().forEach(hit -> configurationVersion.stream().forEach(metric -> metric.collect(hit)));
