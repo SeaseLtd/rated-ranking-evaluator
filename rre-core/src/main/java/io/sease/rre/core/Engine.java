@@ -3,16 +3,16 @@ package io.sease.rre.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.domain.*;
+import io.sease.rre.core.domain.metrics.CompoundMetric;
 import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.core.event.MetricEvent;
+import io.sease.rre.core.event.MetricEventListener;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -33,7 +33,11 @@ public class Engine {
     private final File ratingsFolder;
     private final File templatesFolder;
 
+    private final List<Class<? extends Metric>> availableMetricsDefs;
+    private final List<Class<? extends CompoundMetric>> availableCompoundMetricsDefs;
+
     private final SearchPlatform platform;
+    private final List<MetricEventListener> metricEventListeners = new ArrayList<>();
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -49,12 +53,26 @@ public class Engine {
             final String configurationsFolderPath,
             final String corporaFolderPath,
             final String ratingsFolderPath,
-            final String templatesFolderPath) {
+            final String templatesFolderPath,
+            final List<String> metrics,
+            final List<String> compoundMetrics) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
         this.templatesFolder = new File(templatesFolderPath);
         this.platform = platform;
+
+        this.availableMetricsDefs =
+                metrics.stream()
+                        .filter(Objects::nonNull)
+                        .map(this::newMetricDefinition)
+                        .collect(toList());
+
+        this.availableCompoundMetricsDefs =
+                compoundMetrics.stream()
+                        .filter(Objects::nonNull)
+                        .map(this::newCompoundMetricDefinition)
+                        .collect(toList());
     }
 
     /**
@@ -65,12 +83,6 @@ public class Engine {
      */
     @SuppressWarnings("unchecked")
     public Evaluation evaluate(final Map<String, Object> configuration){
-        final List<Class<? extends Metric>> availableMetricsDefs =
-                ((List<String>)configuration.get("metrics")).stream()
-                    .filter(Objects::nonNull)
-                    .map(this::newMetricInstance)
-                    .collect(toList());
-
         final JsonNode ratingsNode = ratings();
 
         platform.beforeStart(configuration);
@@ -85,7 +97,10 @@ public class Engine {
         }
 
         final Evaluation evaluation = new Evaluation();
-        final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
+        final Corpus corpus =
+                withMetricEventListening(
+                    evaluation.findOrCreate(data.getName(), Corpus::new))
+                        .init(availableCompoundMetricsDefs);
 
         stream(safe(configurationsFolder.listFiles(file -> file.isDirectory() && !file.isHidden())))
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(file -> file.isDirectory() && !file.isHidden()))))
@@ -94,17 +109,21 @@ public class Engine {
                     final String version = folder.getParentFile().getName();
                     final String internalIndexName = indexName + "_" + version;
 
-                   // final ConfigurationVersion configurationVersion = corpus.add(new ConfigurationVersion(folder.getParentFile().getName()));
                     platform.load(data, folder, internalIndexName);
 
                     all(ratingsNode.get("topics"))
                             .forEach(topicNode -> {
                                 final Topic topic =
-                                        corpus.findOrCreate(topicNode.get("description").asText(), Topic::new);
+                                        withMetricEventListening(
+                                                corpus.findOrCreate(
+                                                        topicNode.get("description").asText(), Topic::new))
+                                                .init(availableCompoundMetricsDefs);
 
                                 all(topicNode.get("query_groups"))
                                         .forEach(queryGroup -> {
-                                            final QueryGroup group = topic.findOrCreate(queryGroup.get("name").asText(), QueryGroup::new);
+                                            final QueryGroup group =
+                                                    withMetricEventListening(
+                                                            topic.findOrCreate(queryGroup.get("name").asText(), QueryGroup::new)).init(availableCompoundMetricsDefs);
                                             all(queryGroup.get("queries"))
                                                     .forEach(queryNode -> {
                                                         String query = queryTemplate(queryNode.get("template").asText());
@@ -113,7 +132,8 @@ public class Engine {
                                                             query = query.replace(name, queryNode.get("placeholders").get(name).asText());
                                                         }
 
-                                                        final QueryEvaluation queryEvaluation = group.findOrCreate(query, QueryEvaluation::new);
+                                                        final QueryEvaluation queryEvaluation =
+                                                                withMetricEventListening(group.findOrCreate(query, QueryEvaluation::new)).init(availableCompoundMetricsDefs);
                                                         final ConfigurationVersion configurationVersion = queryEvaluation.findOrCreate(version, ConfigurationVersion::new);
 
                                                         final JsonNode relevantDocuments = queryGroup.get("relevant_documents");
@@ -121,6 +141,7 @@ public class Engine {
 
                                                         configurationVersion.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits()));
                                                         response.hits().forEach(hit -> configurationVersion.stream().forEach(metric -> metric.collect(hit)));
+                                                        configurationVersion.stream().forEach(metric -> broadcast(metric, version));
                                                     });
                                         });
                             });
@@ -158,6 +179,16 @@ public class Engine {
                         throw new IllegalArgumentException(exception);
                     }})
                 .collect(toList());
+    }
+
+    private <L extends MetricEventListener> L withMetricEventListening(final L listener) {
+        metricEventListeners.add(listener);
+        return listener;
+    }
+
+    private void broadcast(final Metric metric, final String version) {
+        final MetricEvent event = new MetricEvent(metric, version, this);
+        metricEventListeners.forEach(listener -> listener.newMetricHasBeenComputed(event));
     }
 
     /**
@@ -199,9 +230,18 @@ public class Engine {
     }
 
     @SuppressWarnings("unchecked")
-    private Class<? extends Metric> newMetricInstance(final String clazzName) {
+    private Class<? extends Metric> newMetricDefinition(final String clazzName) {
         try {
             return (Class<? extends Metric>) Class.forName(clazzName);
+        } catch (final Exception exception) {
+            throw new IllegalArgumentException(exception);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<? extends CompoundMetric> newCompoundMetricDefinition(final String clazzName) {
+        try {
+            return (Class<? extends CompoundMetric>) Class.forName(clazzName);
         } catch (final Exception exception) {
             throw new IllegalArgumentException(exception);
         }

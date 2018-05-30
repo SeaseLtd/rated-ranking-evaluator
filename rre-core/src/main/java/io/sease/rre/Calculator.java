@@ -22,4 +22,10 @@ public abstract class Calculator {
     public static BigDecimal divide(final BigDecimal dividend, final BigDecimal divisor) {
         return dividend.divide(divisor, 4, RoundingMode.CEILING);
     }
+
+    public static BigDecimal divide(final BigDecimal dividend, final int divisor) {
+        return dividend.divide(new BigDecimal(divisor), 4, RoundingMode.CEILING);
+    }
+
+
 }
