@@ -2,10 +2,12 @@ package io.sease.rre.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.sease.rre.core.domain.metrics.CompoundMetric;
 import io.sease.rre.core.domain.metrics.Metric;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -26,6 +28,12 @@ public class ConfigurationVersion extends DomainMember {
     @JsonIgnore
     public List getChildren() {
         return super.getChildren();
+    }
+
+    @Override
+    @JsonIgnore
+    public Map<String, List<CompoundMetric>> getCompoundMetrics() {
+        return super.getCompoundMetrics();
     }
 
     /**

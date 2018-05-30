@@ -9,6 +9,8 @@ import java.util.Map;
 import static io.sease.rre.Calculator.*;
 
 public class AveragePrecision extends RankMetric {
+    public final static String NAME = "AP";
+
     private BigDecimal relevantItemsFound = BigDecimal.ZERO;
 
     private BigDecimal howManyRelevantDocuments = BigDecimal.ZERO;
@@ -20,7 +22,7 @@ public class AveragePrecision extends RankMetric {
      * Builds a new {@link AveragePrecision} metric.
      */
     public AveragePrecision() {
-        super("AP");
+        super(NAME);
     }
 
     @Override
