@@ -1,11 +1,16 @@
 package io.sease.rre.core.domain;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.sease.rre.core.domain.metrics.CompoundMetric;
+import io.sease.rre.core.event.MetricEvent;
+import io.sease.rre.core.event.MetricEventListener;
+
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Supertype layer for all RRE domain entities.
@@ -14,10 +19,13 @@ import java.util.stream.Stream;
  * @author agazzarini
  * @since 1.0
  */
-public abstract class DomainMember<C extends DomainMember> {
+public abstract class DomainMember<C extends DomainMember> implements MetricEventListener {
     private String name;
 
     private Map<String, C> childrenLookupCache = new HashMap<>();
+    protected Map<String, List<CompoundMetric>> compoundMetrics = new LinkedHashMap<>();
+
+    protected List<Class<? extends CompoundMetric>> compoundMetricsDef;
 
     private List<C> children = new ArrayList<>();
 
@@ -31,6 +39,31 @@ public abstract class DomainMember<C extends DomainMember> {
         return child;
     }
 
+    public <T extends DomainMember> T init(final List<Class<? extends CompoundMetric>> metricsDef) {
+        this.compoundMetricsDef = metricsDef;
+        return (T) this;
+    }
+
+    @Override
+    public void newMetricHasBeenComputed(final MetricEvent event) {
+        compoundMetrics.computeIfAbsent(event.getVersion(), v -> newCompoundMetricSet())
+            .forEach(compoundMetric -> compoundMetric.collect(event.getMetric()));
+    }
+
+    private List<CompoundMetric> newCompoundMetricSet() {
+        return compoundMetricsDef
+                .stream()
+                .map(clazz -> {
+                    try {
+                        return clazz.newInstance();
+                    } catch (final Exception exception) {
+                        exception.printStackTrace();
+                        return null;
+                    }})
+                .filter(Objects::nonNull)
+                .collect(toList());
+    }
+
     public C findOrCreate(final String name, final Supplier<C> factory) {
         return childrenLookupCache.computeIfAbsent(name, key -> add((C) factory.get().setName(name)));
     }
@@ -38,6 +71,11 @@ public abstract class DomainMember<C extends DomainMember> {
     public DomainMember setName(final String name) {
         this.name = name;
         return this;
+    }
+
+    @JsonProperty("compound-metrics")
+    public Map<String, List<CompoundMetric>> getCompoundMetrics() {
+        return compoundMetrics;
     }
 
     /**

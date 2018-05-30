@@ -37,6 +37,9 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name="metrics", defaultValue = "io.sease.rre.core.domain.metrics.impl.PrecisionAtOne,io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo,io.sease.rre.core.domain.metrics.impl.PrecisionAtThree,io.sease.rre.core.domain.metrics.impl.PrecisionAtTen")
     private List<String> metrics;
 
+    @Parameter(name="compoundMetrics", defaultValue = "io.sease.rre.core.domain.metrics.impl.MAP,io.sease.rre.core.domain.metrics.impl.GMAP")
+    private List<String> compoundMetrics;
+
     @Override
     public void execute() throws MojoExecutionException {
         try (final SearchPlatform platform = new ApacheSolr()) {
@@ -45,10 +48,11 @@ public class RREvaluateMojo extends AbstractMojo {
                 configurationsFolder,
                     corporaFolder,
                     ratingsFolder,
-                    templatesFolder);
+                    templatesFolder,
+                    metrics,
+                    compoundMetrics);
 
             final Map<String, Object> configuration = new HashMap<>();
-            configuration.put("metrics", metrics);
             configuration.put("solr.home", "/tmp");
 
             write(engine.evaluate(configuration));
