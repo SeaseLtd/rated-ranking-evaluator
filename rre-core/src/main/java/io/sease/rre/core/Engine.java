@@ -11,8 +11,12 @@ import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -64,16 +68,18 @@ public class Engine {
 
         this.availableMetricsDefs =
                 metrics.stream()
-                        .filter(Objects::nonNull)
                         .map(this::newMetricDefinition)
+                        .filter(Objects::nonNull)
                         .collect(toList());
 
         this.availableCompoundMetricsDefs =
                 compoundMetrics.stream()
-                        .filter(Objects::nonNull)
                         .map(this::newCompoundMetricDefinition)
+                        .filter(Objects::nonNull)
                         .collect(toList());
     }
+
+    private List<String> versions;
 
     /**
      * Executes the evaluation process.
@@ -83,73 +89,56 @@ public class Engine {
      */
     @SuppressWarnings("unchecked")
     public Evaluation evaluate(final Map<String, Object> configuration){
-        final JsonNode ratingsNode = ratings();
 
         platform.beforeStart(configuration);
         platform.start();
         platform.afterStart();
 
-        final String indexName = ratingsNode.get("index").asText();
-        final String idFieldName = ratingsNode.get("id_field").asText("id");
-        final File data = new File(corporaFolder, ratingsNode.get("corpora_file").asText());
-        if (!data.canRead()) {
-            throw new IllegalArgumentException("Unable to read the corpus file " + data.getAbsolutePath());
-        }
-
         final Evaluation evaluation = new Evaluation();
-        final Corpus corpus =
-                withMetricEventListening(
-                    evaluation.findOrCreate(data.getName(), Corpus::new))
-                        .init(availableCompoundMetricsDefs);
 
-        stream(safe(configurationsFolder.listFiles(file -> file.isDirectory() && !file.isHidden())))
-                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(file -> file.isDirectory() && !file.isHidden()))))
-                .filter(folder -> folder.getName().equals(indexName))
-                .forEach(folder -> {
-                    final String version = folder.getParentFile().getName();
-                    final String internalIndexName = indexName + "_" + version;
+        ratings().forEach(ratingsNode -> {
+            final String indexName = ratingsNode.get("index").asText();
+            final String idFieldName = ratingsNode.get("id_field").asText("id");
+            final File data = new File(corporaFolder, ratingsNode.get("corpora_file").asText());
 
-                    platform.load(data, folder, internalIndexName);
+            if (!data.canRead()) {
+                throw new IllegalArgumentException("Unable to read the corpus file " + data.getAbsolutePath());
+            }
 
-                    all(ratingsNode.get("topics"))
-                            .forEach(topicNode -> {
-                                final Topic topic =
-                                        withMetricEventListening(
-                                                corpus.findOrCreate(
-                                                        topicNode.get("description").asText(), Topic::new))
-                                                .init(availableCompoundMetricsDefs);
+            prepareData(indexName, data);
 
-                                all(topicNode.get("query_groups"))
-                                        .forEach(queryGroup -> {
-                                            final QueryGroup group =
-                                                    withMetricEventListening(
-                                                            topic.findOrCreate(queryGroup.get("name").asText(), QueryGroup::new)).init(availableCompoundMetricsDefs);
-                                            all(queryGroup.get("queries"))
-                                                    .forEach(queryNode -> {
-                                                        String query = queryTemplate(queryNode.get("template").asText());
-                                                        for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext();) {
-                                                            final String name = iterator.next();
-                                                            query = query.replace(name, queryNode.get("placeholders").get(name).asText());
-                                                        }
+            final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
+            all(ratingsNode.get("topics"))
+                    .forEach(topicNode -> {
+                        final Topic topic = corpus.findOrCreate(topicNode.get("description").asText(), Topic::new);
+                        all(topicNode.get("query_groups"))
+                                .forEach(groupNode -> {
+                                    final QueryGroup group =
+                                            topic.findOrCreate(groupNode.get("name").asText(), QueryGroup::new);
+                                    all(groupNode.get("queries"))
+                                            .forEach(queryNode -> {
+                                                final String query = query(queryNode);
+                                                final Query queryEvaluation = group.findOrCreate(query, Query::new);
+                                                final JsonNode relevantDocuments = groupNode.get("relevant_documents");
 
-                                                        final QueryEvaluation queryEvaluation =
-                                                                withMetricEventListening(group.findOrCreate(query, QueryEvaluation::new)).init(availableCompoundMetricsDefs);
-                                                        final ConfigurationVersion configurationVersion = queryEvaluation.findOrCreate(version, ConfigurationVersion::new);
+                                                queryEvaluation.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, versions));
 
-                                                        final JsonNode relevantDocuments = queryGroup.get("relevant_documents");
-                                                        final QueryOrSearchResponse response = platform.executeQuery(internalIndexName, query, Math.max(10, relevantDocuments.size()));
+                                                versions.forEach(version -> {
+                                                    final AtomicInteger rank = new AtomicInteger(1);
+                                                    final QueryOrSearchResponse response =
+                                                            platform.executeQuery(indexFqdn(indexName, version), query, Math.max(10, relevantDocuments.size()));
 
-                                                        configurationVersion.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, response.totalHits()));
-                                                        response.hits().forEach(hit -> configurationVersion.stream().forEach(metric -> metric.collect(hit)));
-                                                        configurationVersion.stream().forEach(metric -> broadcast(metric, version));
-                                                    });
-                                        });
-                            });
-                });
+                                                    queryEvaluation.setTotalHits(response.totalHits(), version);
+                                                    response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), version));
+                                                });
+                                            });
+                                });
+                    });
+        });
 
-            platform.beforeStop();
+        platform.beforeStop();
 
-            return evaluation;
+        return evaluation;
     }
 
     /**
@@ -158,14 +147,14 @@ public class Engine {
      * @param definitions the metrics definitions.
      * @param idFieldName the id fieldname.
      * @param relevantDocumentsMap the relevant documents for a given query.
-     * @param totalHits the total hits for a given query.
+     * @param versions the available versions for a given query.
      * @return a new metrics set for the current query evaluation.
      */
     private List<Metric> availableMetrics(
             final List<Class<? extends Metric>> definitions,
             final String idFieldName,
             final JsonNode relevantDocumentsMap,
-            final long totalHits) {
+            final List<String> versions) {
         return definitions
                 .stream()
                 .map(def -> {
@@ -173,7 +162,7 @@ public class Engine {
                         final Metric metric = def.newInstance();
                         metric.setIdFieldName(idFieldName);
                         metric.setRelevantDocuments(relevantDocumentsMap);
-                        metric.setTotalHits(totalHits);
+                        metric.setVersions(versions);
                         return metric;
                     } catch (final Exception exception) {
                         throw new IllegalArgumentException(exception);
@@ -210,13 +199,15 @@ public class Engine {
      *
      * @return the ratings / judgements for this evaluation suite.
      */
-    private JsonNode ratings() {
-        try {
-            final ObjectMapper mapper = new ObjectMapper();
-            return mapper.readTree(new File(ratingsFolder, "ratings.json"));
-        } catch (final Exception exception) {
-            throw new RuntimeException(exception);
-        }
+    private Stream<JsonNode> ratings() {
+        final ObjectMapper mapper = new ObjectMapper();
+        return stream(ratingsFolder.listFiles((dir, name) -> name.endsWith(".json")))
+                .map(ratingFile -> {
+                    try {
+                        return mapper.readTree(ratingFile);
+                    } catch (final IOException exception) {
+                        throw new RuntimeException(exception);
+                    }});
     }
 
     /**
@@ -245,5 +236,28 @@ public class Engine {
         } catch (final Exception exception) {
             throw new IllegalArgumentException(exception);
         }
+    }
+
+    private void prepareData(final String indexName, final File data) {
+        final File [] versionFolders = safe(configurationsFolder.listFiles(file -> file.isDirectory() && !file.isHidden()));
+        stream(versionFolders)
+                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(file -> file.isDirectory() && !file.isHidden()))))
+                .filter(folder -> folder.getName().equals(indexName))
+                .forEach(folder -> platform.load(data, folder, indexFqdn(indexName, folder.getParentFile().getName())));
+
+        this.versions = stream(versionFolders).map(File::getName).collect(toList());
+    }
+
+    private String indexFqdn(final String indexName, final String version) {
+        return indexName + "_" + version;
+    }
+
+    private String query(final JsonNode queryNode) {
+        String query = queryTemplate(queryNode.get("template").asText());
+        for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext();) {
+            final String name = iterator.next();
+            query = query.replace(name, queryNode.get("placeholders").get(name).asText());
+        }
+        return query;
     }
 }

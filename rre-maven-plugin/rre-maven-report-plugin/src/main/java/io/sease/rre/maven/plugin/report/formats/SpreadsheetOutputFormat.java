@@ -106,7 +106,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                                                                 hmCell.setCellValue(metric.get("name").asText());
 
                                                                                 final Cell mCell = qRow.createCell(2 + metricCount.get() + (versionCount.get() * howManyMetrics), CellType.NUMERIC);
-                                                                                mCell.setCellValue(metric.get("value").asDouble());
+                                                                                mCell.setCellValue(metric.get("valueFactory").asDouble());
                                                                             });
                                                                     versionCount.incrementAndGet();
                                                                 });

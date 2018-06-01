@@ -2,7 +2,6 @@ package io.sease.rre.core.domain.metrics.impl;
 
 import static io.sease.rre.Calculator.*;
 import io.sease.rre.core.domain.metrics.CompoundMetric;
-import io.sease.rre.core.domain.metrics.Metric;
 
 import java.math.BigDecimal;
 
@@ -24,7 +23,7 @@ public class MAP extends CompoundMetric {
     public BigDecimal value() {
         if (metrics.size() == 0) return BigDecimal.ZERO;
         return divide(
-                metrics.stream().map(Metric::value).reduce(BigDecimal.ZERO, BigDecimal::add),
+                metrics.stream().map(metric -> metric.valueFactory().value()).reduce(BigDecimal.ZERO, BigDecimal::add),
                 metrics.size());
     }
 }

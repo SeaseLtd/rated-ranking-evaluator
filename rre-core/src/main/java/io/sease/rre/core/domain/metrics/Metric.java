@@ -3,32 +3,42 @@ package io.sease.rre.core.domain.metrics;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
+import static io.sease.rre.Calculator.subtract;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.range;
 
 /**
- * Supertype layer for all evaluation metrics.
+ * Supertype layer for all metrics.
  * An evaluation metric, within an information retrieval system context,
  * is used to assess how well the search results satisfied the user's query intent.
  *
+ * @see Value
  * @author agazzarini
  * @since 1.0
  */
 public abstract class Metric implements HitsCollector {
     private final String name;
 
-    private String idFieldName = "id";
+    protected String idFieldName = "id";
     protected JsonNode relevantDocuments;
-    protected long totalHits;
+
+    protected Map<String, Value> values = new LinkedHashMap<>();
+
+    public void setVersions(final List<String> versions) {
+        versions.forEach(version -> values.put(version, valueFactory()));
+    }
 
     /**
      * Builds a new {@link Metric} with the given mnemonic name.
      *
      * @param name the metric name.
      */
-    protected Metric(final String name) {
+    public Metric(final String name) {
         this.name = name;
     }
 
@@ -50,21 +60,30 @@ public abstract class Metric implements HitsCollector {
         this.relevantDocuments = relevantDocuments;
     }
 
-    /**
-     * Sets the total hits (i.e. the total number of results) of the query response associated with this metric.
-     *
-     * @param totalHits the total hits of the query response associated with this metric.
-     */
-    public void setTotalHits(final long totalHits) {
-        this.totalHits = totalHits;
+    @Override
+    public void setTotalHits(final long totalHits, final String version) {
+        ofNullable(values.get(version)).ifPresent(value -> value.setTotalHits(totalHits, version));
+    }
+
+    @Override
+    public void collect(Map<String, Object> hit, int rank, final String version) {
+        ofNullable(values.get(version)).ifPresent(value -> value.collect(hit, rank, version));
     }
 
     /**
-     * Returns the value of this metric.
+     * Assuming the metric provides more than one version, this method returns the metric trend in terms of delta.
      *
-     * @return the value of this metric.
+     * @return the delta between the subsequent versioned values.
      */
-    public abstract BigDecimal value();
+    public List<BigDecimal> trend() {
+        if (values.isEmpty()) return emptyList();
+        if (values.size() == 1) return singletonList(values.values().iterator().next().value());
+
+        final List<Value> onlyValues = new ArrayList<>(values.values());
+        return range(0, onlyValues.size() - 1)
+                .mapToObj(index -> subtract(onlyValues.get(index + 1).value(), onlyValues.get(index).value()))
+                .collect(toList());
+    }
 
     /**
      * Returns the judgment associated with the given identifier.
@@ -72,15 +91,15 @@ public abstract class Metric implements HitsCollector {
      * @param id the document identifier.
      * @return an optional describing the judgment associated with the given identifier. 
      */
-    public Optional<JsonNode> judgment(final String id) {
+    protected Optional<JsonNode> judgment(final String id) {
         return ofNullable(relevantDocuments).map(judgements -> judgements.get(id));
     }
 
     /**
-     * Extracts the id field value from the given document.
+     * Extracts the id field valueFactory from the given document.
      *
      * @param document the document (i.e. a search hit).
-     * @return the id field value of the input document.
+     * @return the id field valueFactory of the input document.
      */
     protected String id(final Map<String, Object> document) {
         return String.valueOf(document.get(idFieldName));
@@ -95,20 +114,9 @@ public abstract class Metric implements HitsCollector {
         return name;
     }
 
-    /**
-     * Returns the value of this metric (as a string).
-     * Note that the goal of this method is the same as {@link #value()}. As you can see
-     * the difference is in the result kind (a string instead of a number) and it is mainly
-     * used for JSON serialization purposes.
-     *
-     * @return the value of this metric (as a string).
-     */
-    public String getValue() {
-        return value().toPlainString();
-    }
+    public abstract Value valueFactory();
 
-    @Override
-    public String toString() {
-        return getName() + " = " + getValue();
+    public Map<String, Value> getValues() {
+        return values;
     }
 }
