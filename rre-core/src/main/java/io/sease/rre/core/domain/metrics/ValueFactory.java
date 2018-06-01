@@ -17,7 +17,7 @@ import static java.util.Optional.ofNullable;
  * @author agazzarini
  * @since 1.0
  */
-public abstract class Value implements HitsCollector {
+public abstract class ValueFactory implements HitsCollector {
     private String version;
     private final Metric owner;
     protected long totalHits;
@@ -27,8 +27,12 @@ public abstract class Value implements HitsCollector {
      *
      * @param owner the owner metric.
      */
-    protected Value(final Metric owner) {
+    protected ValueFactory(final Metric owner) {
         this.owner = owner;
+    }
+
+    public Metric owner() {
+        return owner;
     }
 
     @Override

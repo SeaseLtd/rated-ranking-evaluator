@@ -1,8 +1,7 @@
 package io.sease.rre.core.domain.metrics.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.core.domain.metrics.Metric;
-import io.sease.rre.core.domain.metrics.Value;
+import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -20,9 +19,9 @@ public class AveragePrecision extends Metric {
     }
 
     @Override
-    public Value valueFactory() {
+    public ValueFactory valueFactory() {
 
-        return new Value(this) {
+        return new ValueFactory(this) {
             private BigDecimal relevantItemsFound = BigDecimal.ZERO;
 
             private BigDecimal howManyRelevantDocuments = new BigDecimal(relevantDocuments.size());

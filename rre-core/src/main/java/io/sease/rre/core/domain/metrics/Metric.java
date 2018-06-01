@@ -17,7 +17,7 @@ import static java.util.stream.IntStream.range;
  * An evaluation metric, within an information retrieval system context,
  * is used to assess how well the search results satisfied the user's query intent.
  *
- * @see Value
+ * @see ValueFactory
  * @author agazzarini
  * @since 1.0
  */
@@ -27,7 +27,7 @@ public abstract class Metric implements HitsCollector {
     protected String idFieldName = "id";
     protected JsonNode relevantDocuments;
 
-    protected Map<String, Value> values = new LinkedHashMap<>();
+    protected Map<String, ValueFactory> values = new LinkedHashMap<>();
 
     public void setVersions(final List<String> versions) {
         versions.forEach(version -> values.put(version, valueFactory()));
@@ -79,9 +79,9 @@ public abstract class Metric implements HitsCollector {
         if (values.isEmpty()) return emptyList();
         if (values.size() == 1) return singletonList(values.values().iterator().next().value());
 
-        final List<Value> onlyValues = new ArrayList<>(values.values());
-        return range(0, onlyValues.size() - 1)
-                .mapToObj(index -> subtract(onlyValues.get(index + 1).value(), onlyValues.get(index).value()))
+        final List<ValueFactory> onlyValueFactories = new ArrayList<>(values.values());
+        return range(0, onlyValueFactories.size() - 1)
+                .mapToObj(index -> subtract(onlyValueFactories.get(index + 1).value(), onlyValueFactories.get(index).value()))
                 .collect(toList());
     }
 
@@ -114,9 +114,9 @@ public abstract class Metric implements HitsCollector {
         return name;
     }
 
-    public abstract Value valueFactory();
+    public abstract ValueFactory valueFactory();
 
-    public Map<String, Value> getValues() {
+    public Map<String, ValueFactory> getVersions() {
         return values;
     }
 }
