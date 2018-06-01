@@ -11,7 +11,7 @@ import java.util.List;
  * @author agazzarini
  * @since 1.0
  */
-public class QueryGroup extends DomainMember<Query> implements MetricEventListener {
+public class QueryGroup extends DomainMember<Query> {
     @Override
     @JsonProperty("query-evaluations")
     public List<Query> getChildren() {

@@ -10,6 +10,7 @@ import io.sease.rre.core.event.MetricEventListener;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 
+import javax.management.QueryEval;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -96,6 +97,8 @@ public class Engine {
 
         final Evaluation evaluation = new Evaluation();
 
+        final List<Query> queries = new ArrayList<>();
+
         ratings().forEach(ratingsNode -> {
             final String indexName = ratingsNode.get("index").asText();
             final String idFieldName = ratingsNode.get("id_field").asText("id");
@@ -119,6 +122,7 @@ public class Engine {
                                             .forEach(queryNode -> {
                                                 final String query = query(queryNode);
                                                 final Query queryEvaluation = group.findOrCreate(query, Query::new);
+                                                queries.add(queryEvaluation);
                                                 final JsonNode relevantDocuments = groupNode.get("relevant_documents");
 
                                                 queryEvaluation.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, versions));
@@ -137,6 +141,8 @@ public class Engine {
         });
 
         platform.beforeStop();
+
+        queries.forEach(Query::notifyCollectedMetrics);
 
         return evaluation;
     }

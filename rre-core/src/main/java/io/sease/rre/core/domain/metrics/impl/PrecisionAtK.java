@@ -1,7 +1,7 @@
 package io.sease.rre.core.domain.metrics.impl;
 
 import io.sease.rre.core.domain.metrics.Metric;
-import io.sease.rre.core.domain.metrics.Value;
+import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,8 +28,8 @@ public class PrecisionAtK extends Metric {
     }
 
     @Override
-    public Value valueFactory() {
-        return new Value(this) {
+    public ValueFactory valueFactory() {
+        return new ValueFactory(this) {
             private final List<Map<String, Object>> collected = new ArrayList<>();
 
             @Override
