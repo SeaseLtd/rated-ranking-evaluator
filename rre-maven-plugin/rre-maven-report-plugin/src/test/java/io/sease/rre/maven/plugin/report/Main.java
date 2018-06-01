@@ -9,7 +9,7 @@ public class Main {
     public static void main(String a []) throws Exception {
         RREReport report = new RREReport(){
             @Override
-            File evaluationOutputFile() throws MavenReportException {
+            File evaluationOutputFile() {
                 return new File("/Users/agazzarini/IdeaProjects/rated-ranking-evaluator/rre-maven-plugin/rre-maven-solr-plugin/target/rre/evaluation.json");
             }
         };

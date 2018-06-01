@@ -17,7 +17,7 @@ import java.util.Map;
  * @author agazzarini
  * @since 1.0
  */
-public class Evaluation extends DomainMember<Corpus> implements EventCollector<QueryEvaluation> {
+public class Evaluation extends DomainMember<Corpus> implements EventCollector<Query> {
     @JsonProperty("corpora")
     public List<Corpus> getChildren() {
         return super.getChildren();
@@ -34,7 +34,7 @@ public class Evaluation extends DomainMember<Corpus> implements EventCollector<Q
     }
 
     @Override
-    public void collect(final QueryEvaluation event) {
+    public void collect(final Query event) {
         // TODO
     }
 }

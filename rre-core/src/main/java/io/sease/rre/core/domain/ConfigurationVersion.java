@@ -38,7 +38,7 @@ public class ConfigurationVersion extends DomainMember {
 
     /**
      * Adds to this {@link ConfigurationVersion} the given list of metrics.
-     * Note that at this stage the metrics are empty, without data and value.
+     * Note that at this stage the metrics are empty, without data and valueFactory.
      *
      * @param metrics the metric instances associated with this instance.
      */

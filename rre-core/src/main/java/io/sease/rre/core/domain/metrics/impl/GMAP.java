@@ -1,7 +1,6 @@
 package io.sease.rre.core.domain.metrics.impl;
 
 import io.sease.rre.core.domain.metrics.CompoundMetric;
-import io.sease.rre.core.domain.metrics.Metric;
 
 import java.math.BigDecimal;
 
@@ -20,7 +19,7 @@ public class GMAP extends CompoundMetric {
         if (metrics.size() == 0) return BigDecimal.ZERO;
         return BigDecimal.valueOf(
                 Math.pow(
-                    metrics.stream().map(Metric::value).reduce(BigDecimal.ONE, BigDecimal::multiply).doubleValue(),
+                    metrics.stream().map(metric -> metric.valueFactory().value()).reduce(BigDecimal.ONE, BigDecimal::multiply).doubleValue(),
                     1.0 / metrics.size()));
     }
 }

@@ -1,7 +1,8 @@
 package io.sease.rre.core.domain.metrics.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.core.domain.metrics.RankMetric;
+import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.core.domain.metrics.Value;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -13,9 +14,7 @@ import java.util.stream.StreamSupport;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 
-public class NDCGAtTen extends RankMetric {
-    private BigDecimal dcg = BigDecimal.ZERO;
-
+public class NDCGAtTen extends Metric {
     /**
      * Builds a new NDCGAtTen metric.
      */
@@ -24,28 +23,34 @@ public class NDCGAtTen extends RankMetric {
     }
 
     @Override
-    public void collect(final Map<String, Object> hit, final int rank) {
-        if (rank > 10) return;
-        judgment(id(hit))
-                .ifPresent(judgment -> {
-                    switch(rank) {
-                        case 1:
-                            dcg = judgment.get("gain") == null || judgment.get("gain").isNull()
-                                    ? new BigDecimal(2)
-                                    : judgment.get("gain").decimalValue();
-                            break;
-                        default:
-                            final double gain = judgment.get("gain").asDouble(2);
-                            dcg = dcg.add(new BigDecimal(gain / (Math.log(rank) / Math.log(2))));
-                    }
-                });
-    }
+    public Value valueFactory() {
+        return new Value(this) {
+            private BigDecimal dcg = BigDecimal.ZERO;
 
-    @Override
-    public BigDecimal value() {
-        if (totalHits == 0) { return hits.isEmpty() ? BigDecimal.ONE : BigDecimal.ZERO; }
+            @Override
+            public void collect(final Map<String, Object> hit, final int rank, final String version) {
+                if (rank > 10) return;
+                judgment(id(hit))
+                        .ifPresent(judgment -> {
+                            switch(rank) {
+                                case 1:
+                                    dcg = judgment.get("gain") == null || judgment.get("gain").isNull()
+                                            ? new BigDecimal(2)
+                                            : judgment.get("gain").decimalValue();
+                                    break;
+                                default:
+                                    final double gain = judgment.get("gain").asDouble(2);
+                                    dcg = dcg.add(new BigDecimal(gain / (Math.log(rank) / Math.log(2))));
+                            }
+                        });
+            }
+            @Override
+            public BigDecimal value() {
+                if (totalHits == 0) { return relevantDocuments.size() == 0 ? BigDecimal.ONE : BigDecimal.ZERO; }
 
-        return dcg.divide(idealDcg(relevantDocuments), 2, RoundingMode.FLOOR);
+                return dcg.divide(idealDcg(relevantDocuments), 2, RoundingMode.FLOOR);
+            }
+        };
     }
 
     private BigDecimal idealDcg(final JsonNode relevantDocuments) {

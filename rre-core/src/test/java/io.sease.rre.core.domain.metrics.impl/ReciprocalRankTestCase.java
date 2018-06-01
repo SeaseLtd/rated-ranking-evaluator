@@ -19,46 +19,46 @@ import static org.junit.Assert.assertEquals;
  * @since 1.0
  */
 public class ReciprocalRankTestCase extends BaseTestCase {
-    private ReciprocalRank cut;
+ /*   private ReciprocalRank cut;
 
-    /**
+    *//**
      * Setup fixture for this test case.
-     */
+     *//*
     @Before
     public void setUp() {
         cut = new ReciprocalRank();
     }
 
-    /**
+    *//**
      * If there are no relevant results in the resultset, then RR must be 0.
-     */
+     *//*
     @Test
     public void noRelevantDocuments() {
         cut.setRelevantDocuments(mapper.createObjectNode());
-        cut.setTotalHits(TestData.randomLong());
+        cut.setTotalHits(TestData.randomLong(), "");
 
         Stream.of("1", "10", "100", "1000")
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(BigDecimal.ZERO, cut.value());
+        assertEquals(BigDecimal.ZERO, cut.valueFactory());
     }
 
-    /**
+    *//**
      * If there are no expected results, then RR must be 1.
-     */
+     *//*
     @Test
     public void zeroExpectedResults() {
         cut.setRelevantDocuments(mapper.createObjectNode());
         cut.setTotalHits(0);
 
-        assertEquals(BigDecimal.ONE, cut.value());
+        assertEquals(BigDecimal.ONE, cut.valueFactory());
     }
 
-    /**
+    *//**
      * If the search produced more than one result, the first result is the only item in the relevant document list,
      * then the RR must be 1.
-     */
+     *//*
     @Test
     public void firstRelevantResultAtFirstPosition() {
         final String relevantDocumentId = "3";
@@ -76,13 +76,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(BigDecimal.ONE.doubleValue(), cut.value().doubleValue(), 0);
+        assertEquals(BigDecimal.ONE.doubleValue(), cut.valueFactory().value().doubleValue(), 0);
     }
 
-    /**
+    *//**
      * If the search produced more than one result, the first result is the item in the relevant document list with
      * a max gain, then the RR must be 1.
-     */
+     *//*
     @Test
     public void firstMaxRelevantResultAtFourthPosition() {
         final String relevantDocumentId = "3";
@@ -102,13 +102,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(1/4d, cut.value().doubleValue(), 0);
+        assertEquals(1/4d, cut.valueFactory().value().doubleValue(), 0);
     }
 
-    /**
+    *//**
      * If the search produced more than one result, the first result is the item in the relevant document list with
      * a max gain, then the RR must be 1.
-     */
+     *//*
     @Test
     public void firstMaxRelevantResultAtFirstPosition() {
         final String relevantDocumentId = "3";
@@ -126,13 +126,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(BigDecimal.ONE.doubleValue(), cut.value().doubleValue(), 0);
+        assertEquals(BigDecimal.ONE.doubleValue(), cut.valueFactory().value().doubleValue(), 0);
     }
 
-    /**
+    *//**
      * If the search produced more than one result, the second result is the item in the relevant document list with
      * a max gain, then the RR must be 0.5.
-     */
+     *//*
     @Test
     public void firstMaxRelevantResultAtSecondPosition() {
         final String relevantDocumentId = "3";
@@ -150,13 +150,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(0.5d, cut.value().doubleValue(), 0);
+        assertEquals(0.5d, cut.valueFactory().value().doubleValue(), 0);
     }
 
-    /**
+    *//**
      * If the search produced more than one result, the 2nd result is the only item in the relevant document list,
      * then the RR must be 0.5.
-     */
+     *//*
     @Test
     public void firstRelevantResultAtSecondPosition() {
         final String relevantDocumentId = "3";
@@ -174,6 +174,6 @@ public class ReciprocalRankTestCase extends BaseTestCase {
                 .map(this::searchHit)
                 .forEach(cut::collect);
 
-        assertEquals(0.5d, cut.value().doubleValue(), 0);
-    }
+        assertEquals(0.5d, cut.valueFactory().value().doubleValue(), 0);
+    }*/
 }
