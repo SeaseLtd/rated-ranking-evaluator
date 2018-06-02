@@ -1,9 +1,10 @@
 package io.sease.rre.core.domain.metrics.impl;
 
-import static io.sease.rre.Calculator.*;
 import io.sease.rre.core.domain.metrics.CompoundMetric;
 
 import java.math.BigDecimal;
+
+import static io.sease.rre.Calculator.divide;
 
 /**
  * Mean average precision for a set of queries is the mean of the average precision scores for each query.

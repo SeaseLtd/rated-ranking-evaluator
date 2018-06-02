@@ -23,6 +23,9 @@ public class Evaluation extends DomainMember<Corpus> implements EventCollector<Q
         return super.getChildren();
     }
 
+    /**
+     * Builds a new {@link Evaluation} instance.
+     */
     public Evaluation() {
         setName("Ranking Evaluation Report - created on " + DateFormat.getDateInstance(DateFormat.FULL, Locale.ENGLISH).format(new Date()));
     }

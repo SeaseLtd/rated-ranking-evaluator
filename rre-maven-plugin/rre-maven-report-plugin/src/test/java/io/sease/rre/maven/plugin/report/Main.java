@@ -1,12 +1,8 @@
 package io.sease.rre.maven.plugin.report;
 
-import org.apache.maven.reporting.MavenReportException;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.Locale;
-
-import static java.util.Arrays.asList;
 
 public class Main {
     public static void main(String a []) throws Exception {

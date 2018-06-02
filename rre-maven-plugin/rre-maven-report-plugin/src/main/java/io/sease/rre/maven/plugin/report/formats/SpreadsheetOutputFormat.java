@@ -3,7 +3,6 @@ package io.sease.rre.maven.plugin.report.formats;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.maven.plugin.report.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.RREReport;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;

@@ -5,8 +5,20 @@ import java.math.RoundingMode;
 
 import static java.util.Arrays.stream;
 
+/**
+ * RRE Calculator.
+ *
+ * @author agazzarini
+ * @since 1.0
+ */
 public abstract class Calculator {
 
+    /**
+     * Executes the sum of the given addends.
+     *
+     * @param addends the numbers that will be added together.
+     * @return the sum of all input addends.
+     */
     public static BigDecimal sum(final BigDecimal ... addends) {
         return stream(addends).reduce(BigDecimal.ZERO, BigDecimal::add);
     }

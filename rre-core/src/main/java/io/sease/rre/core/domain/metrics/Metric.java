@@ -3,7 +3,10 @@ package io.sease.rre.core.domain.metrics;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.sease.rre.Calculator.subtract;
 import static java.util.Collections.emptyList;
@@ -17,6 +20,11 @@ import static java.util.stream.IntStream.range;
  * An evaluation metric, within an information retrieval system context,
  * is used to assess how well the search results satisfied the user's query intent.
  *
+ * A metric doesn't provide directly a value: this because within the RRE data model we can have several versions of
+ * the same metric associated to different configurations. Although the metric is always the same, the value can
+ * change between version; as consequence of that, the "value" computation itself is delegated to a special class
+ * called, not surprisingly, {@link ValueFactory}.
+ *
  * @see ValueFactory
  * @author agazzarini
  * @since 1.0
@@ -26,9 +34,13 @@ public abstract class Metric implements HitsCollector {
 
     protected String idFieldName = "id";
     protected JsonNode relevantDocuments;
-
     protected Map<String, ValueFactory> values = new LinkedHashMap<>();
 
+    /**
+     * Sets into this metrics the different versions available in the current evaluation process.
+     *
+     * @param versions the different versions available in the current evaluation process.
+     */
     public void setVersions(final List<String> versions) {
         versions.forEach(version -> values.put(version, valueFactory()));
     }
@@ -44,6 +56,7 @@ public abstract class Metric implements HitsCollector {
 
     /**
      * Sets the name of the field which represent the unique key.
+     * This name defaults to "id", which probably covers the 99% of the scenarios.
      *
      * @param idFieldName the name of the field which represent the unique key.
      */
@@ -71,7 +84,8 @@ public abstract class Metric implements HitsCollector {
     }
 
     /**
-     * Assuming the metric provides more than one version, this method returns the metric trend in terms of delta.
+     * Assuming the metric provides more than one version, this method returns the metric trend in terms of delta
+     * between (subsequent) versions.
      *
      * @return the delta between the subsequent versioned values.
      */
@@ -83,16 +97,6 @@ public abstract class Metric implements HitsCollector {
         return range(0, onlyValueFactories.size() - 1)
                 .mapToObj(index -> subtract(onlyValueFactories.get(index + 1).value(), onlyValueFactories.get(index).value()))
                 .collect(toList());
-    }
-
-    /**
-     * Returns the judgment associated with the given identifier.
-     *
-     * @param id the document identifier.
-     * @return an optional describing the judgment associated with the given identifier. 
-     */
-    protected Optional<JsonNode> judgment(final String id) {
-        return ofNullable(relevantDocuments).map(judgements -> judgements.get(id));
     }
 
     /**
@@ -114,9 +118,29 @@ public abstract class Metric implements HitsCollector {
         return name;
     }
 
+    /**
+     * A metric must provide an {@link ValueFactory} instance which will be used for actually computing its value(s).
+     *
+     * @return the factory which will be used for actually computing metric value(s).
+     */
     public abstract ValueFactory valueFactory();
 
+    /**
+     * Returns a map of the available versions with the corresponding value factory.
+     *
+     * @return a map of the available versions with the corresponding value factory.
+     */
     public Map<String, ValueFactory> getVersions() {
         return values;
+    }
+
+    /**
+     * Returns the {@link ValueFactory} instance associated with a given version.
+     *
+     * @param version the target version.
+     * @return the {@link ValueFactory} instance associated with a given version.
+     */
+    public ValueFactory valueFactory(final String version) {
+        return values.getOrDefault(version, valueFactory());
     }
 }
