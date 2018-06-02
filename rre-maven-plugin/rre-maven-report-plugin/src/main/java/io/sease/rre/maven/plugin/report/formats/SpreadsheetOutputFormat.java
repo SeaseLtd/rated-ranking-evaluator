@@ -1,7 +1,6 @@
 package io.sease.rre.maven.plugin.report.formats;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.maven.plugin.report.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.RREReport;
 import org.apache.poi.ss.usermodel.*;
@@ -16,11 +15,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static io.sease.rre.maven.plugin.report.Utility.all;
-import static io.sease.rre.maven.plugin.report.Utility.pretty;
 
 /**
  * RRE Report : Excel output format.
@@ -29,7 +26,7 @@ import static io.sease.rre.maven.plugin.report.Utility.pretty;
  * @since 1.0
  */
 public class SpreadsheetOutputFormat implements OutputFormat {
-    private XSSFRow createHeader(final XSSFSheet sheet, EvaluationMetadata metadata) {
+    private XSSFRow topHeader(final XSSFSheet sheet, EvaluationMetadata metadata) {
         final XSSFRow header = sheet.createRow(0);
 
         final CellStyle bold = sheet.getWorkbook().createCellStyle();
@@ -73,15 +70,52 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         return header;
     }
 
-    private XSSFRow createSubHeader(final XSSFSheet sheet, final EvaluationMetadata metadata) {
-        final XSSFRow header = sheet.createRow(0);
+    private XSSFRow metricsHeader(final XSSFSheet sheet, final EvaluationMetadata metadata) {
+        final XSSFRow header = sheet.createRow(1);
 
         final CellStyle bold = sheet.getWorkbook().createCellStyle();
         final Font font = sheet.getWorkbook().createFont();
         font.setBold(true);
         bold.setFont(font);
+        bold.setAlignment(HorizontalAlignment.CENTER);
 
-//        metadata.metrics.stream().forEach();
+        final AtomicInteger counter = new AtomicInteger(0);
+        metadata.metrics
+                .forEach(name -> {
+                    final int columnIndex = 4 + (counter.getAndIncrement() * metadata.howManyVersions());
+                    final Cell qgHeaderCell = header.createCell(columnIndex, CellType.STRING);
+                    qgHeaderCell.setCellValue(name);
+                    qgHeaderCell.setCellStyle(bold);
+                    try {
+                        sheet.addMergedRegion(
+                                new CellRangeAddress(
+                                        header.getRowNum(),
+                                        header.getRowNum(),
+                                        columnIndex,
+                                        columnIndex + (metadata.howManyVersions() - 1)));
+                    } catch (final Exception ignore) {}
+                });
+        return header;
+    }
+
+    private XSSFRow versionsHeader(final XSSFSheet sheet, final EvaluationMetadata metadata) {
+        final XSSFRow header = sheet.createRow(2);
+
+        final CellStyle bold = sheet.getWorkbook().createCellStyle();
+        final Font font = sheet.getWorkbook().createFont();
+        font.setBold(true);
+        bold.setFont(font);
+        final AtomicInteger versionCounter = new AtomicInteger(4);
+        metadata.metrics.forEach(metric -> {
+            metadata.versions
+                    .forEach(name -> {
+                        final int columnIndex = versionCounter.getAndIncrement();
+                        final Cell qgHeaderCell = header.createCell(columnIndex, CellType.STRING);
+                        qgHeaderCell.setCellValue(name);
+                        qgHeaderCell.setCellStyle(bold);
+                    });
+
+        });
         return header;
     }
 
@@ -91,16 +125,20 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         final CellStyle topAlign = workbook.createCellStyle();
         topAlign.setVerticalAlignment(VerticalAlignment.TOP);
 
-        final AtomicInteger rowCount = new AtomicInteger(1);
+        final AtomicInteger rowCount = new AtomicInteger(3);
 
         all(data, "corpora")
                 .forEach(corpus -> {
                     final String name = corpus.get("name").asText();
                     final XSSFSheet spreadsheet = workbook.createSheet(name);
-                    final XSSFRow header = createHeader(spreadsheet, metadata);
+                    final XSSFRow header = topHeader(spreadsheet, metadata);
+                    final XSSFRow subheader = metricsHeader(spreadsheet, metadata);
+                    final XSSFRow _3rdHeader = versionsHeader(spreadsheet, metadata);
 
-                    final XSSFRow corpusRow = spreadsheet.createRow(rowCount.incrementAndGet());
+                    final XSSFRow corpusRow = spreadsheet.createRow(rowCount.getAndIncrement());
 
+                    JsonNode metricsNode = corpus.get("metrics");
+                    AtomicInteger columnCounter = new AtomicInteger(4);
 
                     all(corpus, "topics")
                             .forEach(topic -> {
@@ -152,7 +190,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                                                 });
                                                     });
                                         });
-                            });
+                            });*/
                 });
         try (final OutputStream out =
                      new FileOutputStream(
