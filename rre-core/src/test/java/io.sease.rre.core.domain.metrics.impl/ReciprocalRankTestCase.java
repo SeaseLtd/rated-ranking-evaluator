@@ -2,13 +2,15 @@ package io.sease.rre.core.domain.metrics.impl;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.core.BaseTestCase;
-import io.sease.rre.core.TestData;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static io.sease.rre.core.TestData.A_VERSION;
 import static java.util.Arrays.stream;
 import static org.junit.Assert.assertEquals;
 
@@ -20,6 +22,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ReciprocalRankTestCase extends BaseTestCase {
     private ReciprocalRank cut;
+    private AtomicInteger counter;
 
     /**
      * Setup fixture for this test case.
@@ -27,6 +30,8 @@ public class ReciprocalRankTestCase extends BaseTestCase {
     @Before
     public void setUp() {
         cut = new ReciprocalRank();
+        cut.setVersions(Collections.singletonList(A_VERSION));
+        counter = new AtomicInteger();
     }
 
     /**
@@ -35,13 +40,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
     @Test
     public void noRelevantDocuments() {
         cut.setRelevantDocuments(mapper.createObjectNode());
-        cut.setTotalHits(TestData.randomLong());
+        cut.setTotalHits(4, A_VERSION);
 
         Stream.of("1", "10", "100", "1000")
                 .map(this::searchHit)
-                .forEach(cut::collect);
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
-        assertEquals(BigDecimal.ZERO, cut.value());
+        assertEquals(BigDecimal.ZERO.doubleValue(), cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**
@@ -50,9 +55,9 @@ public class ReciprocalRankTestCase extends BaseTestCase {
     @Test
     public void zeroExpectedResults() {
         cut.setRelevantDocuments(mapper.createObjectNode());
-        cut.setTotalHits(0);
+        cut.setTotalHits(0, A_VERSION);
 
-        assertEquals(BigDecimal.ONE, cut.value());
+        assertEquals(BigDecimal.ONE.doubleValue(), cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**
@@ -70,13 +75,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
         judgements.set("5", createJudgmentNode(3));
 
         cut.setRelevantDocuments(judgements);
-        cut.setTotalHits(documents.length);
+        cut.setTotalHits(documents.length, A_VERSION);
 
         stream(documents)
                 .map(this::searchHit)
-                .forEach(cut::collect);
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
-        assertEquals(BigDecimal.ONE.doubleValue(), cut.value().doubleValue(), 0);
+        assertEquals(BigDecimal.ONE.doubleValue(), cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**
@@ -96,13 +101,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
         judgements.set("991", createJudgmentNode(1));
 
         cut.setRelevantDocuments(judgements);
-        cut.setTotalHits(documents.length);
+        cut.setTotalHits(documents.length, A_VERSION);
 
         stream(documents)
                 .map(this::searchHit)
-                .forEach(cut::collect);
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
-        assertEquals(1/4d, cut.value().doubleValue(), 0);
+        assertEquals(1/4d, cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**
@@ -120,13 +125,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
         judgements.set("5", createJudgmentNode(2));
 
         cut.setRelevantDocuments(judgements);
-        cut.setTotalHits(documents.length);
+        cut.setTotalHits(documents.length, A_VERSION);
 
         stream(documents)
                 .map(this::searchHit)
-                .forEach(cut::collect);
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
-        assertEquals(BigDecimal.ONE.doubleValue(), cut.value().doubleValue(), 0);
+        assertEquals(BigDecimal.ONE.doubleValue(), cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**
@@ -144,13 +149,13 @@ public class ReciprocalRankTestCase extends BaseTestCase {
         judgements.set("5", createJudgmentNode(2));
 
         cut.setRelevantDocuments(judgements);
-        cut.setTotalHits(documents.length);
+        cut.setTotalHits(documents.length, A_VERSION);
 
         stream(documents)
                 .map(this::searchHit)
-                .forEach(cut::collect);
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
-        assertEquals(0.5d, cut.value().doubleValue(), 0);
+        assertEquals(0.5d, cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**
@@ -168,12 +173,12 @@ public class ReciprocalRankTestCase extends BaseTestCase {
         judgements.set("5", createJudgmentNode(3));
 
         cut.setRelevantDocuments(judgements);
-        cut.setTotalHits(documents.length);
+        cut.setTotalHits(documents.length, A_VERSION);
 
         stream(documents)
                 .map(this::searchHit)
-                .forEach(cut::collect);
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
-        assertEquals(0.5d, cut.value().doubleValue(), 0);
+        assertEquals(0.5d, cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 }
