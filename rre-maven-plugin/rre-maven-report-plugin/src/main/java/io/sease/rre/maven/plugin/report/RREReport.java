@@ -14,6 +14,10 @@ import org.apache.maven.reporting.AbstractMavenReport;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.StreamSupport;
+
+import static io.sease.rre.maven.plugin.report.Utility.all;
+import static java.util.stream.Collectors.toList;
 
 @Mojo(name = "report",
       defaultPhase = LifecyclePhase.SITE,
@@ -41,10 +45,32 @@ public class RREReport extends AbstractMavenReport {
 
     @Override
     protected void executeReport(final Locale locale) {
+
+        final JsonNode evaluationData = evaluationAsJson();
+        final EvaluationMetadata metadata = evaluationMetadata(evaluationData);
+
         formats.parallelStream()
                 .map(formatters::get)
                 .filter(Objects::nonNull)
-                .forEach(formatter -> formatter.writeReport(evaluationAsJson(), locale, this));
+                .forEach(formatter -> formatter.writeReport(evaluationAsJson(), metadata, locale, this));
+    }
+
+    private EvaluationMetadata evaluationMetadata(final JsonNode evaluationData) {
+        final List<String> metrics =
+                all(evaluationData, "corpora")
+                        .limit(1)
+                        .map(corpusNode -> corpusNode.get("metrics"))
+                        .flatMap(metricsNode -> StreamSupport.stream(Spliterators.spliteratorUnknownSize(metricsNode.fieldNames(), Spliterator.ORDERED), false))
+                        .collect(toList());
+
+        final List<String> versions =
+                all(evaluationData, "corpora")
+                        .limit(1)
+                        .map(corpusNode -> corpusNode.get("metrics").iterator().next().get("versions"))
+                        .flatMap(versionsNode -> StreamSupport.stream(Spliterators.spliteratorUnknownSize(versionsNode.fieldNames(), Spliterator.ORDERED), false))
+                        .collect(toList());
+
+        return new EvaluationMetadata(versions, metrics);
     }
 
     @Override
