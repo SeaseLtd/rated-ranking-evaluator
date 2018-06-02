@@ -6,7 +6,6 @@ import io.sease.rre.core.domain.metrics.HitsCollector;
 import io.sease.rre.core.domain.metrics.Metric;
 
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,10 +30,11 @@ public class Query extends DomainMember<Query> implements HitsCollector {
     }
 
     /**
-     * Adds to this {@link ConfigurationVersion} the given list of metrics.
-     * Note that at this stage the metrics are empty, without data and valueFactory.
+     * Populates this query instance with the available metrics.
+     * Note that those metrics instances are empty (i.e. no value) at this time. Before getting their values, the
+     * search results accumulation phase needs to be executed.
      *
-     * @param metrics the metric instances associated with this instance.
+     * @param metrics the metrics instances associated with this instance.
      */
     public void prepare(final List<Metric> metrics) {
         this.metrics.putAll(

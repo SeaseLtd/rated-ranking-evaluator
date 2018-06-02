@@ -4,8 +4,6 @@ import io.sease.rre.core.domain.metrics.CompoundMetric;
 
 import java.math.BigDecimal;
 
-import static io.sease.rre.Calculator.divide;
-
 public class GMAP extends CompoundMetric {
     /**
      * Builds a new {@link GMAP} metric.

@@ -24,13 +24,15 @@ public class AveragePrecision extends Metric {
         return new ValueFactory(this) {
             private BigDecimal relevantItemsFound = BigDecimal.ZERO;
 
-            private BigDecimal howManyRelevantDocuments = new BigDecimal(relevantDocuments.size());
+            private BigDecimal howManyRelevantDocuments;
 
             private BigDecimal value = BigDecimal.ZERO;
             private BigDecimal lastCollectedRecallLevel = BigDecimal.ZERO;
 
             @Override
             public void collect(final Map<String, Object> hit, final int rank, String version) {
+                if (howManyRelevantDocuments == null) howManyRelevantDocuments = new BigDecimal(relevantDocuments.size());
+
                 relevantItemsFound = sum(relevantItemsFound, judgment(id(hit)).isPresent() ? BigDecimal.ONE : BigDecimal.ZERO);
 
                 final BigDecimal currentPrecision = divide(relevantItemsFound, new BigDecimal(rank));
@@ -49,7 +51,7 @@ public class AveragePrecision extends Metric {
 
             @Override
             public BigDecimal value() {
-                if (totalHits == 0) { return relevantDocuments.size() == 0 ? BigDecimal.ONE : BigDecimal.ZERO; }
+                if (relevantDocuments.size() == 0) { return totalHits == 0 ? BigDecimal.ONE : BigDecimal.ZERO; }
                 return value;
             }
         };
