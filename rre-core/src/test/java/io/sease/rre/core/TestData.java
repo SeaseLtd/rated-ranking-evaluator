@@ -17,6 +17,8 @@ public class TestData {
             FIFTEEN_SEARCH_HITS
     };
 
+    public final static String A_VERSION = "v1.0";
+
     public static long randomLong() {
         return RANDOMIZER.nextLong();
     }

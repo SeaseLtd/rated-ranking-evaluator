@@ -3,37 +3,60 @@ package io.sease.rre.core.domain.metrics;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
+import static io.sease.rre.Calculator.subtract;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.range;
 
 /**
- * Supertype layer for all evaluation metrics.
+ * Supertype layer for all metrics.
  * An evaluation metric, within an information retrieval system context,
  * is used to assess how well the search results satisfied the user's query intent.
  *
+ * A metric doesn't provide directly a value: this because within the RRE data model we can have several versions of
+ * the same metric associated to different configurations. Although the metric is always the same, the value can
+ * change between version; as consequence of that, the "value" computation itself is delegated to a special class
+ * called, not surprisingly, {@link ValueFactory}.
+ *
+ * @see ValueFactory
  * @author agazzarini
  * @since 1.0
  */
 public abstract class Metric implements HitsCollector {
     private final String name;
 
-    private String idFieldName = "id";
+    protected String idFieldName = "id";
     protected JsonNode relevantDocuments;
-    protected long totalHits;
+    protected Map<String, ValueFactory> values = new LinkedHashMap<>();
+
+    /**
+     * Sets into this metrics the different versions available in the current evaluation process.
+     *
+     * @param versions the different versions available in the current evaluation process.
+     */
+    public void setVersions(final List<String> versions) {
+        versions.forEach(version -> values.put(version, valueFactory()));
+    }
 
     /**
      * Builds a new {@link Metric} with the given mnemonic name.
      *
      * @param name the metric name.
      */
-    protected Metric(final String name) {
+    public Metric(final String name) {
         this.name = name;
     }
 
     /**
      * Sets the name of the field which represent the unique key.
+     * This name defaults to "id", which probably covers the 99% of the scenarios.
      *
      * @param idFieldName the name of the field which represent the unique key.
      */
@@ -50,37 +73,37 @@ public abstract class Metric implements HitsCollector {
         this.relevantDocuments = relevantDocuments;
     }
 
-    /**
-     * Sets the total hits (i.e. the total number of results) of the query response associated with this metric.
-     *
-     * @param totalHits the total hits of the query response associated with this metric.
-     */
-    public void setTotalHits(final long totalHits) {
-        this.totalHits = totalHits;
+    @Override
+    public void setTotalHits(final long totalHits, final String version) {
+        ofNullable(values.get(version)).ifPresent(value -> value.setTotalHits(totalHits, version));
+    }
+
+    @Override
+    public void collect(Map<String, Object> hit, int rank, final String version) {
+        ofNullable(values.get(version)).ifPresent(value -> value.collect(hit, rank, version));
     }
 
     /**
-     * Returns the value of this metric.
+     * Assuming the metric provides more than one version, this method returns the metric trend in terms of delta
+     * between (subsequent) versions.
      *
-     * @return the value of this metric.
+     * @return the delta between the subsequent versioned values.
      */
-    public abstract BigDecimal value();
+    public List<BigDecimal> trend() {
+        if (values.isEmpty()) return emptyList();
+        if (values.size() == 1) return singletonList(values.values().iterator().next().value());
 
-    /**
-     * Returns the judgment associated with the given identifier.
-     *
-     * @param id the document identifier.
-     * @return an optional describing the judgment associated with the given identifier. 
-     */
-    public Optional<JsonNode> judgment(final String id) {
-        return ofNullable(relevantDocuments).map(judgements -> judgements.get(id));
+        final List<ValueFactory> onlyValueFactories = new ArrayList<>(values.values());
+        return range(0, onlyValueFactories.size() - 1)
+                .mapToObj(index -> subtract(onlyValueFactories.get(index + 1).value(), onlyValueFactories.get(index).value()))
+                .collect(toList());
     }
 
     /**
-     * Extracts the id field value from the given document.
+     * Extracts the id field valueFactory from the given document.
      *
      * @param document the document (i.e. a search hit).
-     * @return the id field value of the input document.
+     * @return the id field valueFactory of the input document.
      */
     protected String id(final Map<String, Object> document) {
         return String.valueOf(document.get(idFieldName));
@@ -96,19 +119,28 @@ public abstract class Metric implements HitsCollector {
     }
 
     /**
-     * Returns the value of this metric (as a string).
-     * Note that the goal of this method is the same as {@link #value()}. As you can see
-     * the difference is in the result kind (a string instead of a number) and it is mainly
-     * used for JSON serialization purposes.
+     * A metric must provide an {@link ValueFactory} instance which will be used for actually computing its value(s).
      *
-     * @return the value of this metric (as a string).
+     * @return the factory which will be used for actually computing metric value(s).
      */
-    public String getValue() {
-        return value().toPlainString();
+    public abstract ValueFactory valueFactory();
+
+    /**
+     * Returns a map of the available versions with the corresponding value factory.
+     *
+     * @return a map of the available versions with the corresponding value factory.
+     */
+    public Map<String, ValueFactory> getVersions() {
+        return values;
     }
 
-    @Override
-    public String toString() {
-        return getName() + " = " + getValue();
+    /**
+     * Returns the {@link ValueFactory} instance associated with a given version.
+     *
+     * @param version the target version.
+     * @return the {@link ValueFactory} instance associated with a given version.
+     */
+    public ValueFactory valueFactory(final String version) {
+        return values.getOrDefault(version, valueFactory());
     }
 }

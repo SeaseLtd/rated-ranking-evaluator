@@ -10,12 +10,19 @@ import java.util.Map;
  * @author agazzarini
  * @since 1.0
  */
-@FunctionalInterface
 public interface HitsCollector {
     /**
      * Consumes the "hit availability" event.
      *
      * @param hit the search hit.
+     * @param rank the hit rank.
      */
-    void collect(Map<String, Object> hit);
+    void collect(Map<String, Object> hit, int rank, String version);
+
+    /**
+     * Sets the total hits (i.e. the total number of results) of the query response associated with this metric.
+     *
+     * @param totalHits the total hits of the query response associated with this metric.
+     */
+    void setTotalHits(long totalHits, String version);
 }

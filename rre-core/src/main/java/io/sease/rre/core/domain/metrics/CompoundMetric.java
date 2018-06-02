@@ -1,7 +1,5 @@
 package io.sease.rre.core.domain.metrics;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
