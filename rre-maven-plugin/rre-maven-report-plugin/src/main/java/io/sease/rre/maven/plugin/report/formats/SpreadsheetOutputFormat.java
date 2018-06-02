@@ -3,21 +3,25 @@ package io.sease.rre.maven.plugin.report.formats;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.maven.plugin.report.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.RREReport;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.StreamSupport;
 
 import static io.sease.rre.maven.plugin.report.Utility.all;
+import static io.sease.rre.maven.plugin.report.Utility.pretty;
+import static java.util.Optional.ofNullable;
 
 /**
  * RRE Report : Excel output format.
@@ -119,6 +123,19 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         return header;
     }
 
+    public void writeMetrics(final JsonNode ownerNode, final XSSFRow row) {
+        AtomicInteger counter = new AtomicInteger();
+        ownerNode.get("metrics").fields()
+                .forEachRemaining( entry -> {
+                    entry.getValue().get("versions").fields()
+                            .forEachRemaining(vEntry -> {
+                                final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
+                                double value = vEntry.getValue().get("value").asDouble();
+                                vCell.setCellValue(value);
+                            });
+                });
+    }
+
     @Override
     public void writeReport(final JsonNode data, EvaluationMetadata metadata, final Locale locale, final RREReport plugin) {
         final XSSFWorkbook workbook = new XSSFWorkbook();
@@ -136,62 +153,77 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                     final XSSFRow _3rdHeader = versionsHeader(spreadsheet, metadata);
 
                     final XSSFRow corpusRow = spreadsheet.createRow(rowCount.getAndIncrement());
+                    final Cell nCell = corpusRow.createCell(0, CellType.STRING);
+                    nCell.setCellValue(name);
 
-                    JsonNode metricsNode = corpus.get("metrics");
-                    AtomicInteger columnCounter = new AtomicInteger(4);
+                    writeMetrics(corpus, corpusRow);
 
                     all(corpus, "topics")
                             .forEach(topic -> {
-                                final XSSFRow topicRow = spreadsheet.createRow(rowCount.incrementAndGet());
-                                final Cell topicCell = topicRow.createCell(0, CellType.STRING);
+                                final XSSFRow topicRow = spreadsheet.createRow(rowCount.getAndIncrement());
+                                final Cell topicCell = topicRow.createCell(1, CellType.STRING);
                                 topicCell.setCellValue(topic.get("name").asText());
+
+                                writeMetrics(topic, topicRow);
+
 
                                 all(topic, "query-groups")
                                         .forEach(group -> {
-                                            final XSSFRow groupRow = spreadsheet.createRow(rowCount.incrementAndGet());
-                                            final Cell groupCell = groupRow.createCell(1, CellType.STRING);
+                                            final XSSFRow groupRow = spreadsheet.createRow(rowCount.getAndIncrement());
+                                            final Cell groupCell = groupRow.createCell(2, CellType.STRING);
                                             groupCell.setCellValue(group.get("name").asText());
+
+                                            writeMetrics(group, groupRow);
 
                                             all(group, "query-evaluations")
                                                     .forEach(qeval -> {
-                                                        final XSSFRow qRow = spreadsheet.createRow(rowCount.incrementAndGet());
-                                                        final Cell qCell = qRow.createCell(2, CellType.STRING);
+                                                        final XSSFRow qRow = spreadsheet.createRow(rowCount.getAndIncrement());
+                                                        final Cell qCell = qRow.createCell(3, CellType.STRING);
                                                         qCell.setCellValue(pretty(qeval.get("query")));
-                                                        final AtomicInteger versionCount = new AtomicInteger();
 
-                                                        all(qeval, "versions")
-                                                                .forEach(version -> {
-                                                                    final int howManyMetrics = version.get("metrics").size();
-                                                                    final AtomicInteger metricCount = new AtomicInteger();
-
-                                                                    all(version, "metrics")
-                                                                            .forEach(metric -> {
-                                                                                if (metricCount.get() % howManyMetrics == 0 ) {
-                                                                                    Cell vCell = header.createCell(3 + metricCount.get() + (versionCount.get() * howManyMetrics), CellType.STRING);
-                                                                                    vCell.setCellValue(version.get("name").asText());
-                                                                                    vCell.setCellStyle(boldAndCentered);
-
-                                                                                    try {
-                                                                                        spreadsheet.addMergedRegion(new CellRangeAddress(header.getRowNum(), header.getRowNum(), vCell.getColumnIndex(), vCell.getColumnIndex() + (howManyMetrics -1)));
-                                                                                        //irow.getCell(0).setCellStyle(topAlign);
-                                                                                    } catch (final Exception ignore) {}
-
-                                                                                    vCell.setCellStyle(boldAndCentered);
-
-                                                                                }
-                                                                                metricCount.getAndIncrement();
-                                                                                final Cell hmCell = subHeader.createCell(2 + metricCount.get() + (versionCount.get() * howManyMetrics), CellType.STRING);
-                                                                                hmCell.setCellValue(metric.get("name").asText());
-
-                                                                                final Cell mCell = qRow.createCell(2 + metricCount.get() + (versionCount.get() * howManyMetrics), CellType.NUMERIC);
-                                                                                mCell.setCellValue(metric.get("valueFactory").asDouble());
-                                                                            });
-                                                                    versionCount.incrementAndGet();
-                                                                });
+                                                        writeMetrics(qeval, qRow);
                                                     });
+
                                         });
-                            });*/
+                            });
+
+                    for (int i = 0; i < (metadata.howManyVersions() * metadata.howManyMetrics() + 4); i++) {
+                        spreadsheet.autoSizeColumn(i);
+                    }
+
+                    XSSFCellStyle style = workbook.createCellStyle();
+                    style.setWrapText(true);
+                    StreamSupport.stream(Spliterators.spliteratorUnknownSize(spreadsheet.iterator(), Spliterator.ORDERED), false)
+                            .skip(5)
+                            .filter(Objects::nonNull)
+                            .forEach(row -> {
+                                XSSFCell c = (XSSFCell) row.getCell(3);
+                                ofNullable(c).ifPresent(poiCell -> {
+                                    float tallestCell = -1;
+                                    String value = poiCell.getStringCellValue();
+                                    int numLines = 1;
+                                    for (int i = 0; i < value.length(); i++) {
+                                        if (value.charAt(i) == '\n') numLines++;
+                                    }
+                                    float cellHeight = computeRowHeightInPoints(poiCell.getCellStyle().getFont().getFontHeightInPoints(), numLines, spreadsheet);
+                                    if (cellHeight > tallestCell) {
+                                        tallestCell = cellHeight;
+                                    }
+
+                                    float defaultRowHeightInPoints = spreadsheet.getDefaultRowHeightInPoints();
+                                    float rowHeight = tallestCell;
+                                    if (rowHeight < defaultRowHeightInPoints+1) {
+                                        rowHeight = -1;    // resets to the default
+                                    }
+
+                                    row.setHeightInPoints(rowHeight);
+                                });
+
+                            });
                 });
+
+
+
         try (final OutputStream out =
                      new FileOutputStream(
                              new File(plugin.getReportOutputDirectory(), plugin.getOutputName() + ".xlsx"))) {
@@ -199,5 +231,19 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    public float computeRowHeightInPoints(int fontSizeInPoints, int numLines, XSSFSheet sheet) {
+        // a crude approximation of what excel does
+        float lineHeightInPoints = 1.3f * fontSizeInPoints;
+        float rowHeightInPoints = lineHeightInPoints * numLines;
+        rowHeightInPoints = Math.round(rowHeightInPoints * 4) / 4f;        // round to the nearest 0.25
+
+        // Don't shrink rows to fit the font, only grow them
+        float defaultRowHeightInPoints = sheet.getDefaultRowHeightInPoints();
+        if (rowHeightInPoints < defaultRowHeightInPoints + 1) {
+            rowHeightInPoints = defaultRowHeightInPoints;
+        }
+        return rowHeightInPoints;
     }
 }
