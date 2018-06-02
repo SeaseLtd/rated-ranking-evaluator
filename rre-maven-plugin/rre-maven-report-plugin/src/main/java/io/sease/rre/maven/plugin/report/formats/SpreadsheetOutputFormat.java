@@ -2,6 +2,7 @@ package io.sease.rre.maven.plugin.report.formats;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.sease.rre.maven.plugin.report.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.RREReport;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -18,6 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static io.sease.rre.maven.plugin.report.Utility.all;
+import static io.sease.rre.maven.plugin.report.Utility.pretty;
+
 /**
  * RRE Report : Excel output format.
  *
@@ -25,10 +29,64 @@ import java.util.stream.StreamSupport;
  * @since 1.0
  */
 public class SpreadsheetOutputFormat implements OutputFormat {
-    private final ObjectMapper mapper = new ObjectMapper();
+    private XSSFRow createHeader(final XSSFSheet sheet, EvaluationMetadata metadata) {
+        final XSSFRow header = sheet.createRow(0);
+
+        final CellStyle bold = sheet.getWorkbook().createCellStyle();
+        final Font font = sheet.getWorkbook().createFont();
+        font.setBold(true);
+        bold.setFont(font);
+
+        final CellStyle boldAndCentered = sheet.getWorkbook().createCellStyle();
+        boldAndCentered.setFont(font);
+        boldAndCentered.setAlignment(HorizontalAlignment.CENTER);
+
+        final Cell corpusHeaderCell = header.createCell(0, CellType.STRING);
+        corpusHeaderCell.setCellValue("Corpus");
+        corpusHeaderCell.setCellStyle(bold);
+
+        final Cell topicHeaderCell = header.createCell(1, CellType.STRING);
+        topicHeaderCell.setCellValue("Topic");
+        topicHeaderCell.setCellStyle(bold);
+
+        final Cell qgHeaderCell = header.createCell(2, CellType.STRING);
+        qgHeaderCell.setCellValue("Query Group");
+        qgHeaderCell.setCellStyle(bold);
+
+        final Cell qHeaderCell = header.createCell(3, CellType.STRING);
+        qHeaderCell.setCellValue("Query");
+        qHeaderCell.setCellStyle(bold);
+
+        final Cell mHeaderCell = header.createCell(4, CellType.STRING);
+        mHeaderCell.setCellValue("Metric");
+        mHeaderCell.setCellStyle(bold);
+
+        try {
+            sheet.addMergedRegion(
+                    new CellRangeAddress(
+                            header.getRowNum(),
+                            header.getRowNum(),
+                            4,
+                            4 + (metadata.howManyMetrics() * metadata.howManyVersions())));
+        } catch (final Exception ignore) {}
+
+        return header;
+    }
+
+    private XSSFRow createSubHeader(final XSSFSheet sheet, final EvaluationMetadata metadata) {
+        final XSSFRow header = sheet.createRow(0);
+
+        final CellStyle bold = sheet.getWorkbook().createCellStyle();
+        final Font font = sheet.getWorkbook().createFont();
+        font.setBold(true);
+        bold.setFont(font);
+
+//        metadata.metrics.stream().forEach();
+        return header;
+    }
 
     @Override
-    public void writeReport(final JsonNode data, final Locale locale, final RREReport plugin) {
+    public void writeReport(final JsonNode data, EvaluationMetadata metadata, final Locale locale, final RREReport plugin) {
         final XSSFWorkbook workbook = new XSSFWorkbook();
         final CellStyle topAlign = workbook.createCellStyle();
         topAlign.setVerticalAlignment(VerticalAlignment.TOP);
@@ -37,30 +95,12 @@ public class SpreadsheetOutputFormat implements OutputFormat {
 
         all(data, "corpora")
                 .forEach(corpus -> {
-                    final XSSFSheet spreadsheet = workbook.createSheet(corpus.get("name").asText());
-                    final XSSFRow header = spreadsheet.createRow(0);
-                    final XSSFRow subHeader = spreadsheet.createRow(1);
+                    final String name = corpus.get("name").asText();
+                    final XSSFSheet spreadsheet = workbook.createSheet(name);
+                    final XSSFRow header = createHeader(spreadsheet, metadata);
 
-                    final CellStyle bold = workbook.createCellStyle();
-                    final Font font = workbook.createFont();
-                    font.setBold(true);
-                    bold.setFont(font);
+                    final XSSFRow corpusRow = spreadsheet.createRow(rowCount.incrementAndGet());
 
-                    final CellStyle boldAndCentered = workbook.createCellStyle();
-                    boldAndCentered.setFont(font);
-                    boldAndCentered.setAlignment(HorizontalAlignment.CENTER);
-
-                    final Cell topicHeaderCell = header.createCell(0, CellType.STRING);
-                    topicHeaderCell.setCellValue("Topics");
-                    topicHeaderCell.setCellStyle(bold);
-
-                    final Cell qgHeaderCell = header.createCell(1, CellType.STRING);
-                    qgHeaderCell.setCellValue("Query Group");
-                    qgHeaderCell.setCellStyle(bold);
-
-                    final Cell qHeaderCell = header.createCell(2, CellType.STRING);
-                    qHeaderCell.setCellValue("Query");
-                    qHeaderCell.setCellStyle(bold);
 
                     all(corpus, "topics")
                             .forEach(topic -> {
@@ -116,22 +156,10 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                 });
         try (final OutputStream out =
                      new FileOutputStream(
-                             new File(plugin.getReportOutputDirectory(), plugin.getOutputName() + ".xslx"))) {
+                             new File(plugin.getReportOutputDirectory(), plugin.getOutputName() + ".xlsx"))) {
             workbook.write(out);
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
-    }
-
-    private String pretty(final JsonNode node) {
-        try {
-            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(node.asText()));
-        } catch (Exception exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-
-    private Stream<JsonNode> all(final JsonNode parent, final String name) {
-        return StreamSupport.stream(parent.get(name).spliterator(), false);
     }
 }
