@@ -38,6 +38,7 @@ public abstract class ValueFactory implements HitsCollector {
     @Override
     public void setTotalHits(final long totalHits, final String version) {
         this.totalHits = totalHits;
+        this.version = version;
     }
 
     /**
@@ -53,7 +54,7 @@ public abstract class ValueFactory implements HitsCollector {
      * @param id the document identifier.
      * @return an optional describing the judgment associated with the given identifier. 
      */
-    public Optional<JsonNode> judgment(final String id) {
+    protected Optional<JsonNode> judgment(final String id) {
         return ofNullable(owner.relevantDocuments).map(judgements -> judgements.get(id));
     }
 
@@ -81,6 +82,8 @@ public abstract class ValueFactory implements HitsCollector {
 
     @Override
     public String toString() {
-        return owner.getName() + "("  + version + ") = " + getValue();
+        return owner.getName() +
+                "("  + ofNullable(version).orElse("N.A.") + ") = " +
+                getValue();
     }
 }

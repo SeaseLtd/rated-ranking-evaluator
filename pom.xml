@@ -28,5 +28,6 @@
         <module>rre-maven-plugin</module>
         <module>rre-core</module>
         <module>rre-search-platform</module>
+        <module>rre-solr-request-handler</module>
     </modules>
 </project>
