@@ -11,9 +11,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
+import static io.sease.rre.Field.GAIN;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 
+/**
+ * NDCG@10 metric.
+ *
+ * @author agazzarini
+ * @since 1.0
+ */
 public class NDCGAtTen extends Metric {
     /**
      * Builds a new NDCGAtTen metric.
@@ -34,12 +41,12 @@ public class NDCGAtTen extends Metric {
                         .ifPresent(judgment -> {
                             switch(rank) {
                                 case 1:
-                                    dcg = judgment.get("gain") == null || judgment.get("gain").isNull()
+                                    dcg = judgment.get(GAIN) == null || judgment.get(GAIN).isNull()
                                             ? new BigDecimal(2)
-                                            : judgment.get("gain").decimalValue();
+                                            : judgment.get(GAIN).decimalValue();
                                     break;
                                 default:
-                                    final double gain = judgment.get("gain").asDouble(2);
+                                    final double gain = judgment.get(GAIN).asDouble(2);
                                     dcg = dcg.add(new BigDecimal(gain / (Math.log(rank) / Math.log(2))));
                             }
                         });

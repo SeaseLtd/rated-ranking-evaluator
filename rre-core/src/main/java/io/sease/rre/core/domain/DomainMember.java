@@ -1,19 +1,14 @@
 package io.sease.rre.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.sease.rre.core.domain.metrics.CompoundMetric;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.impl.AveragedMetric;
-import io.sease.rre.core.event.MetricEvent;
-import io.sease.rre.core.event.MetricEventListener;
 
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Supertype layer for all RRE domain entities.
@@ -22,81 +17,57 @@ import static java.util.stream.Collectors.toList;
  * @author agazzarini
  * @since 1.0
  */
-public abstract class DomainMember<C extends DomainMember> implements MetricEventListener {
-    protected Map<String, Metric> metrics = new LinkedHashMap<>();
+public abstract class DomainMember<C extends DomainMember> {
+    @JsonProperty("metrics")
+    protected final Map<String, Metric> metrics = new LinkedHashMap<>();
+    private final Map<String, C> childrenLookupCache = new HashMap<>();
+    private final List<C> children = new ArrayList<>();
 
     private String name;
-
-    private Map<String, C> childrenLookupCache = new HashMap<>();
-    protected Map<String, List<CompoundMetric>> compoundMetrics = new LinkedHashMap<>();
-
-    protected List<Class<? extends CompoundMetric>> compoundMetricsDef;
-
-    protected DomainMember parent;
-
-    private List<C> children = new ArrayList<>();
+    private DomainMember parent;
 
     /**
      * Adds the given child to this entity.
      *
      * @param child the child entity.
      */
-    public C add(final C child) {
+    private C add(final C child) {
         children.add(child);
         return child;
     }
 
-    public <T extends DomainMember> T init(final List<Class<? extends CompoundMetric>> metricsDef) {
-        this.compoundMetricsDef = metricsDef;
-        return (T) this;
-    }
-
-    @Override
-    public void newMetricHasBeenComputed(final MetricEvent event) {
-        compoundMetrics.computeIfAbsent(event.getVersion(), v -> newCompoundMetricSet())
-            .forEach(compoundMetric -> compoundMetric.collect(event.getMetric()));
-    }
-
-    private List<CompoundMetric> newCompoundMetricSet() {
-        return compoundMetricsDef
-                .stream()
-                .map(clazz -> {
-                    try {
-                        return clazz.newInstance();
-                    } catch (final Exception exception) {
-                        exception.printStackTrace();
-                        return null;
-                    }})
-                .filter(Objects::nonNull)
-                .collect(toList());
-    }
-
+    /**
+     * Finds or creates a new child with the given name.
+     *
+     * @param name the child name (which is used as its identifier).
+     * @param factory a supplier that will be used for creating a new instance of requested child (if it doesn't exist).
+     * @return a child with the given name.
+     */
+    @SuppressWarnings("unchecked")
     public C findOrCreate(final String name, final Supplier<C> factory) {
         return childrenLookupCache.computeIfAbsent(name, key -> add((C) factory.get().setName(name).setParent(this)));
     }
 
+    /**
+     * Sets the name of this domain entity.
+     *
+     * @param name the entity name.
+     * @return this entity.
+     */
     public DomainMember setName(final String name) {
         this.name = name;
         return this;
     }
 
-    public DomainMember setParent(final DomainMember parent) {
+    /**
+     * Sets the parent of this domain entity.
+     *
+     * @param parent the entity parent.
+     * @return this entity.
+     */
+    private DomainMember setParent(final DomainMember parent) {
         this.parent = parent;
         return this;
-    }
-
-    @JsonProperty("compound-metrics")
-    public Map<String, List<CompoundMetric>> getCompoundMetrics() {
-        return compoundMetrics;
-    }
-
-    /**
-     * Returns the children stream.
-     *
-     * @return the children stream.
-     */
-    public Stream<C> childrenStream() {
-        return children.stream();
     }
 
     /**
@@ -117,17 +88,26 @@ public abstract class DomainMember<C extends DomainMember> implements MetricEven
         return name;
     }
 
-    protected void collectLeafMetric(final String version, final BigDecimal value, final String name) {
+    /**
+     * Collects a leaf metric data (which has been just computed).
+     *
+     * @param version the version associated with the metric.
+     * @param value the metric value.
+     * @param name the metric name.
+     */
+    private void collectLeafMetric(final String version, final BigDecimal value, final String name) {
         metric(name).collect(version, value);
         ofNullable(parent).ifPresent(p -> p.collectLeafMetric(version, value, name));
     }
 
+    /**
+     * Returns the {@link AveragedMetric} instance associated with the given name.
+     *
+     * @param name the metric name.
+     * @return the {@link AveragedMetric} instance associated with the given name.
+     */
     private AveragedMetric metric(final String name) {
         return (AveragedMetric) metrics.computeIfAbsent(name, k -> new AveragedMetric(name));
-    }
-
-    public Map<String, Metric> getMetrics() {
-        return metrics;
     }
 
     public void notifyCollectedMetrics() {

@@ -18,7 +18,7 @@ import java.util.Map;
 public class PrecisionAtK extends Metric {
     private final int k;
     /**
-     * Builds a new ReciprocalRank at X metric.
+     * Builds a new AveragePrecision at X metric.
      *
      * @param k the precision bound.
      */
@@ -49,6 +49,4 @@ public class PrecisionAtK extends Metric {
             }
         };
     }
-
-
 }

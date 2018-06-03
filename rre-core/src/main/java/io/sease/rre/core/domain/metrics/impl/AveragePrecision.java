@@ -9,13 +9,11 @@ import java.util.Map;
 import static io.sease.rre.Calculator.*;
 
 public class AveragePrecision extends Metric {
-    public final static String NAME = "AP";
-
     /**
      * Builds a new {@link AveragePrecision} metric.
      */
     public AveragePrecision() {
-        super(NAME);
+        super("AP");
     }
 
     @Override
