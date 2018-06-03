@@ -1,5 +1,6 @@
 package io.sease.rre.core.domain.metrics;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.sease.rre.Calculator.subtract;
+import static io.sease.rre.Field.DEFAULT_ID_FIELD_NAME;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
@@ -32,7 +34,7 @@ import static java.util.stream.IntStream.range;
 public abstract class Metric implements HitsCollector {
     private final String name;
 
-    protected String idFieldName = "id";
+    protected String idFieldName = DEFAULT_ID_FIELD_NAME;
     protected JsonNode relevantDocuments;
     protected Map<String, ValueFactory> values = new LinkedHashMap<>();
 
@@ -89,6 +91,7 @@ public abstract class Metric implements HitsCollector {
      *
      * @return the delta between the subsequent versioned values.
      */
+    @JsonProperty("trend")
     public List<BigDecimal> trend() {
         if (values.isEmpty()) return emptyList();
         if (values.size() == 1) return singletonList(values.values().iterator().next().value());

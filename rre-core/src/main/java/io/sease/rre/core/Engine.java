@@ -1,25 +1,23 @@
 package io.sease.rre.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.sease.rre.Func;
 import io.sease.rre.core.domain.*;
-import io.sease.rre.core.domain.metrics.CompoundMetric;
 import io.sease.rre.core.domain.metrics.Metric;
-import io.sease.rre.core.event.MetricEvent;
-import io.sease.rre.core.event.MetricEventListener;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static io.sease.rre.Utility.safe;
+import static io.sease.rre.Field.*;
+import static io.sease.rre.Func.*;
 import static java.util.Arrays.stream;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -36,10 +34,8 @@ public class Engine {
     private final File templatesFolder;
 
     private final List<Class<? extends Metric>> availableMetricsDefs;
-    private final List<Class<? extends CompoundMetric>> availableCompoundMetricsDefs;
 
     private final SearchPlatform platform;
-    private final List<MetricEventListener> metricEventListeners = new ArrayList<>();
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -56,8 +52,7 @@ public class Engine {
             final String corporaFolderPath,
             final String ratingsFolderPath,
             final String templatesFolderPath,
-            final List<String> metrics,
-            final List<String> compoundMetrics) {
+            final List<String> metrics) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
@@ -66,13 +61,7 @@ public class Engine {
 
         this.availableMetricsDefs =
                 metrics.stream()
-                        .map(this::newMetricDefinition)
-                        .filter(Objects::nonNull)
-                        .collect(toList());
-
-        this.availableCompoundMetricsDefs =
-                compoundMetrics.stream()
-                        .map(this::newCompoundMetricDefinition)
+                        .map(Func::newMetricDefinition)
                         .filter(Objects::nonNull)
                         .collect(toList());
     }
@@ -87,19 +76,17 @@ public class Engine {
      */
     @SuppressWarnings("unchecked")
     public Evaluation evaluate(final Map<String, Object> configuration){
-
         platform.beforeStart(configuration);
         platform.start();
         platform.afterStart();
 
         final Evaluation evaluation = new Evaluation();
-
         final List<Query> queries = new ArrayList<>();
 
         ratings().forEach(ratingsNode -> {
-            final String indexName = ratingsNode.get("index").asText();
-            final String idFieldName = ratingsNode.get("id_field").asText("id");
-            final File data = new File(corporaFolder, ratingsNode.get("corpora_file").asText());
+            final String indexName = ratingsNode.get(INDEX_NAME).asText();
+            final String idFieldName = ratingsNode.get(ID_FIELD_NAME).asText(DEFAULT_ID_FIELD_NAME);
+            final File data = new File(corporaFolder, ratingsNode.get(CORPORA_FILENAME).asText());
 
             if (!data.canRead()) {
                 throw new IllegalArgumentException("Unable to read the corpus file " + data.getAbsolutePath());
@@ -108,26 +95,29 @@ public class Engine {
             prepareData(indexName, data);
 
             final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
-            all(ratingsNode.get("topics"))
+            all(ratingsNode.get(TOPICS))
                     .forEach(topicNode -> {
-                        final Topic topic = corpus.findOrCreate(topicNode.get("description").asText(), Topic::new);
-                        all(topicNode.get("query_groups"))
+                        final Topic topic = corpus.findOrCreate(topicNode.get(DESCRIPTION).asText(), Topic::new);
+                        all(topicNode.get(QUERY_GROUPS))
                                 .forEach(groupNode -> {
                                     final QueryGroup group =
-                                            topic.findOrCreate(groupNode.get("name").asText(), QueryGroup::new);
-                                    all(groupNode.get("queries"))
+                                            topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
+                                    all(groupNode.get(QUERIES))
                                             .forEach(queryNode -> {
                                                 final String query = query(queryNode);
                                                 final Query queryEvaluation = group.findOrCreate(query, Query::new);
                                                 queries.add(queryEvaluation);
-                                                final JsonNode relevantDocuments = groupNode.get("relevant_documents");
+                                                final JsonNode relevantDocuments = groupNode.get(RELEVANT_DOCUMENTS);
 
                                                 queryEvaluation.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, versions));
 
                                                 versions.forEach(version -> {
                                                     final AtomicInteger rank = new AtomicInteger(1);
                                                     final QueryOrSearchResponse response =
-                                                            platform.executeQuery(indexFqdn(indexName, version), query, Math.max(10, relevantDocuments.size()));
+                                                            platform.executeQuery(
+                                                                    indexFqdn(indexName, version),
+                                                                    query,
+                                                                    Math.max(10, relevantDocuments.size()));
 
                                                     queryEvaluation.setTotalHits(response.totalHits(), version);
                                                     response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), version));
@@ -173,16 +163,6 @@ public class Engine {
                 .collect(toList());
     }
 
-    private <L extends MetricEventListener> L withMetricEventListening(final L listener) {
-        metricEventListeners.add(listener);
-        return listener;
-    }
-
-    private void broadcast(final Metric metric, final String version) {
-        final MetricEvent event = new MetricEvent(metric, version, this);
-        metricEventListeners.forEach(listener -> listener.newMetricHasBeenComputed(event));
-    }
-
     /**
      * Loads the query template associated with the given name.
      *
@@ -203,14 +183,9 @@ public class Engine {
      * @return the ratings / judgements for this evaluation suite.
      */
     private Stream<JsonNode> ratings() {
-        final ObjectMapper mapper = new ObjectMapper();
-        return stream(ratingsFolder.listFiles((dir, name) -> name.endsWith(".json")))
-                .map(ratingFile -> {
-                    try {
-                        return mapper.readTree(ratingFile);
-                    } catch (final IOException exception) {
-                        throw new RuntimeException(exception);
-                    }});
+        return stream(
+                requireNonNull(ratingsFolder.listFiles(ONLY_JSON_FILES)))
+                .map(Func::toJson);
     }
 
     /**
@@ -223,38 +198,42 @@ public class Engine {
         return StreamSupport.stream(source.spliterator(), false);
     }
 
-    @SuppressWarnings("unchecked")
-    private Class<? extends Metric> newMetricDefinition(final String clazzName) {
-        try {
-            return (Class<? extends Metric>) Class.forName(clazzName);
-        } catch (final Exception exception) {
-            throw new IllegalArgumentException(exception);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class<? extends CompoundMetric> newCompoundMetricDefinition(final String clazzName) {
-        try {
-            return (Class<? extends CompoundMetric>) Class.forName(clazzName);
-        } catch (final Exception exception) {
-            throw new IllegalArgumentException(exception);
-        }
-    }
-
+    /**
+     * Prepares the search platform with the given index name and dataset.
+     *
+     * @param indexName the index name.
+     * @param data the dataset.
+     */
     private void prepareData(final String indexName, final File data) {
-        final File [] versionFolders = safe(configurationsFolder.listFiles(file -> file.isDirectory() && !file.isHidden()));
+        final File [] versionFolders = safe(configurationsFolder.listFiles(ONLY_NON_HIDDEN_FILES));
         stream(versionFolders)
-                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(file -> file.isDirectory() && !file.isHidden()))))
+                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(folder -> folder.getName().equals(indexName))
                 .forEach(folder -> platform.load(data, folder, indexFqdn(indexName, folder.getParentFile().getName())));
 
         this.versions = stream(versionFolders).map(File::getName).collect(toList());
     }
 
+    /**
+     * Returns the FDQN of the target index that will be used.
+     * Starting from the index name declared in the configuration, RRE uses an internal naming (which adds the version
+     * name) for avoiding conflicts between versions.
+     *
+     * @param indexName the index name.
+     * @param version the current version.
+     * @return the FDQN of the target index that will be used.
+     */
     private String indexFqdn(final String indexName, final String version) {
         return indexName + "_" + version;
     }
 
+    /**
+     * Returns a query (as a string) that will be used for executing a specific evaluation.
+     * A query string is the result of replacing all placeholders found in the template.
+     *
+     * @param queryNode the JSON query node (in ratings configuration).
+     * @return a query (as a string) that will be used for executing a specific evaluation.
+     */
     private String query(final JsonNode queryNode) {
         String query = queryTemplate(queryNode.get("template").asText());
         for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext();) {
