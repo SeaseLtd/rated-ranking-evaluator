@@ -55,6 +55,7 @@ public class Query extends DomainMember<Query> implements HitsCollector {
 
     @Override
     @JsonIgnore
+    @SuppressWarnings("unchecked")
     public List getChildren() {
         return super.getChildren();
     }

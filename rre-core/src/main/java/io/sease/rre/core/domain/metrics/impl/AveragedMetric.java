@@ -10,7 +10,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static io.sease.rre.Calculator.divide;
 import static io.sease.rre.Calculator.sum;
 
+/**
+ * A metric which is the mathematic mean of other collected metrics.
+ *
+ * @since 1.0
+ * @author agazzarini
+ */
 public class AveragedMetric extends Metric {
+
+    /**
+     * A {@link ValueFactory} whose value can be changed.
+     *
+     * @author agazzarini
+     * @since 1.0
+     */
     class MutableValueFactory extends ValueFactory {
         private BigDecimal value = BigDecimal.ZERO;
         private final AtomicInteger counter = new AtomicInteger(1);
@@ -20,7 +33,7 @@ public class AveragedMetric extends Metric {
          *
          * @param owner the owner metric.
          */
-        protected MutableValueFactory(final Metric owner) {
+        private MutableValueFactory(final Metric owner) {
             super(owner);
         }
 
@@ -29,6 +42,11 @@ public class AveragedMetric extends Metric {
             return value;
         }
 
+        /**
+         * Collects a new (metric) value.
+         *
+         * @param additionalValue the collected value.
+         */
         public void collect(final BigDecimal additionalValue) {
             value = divide(sum(value, additionalValue), counter.incrementAndGet());
         }
@@ -39,13 +57,25 @@ public class AveragedMetric extends Metric {
         }
     }
 
+    /**
+     * Builds a new {@link AveragedMetric} instance with the given name.
+     *
+     * @param name the metric name.
+     */
     public AveragedMetric(final String name) {
         super(name);
     }
 
+    /**
+     * Collects a new (metric) value.
+     *
+     * @param version the version associated with the collected (metric) value.
+     * @param additionalValue the collected value.
+     */
     public void collect(final String version, final BigDecimal additionalValue) {
-        final MutableValueFactory valueFactory = (MutableValueFactory) values.computeIfAbsent(version, v ->  valueFactory());
-        valueFactory.collect(additionalValue);
+        ((MutableValueFactory)
+                values.computeIfAbsent(version, v ->  valueFactory()))
+                    .collect(additionalValue);
     }
 
     @Override

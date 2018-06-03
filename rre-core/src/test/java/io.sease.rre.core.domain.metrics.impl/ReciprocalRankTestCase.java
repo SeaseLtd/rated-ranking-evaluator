@@ -8,7 +8,6 @@ import org.junit.Test;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 import static io.sease.rre.core.TestData.A_VERSION;
 import static java.util.Arrays.stream;
@@ -21,43 +20,15 @@ import static org.junit.Assert.assertEquals;
  * @since 1.0
  */
 public class ReciprocalRankTestCase extends BaseTestCase {
-    private ReciprocalRank cut;
-    private AtomicInteger counter;
-
     /**
      * Setup fixture for this test case.
      */
     @Before
+    @Override
     public void setUp() {
         cut = new ReciprocalRank();
         cut.setVersions(Collections.singletonList(A_VERSION));
         counter = new AtomicInteger();
-    }
-
-    /**
-     * If there are no relevant results in the resultset, then RR must be 0.
-     */
-    @Test
-    public void noRelevantDocuments() {
-        cut.setRelevantDocuments(mapper.createObjectNode());
-        cut.setTotalHits(4, A_VERSION);
-
-        Stream.of("1", "10", "100", "1000")
-                .map(this::searchHit)
-                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
-
-        assertEquals(BigDecimal.ZERO.doubleValue(), cut.valueFactory(A_VERSION).value().doubleValue(), 0);
-    }
-
-    /**
-     * If there are no expected results, then RR must be 1.
-     */
-    @Test
-    public void zeroExpectedResults() {
-        cut.setRelevantDocuments(mapper.createObjectNode());
-        cut.setTotalHits(0, A_VERSION);
-
-        assertEquals(BigDecimal.ONE.doubleValue(), cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**

@@ -3,9 +3,18 @@ package io.sease.rre.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.sease.rre.core.domain.metrics.Metric;
+import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.sease.rre.core.TestData.A_VERSION;
+import static io.sease.rre.core.TestData.DOCUMENTS_SETS;
+import static java.util.Arrays.stream;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Supertype layers for all unit test cases.
@@ -13,9 +22,55 @@ import java.util.Map;
  * @author agazzarini
  * @since 1.0
  */
-public class BaseTestCase {
+public abstract class BaseTestCase {
     protected final ObjectMapper mapper = new ObjectMapper();
 
+    protected Metric cut;
+    protected AtomicInteger counter;
+
+    /**
+     * Returns the class under test.
+     *
+     * @return the class under test.
+     */
+    protected Metric cut() {
+        return cut;
+    }
+
+    /**
+     * Setup fixture for this test case.
+     */
+    public abstract void setUp();
+
+    /**
+     * If there are no relevant results and we have an empty resultset, then (symbolic) P is 1.
+     */
+    @Test
+    public void noRelevantDocumentsAndNoSearchResults() {
+        cut().setRelevantDocuments(mapper.createObjectNode());
+        cut().setTotalHits(0, A_VERSION);
+
+        assertEquals(BigDecimal.ONE, cut().valueFactory(A_VERSION).value());
+    }
+
+    /**
+     * If there are no relevant results and we haven't an empty resultset, then P should be 0.
+     */
+    @Test
+    public void noRelevantDocumentsWithSearchResults() {
+        stream(DOCUMENTS_SETS).forEach(set -> {
+            cut().setRelevantDocuments(mapper.createObjectNode());
+            cut().setTotalHits(set.length, A_VERSION);
+
+            stream(set)
+                    .map(this::searchHit)
+                    .forEach(hit -> cut().collect(hit, counter.incrementAndGet(), A_VERSION));
+
+            assertEquals(BigDecimal.ZERO.doubleValue(), cut().valueFactory(A_VERSION).value().doubleValue(), 0);
+            setUp();
+        });
+    }
+    
     /**
      * Creates a JSON object node representation of a document judgment.
      *
