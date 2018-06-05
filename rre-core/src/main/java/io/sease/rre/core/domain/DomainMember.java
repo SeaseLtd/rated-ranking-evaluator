@@ -120,4 +120,8 @@ public abstract class DomainMember<C extends DomainMember> {
                                     entry.getValue().value(),
                                     entry.getValue().owner().getName())));
     }
+
+    public Map<String, Metric> getMetrics() {
+        return metrics;
+    }
 }

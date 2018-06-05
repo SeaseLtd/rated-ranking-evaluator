@@ -1,0 +1,7 @@
+#macro(metrics $metrics)
+    #foreach($metric in $metrics.entrySet())
+        #foreach($entry in $metric.getValue().getVersions().entrySet())
+        <td>$entry.getValue().getValue()</td>
+        #end
+    #end
+#end
