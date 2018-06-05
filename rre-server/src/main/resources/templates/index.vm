@@ -1,0 +1,59 @@
+<table>
+    <th>
+        <td>Corpus</td>
+        <td>Topic</td>
+        <td>Query Group</td>
+        <td>Query</td>
+        #set($colspan = $metadata.howManyMetrics() * $metadata.howManyVersions())
+        <td colspan="$colspan">Metrics</td>
+    </th>
+    <th>
+        <td colspan="4">&nbsp;</td>
+        #foreach($metric in $metric)
+            <td colspan="$metadata.howManyVersions()">$metric</td>
+        #end
+    </th>
+    <th>
+        #foreach($metric in $metadata.metrics)
+            #foreach($version in $metadata.versions())
+                <td>$version</td>
+            #end
+        #end
+    </th>
+    #foreach($corpus in $data.children)
+        <tr>
+            <td>$corpus.name</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            #metrics($corpus.metrics)
+        </tr>
+        #foreach($topic in $corpus.children)
+            <tr>
+                <td>&nbsp;</td>
+                <td>$topic.name</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                #metrics($topic.metrics)
+            </tr>
+            #foreach($queryGroup in $topic.children)
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>$queryGroup.name</td>
+                    <td>&nbsp;</td>
+                    #metrics($queryGroup.metrics)
+                </tr>
+                #foreach($query in $queryGroup.children)
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>$query.name</td>
+                        #metrics($query.metrics)
+                    </tr>
+                #end
+            #end
+        #end
+    #end
+</table>
