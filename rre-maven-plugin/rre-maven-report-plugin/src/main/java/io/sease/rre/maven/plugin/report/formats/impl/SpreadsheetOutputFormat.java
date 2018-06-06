@@ -1,8 +1,9 @@
-package io.sease.rre.maven.plugin.report.formats;
+package io.sease.rre.maven.plugin.report.formats.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.maven.plugin.report.EvaluationMetadata;
-import io.sease.rre.maven.plugin.report.RREReport;
+import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
+import io.sease.rre.maven.plugin.report.RREMavenReport;
+import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
@@ -136,7 +137,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
     }
 
     @Override
-    public void writeReport(final JsonNode data, EvaluationMetadata metadata, final Locale locale, final RREReport plugin) {
+    public void writeReport(final JsonNode data, EvaluationMetadata metadata, final Locale locale, final RREMavenReport plugin) {
         final XSSFWorkbook workbook = new XSSFWorkbook();
         final CellStyle topAlign = workbook.createCellStyle();
         topAlign.setVerticalAlignment(VerticalAlignment.TOP);
