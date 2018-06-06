@@ -36,7 +36,7 @@ public class RREMavenReport extends AbstractMavenReport {
     List<String> formats;
 
     @Parameter(name = "endpoint", defaultValue = "http://127.0.0.1:8080")
-    String endpoint;
+    private String endpoint;
 
     private Map<String, OutputFormat> formatters = new HashMap<>();
     {
@@ -44,7 +44,7 @@ public class RREMavenReport extends AbstractMavenReport {
         formatters.put("rre-server", new RREOutputFormat());
     }
 
-    final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     protected void executeReport(final Locale locale) {
@@ -114,7 +114,7 @@ public class RREMavenReport extends AbstractMavenReport {
      *
      * @return the evaluation data as a JSON object.
      */
-    JsonNode evaluationAsJson() {
+    private JsonNode evaluationAsJson() {
         try {
             return mapper.readTree(evaluationOutputFile());
         } catch (final IOException exception) {
