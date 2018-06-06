@@ -21,7 +21,7 @@ public class Main {
 
         report.setReportOutputDirectory(new File("/Users/agazzarini/workspaces/rated-ranking-evaluator/rre-maven-plugin/rre-maven-solr-plugin/target/rre"));
         report.formats = asList("spreadsheet", "rre-server");
-
+        report.endpoint = "http://127.0.0.1:8080";
         report.executeReport(Locale.getDefault());
     }
 }
