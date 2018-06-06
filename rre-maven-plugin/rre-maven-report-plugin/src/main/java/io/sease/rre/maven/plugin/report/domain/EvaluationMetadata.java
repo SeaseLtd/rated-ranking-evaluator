@@ -1,4 +1,4 @@
-package io.sease.rre.maven.plugin.report;
+package io.sease.rre.maven.plugin.report.domain;
 
 import java.util.List;
 
