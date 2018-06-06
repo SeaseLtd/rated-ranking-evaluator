@@ -1,7 +1,26 @@
 #macro(metrics $metrics)
     #foreach($metric in $metrics.entrySet())
-        #foreach($entry in $metric.getValue().getVersions().entrySet())
-        <td>$entry.getValue().getValue()</td>
+        #foreach($entry in $metric.getValue().versions.entrySet())
+            <td>$entry.getValue().getValue()</td>
         #end
+        <td>
+            <table width="100%">
+                <tr>
+                    #set($trend = $metric.getValue().trend())
+                    #foreach($v in $trend)
+                        #if($f.isZero($v))
+                            #set($style="background:yellow")
+                        #else
+                            #if($f.isPositive($v))
+                                #set($style="background:green")
+                            #else
+                                #set($style="background:red")
+                            #end
+                        #end
+                        <td style="$style">$v</td>
+                    #end
+                </tr>
+            </table>
+        </td>
     #end
 #end

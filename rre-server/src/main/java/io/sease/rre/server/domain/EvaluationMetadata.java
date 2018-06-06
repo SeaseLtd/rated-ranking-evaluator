@@ -1,4 +1,4 @@
-package io.sease.rre.server;
+package io.sease.rre.server.domain;
 
 import java.util.List;
 
@@ -22,5 +22,13 @@ public class EvaluationMetadata {
 
     public int howManyMetrics() {
         return metrics.size();
+    }
+
+    public List<String> getVersions() {
+        return versions;
+    }
+
+    public List<String> getMetrics() {
+        return metrics;
     }
 }

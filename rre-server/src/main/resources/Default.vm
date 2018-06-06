@@ -1,1 +1,8 @@
-$screen_content
+<html>
+    <head>
+        <meta http-equiv="refresh" content="2">
+    </head>
+    <body>
+        $screen_content
+    </body>
+</html>
