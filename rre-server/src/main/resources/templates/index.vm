@@ -1,31 +1,32 @@
-<table>
-    <th>
-        <td>Corpus</td>
-        <td>Topic</td>
-        <td>Query Group</td>
-        <td>Query</td>
-        #set($colspan = $metadata.howManyMetrics() * $metadata.howManyVersions())
-        <td colspan="$colspan">Metrics</td>
-    </th>
-    <th>
-        <td colspan="4">&nbsp;</td>
-        #foreach($metric in $metric)
-            <td colspan="$metadata.howManyVersions()">$metric</td>
-        #end
-    </th>
-    <th>
+<table border="1" width="100%">
+    <tr>
+            <th>Corpus</th>
+            <th>Topic</th>
+            <th>Query Group</th>
+            <th>Query</th>
+            #set($colspan = $metadata.howManyMetrics() * $metadata.howManyVersions())
+            <th colspan="$colspan">Metrics</th>
+    </tr>
+    <tr>
+        <th colspan="4">&nbsp;</th>
         #foreach($metric in $metadata.metrics)
-            #foreach($version in $metadata.versions())
-                <td>$version</td>
-            #end
+            #set($span = $metadata.howManyVersions() + 1)
+            <th colspan="$span">$metric</th>
         #end
-    </th>
+    </tr>
+    <tr>
+        <th colspan="4">&nbsp;</th>
+        #foreach($metric in $metadata.metrics)
+            #foreach($version in $metadata.versions)
+                <th>$version</th>
+            #end
+            <th>&Delta;</th>
+        #end
+    </tr>
     #foreach($corpus in $data.children)
         <tr>
             <td>$corpus.name</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
+            <td colspan="3">&nbsp;</td>
             #metrics($corpus.metrics)
         </tr>
         #foreach($topic in $corpus.children)
