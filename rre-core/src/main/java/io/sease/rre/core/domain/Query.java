@@ -6,8 +6,12 @@ import io.sease.rre.core.domain.metrics.HitsCollector;
 import io.sease.rre.core.domain.metrics.Metric;
 
 import java.util.AbstractMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -40,7 +44,10 @@ public class Query extends DomainMember<Query> implements HitsCollector {
         this.metrics.putAll(
                 metrics.stream()
                         .map(metric -> new AbstractMap.SimpleEntry<>(metric.getName(), metric))
-                        .collect(toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue)));
+                        .collect(
+                            toLinkedMap(
+                                    AbstractMap.SimpleEntry::getKey,
+                                    AbstractMap.SimpleEntry::getValue)));
     }
 
     @Override
@@ -58,5 +65,15 @@ public class Query extends DomainMember<Query> implements HitsCollector {
     @SuppressWarnings("unchecked")
     public List getChildren() {
         return super.getChildren();
+    }
+
+    public static <T, K, U> Collector<T, ?, Map<K,U>> toLinkedMap(
+            Function<? super T, ? extends K> keyMapper,
+            Function<? super T, ? extends U> valueMapper)  {
+        return toMap(
+                keyMapper,
+                valueMapper,
+                (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); },
+                LinkedHashMap::new);
     }
 }

@@ -36,7 +36,7 @@ public class RREMavenReport extends AbstractMavenReport {
     List<String> formats;
 
     @Parameter(name = "endpoint", defaultValue = "http://127.0.0.1:8080")
-    private String endpoint;
+    String endpoint;
 
     private Map<String, OutputFormat> formatters = new HashMap<>();
     {

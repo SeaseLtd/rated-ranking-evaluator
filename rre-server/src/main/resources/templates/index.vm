@@ -1,8 +1,8 @@
-<table border="1" width="100%">
+<table class="pure-table-striped" width="100%" cellpadding="5" cellspacing="2">
     <tr>
             <th>Corpus</th>
             <th>Topic</th>
-            <th>Query Group</th>
+            <th nowrap="nowrap">Query Group</th>
             <th>Query</th>
             #set($colspan = $metadata.howManyMetrics() * $metadata.howManyVersions())
             <th colspan="$colspan">Metrics</th>
