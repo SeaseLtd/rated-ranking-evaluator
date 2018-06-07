@@ -144,8 +144,8 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String indexName, final String query, final int maxRows) {
-        final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(query)).size(maxRows);
+    public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String [] fields, final int maxRows) {
+        final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(query)).size(maxRows).fetchSource(fields, null);
         final SearchResponse qresponse = proxy.search(new SearchRequest(indexName).source(qBuilder)).actionGet();
         return new QueryOrSearchResponse(
                 qresponse.getHits().totalHits,

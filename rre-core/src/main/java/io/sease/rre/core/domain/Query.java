@@ -2,17 +2,17 @@ package io.sease.rre.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.sease.rre.Field;
 import io.sease.rre.core.domain.metrics.HitsCollector;
 import io.sease.rre.core.domain.metrics.Metric;
 
-import java.util.AbstractMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
+import static io.sease.rre.Field.DEFAULT_ID_FIELD_NAME;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -22,10 +22,16 @@ import static java.util.stream.Collectors.toMap;
  * @since 1.0
  */
 public class Query extends DomainMember<Query> implements HitsCollector {
+    protected String idFieldName = DEFAULT_ID_FIELD_NAME;
+    protected JsonNode relevantDocuments;
+
     @Override
     public DomainMember setName(final String query) {
         return super.setName(query);
     }
+
+    @JsonProperty("results")
+    private Map<String, MutableQueryOrSearchResponse> results = new LinkedHashMap<>();
 
     @Override
     @JsonProperty("query")
@@ -53,11 +59,29 @@ public class Query extends DomainMember<Query> implements HitsCollector {
     @Override
     public void setTotalHits(final long totalHits, final String version) {
         metrics.values().forEach(metric -> metric.setTotalHits(totalHits, version));
+        results.computeIfAbsent(version, v -> new MutableQueryOrSearchResponse()).setTotalHits(totalHits, version);
     }
 
     @Override
     public void collect(final Map<String, Object> hit, final int rank, final String version) {
         metrics.values().forEach(metric -> metric.collect(hit, rank, version));
+
+        judgment(id(hit)).ifPresent(jNode -> {
+            hit.put("_isRelevant", true);
+            hit.put("_gain", jNode.get(Field.GAIN).asInt());
+        });
+
+        results.computeIfAbsent(version, v -> new MutableQueryOrSearchResponse()).collect(hit, rank, version);
+    }
+
+    /**
+     * Extracts the id field valueFactory from the given document.
+     *
+     * @param document the document (i.e. a search hit).
+     * @return the id field valueFactory of the input document.
+     */
+    protected String id(final Map<String, Object> document) {
+        return String.valueOf(document.get(idFieldName));
     }
 
     @Override
@@ -67,7 +91,17 @@ public class Query extends DomainMember<Query> implements HitsCollector {
         return super.getChildren();
     }
 
-    public static <T, K, U> Collector<T, ?, Map<K,U>> toLinkedMap(
+    /**
+     * Returns the judgment associated with the given identifier.
+     *
+     * @param id the document identifier.
+     * @return an optional describing the judgment associated with the given identifier.
+     */
+    protected Optional<JsonNode> judgment(final String id) {
+        return ofNullable(relevantDocuments).map(judgements -> judgements.get(id));
+    }
+
+    private static <T, K, U> Collector<T, ?, Map<K,U>> toLinkedMap(
             Function<? super T, ? extends K> keyMapper,
             Function<? super T, ? extends U> valueMapper)  {
         return toMap(
@@ -75,5 +109,24 @@ public class Query extends DomainMember<Query> implements HitsCollector {
                 valueMapper,
                 (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); },
                 LinkedHashMap::new);
+    }
+
+    /**
+     * Sets the name of the field which represent the unique key.
+     * This name defaults to "id", which probably covers the 99% of the scenarios.
+     *
+     * @param idFieldName the name of the field which represent the unique key.
+     */
+    public void setIdFieldName(final String idFieldName) {
+        this.idFieldName = idFieldName;
+    }
+
+    /**
+     * Sets the relevant documents / judgments for this metric.
+     *
+     * @param relevantDocuments the relevant documents / judgments for this metric.
+     */
+    public void setRelevantDocuments(final JsonNode relevantDocuments) {
+        this.relevantDocuments = relevantDocuments;
     }
 }

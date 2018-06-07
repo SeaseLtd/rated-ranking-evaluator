@@ -2,6 +2,7 @@ package io.sease.rre.search.api;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,5 +54,5 @@ public interface SearchPlatform extends Closeable {
      * @param maxRows the maximum number of rows that will be returned.
      * @return the response of the query execution.
      */
-    QueryOrSearchResponse executeQuery(String indexName, String query, int maxRows);
+    QueryOrSearchResponse executeQuery(String indexName, String query, final String [] fields, int maxRows);
 }
