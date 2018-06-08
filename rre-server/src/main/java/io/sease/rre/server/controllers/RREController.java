@@ -2,6 +2,7 @@ package io.sease.rre.server.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.server.domain.EvaluationMetadata;
 import io.sease.rre.server.domain.StaticMetric;
@@ -16,10 +17,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
+import static java.util.stream.StreamSupport.stream;
+
 @RestController
 public class RREController extends BaseController {
     private Evaluation evaluation = new Evaluation();
     private EvaluationMetadata metadata = new EvaluationMetadata(Collections.emptyList(), Collections.emptyList());
+    private ObjectMapper mapper = new ObjectMapper();
 
     @PostMapping("/evaluation")
     public void updateEvaluationData(@RequestBody final JsonNode evaluation) {
@@ -65,6 +69,21 @@ public class RREController extends BaseController {
                         final String qename = queryNode.get("query").asText();
                         final Query q = group.findOrCreate(qename, Query::new);
                         metrics(queryNode, q);
+
+
+                        queryNode.get("results").fields().forEachRemaining(resultsEntry -> {
+                            final MutableQueryOrSearchResponse versionedResponse =
+                                    q.getResults().computeIfAbsent(
+                                                resultsEntry.getKey(),
+                                                version -> new MutableQueryOrSearchResponse());
+
+                            JsonNode content = resultsEntry.getValue();
+                            versionedResponse.setTotalHits(content.get("total-hits").asLong(), null);
+
+                            stream(content.get("hits").spliterator(), false)
+                                    .map(hit -> mapper.convertValue(hit, Map.class))
+                                    .forEach(hit -> versionedResponse.collect(hit, -1, null));
+                        });
                     });
                 });
             });

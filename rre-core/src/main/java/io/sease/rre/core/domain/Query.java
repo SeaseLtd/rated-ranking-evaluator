@@ -91,6 +91,11 @@ public class Query extends DomainMember<Query> implements HitsCollector {
         return super.getChildren();
     }
 
+    @JsonIgnore
+    public Map<String, MutableQueryOrSearchResponse> getResults() {
+        return results;
+    }
+
     /**
      * Returns the judgment associated with the given identifier.
      *
