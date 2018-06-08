@@ -84,10 +84,10 @@
                         <td>&nbsp;</td>
                         <td nowrap="nowrap">
                             #set($thisid = $f.id($query.name))
-                            #if($id == $thisid))
-                                $open = "true";
+                            #if($id == $thisid)
+                                #set ($open = "true")
                             #else
-                                $open = "false";
+                                #set ($open = "false")
                             #end
                             <a data-toggle="collapse" href="#$thisid" role="button" aria-expanded="$open" aria-controls="collapseExample">
                                 $f.pretty($query.name)
