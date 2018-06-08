@@ -36,6 +36,7 @@ public class Engine {
     private final List<Class<? extends Metric>> availableMetricsDefs;
 
     private final SearchPlatform platform;
+    private final String [] fields;
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -52,12 +53,14 @@ public class Engine {
             final String corporaFolderPath,
             final String ratingsFolderPath,
             final String templatesFolderPath,
-            final List<String> metrics) {
+            final List<String> metrics,
+            final String [] fields) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
         this.templatesFolder = new File(templatesFolderPath);
         this.platform = platform;
+        this.fields = safe(fields);
 
         this.availableMetricsDefs =
                 metrics.stream()
@@ -105,9 +108,13 @@ public class Engine {
                                     all(groupNode.get(QUERIES))
                                             .forEach(queryNode -> {
                                                 final String query = query(queryNode);
-                                                final Query queryEvaluation = group.findOrCreate(query, Query::new);
-                                                queries.add(queryEvaluation);
                                                 final JsonNode relevantDocuments = groupNode.get(RELEVANT_DOCUMENTS);
+
+                                                final Query queryEvaluation = group.findOrCreate(query, Query::new);
+                                                queryEvaluation.setIdFieldName(idFieldName);
+                                                queryEvaluation.setRelevantDocuments(relevantDocuments);
+
+                                                queries.add(queryEvaluation);
 
                                                 queryEvaluation.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, versions));
 
@@ -117,6 +124,7 @@ public class Engine {
                                                             platform.executeQuery(
                                                                     indexFqdn(indexName, version),
                                                                     query,
+                                                                    fields,
                                                                     Math.max(10, relevantDocuments.size()));
 
                                                     queryEvaluation.setTotalHits(response.totalHits(), version);

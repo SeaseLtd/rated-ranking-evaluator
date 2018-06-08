@@ -19,7 +19,7 @@ public class Precision extends Metric {
     /**
      * Builds a new AveragePrecision metric.
      */
-    Precision() {
+    public Precision() {
         super("P");
     }
 

@@ -1,0 +1,103 @@
+<style>
+    tr {
+        border-bottom: 0.5px solid gray;
+    }​
+
+         col:first-child {background: #FF0}
+        col:nth-child(2n+3) {background: #CCC}
+
+    td, th {
+        border-right: 0.5px dashed  gray;
+        padding-left: 5px;
+        padding-right: 5px
+    }
+
+    th.odd,td.odd {
+        background-color: #f0f0f0;
+    }
+
+    th.even,td.even {
+        background-color: #fcfcfc;
+    }
+
+    th {
+        text-align: center;
+    }
+</style>
+<table width="100%">
+    <tr>
+        <th><h3>Corpus</h3></th>
+        <th><h3>Topic</h3></th>
+        <th nowrap="nowrap"><h3>Query Group</h3></th>
+        <th><h3>Query</h3></th>
+        #set($colspan = $metadata.howManyMetrics() * ($metadata.howManyVersions() + 1))
+        <th colspan="$colspan"><h3 style="text-align:center">Metrics</h3></th>
+    </tr>
+    <tr>
+        <th colspan="4">&nbsp;</th>
+        #foreach($metric in $metadata.metrics)
+            #set($span = $metadata.howManyVersions() + 1)
+            <th colspan="$span" style="text-align: center;"><h4>$metric</h4></th>
+        #end
+    </tr>
+    <tr>
+        <th colspan="4">&nbsp;</th>
+        #foreach($metric in $metadata.metrics)
+            #foreach($version in $metadata.versions)
+                #set($v = $velocityCount % 2)
+                #if($v == 0)
+                    #set($c = "even")
+                #else
+                    #set($c= "odd")
+                #end
+                <th style="text-align: center;" class="$c"><h4>$version</h4></th>
+            #end
+            <th style="text-align: center;">&Delta;</th>
+        #end
+    </tr>
+    #foreach($corpus in $data.children)
+        <tr>
+            <td>$corpus.name</td>
+            <td colspan="3">&nbsp;</td>
+            #metrics($corpus.metrics)
+        </tr>
+        #foreach($topic in $corpus.children)
+            <tr>
+                <td>&nbsp;</td>
+                <td nowrap="nowrap">$topic.name</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                #metrics($topic.metrics)
+            </tr>
+            #foreach($queryGroup in $topic.children)
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>$queryGroup.name</td>
+                    <td>&nbsp;</td>
+                    #metrics($queryGroup.metrics)
+                </tr>
+                #foreach($query in $queryGroup.children)
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td nowrap="nowrap">
+                            #set($thisid = $f.id($query.name))
+                            #if($id == $thisid)
+                                #set ($open = "true")
+                            #else
+                                #set ($open = "false")
+                            #end
+                            <a data-toggle="collapse" href="#$thisid" role="button" aria-expanded="$open" aria-controls="collapseExample">
+                                $f.pretty($query.name)
+                            </a>
+                        </td>
+                        #metrics($query.metrics)
+                    </tr>
+                    #print_hits($query)
+                #end
+            #end
+        #end
+    #end
+</table>

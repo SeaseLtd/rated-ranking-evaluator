@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.List;
 
 import static java.util.Collections.emptyList;
 
@@ -31,6 +32,18 @@ public abstract class Func {
      */
     public static <T> T[] safe(final T[] values) {
         return values != null ? values : emptyList().toArray(values);
+    }
+
+    /**
+     * Makes sure a non-null array is returned.
+     * This is used in iterations, in order to avoid NPE.
+     *
+     * @param values the input array.
+     * @param <T> the array type.
+     * @return the same array, if it's not null, an empty array otherwise.
+     */
+    public static <T> List<T> safe(final List<T> values) {
+        return values != null ? values : emptyList();
     }
 
     /**

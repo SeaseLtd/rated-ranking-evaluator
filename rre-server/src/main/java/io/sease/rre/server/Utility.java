@@ -1,8 +1,9 @@
-package io.sease.rre.maven.plugin.report;
+package io.sease.rre.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -26,16 +27,5 @@ public abstract class Utility {
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
-    }
-
-    /**
-     * Produces a stream consisting of all children of the given JSON node.
-     *
-     * @param parent the JSON node.
-     * @param name the name of the attribute associated with the requested children.
-     * @return a stream consisting of all children of the given JSON node.
-     */
-    public static Stream<JsonNode> all(final JsonNode parent, final String name) {
-        return StreamSupport.stream(parent.get(name).spliterator(), false);
     }
 }
