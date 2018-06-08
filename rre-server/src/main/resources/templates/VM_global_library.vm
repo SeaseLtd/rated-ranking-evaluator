@@ -34,10 +34,10 @@
 #macro(print_hits $query)
     #set ($resultsMap = $query.results)
     #set($thisid = $f.id($query.name))
-    #if($id == $thisid))
-        $state = "in";
+    #if($id == $thisid)
+        #set ($state = "in")
     #else
-        $state = "";
+        #set ($state = "")
     #end
 
     <tr class="collapse $state" id="$thisid">
