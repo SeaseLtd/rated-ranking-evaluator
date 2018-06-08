@@ -10,11 +10,10 @@
                     <corporaFolder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/corpora</corporaFolder>
                     <ratingsFolder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/ratings</ratingsFolder>
                     <templatesFolder>/Users/agazzarini/workspaces/BarFridges_IJ/bfa_solr/bfa-querying/src/solr/templates</templatesFolder>
-                    <compoundMetrics>
-                        <param>io.sease.rre.core.domain.metrics.impl.MAP</param>
-                        <param>io.sease.rre.core.domain.metrics.impl.GMAP</param>
-                    </compoundMetrics>
+                    <fields>score,id,product_name</fields>
                     <metrics>
+                        <param>io.sease.rre.core.domain.metrics.impl.Precision</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.Recall</param>
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtOne</param>
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo</param>
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtThree</param>

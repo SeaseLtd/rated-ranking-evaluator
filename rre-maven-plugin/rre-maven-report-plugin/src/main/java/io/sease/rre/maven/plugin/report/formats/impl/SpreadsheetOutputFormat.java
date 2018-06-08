@@ -1,8 +1,9 @@
-package io.sease.rre.maven.plugin.report.formats;
+package io.sease.rre.maven.plugin.report.formats.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.maven.plugin.report.EvaluationMetadata;
-import io.sease.rre.maven.plugin.report.RREReport;
+import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
+import io.sease.rre.maven.plugin.report.RREMavenReport;
+import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
@@ -109,34 +110,32 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         font.setBold(true);
         bold.setFont(font);
         final AtomicInteger versionCounter = new AtomicInteger(4);
-        metadata.metrics.forEach(metric -> {
-            metadata.versions
-                    .forEach(name -> {
-                        final int columnIndex = versionCounter.getAndIncrement();
-                        final Cell qgHeaderCell = header.createCell(columnIndex, CellType.STRING);
-                        qgHeaderCell.setCellValue(name);
-                        qgHeaderCell.setCellStyle(bold);
-                    });
-
-        });
+        metadata.metrics.forEach(metric ->
+                metadata.versions.forEach(
+                        name -> {
+                            final int columnIndex = versionCounter.getAndIncrement();
+                            final Cell qgHeaderCell = header.createCell(columnIndex, CellType.STRING);
+                            qgHeaderCell.setCellValue(name);
+                            qgHeaderCell.setCellStyle(bold);
+                        }));
         return header;
     }
 
-    public void writeMetrics(final JsonNode ownerNode, final XSSFRow row) {
+    private void writeMetrics(final JsonNode ownerNode, final XSSFRow row) {
         AtomicInteger counter = new AtomicInteger();
         ownerNode.get("metrics").fields()
-                .forEachRemaining( entry -> {
+                .forEachRemaining( entry ->
                     entry.getValue().get("versions").fields()
                             .forEachRemaining(vEntry -> {
                                 final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
                                 double value = vEntry.getValue().get("value").asDouble();
                                 vCell.setCellValue(value);
-                            });
-                });
+                            }));
+
     }
 
     @Override
-    public void writeReport(final JsonNode data, EvaluationMetadata metadata, final Locale locale, final RREReport plugin) {
+    public void writeReport(final JsonNode data, EvaluationMetadata metadata, final Locale locale, final RREMavenReport plugin) {
         final XSSFWorkbook workbook = new XSSFWorkbook();
         final CellStyle topAlign = workbook.createCellStyle();
         topAlign.setVerticalAlignment(VerticalAlignment.TOP);
@@ -147,9 +146,10 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                 .forEach(corpus -> {
                     final String name = corpus.get("name").asText();
                     final XSSFSheet spreadsheet = workbook.createSheet(name);
-                    final XSSFRow header = topHeader(spreadsheet, metadata);
-                    final XSSFRow subheader = metricsHeader(spreadsheet, metadata);
-                    final XSSFRow _3rdHeader = versionsHeader(spreadsheet, metadata);
+
+                    topHeader(spreadsheet, metadata);
+                    metricsHeader(spreadsheet, metadata);
+                    versionsHeader(spreadsheet, metadata);
 
                     final XSSFRow corpusRow = spreadsheet.createRow(rowCount.getAndIncrement());
                     final Cell nCell = corpusRow.createCell(0, CellType.STRING);
@@ -221,8 +221,6 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                             });
                 });
 
-
-
         try (final OutputStream out =
                      new FileOutputStream(
                              new File(plugin.getReportOutputDirectory(), plugin.getOutputName() + ".xlsx"))) {
@@ -232,13 +230,11 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         }
     }
 
-    public float computeRowHeightInPoints(int fontSizeInPoints, int numLines, XSSFSheet sheet) {
-        // a crude approximation of what excel does
+    private float computeRowHeightInPoints(int fontSizeInPoints, int numLines, XSSFSheet sheet) {
         float lineHeightInPoints = 1.3f * fontSizeInPoints;
         float rowHeightInPoints = lineHeightInPoints * numLines;
-        rowHeightInPoints = Math.round(rowHeightInPoints * 4) / 4f;        // round to the nearest 0.25
+        rowHeightInPoints = Math.round(rowHeightInPoints * 4) / 4f;
 
-        // Don't shrink rows to fit the font, only grow them
         float defaultRowHeightInPoints = sheet.getDefaultRowHeightInPoints();
         if (rowHeightInPoints < defaultRowHeightInPoints + 1) {
             rowHeightInPoints = defaultRowHeightInPoints;

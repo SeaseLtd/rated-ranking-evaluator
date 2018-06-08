@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
@@ -97,9 +98,12 @@ public class ApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString, final int maxRows) {
+    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString, final String [] fields, final int maxRows) {
         try {
-            final SolrQuery query = new SolrQuery().setRows(maxRows);
+            final SolrQuery query =
+                    new SolrQuery()
+                            .setRows(maxRows)
+                            .setFields(fields);
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode queryDef = mapper.readTree(queryString);
 

@@ -1,0 +1,91 @@
+#macro(metrics $metrics)
+    #foreach($metric in $metrics.entrySet())
+        #foreach($entry in $metric.getValue().versions.entrySet())
+            #set($v = $velocityCount % 2)
+            #if($v == 0)
+                #set($c = "even")
+            #else
+                #set($c= "odd")
+            #end
+            <td class="$c">$entry.getValue().getValue()</td>
+        #end
+        <td>
+            <table width="100%" style="border:none">
+                <tr style="border:none">
+                    #set($trend = $metric.getValue().trend())
+                    #foreach($v in $trend)
+                        #if($f.isZero($v))
+                            #set($style="color:#ffffff")
+                        #else
+                            #if($f.isPositive($v))
+                                #set($style="color:#009933")
+                            #else
+                                #set($style="color:#ff0000")
+                            #end
+                        #end
+                        <td style="$style; border:none">$v</td>
+                    #end
+                </tr>
+            </table>
+        </td>
+    #end
+#end
+
+#macro(print_hits $query)
+    #set ($resultsMap = $query.results)
+    #set($thisid = $f.id($query.name))
+    #if($id == $thisid)
+        #set ($state = "in")
+    #else
+        #set ($state = "")
+    #end
+
+    <tr class="collapse $state" id="$thisid">
+        #set($colspan = 4 + ($metadata.howManyMetrics() * ($metadata.howManyVersions() + 1)))
+        <td colspan="$colspan">
+            <table width="100%">
+                #set($versions = $resultsMap.keySet())
+                <tr>
+                    #set($first = true)
+                    #foreach($entry in $resultsMap.entrySet())
+                        #set($no = $velocityCount)
+                        #set($res = $entry.getValue())
+                        <td valign="top" colspan="2" >
+                            <table cellspacing="2" cellpadding="2" style="border:none" width="100%">
+                                <tr valign="top">
+                                    <th colspan="2" style="border:none"><h4>Version $entry.getKey() - Hits: $res.totalHits()</h4></th>
+                                </tr>
+                                #foreach($hit in $res.hits())
+                                    #if($velocityCount < 11)
+                                        <tr valign="top">
+                                            #if($no == 1)
+                                                <td valign="middle" style="font-size:1.1em">#$velocityCount</td>
+                                            #end
+                                            <td valign="top" style="border:none">
+                                                <table style="padding:2px">
+                                                    #foreach($hentry in $hit.entrySet())
+                                                        #if($hit.get("_isRelevant"))
+                                                          #set($style = "color:#009933")
+                                                        #else
+                                                            #set($style = "color:#ff0000")
+                                                        #end
+                                                        #if(!$hentry.getKey().equals("_isRelevant") && !$hentry.getKey().equals("_gain"))
+                                                            <tr valign="top" style="$style; border:none">
+                                                                <td valign="top" nowrap="nowrap" style="padding:3px; color:black"><b>$hentry.getKey()</b></td>
+                                                                <td valign="top" nowrap="nowrap" style="padding-left:5px; padding-right: 5px; border:none">$hentry.getValue()</td>
+                                                            </tr>
+                                                        #end
+                                                    #end
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    #end
+                                #end
+                            </table>
+                        </td>
+                    #end
+                </tr>
+            </table>
+        </td>
+    </tr>
+#end

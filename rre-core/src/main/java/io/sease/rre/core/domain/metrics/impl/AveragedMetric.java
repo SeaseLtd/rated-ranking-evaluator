@@ -1,5 +1,6 @@
 package io.sease.rre.core.domain.metrics.impl;
 
+import io.sease.rre.Calculator;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
@@ -26,7 +27,7 @@ public class AveragedMetric extends Metric {
      */
     class MutableValueFactory extends ValueFactory {
         private BigDecimal value = BigDecimal.ZERO;
-        private final AtomicInteger counter = new AtomicInteger(1);
+        private final AtomicInteger counter = new AtomicInteger(0);
 
         /**
          * Builds a new (Metric) valueFactory with the given (metric) owner.
@@ -39,7 +40,7 @@ public class AveragedMetric extends Metric {
 
         @Override
         public BigDecimal value() {
-            return value;
+            return divide(value, counter.get());
         }
 
         /**
@@ -48,7 +49,8 @@ public class AveragedMetric extends Metric {
          * @param additionalValue the collected value.
          */
         public void collect(final BigDecimal additionalValue) {
-            value = divide(sum(value, additionalValue), counter.incrementAndGet());
+            value = sum(value, additionalValue);
+            counter.incrementAndGet();
         }
 
         @Override

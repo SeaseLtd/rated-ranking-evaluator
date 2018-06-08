@@ -19,7 +19,7 @@ public class Recall extends Metric {
     /**
      * Builds a new Recall at X metric.
      */
-    Recall() {
+    public Recall() {
         super("R");
     }
 
