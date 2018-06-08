@@ -1,9 +1,7 @@
 package io.sease.rre.server.domain;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.ValueFactory;
-import io.sease.rre.server.deserializers.MetricDeserializer;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -18,7 +16,6 @@ import static java.util.Optional.ofNullable;
  * @author agazzarini
  * @since 1.0
  */
-@JsonDeserialize(using = MetricDeserializer.class)
 public class StaticMetric extends Metric {
 
     /**

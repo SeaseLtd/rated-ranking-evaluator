@@ -1,9 +1,49 @@
+<!doctype html>
 <html>
-    <head>
-        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
-        <meta http-equiv="refresh" content="2">
+    <head lang="en">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+##        <meta http-equiv="refresh" content="2">
     </head>
     <body>
-        $screen_content
+        <div class="container-fluid">
+            $screen_content
+        </div>
+        <script language="JavaScript">
+            $(document).ready(function() {
+                $('.collapse').on('shown.bs.collapse', function () {
+                    var activeId =  $(this).attr('id');
+                    Cookies.set('activeAccordionGroup', activeId);
+                });
+
+                $('.collapse').on('hidden.bs.collapse', function () {
+                    var activeId = $(".collapse .in").attr('id');
+                    Cookies.remove('activeAccordionGroup')
+                });
+            });
+        </script>
     </body>
+    <script language="JavaScript">
+        (function worker() {
+            $.ajax({
+                url: '/?p=' + Cookies.get('activeAccordionGroup'),
+                cache:false,
+                success: function(data) {
+                    var start = data.indexOf("<body>");
+                    var end = data.indexOf("</body>");
+
+                    var bodyContent = data.substring(start + 6, end);
+
+                    $("body").html(bodyContent);
+                },
+                complete: function() {
+                    // Schedule the next request when the current one's complete
+                    setTimeout(worker, 2000);
+                }
+            });
+        })();
+    </script>
 </html>
