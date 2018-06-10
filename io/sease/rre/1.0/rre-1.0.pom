@@ -35,7 +35,7 @@
     <distributionManagement>
         <repository>
             <id>internal.repo</id>
-            <url>file://${user.dir}/work/rre/target/mvn-repo</url>
+            <url>file://${user.dir}/target/mvn-repo</url>
             <layout>default</layout>
         </repository>
     </distributionManagement>
@@ -49,7 +49,7 @@
                 <configuration>
                     <message>Maven artifacts for ${project.groupId}:${project.artifactId}:${project.version}</message>
                     <noJekyll>true</noJekyll>
-                    <outputDirectory>${user.dir}/work/rre/target/mvn-repo</outputDirectory>
+                    <outputDirectory>${user.dir}/target/mvn-repo</outputDirectory>
                     <branch>refs/heads/mvn-repo</branch>
                     <includes>
                         <include>**/*</include>
@@ -70,7 +70,7 @@
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>2.8.1</version>
                 <configuration>
-                    <altDeploymentRepository>internal.repo::default::file://${user.dir}/work/rre/target/mvn-repo</altDeploymentRepository>
+                    <altDeploymentRepository>internal.repo::default::file://${user.dir}/target/mvn-repo</altDeploymentRepository>
                 </configuration>
             </plugin>
         </plugins>
