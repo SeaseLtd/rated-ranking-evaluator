@@ -3,14 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>rre-search-platform</artifactId>
+        <artifactId>rre</artifactId>
         <groupId>io.sease</groupId>
         <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>rre-search-platform-solr-impl</artifactId>
-    <version>7.1.0</version>
-    <name>RRE - Apache Solr platform binding </name>
+    <artifactId>rre-core</artifactId>
+    <name>RRE - Core libraries</name>
     <dependencies>
         <dependency>
             <groupId>io.sease</groupId>
@@ -18,14 +17,10 @@
             <version>1.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-core</artifactId>
-            <version>${project.version}</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
