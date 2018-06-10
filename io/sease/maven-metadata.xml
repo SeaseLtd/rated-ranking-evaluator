@@ -6,5 +6,10 @@
       <prefix>simple</prefix>
       <artifactId>rre-maven-solr-plugin</artifactId>
     </plugin>
+    <plugin>
+      <name>RRE - Maven Report Plugin</name>
+      <prefix>report</prefix>
+      <artifactId>rre-maven-report-plugin</artifactId>
+    </plugin>
   </plugins>
 </metadata>
