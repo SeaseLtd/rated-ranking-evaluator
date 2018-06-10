@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-maven-report-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <name>RRE Report Plugin</name>
+    <name>RRE - Maven Report Plugin</name>
     <dependencies>
         <!-- reporting API -->
         <dependency>
