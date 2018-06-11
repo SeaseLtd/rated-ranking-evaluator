@@ -32,17 +32,6 @@ public class RREController extends BaseController {
         metadata = evaluationMetadata(this.evaluation);
     }
 
-    private void metrics(final JsonNode data, final DomainMember parent) {
-        data.get("metrics").fields().forEachRemaining( entry -> {
-            final StaticMetric metric = new StaticMetric(entry.getKey());
-
-            entry.getValue().get("versions").fields().forEachRemaining(vEntry -> {
-                metric.collect(vEntry.getKey(), new BigDecimal(vEntry.getValue().get("value").asDouble()).setScale(4, RoundingMode.CEILING));
-            });
-            parent.getMetrics().put(metric.getName(), metric);
-        });
-    }
-
     private Evaluation make(final JsonNode data) {
         final Evaluation evaluation = new Evaluation();
         evaluation.setName(data.get("name").asText());
@@ -98,9 +87,7 @@ public class RREController extends BaseController {
 
     @GetMapping("/evaluation")
     public Evaluation getEvaluationData() throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        updateEvaluationData(mapper.readTree(new FileReader(new File("/Users/agazzarini/workspaces/rated-ranking-evaluator/rre-maven-plugin/rre-maven-solr-plugin/target/rre/evaluation.json"))));
-        return evaluation;
+       return evaluation;
     }
 
     private EvaluationMetadata evaluationMetadata(final Evaluation evaluation) {
@@ -115,5 +102,16 @@ public class RREController extends BaseController {
                         .getMetrics().values().iterator().next().getVersions().keySet());
 
         return new EvaluationMetadata(versions, metrics);
+    }
+
+    private void metrics(final JsonNode data, final DomainMember parent) {
+        data.get("metrics").fields().forEachRemaining( entry -> {
+            final StaticMetric metric = new StaticMetric(entry.getKey());
+
+            entry.getValue().get("versions").fields().forEachRemaining(vEntry -> {
+                metric.collect(vEntry.getKey(), new BigDecimal(vEntry.getValue().get("value").asDouble()).setScale(4, RoundingMode.CEILING));
+            });
+            parent.getMetrics().put(metric.getName(), metric);
+        });
     }
 }
