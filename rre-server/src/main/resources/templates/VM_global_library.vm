@@ -43,7 +43,7 @@
     <tr class="collapse $state" id="$thisid">
         #set($colspan = 4 + ($metadata.howManyMetrics() * ($metadata.howManyVersions() + 1)))
         <td colspan="$colspan">
-            <table width="100%">
+            <table>
                 #set($versions = $resultsMap.keySet())
                 <tr>
                     #set($first = true)

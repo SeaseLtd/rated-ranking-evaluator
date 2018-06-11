@@ -221,6 +221,8 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                             });
                 });
 
+        plugin.getReportOutputDirectory().mkdirs();
+
         try (final OutputStream out =
                      new FileOutputStream(
                              new File(plugin.getReportOutputDirectory(), plugin.getOutputName() + ".xlsx"))) {

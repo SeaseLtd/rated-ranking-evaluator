@@ -6,10 +6,7 @@ import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.RREOutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.SpreadsheetOutputFormat;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.reporting.AbstractMavenReport;
 
 import java.io.File;
@@ -27,12 +24,10 @@ import static java.util.stream.StreamSupport.stream;
  * @author agazzarini
  * @since 1.0
  */
-@Mojo(name = "report",
-      defaultPhase = LifecyclePhase.SITE,
-      requiresDependencyResolution = ResolutionScope.RUNTIME,
-      threadSafe = true)
+@Mojo(name = "report", inheritByDefault = false)
+@Execute(phase = LifecyclePhase.INSTALL )
 public class RREMavenReport extends AbstractMavenReport {
-    @Parameter(name = "format", defaultValue = "spreadsheet")
+    @Parameter(name = "formats", defaultValue = "spreadsheet")
     List<String> formats;
 
     @Parameter(name = "endpoint", defaultValue = "http://127.0.0.1:8080")

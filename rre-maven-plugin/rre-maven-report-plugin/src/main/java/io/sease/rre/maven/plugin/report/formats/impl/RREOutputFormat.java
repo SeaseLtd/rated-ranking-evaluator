@@ -24,7 +24,7 @@ public class RREOutputFormat implements OutputFormat {
         try {
             final ObjectMapper serializer = new ObjectMapper();
             Request request = new Request.Builder()
-                    .url(requireNonNull(HttpUrl.parse(plugin.getEndpoint())))
+                    .url(requireNonNull(HttpUrl.parse(plugin.getEndpoint() + "/evaluation")))
                     .post(RequestBody.create(MediaType.parse("application/json"), serializer.writeValueAsString(data)))
                     .build();
 

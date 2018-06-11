@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mojo( name = "evaluate", inheritByDefault = false )
-@Execute( lifecycle = "rre", phase = LifecyclePhase.TEST )
+@Execute(phase = LifecyclePhase.TEST )
 public class RREvaluateMojo extends AbstractMojo {
 
     @Parameter(name="configurations-folder", defaultValue = "${basedir}/src/etc/configurations")
@@ -31,7 +31,7 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name="ratings-folder", defaultValue = "${basedir}/src/etc/ratings)")
     private String ratingsFolder;
 
-    @Parameter(name="target-folder", defaultValue = "${basedir}/src/etc/templates")
+    @Parameter(name="templates-folder", defaultValue = "${basedir}/src/etc/templates")
     private String templatesFolder;
 
     @Parameter(name="metrics", defaultValue = "io.sease.rre.core.domain.metrics.impl.PrecisionAtOne,io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo,io.sease.rre.core.domain.metrics.impl.PrecisionAtThree,io.sease.rre.core.domain.metrics.impl.PrecisionAtTen")
