@@ -120,7 +120,7 @@
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>3.5.1</version>
                 <configuration>
-                    <goalPrefix>simple</goalPrefix>
+                    <goalPrefix>rre</goalPrefix>
                 </configuration>
                 <executions>
                     <execution>
