@@ -28,7 +28,7 @@ public class Func {
             final String q = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(payload)).replaceFirst("\\{", "");
             return q.substring(0, q.length()-1).trim().replace("\n", "<br/>");
         } catch (final Exception exception) {
-            throw new RuntimeException(exception);
+            return payload;
         }
     }
 
