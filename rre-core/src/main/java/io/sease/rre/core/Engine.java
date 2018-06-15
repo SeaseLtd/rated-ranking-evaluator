@@ -18,6 +18,7 @@ import static io.sease.rre.Field.*;
 import static io.sease.rre.Func.*;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -105,9 +106,10 @@ public class Engine {
                                 .forEach(groupNode -> {
                                     final QueryGroup group =
                                             topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
+                                    final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
                                     all(groupNode.get(QUERIES))
                                             .forEach(queryNode -> {
-                                                final String query = query(queryNode);
+                                                final String query = query(queryNode, sharedTemplate);
                                                 final JsonNode relevantDocuments = groupNode.get(RELEVANT_DOCUMENTS);
 
                                                 final Query queryEvaluation = group.findOrCreate(query, Query::new);
@@ -177,9 +179,23 @@ public class Engine {
      * @param templateName the query template name.
      * @return the query template associated with the given name.
      */
-    private String queryTemplate(final String templateName) {
+    private String queryTemplate(final Optional<String> defaultTemplate, final Optional<String> templateName) {
         try {
-            return new String(Files.readAllBytes(new File(templatesFolder, templateName).toPath()));
+            return templateName
+                        .map(name -> new File(templatesFolder, name))
+                        .map(this::templateContent)
+                        .orElseGet(() -> {
+                            final File defaultTemplateFile = new File(templatesFolder, defaultTemplate.get());
+                            return templateContent(defaultTemplateFile);
+                        });
+        } catch (final Exception exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    private String templateContent(final File file) {
+        try {
+            return new String(Files.readAllBytes(file.toPath()));
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
@@ -240,10 +256,11 @@ public class Engine {
      * A query string is the result of replacing all placeholders found in the template.
      *
      * @param queryNode the JSON query node (in ratings configuration).
+     * @param defaultTemplate the default template that will be used if a query doesn't declare it.
      * @return a query (as a string) that will be used for executing a specific evaluation.
      */
-    private String query(final JsonNode queryNode) {
-        String query = queryTemplate(queryNode.get("template").asText());
+    private String query(final JsonNode queryNode, final Optional<String> defaultTemplate) {
+        String query = queryTemplate(defaultTemplate, ofNullable(queryNode.get("template")).map(JsonNode::asText));
         for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext();) {
             final String name = iterator.next();
             query = query.replace(name, queryNode.get("placeholders").get(name).asText());
