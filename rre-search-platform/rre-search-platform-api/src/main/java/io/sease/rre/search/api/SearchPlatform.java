@@ -2,6 +2,7 @@ package io.sease.rre.search.api;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
