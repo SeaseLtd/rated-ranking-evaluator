@@ -20,7 +20,8 @@ import static java.util.Collections.emptyList;
  */
 public abstract class Func {
     public static final FilenameFilter ONLY_JSON_FILES = (dir, name) -> name.endsWith(".json");
-    public static final FileFilter ONLY_NON_HIDDEN_FILES = file -> file.isDirectory() && !file.isHidden();
+    public static final FileFilter ONLY_DIRECTORIES = file -> file.isDirectory() && !file.isHidden();
+    public static final FileFilter ONLY_NON_HIDDEN_FILES = file -> !file.isHidden();
 
     /**
      * Makes sure a non-null array is returned.

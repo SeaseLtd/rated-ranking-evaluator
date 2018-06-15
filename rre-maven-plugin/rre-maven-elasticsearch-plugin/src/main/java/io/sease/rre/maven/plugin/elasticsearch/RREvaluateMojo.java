@@ -1,10 +1,10 @@
-package io.sease.rre.maven.plugin.solr;
+package io.sease.rre.maven.plugin.elasticsearch;
 
+import io.sease.rre.search.api.impl.Elasticsearch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Evaluation;
 import io.sease.rre.search.api.SearchPlatform;
-import io.sease.rre.search.api.impl.ApacheSolr;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Execute;
@@ -14,6 +14,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +25,8 @@ import java.util.Map;
  * @author agazzarini
  * @since 1.0
  */
-@Mojo( name = "evaluate", inheritByDefault = false )
-@Execute(phase = LifecyclePhase.TEST )
+@Mojo( name = "evaluate", inheritByDefault = false, defaultPhase = LifecyclePhase.INSTALL)
+@Execute(phase = LifecyclePhase.INSTALL)
 public class RREvaluateMojo extends AbstractMojo {
 
     @Parameter(name="configurations-folder", defaultValue = "${basedir}/src/etc/configurations")
@@ -43,12 +44,16 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name="metrics", defaultValue = "io.sease.rre.core.domain.metrics.impl.PrecisionAtOne,io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo,io.sease.rre.core.domain.metrics.impl.PrecisionAtThree,io.sease.rre.core.domain.metrics.impl.PrecisionAtTen")
     private List<String> metrics;
 
-    @Parameter(name="fields", defaultValue = "*,score")
+    @Parameter(name="fields", defaultValue = "")
     private String fields;
+
+    @Parameter(name="port", defaultValue = "9200")
+    private int port;
+
 
     @Override
     public void execute() throws MojoExecutionException {
-        try (final SearchPlatform platform = new ApacheSolr()) {
+        try (final SearchPlatform platform = new Elasticsearch()) {
             final Engine engine = new Engine(
                 platform,
                 configurationsFolder,
@@ -59,7 +64,8 @@ public class RREvaluateMojo extends AbstractMojo {
                     fields.split(","));
 
             final Map<String, Object> configuration = new HashMap<>();
-            configuration.put("solr.home", "/tmp");
+            configuration.put("path.home", "/tmp");
+            configuration.put("http.port", port);
 
             write(engine.evaluate(configuration));
         } catch (final IOException exception) {

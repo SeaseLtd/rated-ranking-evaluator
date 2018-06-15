@@ -18,6 +18,7 @@ import static io.sease.rre.Field.*;
 import static io.sease.rre.Func.*;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
@@ -79,69 +80,71 @@ public class Engine {
      * @return the evaluation result.
      */
     @SuppressWarnings("unchecked")
-    public Evaluation evaluate(final Map<String, Object> configuration){
-        platform.beforeStart(configuration);
-        platform.start();
-        platform.afterStart();
+    public Evaluation evaluate(final Map<String, Object> configuration) {
+        try {
+            platform.beforeStart(configuration);
+            platform.start();
+            platform.afterStart();
 
-        final Evaluation evaluation = new Evaluation();
-        final List<Query> queries = new ArrayList<>();
+            final Evaluation evaluation = new Evaluation();
+            final List<Query> queries = new ArrayList<>();
 
-        ratings().forEach(ratingsNode -> {
-            final String indexName = ratingsNode.get(INDEX_NAME).asText();
-            final String idFieldName = ratingsNode.get(ID_FIELD_NAME).asText(DEFAULT_ID_FIELD_NAME);
-            final File data = new File(corporaFolder, ratingsNode.get(CORPORA_FILENAME).asText());
+            ratings().forEach(ratingsNode -> {
+                final String indexName = ratingsNode.get(INDEX_NAME).asText();
+                final String idFieldName = ratingsNode.get(ID_FIELD_NAME).asText(DEFAULT_ID_FIELD_NAME);
+                final File data = new File(corporaFolder, ratingsNode.get(CORPORA_FILENAME).asText());
+                final String queryPlaceholder = ofNullable(ratingsNode.get("query_placeholder")).map(JsonNode::asText).orElse("$query");
 
-            if (!data.canRead()) {
-                throw new IllegalArgumentException("Unable to read the corpus file " + data.getAbsolutePath());
-            }
+                if (!data.canRead()) {
+                    throw new IllegalArgumentException("Unable to read the corpus file " + data.getAbsolutePath());
+                }
 
-            prepareData(indexName, data);
+                prepareData(indexName, data);
 
-            final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
-            all(ratingsNode.get(TOPICS))
-                    .forEach(topicNode -> {
-                        final Topic topic = corpus.findOrCreate(topicNode.get(DESCRIPTION).asText(), Topic::new);
-                        all(topicNode.get(QUERY_GROUPS))
-                                .forEach(groupNode -> {
-                                    final QueryGroup group =
-                                            topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
-                                    final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
-                                    all(groupNode.get(QUERIES))
-                                            .forEach(queryNode -> {
-                                                final String query = query(queryNode, sharedTemplate);
-                                                final JsonNode relevantDocuments = groupNode.get(RELEVANT_DOCUMENTS);
+                final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
+                all(ratingsNode.get(TOPICS))
+                        .forEach(topicNode -> {
+                            final Topic topic = corpus.findOrCreate(topicNode.get(DESCRIPTION).asText(), Topic::new);
+                            all(topicNode.get(QUERY_GROUPS))
+                                    .forEach(groupNode -> {
+                                        final QueryGroup group =
+                                                topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
+                                        final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
+                                        all(groupNode.get(QUERIES))
+                                                .forEach(queryNode -> {
+                                                    final String queryString = queryNode.findValue(queryPlaceholder).asText();
+                                                    final JsonNode relevantDocuments = groupNode.get(RELEVANT_DOCUMENTS);
+                                                    final Query queryEvaluation = group.findOrCreate(queryString, Query::new);
+                                                    queryEvaluation.setIdFieldName(idFieldName);
+                                                    queryEvaluation.setRelevantDocuments(relevantDocuments);
 
-                                                final Query queryEvaluation = group.findOrCreate(query, Query::new);
-                                                queryEvaluation.setIdFieldName(idFieldName);
-                                                queryEvaluation.setRelevantDocuments(relevantDocuments);
+                                                    queries.add(queryEvaluation);
 
-                                                queries.add(queryEvaluation);
+                                                    queryEvaluation.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, versions));
 
-                                                queryEvaluation.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, versions));
+                                                    versions.forEach(version -> {
+                                                        final AtomicInteger rank = new AtomicInteger(1);
+                                                        final QueryOrSearchResponse response =
+                                                                platform.executeQuery(
+                                                                        indexFqdn(indexName, version),
+                                                                        query(queryNode, sharedTemplate, version),
+                                                                        fields,
+                                                                        Math.max(10, relevantDocuments.size()));
 
-                                                versions.forEach(version -> {
-                                                    final AtomicInteger rank = new AtomicInteger(1);
-                                                    final QueryOrSearchResponse response =
-                                                            platform.executeQuery(
-                                                                    indexFqdn(indexName, version),
-                                                                    query,
-                                                                    fields,
-                                                                    Math.max(10, relevantDocuments.size()));
-
-                                                    queryEvaluation.setTotalHits(response.totalHits(), version);
-                                                    response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), version));
+                                                        queryEvaluation.setTotalHits(response.totalHits(), version);
+                                                        response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), version));
+                                                    });
                                                 });
-                                            });
-                                });
-                    });
-        });
+                                    });
+                        });
+            });
 
-        platform.beforeStop();
+            queries.forEach(Query::notifyCollectedMetrics);
 
-        queries.forEach(Query::notifyCollectedMetrics);
-
-        return evaluation;
+            return evaluation;
+        } finally {
+            platform.beforeStop();
+        }
     }
 
     /**
@@ -176,23 +179,33 @@ public class Engine {
     /**
      * Loads the query template associated with the given name.
      *
+     * @param defaultTemplateName the default template.
      * @param templateName the query template name.
+     * @param version the current version being executed.
      * @return the query template associated with the given name.
      */
-    private String queryTemplate(final Optional<String> defaultTemplate, final Optional<String> templateName) {
+    private String queryTemplate(final Optional<String> defaultTemplateName, final Optional<String> templateName, final String version) {
         try {
-            return templateName
-                        .map(name -> new File(templatesFolder, name))
-                        .map(this::templateContent)
-                        .orElseGet(() -> {
-                            final File defaultTemplateFile = new File(templatesFolder, defaultTemplate.get());
-                            return templateContent(defaultTemplateFile);
-                        });
+            final String templateNameInUse =
+                    templateName.orElseGet(
+                            () -> defaultTemplateName.orElseThrow(
+                                () -> new IllegalArgumentException("Unable to determine the query template.")));
+            return of(templateNameInUse)
+                .map(name -> name.contains("${version}") ? name.replace("${version}", version) : name)
+                .map(name -> new File(templatesFolder, name))
+                .map(this::templateContent)
+                .orElseThrow(() -> new IllegalArgumentException("Unable to determine the query template."));
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
     }
 
+    /**
+     * Reads a template content.
+     *
+     * @param file the template file.
+     * @return the template content.
+     */
     private String templateContent(final File file) {
         try {
             return new String(Files.readAllBytes(file.toPath()));
@@ -208,7 +221,7 @@ public class Engine {
      */
     private Stream<JsonNode> ratings() {
         return stream(
-                requireNonNull(ratingsFolder.listFiles(ONLY_JSON_FILES)))
+                requireNonNull(ratingsFolder.listFiles(ONLY_JSON_FILES), "Unable to find the ratings folder."))
                 .map(Func::toJson);
     }
 
@@ -229,11 +242,12 @@ public class Engine {
      * @param data the dataset.
      */
     private void prepareData(final String indexName, final File data) {
-        final File [] versionFolders = safe(configurationsFolder.listFiles(ONLY_NON_HIDDEN_FILES));
+        final File [] versionFolders = safe(configurationsFolder.listFiles(ONLY_DIRECTORIES));
         stream(versionFolders)
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
-                .filter(folder -> folder.getName().equals(indexName))
-                .forEach(folder -> platform.load(data, folder, indexFqdn(indexName, folder.getParentFile().getName())));
+                .filter(file -> (file.isDirectory() && file.getName().equals(indexName))
+                                    || (file.isFile() && file.getName().startsWith("index")))
+                .forEach(fileOrFolder -> platform.load(data, fileOrFolder, indexFqdn(indexName, fileOrFolder.getParentFile().getName())));
 
         this.versions = stream(versionFolders).map(File::getName).collect(toList());
     }
@@ -248,7 +262,7 @@ public class Engine {
      * @return the FDQN of the target index that will be used.
      */
     private String indexFqdn(final String indexName, final String version) {
-        return indexName + "_" + version;
+        return (indexName + "_" + version).toLowerCase();
     }
 
     /**
@@ -257,10 +271,11 @@ public class Engine {
      *
      * @param queryNode the JSON query node (in ratings configuration).
      * @param defaultTemplate the default template that will be used if a query doesn't declare it.
+     * @param version the version being executed.
      * @return a query (as a string) that will be used for executing a specific evaluation.
      */
-    private String query(final JsonNode queryNode, final Optional<String> defaultTemplate) {
-        String query = queryTemplate(defaultTemplate, ofNullable(queryNode.get("template")).map(JsonNode::asText));
+    private String query(final JsonNode queryNode, final Optional<String> defaultTemplate, final String version) {
+        String query = queryTemplate(defaultTemplate, ofNullable(queryNode.get("template")).map(JsonNode::asText), version);
         for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext();) {
             final String name = iterator.next();
             query = query.replace(name, queryNode.get("placeholders").get(name).asText());

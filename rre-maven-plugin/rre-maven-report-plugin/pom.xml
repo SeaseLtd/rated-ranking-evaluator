@@ -67,7 +67,7 @@
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>3.5.1</version>
                 <configuration>
-                    <goalPrefix>rre</goalPrefix>
+                    <goalPrefix>rre-report</goalPrefix>
                 </configuration>
                 <executions>
                     <execution>
