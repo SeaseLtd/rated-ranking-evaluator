@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +50,7 @@ public class Elasticsearch implements SearchPlatform {
 
     private Client proxy;
     private Node elasticsearch;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
@@ -65,7 +67,8 @@ public class Elasticsearch implements SearchPlatform {
                 .put("path.home", (String)configuration.get("path.home"))
                 .put("transport.type", "netty4")
                 .put("http.type", "netty4")
-                .put("network.host", (Integer)configuration.getOrDefault("network.host", 9200))
+                .put("network.host", "127.0.0.1")
+                .put("http.port", (Integer)configuration.getOrDefault("network.host", 9200))
                 .put("http.enabled", "true")
                 .put("path.logs", logsFolder.getAbsolutePath())
                 .put("path.data", dataFolder.getAbsolutePath());
@@ -73,15 +76,13 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
-    public void load(final File data, File configFolder, String indexName) {
+    public void load(final File data, File indexShapeFile, String indexName) {
+        if (!indexShapeFile.getName().startsWith("index")) {
+            throw new IllegalArgumentException("Unable to find an index-shape (i.e. settings + mappings) within the configuration folder.");
+        }
+
         try {
             final ObjectMapper mapper = new ObjectMapper();
-            final File indexShapeFile =
-                    stream(configFolder.listFiles( (dir, name) -> name.startsWith("index")))
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalArgumentException("Index shape (i.e. a JSON file whose name " +
-                                    "starts with \"index\" containing the ES index settings and mappings) cannot be " +
-                                    "found under " + configFolder.getAbsolutePath()));
             final JsonNode esconfig = mapper.readTree(indexShapeFile);
 
             if (proxy.admin().indices().exists(indicesExistsRequest(indexName)).actionGet().isExists()) {
@@ -145,12 +146,20 @@ public class Elasticsearch implements SearchPlatform {
 
     @Override
     public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String [] fields, final int maxRows) {
-        final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(query)).size(maxRows).fetchSource(fields, null);
-        final SearchResponse qresponse = proxy.search(new SearchRequest(indexName).source(qBuilder)).actionGet();
-        return new QueryOrSearchResponse(
-                qresponse.getHits().totalHits,
-                stream(qresponse.getHits().getHits())
-                        .map(SearchHit::getSourceAsMap)
-                        .collect(toList()));
+        try {
+            final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
+            final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(q)).size(maxRows).fetchSource(fields, null);
+            final SearchResponse qresponse = proxy.search(new SearchRequest(indexName).source(qBuilder)).actionGet();
+            return new QueryOrSearchResponse(
+                    qresponse.getHits().totalHits,
+                    stream(qresponse.getHits().getHits())
+                            .map(hit -> {
+                                final Map<String, Object> result = new HashMap(hit.getSourceAsMap());
+                                result.put("_id", hit.getId());
+                                return result;})
+                            .collect(toList()));
+        } catch (final IOException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 }
