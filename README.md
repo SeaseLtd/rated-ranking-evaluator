@@ -1,6 +1,7 @@
 # Rated Ranking Evaluator
 
 The Rated Ranking Evaluator (RRE) is a search quality evaluation tool which, as the name suggests, evaluates the quality of results coming from a search infrastructure. 
+
 The currently supported search platforms are at the moment Apache Solr and Elasticsearch (see the documentation for supported versions). 
 
 RRE is a multi-module project which consists of:
@@ -35,10 +36,15 @@ As consequence of that RRE provides also the following metrics:
 
 * **Mean Average Precision**: the mean of the average precisions computed at query level. 
 * **Mean Reciprocal Rank**: the average of the reciprocal ranks computed at query level.
-* all other metrics listed above aggregared by using the arithmetic mean
+* **all other metrics listed above** aggregared by their arithmetic mean
 
-One the most important things you can see in the screenshot above is that RRE is able to keep track (and to make comparisons) between several versions of the system under evaluation.
+One the most important things you can see in the screenshot above is that RRE is able to keep track (and to make comparisons) between several versions of the system under evaluation. 
+
 It encourages an incremental / iterative / immutable approach when developing and evolving a search system: assuming you're starting from version 1.0, when you apply some relevant change to your configuration, 
 instead of changing that version, is better to clone it and apply the changes to the new version (let's call it 1.1). 
-In this way, when the system build happens, RRE will compute everything explained above (i.e. the metrics) for each available version. 
+
+In this way, when the system build happens, RRE will compute everything explained above (i.e. the metrics) for each available version.   
+
 In addition, it will provide the delta / trend between subsequent versions, so you can immediately get the overall direction where the system is going, in terms of relevance improvements. 
+
+![delta](https://user-images.githubusercontent.com/7569632/41497997-5e9d2c4c-7162-11e8-9304-d8f529b6a9eb.png)
