@@ -1,0 +1,30 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "trigrams": {
+          "tokenizer": "standard",
+          "filter": [
+            "standard",
+            "lowercase",
+            "trigrams"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "doc": {
+      "_all": {
+        "enabled": false
+      },
+      "properties": {
+        "name": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}
