@@ -29,7 +29,7 @@ import java.util.Map;
 @Execute(phase = LifecyclePhase.INSTALL)
 public class RREvaluateMojo extends AbstractMojo {
 
-    @Parameter(name="configurations-folder", defaultValue = "${basedir}/src/etc/configurations")
+    @Parameter(name="configurations-folder", defaultValue = "${basedir}/src/etc/configuration_sets")
     private String configurationsFolder;
 
     @Parameter(name="corpora-folder", defaultValue = "${basedir}/src/etc/datasets")

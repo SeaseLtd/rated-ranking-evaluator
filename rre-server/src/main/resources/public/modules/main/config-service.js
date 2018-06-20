@@ -14,7 +14,7 @@
          * The data request URL
          * @type {string}
          */
-        var requestUrl = "/evaluation";
+        var requestUrl = "http://127.0.0.1:8080/evaluation";
 
         init();
 

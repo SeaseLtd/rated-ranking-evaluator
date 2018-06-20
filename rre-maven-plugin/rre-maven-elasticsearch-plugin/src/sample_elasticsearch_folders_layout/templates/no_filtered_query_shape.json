@@ -1,0 +1,48 @@
+{
+  "query": {
+    "filtered": {
+      "query": {
+        "bool": {
+          "should": [
+            {
+              "multi_match": {
+                "query": "$query",
+                "fields": [
+                  "search_api_aggregation_3",
+                  "search_api_aggregation_4",
+                  "search_api_aggregation_5",
+                  "search_api_aggregation_6"
+                ],
+                "type": "best_fields"
+              }
+            },
+            {
+              "query_string": {
+                "query": "$query",
+                "fields": [
+                  "title"
+                ]
+              }
+            },
+            {
+              "multi_match": {
+                "query": "$query",
+                "fields": [
+                  "search_api_aggregation_2"
+                ]
+              }
+            },
+            {
+              "query_string": {
+                "query": "$query",
+                "fields": [
+                  "search_api_combined_1^0.1"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

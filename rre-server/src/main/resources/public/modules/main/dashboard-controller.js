@@ -7,12 +7,12 @@
 
         // Scope vars
         vm.data = null;
+        vm.isDetailOpen = [];
 
         // Methods
         vm.getMetricsCount = getMetricsCount;
 
         activate();
-
 
         ////////////
 
@@ -49,6 +49,8 @@
             }
             return 0;
         }
+
+
 
 
     }

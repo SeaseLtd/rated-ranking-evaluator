@@ -17,10 +17,10 @@
                 }
               },
               {
-                "template": "only_q.json",
+                "template": "filter_by_language.json",
                 "placeholders": {
-                  "$query": "Fender"
-                }
+                  "$query": "Fender",
+                  "$lang": "eng"
               }
             ],
             "relevant_documents": {
