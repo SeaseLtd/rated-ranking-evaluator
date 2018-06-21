@@ -30,6 +30,7 @@
         <module>rre-core</module>
         <module>rre-search-platform</module>
         <module>rre-server</module>
+        <module>rre-maven-archetype</module>
     </modules>
 
     <distributionManagement>
