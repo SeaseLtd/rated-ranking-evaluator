@@ -1,5 +1,6 @@
+
 {
-  "index" : "core1",
+  "index" : "basses",
   "corpora_file": "electric_basses.json",
   "id_field": "id",
   "topics" : [
@@ -17,10 +18,10 @@
                 }
               },
               {
-                "template": "filter_by_language.json",
+                "template": "only_q.json",
                 "placeholders": {
-                  "$query": "Fender",
-                  "$lang": "eng"
+                  "$query": "Fender"
+                }
               }
             ],
             "relevant_documents": {
