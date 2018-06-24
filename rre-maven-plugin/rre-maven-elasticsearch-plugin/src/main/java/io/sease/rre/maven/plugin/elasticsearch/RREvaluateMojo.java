@@ -25,8 +25,7 @@ import java.util.Map;
  * @author agazzarini
  * @since 1.0
  */
-@Mojo( name = "evaluate", inheritByDefault = false, defaultPhase = LifecyclePhase.INSTALL)
-@Execute(phase = LifecyclePhase.INSTALL)
+@Mojo( name = "evaluate", inheritByDefault = false, defaultPhase = LifecyclePhase.PACKAGE)
 public class RREvaluateMojo extends AbstractMojo {
 
     @Parameter(name="configurations-folder", defaultValue = "${basedir}/src/etc/configuration_sets")

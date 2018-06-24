@@ -1,22 +1,27 @@
 {
   "query": {
-    "filtered": {
-      "query": {
-        "multi_match": {
-          "query": "$query",
-          "fields": [
-            "all_content", "title^1.2"
-          ]
+    "multi_match": {
+      "query": "$query",
+      "fields": [
+        "all_content",
+        "title^1.2"
+      ]
+    }
+  },
+  "filter": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "search_api_combined_2": "$filter_1"
+          }
+        },
+        {
+          "term": {
+            "field_parent_category": "$filter_2"
+          }
         }
-      }
-      ,"filter": {
-        "bool": {
-          "must": [
-          	{ "term": { "search_api_combined_2": "$filter_1" } },
-          	{ "term": { "field_parent_category": "$filter_2" } }
-          ]
-        }
-      }
+      ]
     }
   }
 }

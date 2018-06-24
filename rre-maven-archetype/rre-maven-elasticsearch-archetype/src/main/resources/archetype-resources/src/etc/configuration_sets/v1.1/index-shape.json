@@ -4,19 +4,20 @@
     "number_of_replicas": 0,
     "analysis": {
       "filter": {
-        "type": "stop",
-        "stopwords": [
-          "advanced",
-          "basics"
-        ]
+        "en_stopwords": {
+          "type": "stop",
+          "stopwords": [
+            "advanced",
+            "basics"
+          ]
+        }
       },
       "analyzer": {
         "trigrams": {
           "tokenizer": "standard",
           "filter": [
             "standard",
-            "lowercase",
-            "trigrams"
+            "lowercase"
           ]
         }
       }

@@ -1,7 +1,7 @@
 
 {
   "index" : "basses",
-  "corpora_file": "electric_basses.json",
+  "corpora_file": "electric_basses.bulk",
   "id_field": "id",
   "topics" : [
       {
@@ -12,13 +12,13 @@
             "description": "The group tests several searches on the Fender brand",
             "queries": [
               {
-                "template": "only_q.json",
+                "template": "no_filtered_query_shape.json",
                 "placeholders": {
                   "$query": "fender"
                 }
               },
               {
-                "template": "only_q.json",
+                "template": "no_filtered_query_shape.json",
                 "placeholders": {
                   "$query": "Fender"
                 }
@@ -38,13 +38,13 @@
             "description": "Several searches on a given model (Jazz bass)",
             "queries": [
               {
-                "template": "only_q.json",
+                "template": "no_filtered_query_shape.json",
                 "placeholders": {
                   "$query": "jazz"
                 }
               },
               {
-                "template": "only_q.json",
+                "template": "no_filtered_query_shape.json",
                 "placeholders": {
                   "$query": "Jazz"
                 }

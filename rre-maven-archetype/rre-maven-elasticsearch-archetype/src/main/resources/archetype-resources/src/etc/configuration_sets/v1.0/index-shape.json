@@ -8,8 +8,7 @@
           "tokenizer": "standard",
           "filter": [
             "standard",
-            "lowercase",
-            "trigrams"
+            "lowercase"
           ]
         }
       }
