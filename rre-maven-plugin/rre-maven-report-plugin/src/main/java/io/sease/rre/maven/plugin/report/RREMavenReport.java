@@ -25,7 +25,6 @@ import static java.util.stream.StreamSupport.stream;
  * @since 1.0
  */
 @Mojo(name = "report", inheritByDefault = false)
-@Execute(phase = LifecyclePhase.INSTALL )
 public class RREMavenReport extends AbstractMavenReport {
     @Parameter(name = "formats", defaultValue = "spreadsheet")
     List<String> formats;

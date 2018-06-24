@@ -32,7 +32,8 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>test</phase>
+                        <id>search-quality-evaluation</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>evaluate</goal>
                         </goals>
@@ -51,7 +52,8 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>post-integration-test</phase>
+                        <id>search-quality-evaluation-reporting</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
