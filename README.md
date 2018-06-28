@@ -2,6 +2,11 @@
 
 The Rated Ranking Evaluator (RRE) is a search quality evaluation tool which, as the name suggests, evaluates the quality of results coming from a search infrastructure. 
 
+For a detailed description of the project, please visit
+
+* The project Wiki, located at https://github.com/SeaseLtd/rated-ranking-evaluator/wiki   
+* Our talk about RRE at the Solr / Lucene London meetup: https://www.slideshare.net/AndreaGazzarini/search-quality-evaluation-a-developer-perspective   
+
 The currently supported search platforms are at the moment Apache Solr and Elasticsearch (see the documentation for supported versions). 
 
 RRE is a multi-module project which consists of:
