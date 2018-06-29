@@ -11,7 +11,7 @@
     <groupId>io.sease</groupId>
     <artifactId>rre-server</artifactId>
     <version>1.0</version>
-    <name>RRE - Admin Server</name>
+    <name>RRE - Web Control Panel</name>
     <properties>
         <java.version>1.8</java.version>
     </properties>
