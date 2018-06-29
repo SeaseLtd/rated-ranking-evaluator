@@ -8,6 +8,7 @@
     <fields>
         <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
         <field name="name" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
+        <field name="language" type="string" indexed="true" stored="true" required="false" multiValued="false"/>
     </fields>
     <uniqueKey>id</uniqueKey>
 </schema>

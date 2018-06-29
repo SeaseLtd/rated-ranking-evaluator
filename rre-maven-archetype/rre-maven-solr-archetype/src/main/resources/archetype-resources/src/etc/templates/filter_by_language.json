@@ -1,0 +1,4 @@
+{
+  "q" : "$query",
+  "fq": "language:$lang"
+}

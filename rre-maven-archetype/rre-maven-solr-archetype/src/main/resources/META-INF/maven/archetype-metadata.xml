@@ -17,6 +17,7 @@
             <directory>src/etc/templates</directory>
             <includes>
                 <include>only_q.json</include>
+                <include>filter_by_language.json</include>
                 <include>README.md</include>
             </includes>
         </fileSet>
