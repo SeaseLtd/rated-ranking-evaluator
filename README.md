@@ -7,7 +7,7 @@ For a detailed description of the project, please visit
 * The project Wiki, located at https://github.com/SeaseLtd/rated-ranking-evaluator/wiki   
 * Our talk about RRE at the Apache Lucene/Solr London meetup: https://www.slideshare.net/AndreaGazzarini/search-quality-evaluation-a-developer-perspective   
 
-At the moment Apache Solr and Elasticsearch are supported(see the documentation for supported versions). 
+At the moment Apache Solr and Elasticsearch are supported (see the documentation for supported versions). 
 
 RRE is a multi-module project which consists of:
 
@@ -20,7 +20,7 @@ RRE is a multi-module project which consists of:
 
 ![RRE Console](https://user-images.githubusercontent.com/7569632/41497947-0c09516e-7161-11e8-8684-13dfc75ef4ba.png)
 
-The whole system has been built as a framework where metrics can be configured/activated and even plugged-in(of course, this option requires some development)
+The whole system has been built as a framework where metrics can be configured/activated and even plugged-in (of course, this option requires some development)
 The metrics that are part of the current RRE release are: 
 
 * **Precision**: the fraction of retrieved documents that are relevant
