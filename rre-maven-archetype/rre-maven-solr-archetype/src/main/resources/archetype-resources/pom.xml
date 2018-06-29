@@ -47,7 +47,10 @@
                 <configuration>
                     <formats>
                         <param>spreadsheet</param>
-                        <param>rre-server</param>
+                        <!-- IMPORTANT: uncomment the following line if you're running the RRE server -->
+                        <!--
+                            <param>rre-server</param>
+                        -->
                     </formats>
                 </configuration>
                 <executions>

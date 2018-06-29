@@ -24,7 +24,7 @@ public abstract class Utility {
             final ObjectMapper mapper = new ObjectMapper();
             return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(payload.asText()));
         } catch (final Exception exception) {
-            throw new RuntimeException(exception);
+            return payload.asText();
         }
     }
 

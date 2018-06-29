@@ -1,8 +1,8 @@
 {
-  "index" : "core1",
+  "index": "core1",
   "corpora_file": "electric_basses.json",
   "id_field": "id",
-  "topics" : [
+  "topics": [
     {
       "description": "Fender basses",
       "query_groups": [
@@ -22,39 +22,40 @@
                 "$query": "Fender",
                 "$lang": "eng"
               }
-              ],
-              "relevant_documents": {
-                "1": {
-                  "gain": 3
-                },
-                "2": {
-                  "gain": 3
-                }
-              }
-            },
-            {
-              "name": "Jazz bass search",
-              "description": "Several searches on a given model (Jazz bass)",
-              "queries": [
-                {
-                  "template": "only_q.json",
-                  "placeholders": {
-                    "$query": "jazz"
-                  }
-                },
-                {
-                  "template": "only_q.json",
-                  "placeholders": {
-                    "$query": "Jazz"
-                  }
-                }
-              ],
-              "relevant_documents": {
-                "1": {
-                  "gain": 3
-                }
+            }
+           ],
+            "relevant_documents": {
+              "1": {
+                "gain": 3
+              },
+              "2": {
+                "gain": 3
               }
             }
+          },
+          {
+            "name": "Jazz bass search",
+            "description": "Several searches on a given model (Jazz bass)",
+            "queries": [
+              {
+                "template": "only_q.json",
+                "placeholders": {
+                  "$query": "jazz"
+                }
+              },
+              {
+                "template": "only_q.json",
+                "placeholders": {
+                  "$query": "Jazz"
+                }
+              }
+            ],
+            "relevant_documents": {
+              "1": {
+                "gain": 3
+              }
+            }
+          }
           ]
         }
       ]
