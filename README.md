@@ -11,7 +11,7 @@ At the moment Apache Solr and Elasticsearch are supported (see the documentation
 
 The following picture illustrates the RRE ecosystem:
 
-https://user-images.githubusercontent.com/7569632/42134581-e2d50736-7d3e-11e8-8b8e-8b9ab134079b.png
+![RRE Ecosystem](https://user-images.githubusercontent.com/7569632/42134581-e2d50736-7d3e-11e8-8b8e-8b9ab134079b.png)
 
 As you can see, there are a lot modules already in place and planned (those with the dashed border)
 
