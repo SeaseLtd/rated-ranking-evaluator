@@ -6,8 +6,8 @@ import java.util.Locale;
 import static java.util.Arrays.asList;
 
 public class Main {
-    public static void main(String a []) throws Exception {
-        RREMavenReport report = new RREMavenReport(){
+    public static void main(String a[]) throws Exception {
+        RREMavenReport report = new RREMavenReport() {
             @Override
             File evaluationOutputFile() {
                 return new File("/Users/agazzarini/workspaces/rated-ranking-evaluator/rre-maven-plugin/rre-maven-solr-plugin/target/rre/evaluation.json");

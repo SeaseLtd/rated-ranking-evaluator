@@ -35,7 +35,9 @@ public class Recall extends Metric {
 
             @Override
             public BigDecimal value() {
-                if (relevantDocuments.size() == 0) { return totalHits ==0 ? BigDecimal.ONE : BigDecimal.ZERO; }
+                if (relevantDocuments.size() == 0) {
+                    return totalHits == 0 ? BigDecimal.ONE : BigDecimal.ZERO;
+                }
                 return divide(new BigDecimal(relevantItemsFound.get()), relevantDocuments.size());
             }
         };

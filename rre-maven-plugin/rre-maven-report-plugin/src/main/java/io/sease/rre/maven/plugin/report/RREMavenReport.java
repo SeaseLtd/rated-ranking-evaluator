@@ -6,7 +6,8 @@ import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.RREOutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.SpreadsheetOutputFormat;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.reporting.AbstractMavenReport;
 
 import java.io.File;
@@ -33,6 +34,7 @@ public class RREMavenReport extends AbstractMavenReport {
     String endpoint;
 
     private Map<String, OutputFormat> formatters = new HashMap<>();
+
     {
         formatters.put("spreadsheet", new SpreadsheetOutputFormat());
         formatters.put("rre-server", new RREOutputFormat());
@@ -47,11 +49,11 @@ public class RREMavenReport extends AbstractMavenReport {
                 .map(formatters::get)
                 .filter(Objects::nonNull)
                 .forEach(formatter ->
-                            formatter.writeReport(
-                                        evaluationAsJson(),
-                                        evaluationMetadata(evaluationData),
-                                        locale,
-                                        this));
+                        formatter.writeReport(
+                                evaluationAsJson(),
+                                evaluationMetadata(evaluationData),
+                                locale,
+                                this));
     }
 
     /**

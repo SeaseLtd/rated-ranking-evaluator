@@ -29,7 +29,8 @@ public class AveragePrecision extends Metric {
 
             @Override
             public void collect(final Map<String, Object> hit, final int rank, String version) {
-                if (howManyRelevantDocuments == null) howManyRelevantDocuments = new BigDecimal(relevantDocuments.size());
+                if (howManyRelevantDocuments == null)
+                    howManyRelevantDocuments = new BigDecimal(relevantDocuments.size());
 
                 relevantItemsFound = sum(relevantItemsFound, judgment(id(hit)).isPresent() ? BigDecimal.ONE : BigDecimal.ZERO);
 
@@ -49,7 +50,9 @@ public class AveragePrecision extends Metric {
 
             @Override
             public BigDecimal value() {
-                if (relevantDocuments.size() == 0) { return totalHits == 0 ? BigDecimal.ONE : BigDecimal.ZERO; }
+                if (relevantDocuments.size() == 0) {
+                    return totalHits == 0 ? BigDecimal.ONE : BigDecimal.ZERO;
+                }
                 return value;
             }
         };

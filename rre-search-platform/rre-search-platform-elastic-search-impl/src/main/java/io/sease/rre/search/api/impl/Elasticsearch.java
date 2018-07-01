@@ -17,7 +17,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.plugins.Plugin;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.transport.Netty4Plugin;
 
@@ -64,11 +63,11 @@ public class Elasticsearch implements SearchPlatform {
         dataFolder.mkdirs();
 
         final Settings.Builder settings = Settings.builder()
-                .put("path.home", (String)configuration.get("path.home"))
+                .put("path.home", (String) configuration.get("path.home"))
                 .put("transport.type", "netty4")
                 .put("http.type", "netty4")
                 .put("network.host", "127.0.0.1")
-                .put("http.port", (Integer)configuration.getOrDefault("network.host", 9200))
+                .put("http.port", (Integer) configuration.getOrDefault("network.host", 9200))
                 .put("http.enabled", "true")
                 .put("path.logs", logsFolder.getAbsolutePath())
                 .put("path.data", dataFolder.getAbsolutePath());
@@ -145,7 +144,7 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String [] fields, final int maxRows) {
+    public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String[] fields, final int maxRows) {
         try {
             final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
             final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(q)).size(maxRows).fetchSource(fields, null);
@@ -156,7 +155,8 @@ public class Elasticsearch implements SearchPlatform {
                             .map(hit -> {
                                 final Map<String, Object> result = new HashMap(hit.getSourceAsMap());
                                 result.put("_id", hit.getId());
-                                return result;})
+                                return result;
+                            })
                             .collect(toList()));
         } catch (final IOException exception) {
             throw new RuntimeException(exception);

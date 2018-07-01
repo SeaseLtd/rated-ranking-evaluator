@@ -38,16 +38,16 @@ public class Engine {
     private final List<Class<? extends Metric>> availableMetricsDefs;
 
     private final SearchPlatform platform;
-    private final String [] fields;
+    private final String[] fields;
 
     /**
      * Builds a new {@link Engine} instance with the given data.
      *
-     * @param platform the search platform in use.
+     * @param platform                 the search platform in use.
      * @param configurationsFolderPath the configurations folder path.
-     * @param corporaFolderPath the corpora folder path.
-     * @param ratingsFolderPath the ratings folder path.
-     * @param templatesFolderPath the query templates folder path.
+     * @param corporaFolderPath        the corpora folder path.
+     * @param ratingsFolderPath        the ratings folder path.
+     * @param templatesFolderPath      the query templates folder path.
      */
     public Engine(
             final SearchPlatform platform,
@@ -56,7 +56,7 @@ public class Engine {
             final String ratingsFolderPath,
             final String templatesFolderPath,
             final List<String> metrics,
-            final String [] fields) {
+            final String[] fields) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
@@ -150,10 +150,10 @@ public class Engine {
     /**
      * Creates a new set of metrics.
      *
-     * @param definitions the metrics definitions.
-     * @param idFieldName the id fieldname.
+     * @param definitions          the metrics definitions.
+     * @param idFieldName          the id fieldname.
      * @param relevantDocumentsMap the relevant documents for a given query.
-     * @param versions the available versions for a given query.
+     * @param versions             the available versions for a given query.
      * @return a new metrics set for the current query evaluation.
      */
     private List<Metric> availableMetrics(
@@ -172,7 +172,8 @@ public class Engine {
                         return metric;
                     } catch (final Exception exception) {
                         throw new IllegalArgumentException(exception);
-                    }})
+                    }
+                })
                 .collect(toList());
     }
 
@@ -180,8 +181,8 @@ public class Engine {
      * Loads the query template associated with the given name.
      *
      * @param defaultTemplateName the default template.
-     * @param templateName the query template name.
-     * @param version the current version being executed.
+     * @param templateName        the query template name.
+     * @param version             the current version being executed.
      * @return the query template associated with the given name.
      */
     private String queryTemplate(final Optional<String> defaultTemplateName, final Optional<String> templateName, final String version) {
@@ -189,12 +190,12 @@ public class Engine {
             final String templateNameInUse =
                     templateName.orElseGet(
                             () -> defaultTemplateName.orElseThrow(
-                                () -> new IllegalArgumentException("Unable to determine the query template.")));
+                                    () -> new IllegalArgumentException("Unable to determine the query template.")));
             return of(templateNameInUse)
-                .map(name -> name.contains("${version}") ? name.replace("${version}", version) : name)
-                .map(name -> new File(templatesFolder, name))
-                .map(this::templateContent)
-                .orElseThrow(() -> new IllegalArgumentException("Unable to determine the query template."));
+                    .map(name -> name.contains("${version}") ? name.replace("${version}", version) : name)
+                    .map(name -> new File(templatesFolder, name))
+                    .map(this::templateContent)
+                    .orElseThrow(() -> new IllegalArgumentException("Unable to determine the query template."));
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
@@ -239,14 +240,14 @@ public class Engine {
      * Prepares the search platform with the given index name and dataset.
      *
      * @param indexName the index name.
-     * @param data the dataset.
+     * @param data      the dataset.
      */
     private void prepareData(final String indexName, final File data) {
-        final File [] versionFolders = safe(configurationsFolder.listFiles(ONLY_DIRECTORIES));
+        final File[] versionFolders = safe(configurationsFolder.listFiles(ONLY_DIRECTORIES));
         stream(versionFolders)
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(file -> (file.isDirectory() && file.getName().equals(indexName))
-                                    || (file.isFile() && file.getName().startsWith("index")))
+                        || (file.isFile() && file.getName().startsWith("index")))
                 .forEach(fileOrFolder -> platform.load(data, fileOrFolder, indexFqdn(indexName, fileOrFolder.getParentFile().getName())));
 
         this.versions = stream(versionFolders).map(File::getName).collect(toList());
@@ -258,7 +259,7 @@ public class Engine {
      * name) for avoiding conflicts between versions.
      *
      * @param indexName the index name.
-     * @param version the current version.
+     * @param version   the current version.
      * @return the FDQN of the target index that will be used.
      */
     private String indexFqdn(final String indexName, final String version) {
@@ -269,14 +270,14 @@ public class Engine {
      * Returns a query (as a string) that will be used for executing a specific evaluation.
      * A query string is the result of replacing all placeholders found in the template.
      *
-     * @param queryNode the JSON query node (in ratings configuration).
+     * @param queryNode       the JSON query node (in ratings configuration).
      * @param defaultTemplate the default template that will be used if a query doesn't declare it.
-     * @param version the version being executed.
+     * @param version         the version being executed.
      * @return a query (as a string) that will be used for executing a specific evaluation.
      */
     private String query(final JsonNode queryNode, final Optional<String> defaultTemplate, final String version) {
         String query = queryTemplate(defaultTemplate, ofNullable(queryNode.get("template")).map(JsonNode::asText), version);
-        for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext();) {
+        for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
             final String name = iterator.next();
             query = query.replace(name, queryNode.get("placeholders").get(name).asText());
         }

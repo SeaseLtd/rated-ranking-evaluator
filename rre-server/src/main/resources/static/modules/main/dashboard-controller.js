@@ -2,6 +2,7 @@
     angular.module('myApp').controller('DashboardController', DashboardController);
 
     DashboardController.$inject = ['$scope', '$http', '$log', 'DataService', '$interval', 'ConfigService'];
+
     function DashboardController($scope, $http, $log, DataService, $interval, ConfigService) {
         var vm = this;
 
@@ -28,7 +29,7 @@
                     $log.error("DataService - Error while performing request:", response);
                 }
             );
-            $interval(function() {
+            $interval(function () {
                 DataService.getData().then(
                     function (response) {
                         vm.data = response.data;
@@ -49,8 +50,6 @@
             }
             return 0;
         }
-
-
 
 
     }

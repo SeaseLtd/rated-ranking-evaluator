@@ -42,8 +42,12 @@ public class ReciprocalRank extends Metric {
 
             @Override
             public BigDecimal value() {
-                if (relevantDocuments.size() == 0) { return totalHits == 0 ? BigDecimal.ONE : BigDecimal.ZERO; }
-                if (rank == 0) { return BigDecimal.ZERO;}
+                if (relevantDocuments.size() == 0) {
+                    return totalHits == 0 ? BigDecimal.ONE : BigDecimal.ZERO;
+                }
+                if (rank == 0) {
+                    return BigDecimal.ZERO;
+                }
 
                 return BigDecimal.ONE.divide(new BigDecimal(rank), 2, RoundingMode.HALF_UP);
             }

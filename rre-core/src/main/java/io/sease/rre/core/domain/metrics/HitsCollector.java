@@ -14,7 +14,7 @@ public interface HitsCollector {
     /**
      * Consumes the "hit availability" event.
      *
-     * @param hit the search hit.
+     * @param hit  the search hit.
      * @param rank the hit rank.
      */
     void collect(Map<String, Object> hit, int rank, String version);

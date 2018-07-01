@@ -6,6 +6,7 @@
     angular.module('App').controller('FeatureController', FeatureController);
 
     FeatureController.$inject = ['$scope', 'logger', 'resolvedValue'];
+
     function FeatureController($scope, logger, resolvedValue) {
         var vm = this;
 
@@ -43,14 +44,13 @@
          * Watch a variable with $watch
          */
         $scope.$watch('vm.variable', watchVariable);
+
         function watchVariable(newValue) {
             logger.log('FeatureController', 'variable=' + newValue);
         }
 
     }
 })();
-
-
 
 
 /**
@@ -61,6 +61,7 @@
     angular.module('App').factory('SimpleService', SimpleService);
 
     SimpleService.$inject = ['logger'];
+
     function SimpleService(logger) {
 
         var aVar; // A variable internal to the service
@@ -73,13 +74,12 @@
         };
 
 
-
         ////////////
 
         /**
          * Init
          */
-        function init(){
+        function init() {
 
         }
 
@@ -99,7 +99,6 @@
         }
 
 
-
     }
 
 
@@ -116,6 +115,7 @@
     angular.module('App').service('sharedModel', sharedModel);
 
     sharedModel.$inject = [];
+
     function sharedModel() {
         var _this = this;
 
@@ -128,7 +128,6 @@
 })();
 
 
-
 /**
  * This is a router config
  *
@@ -138,6 +137,7 @@
     angular.module('App').config(config);
 
     config.$inject = ['$routeProvider'];
+
     function config($routeProvider) {
         $routeProvider.when('/path/:id', {
             controller: 'FeatureController',

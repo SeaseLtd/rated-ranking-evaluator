@@ -2,6 +2,7 @@
     angular.module('myApp').controller('NavbarController', NavbarController);
 
     NavbarController.$inject = ['$scope', '$http', '$log', 'DataService'];
+
     function NavbarController($scope, $http, $log, DataService) {
         var vm = this;
 

@@ -19,7 +19,7 @@ public class QueryOrSearchResponse {
      * Builds a new response with the given data.
      *
      * @param totalHits the total hits of this response.
-     * @param hits the current hits window.
+     * @param hits      the current hits window.
      */
     public QueryOrSearchResponse(final long totalHits, final List<Map<String, Object>> hits) {
         this.totalHits = totalHits;

@@ -16,7 +16,7 @@ public class EvaluationMetadata {
      * Builds a new metadata with the given values.
      *
      * @param versions the available versions in the evaluation data.
-     * @param metrics the available metrics in the evaluation data.
+     * @param metrics  the available metrics in the evaluation data.
      */
     public EvaluationMetadata(final List<String> versions, final List<String> metrics) {
         this.versions = versions;

@@ -32,7 +32,7 @@ public abstract class Utility {
      * Produces a stream consisting of all children of the given JSON node.
      *
      * @param parent the JSON node.
-     * @param name the name of the attribute associated with the requested children.
+     * @param name   the name of the attribute associated with the requested children.
      * @return a stream consisting of all children of the given JSON node.
      */
     public static Stream<JsonNode> all(final JsonNode parent, final String name) {

@@ -17,6 +17,7 @@ import java.util.Map;
  */
 public class PrecisionAtK extends Metric {
     private final int k;
+
     /**
      * Builds a new AveragePrecision at X metric.
      *
@@ -41,7 +42,9 @@ public class PrecisionAtK extends Metric {
 
             @Override
             public BigDecimal value() {
-                if (totalHits == 0) { return relevantDocuments.size() ==0 ? BigDecimal.ONE : BigDecimal.ZERO; }
+                if (totalHits == 0) {
+                    return relevantDocuments.size() == 0 ? BigDecimal.ONE : BigDecimal.ZERO;
+                }
                 return collected.stream()
                         .map(hit -> BigDecimal.ONE)
                         .reduce(BigDecimal.ZERO, BigDecimal::add)

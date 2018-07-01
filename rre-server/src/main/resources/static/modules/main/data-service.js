@@ -2,6 +2,7 @@
     angular.module('myApp').factory('DataService', DataService);
 
     DataService.$inject = ['$log', '$http', 'ConfigService'];
+
     function DataService($log, $http, ConfigService) {
 
         init();

@@ -2,8 +2,6 @@ package io.sease.rre.search.api;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,8 +23,8 @@ public interface SearchPlatform extends Closeable {
     /**
      * Loads some data in a given index.
      *
-     * @param corpus the data.
-     * @param configFolder the folder that contains the configuration for the given index.
+     * @param corpus          the data.
+     * @param configFolder    the folder that contains the configuration for the given index.
      * @param targetIndexName the name of the index where data will be indexed.
      */
     void load(final File corpus, final File configFolder, final String targetIndexName);
@@ -51,9 +49,9 @@ public interface SearchPlatform extends Closeable {
      * The semantic of the input query may change between concrete platforms
      *
      * @param indexName the index name that holds the data.
-     * @param query the query.
-     * @param maxRows the maximum number of rows that will be returned.
+     * @param query     the query.
+     * @param maxRows   the maximum number of rows that will be returned.
      * @return the response of the query execution.
      */
-    QueryOrSearchResponse executeQuery(String indexName, String query, final String [] fields, int maxRows);
+    QueryOrSearchResponse executeQuery(String indexName, String query, final String[] fields, int maxRows);
 }

@@ -1,8 +1,8 @@
 package io.sease.rre.maven.plugin.report.formats.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.RREMavenReport;
+import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -69,7 +69,8 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                             header.getRowNum(),
                             4,
                             4 + (metadata.howManyMetrics() * metadata.howManyVersions())));
-        } catch (final Exception ignore) {}
+        } catch (final Exception ignore) {
+        }
 
         return header;
     }
@@ -97,7 +98,8 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                         header.getRowNum(),
                                         columnIndex,
                                         columnIndex + (metadata.howManyVersions() - 1)));
-                    } catch (final Exception ignore) {}
+                    } catch (final Exception ignore) {
+                    }
                 });
         return header;
     }
@@ -124,13 +126,13 @@ public class SpreadsheetOutputFormat implements OutputFormat {
     private void writeMetrics(final JsonNode ownerNode, final XSSFRow row) {
         AtomicInteger counter = new AtomicInteger();
         ownerNode.get("metrics").fields()
-                .forEachRemaining( entry ->
-                    entry.getValue().get("versions").fields()
-                            .forEachRemaining(vEntry -> {
-                                final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
-                                double value = vEntry.getValue().get("value").asDouble();
-                                vCell.setCellValue(value);
-                            }));
+                .forEachRemaining(entry ->
+                        entry.getValue().get("versions").fields()
+                                .forEachRemaining(vEntry -> {
+                                    final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
+                                    double value = vEntry.getValue().get("value").asDouble();
+                                    vCell.setCellValue(value);
+                                }));
 
     }
 
@@ -211,7 +213,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
 
                                     float defaultRowHeightInPoints = spreadsheet.getDefaultRowHeightInPoints();
                                     float rowHeight = tallestCell;
-                                    if (rowHeight < defaultRowHeightInPoints+1) {
+                                    if (rowHeight < defaultRowHeightInPoints + 1) {
                                         rowHeight = -1;    // resets to the default
                                     }
 

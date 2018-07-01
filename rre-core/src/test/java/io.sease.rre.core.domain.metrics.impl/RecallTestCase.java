@@ -57,7 +57,7 @@ public class RecallTestCase extends BaseTestCase {
 
     /**
      * Scenario: 15 judgments, 15 search results, 10 relevant results in top positions.
-     */ 
+     */
     @Test
     public void _10_judgments_15_search_results_10_relevant_results_at_top() {
         final ObjectNode judgements = mapper.createObjectNode();
@@ -125,7 +125,7 @@ public class RecallTestCase extends BaseTestCase {
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
         assertEquals(
-                5/10d,
+                5 / 10d,
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0.001);
     }

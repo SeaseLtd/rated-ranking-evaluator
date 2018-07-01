@@ -1,8 +1,8 @@
 package io.sease.rre.maven.plugin.report.formats;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.RREMavenReport;
+import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 
 import java.util.Locale;
 
@@ -16,10 +16,10 @@ public interface OutputFormat {
     /**
      * Writes out the report, according with the logic of this concrete implementor.
      *
-     * @param data the RRE evaluation result.
+     * @param data     the RRE evaluation result.
      * @param metadata the RRE evaluation metadata.
-     * @param locale the current locale.
-     * @param plugin the owning plugin.
+     * @param locale   the current locale.
+     * @param plugin   the owning plugin.
      */
     void writeReport(JsonNode data, EvaluationMetadata metadata, Locale locale, RREMavenReport plugin);
 }

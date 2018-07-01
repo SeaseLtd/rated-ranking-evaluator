@@ -39,7 +39,7 @@ public class NDCGAtTen extends Metric {
                 if (rank > 10) return;
                 judgment(id(hit))
                         .ifPresent(judgment -> {
-                            switch(rank) {
+                            switch (rank) {
                                 case 1:
                                     dcg = judgment.get(GAIN) == null || judgment.get(GAIN).isNull()
                                             ? new BigDecimal(2)
@@ -51,9 +51,12 @@ public class NDCGAtTen extends Metric {
                             }
                         });
             }
+
             @Override
             public BigDecimal value() {
-                if (totalHits == 0) { return relevantDocuments.size() == 0 ? BigDecimal.ONE : BigDecimal.ZERO; }
+                if (totalHits == 0) {
+                    return relevantDocuments.size() == 0 ? BigDecimal.ONE : BigDecimal.ZERO;
+                }
 
                 return dcg.divide(idealDcg(relevantDocuments), 2, RoundingMode.FLOOR);
             }
@@ -62,14 +65,14 @@ public class NDCGAtTen extends Metric {
 
     private BigDecimal idealDcg(final JsonNode relevantDocuments) {
         final int windowSize = Math.min(relevantDocuments.size(), 10); // TODO make it dynamic
-        final int [] gains = new int [windowSize];
+        final int[] gains = new int[windowSize];
 
         final Map<Integer, List<JsonNode>> groups = StreamSupport.stream(relevantDocuments.spliterator(), false).collect(groupingBy(doc -> doc.get("gain").intValue()));
 
-        final int veryVeryRelevantDocsCount= groups.getOrDefault(3, emptyList()).size();
+        final int veryVeryRelevantDocsCount = groups.getOrDefault(3, emptyList()).size();
         final int howManyVeryVeryRelevantDocs = Math.min(veryVeryRelevantDocsCount, windowSize);
 
-        final int veryRelevantDocsCount= groups.getOrDefault(2, emptyList()).size();
+        final int veryRelevantDocsCount = groups.getOrDefault(2, emptyList()).size();
         final int howManyVeryRelevantDocs = Math.min(veryRelevantDocsCount, windowSize - howManyVeryVeryRelevantDocs);
 
         final int marginallyRelevantDocsCount = groups.getOrDefault(1, emptyList()).size();
@@ -81,7 +84,7 @@ public class NDCGAtTen extends Metric {
         }
 
         BigDecimal result = new BigDecimal(gains[0]);
-        for (int i = 1 ; i < gains.length; i++) {
+        for (int i = 1; i < gains.length; i++) {
             result = result.add(new BigDecimal(gains[i] / (Math.log(i + 1) / Math.log(2))));
         }
 

@@ -35,7 +35,9 @@ public class Precision extends Metric {
 
             @Override
             public BigDecimal value() {
-                if (totalHits == 0) { return relevantDocuments.size() ==0 ? BigDecimal.ONE : BigDecimal.ZERO; }
+                if (totalHits == 0) {
+                    return relevantDocuments.size() == 0 ? BigDecimal.ONE : BigDecimal.ZERO;
+                }
                 return divide(new BigDecimal(relevantItemsFound.get()), totalHits);
             }
         };

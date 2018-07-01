@@ -28,7 +28,7 @@ public abstract class Func {
      * This is used in iterations, in order to avoid NPE.
      *
      * @param values the input array.
-     * @param <T> the array type.
+     * @param <T>    the array type.
      * @return the same array, if it's not null, an empty array otherwise.
      */
     public static <T> T[] safe(final T[] values) {
@@ -40,7 +40,7 @@ public abstract class Func {
      * This is used in iterations, in order to avoid NPE.
      *
      * @param values the input array.
-     * @param <T> the array type.
+     * @param <T>    the array type.
      * @return the same array, if it's not null, an empty array otherwise.
      */
     public static <T> List<T> safe(final List<T> values) {

@@ -39,7 +39,7 @@ public abstract class DomainMember<C extends DomainMember> {
     /**
      * Finds or creates a new child with the given name.
      *
-     * @param name the child name (which is used as its identifier).
+     * @param name    the child name (which is used as its identifier).
      * @param factory a supplier that will be used for creating a new instance of requested child (if it doesn't exist).
      * @return a child with the given name.
      */
@@ -92,8 +92,8 @@ public abstract class DomainMember<C extends DomainMember> {
      * Collects a leaf metric data (which has been just computed).
      *
      * @param version the version associated with the metric.
-     * @param value the metric value.
-     * @param name the metric name.
+     * @param value   the metric value.
+     * @param name    the metric name.
      */
     private void collectLeafMetric(final String version, final BigDecimal value, final String name) {
         metric(name).collect(version, value);
@@ -114,11 +114,11 @@ public abstract class DomainMember<C extends DomainMember> {
         metrics.values().stream()
                 .flatMap(metric -> metric.getVersions().entrySet().stream())
                 .forEach(entry ->
-                    ofNullable(parent)
-                            .ifPresent(p -> p.collectLeafMetric(
-                                    entry.getKey(),
-                                    entry.getValue().value(),
-                                    entry.getValue().owner().getName())));
+                        ofNullable(parent)
+                                .ifPresent(p -> p.collectLeafMetric(
+                                        entry.getKey(),
+                                        entry.getValue().value(),
+                                        entry.getValue().owner().getName())));
     }
 
     public Map<String, Metric> getMetrics() {

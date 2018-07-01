@@ -8,7 +8,7 @@
     <indexConfig>
         <lockType>${solr.lock.type:native}</lockType>
     </indexConfig>
-    <jmx />
+    <jmx/>
     <updateHandler class="solr.DirectUpdateHandler2"/>
     <query>
         <maxBooleanClauses>1024</maxBooleanClauses>
@@ -21,7 +21,7 @@
                 size="10"
                 initialSize="0"
                 autowarmCount="10"
-                regenerator="solr.NoOpRegenerator" />
+                regenerator="solr.NoOpRegenerator"/>
         <enableLazyFieldLoading>true</enableLazyFieldLoading>
         <queryResultWindowSize>20</queryResultWindowSize>
         <queryResultMaxDocsCached>200</queryResultMaxDocsCached>
@@ -29,13 +29,13 @@
         <maxWarmingSearchers>2</maxWarmingSearchers>
     </query>
 
-    <requestDispatcher handleSelect="true" >
+    <requestDispatcher handleSelect="true">
         <requestParsers
                 enableRemoteStreaming="true"
                 multipartUploadLimitInKB="2048000"
                 formdataUploadLimitInKB="2048"
                 addHttpRequestToContext="false"/>
-        <httpCaching never304="true" />
+        <httpCaching never304="true"/>
     </requestDispatcher>
     <requestHandler name="/query" class="solr.SearchHandler"/>
     <admin>
