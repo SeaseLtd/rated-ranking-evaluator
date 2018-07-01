@@ -1,0 +1,200 @@
+<div class="container-fluid">
+    <table class="table table-bordered table-hover table-sm">
+        <thead class="thead-light">
+        <tr>
+            <th scope="col" class="text-center">Corpus</th>
+            <th scope="col" class="text-center">Topic</th>
+            <th scope="col" class="text-center">Query Group</th>
+            <th scope="col" class="text-center">Query</th>
+            <th scope="col" class="text-center" colspan="{{vm.getMetricsCount()}}">Metrics</th>
+        </tr>
+        <tr>
+            <th scope="col">&nbsp;</th>
+            <th scope="col">&nbsp;</th>
+            <th scope="col">&nbsp;</th>
+            <th scope="col">&nbsp;</th>
+            <th scope="col" class="text-center" ng-repeat="mtr in vm.data.metrics">{{mtr.name}}</th>
+        </tr>
+        </thead>
+        <tbody ng-repeat="corp in vm.data.corpora track by $index">
+            <tr class="table-primary">
+                <th scope="row">{{corp.name}}</th>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td ng-repeat="mtr in corp.metrics">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th ng-repeat="(ver, obj) in mtr.versions" class="col-sm text-center">
+                                    {{ver}}
+                                </th>
+                                <th colspan="{{mtr.trend.length}}" class="text-center">
+                                    &Delta;
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td ng-repeat="(ver, obj) in mtr.versions" class="col-sm">
+                                    {{obj.value}}
+                                </td>
+                                <td ng-repeat="t in mtr.trend" class="{{t > 0 ? 'bg-success' : (t < 0 ? 'bg-danger' : 'bg-warning')}}">
+                                    <!-- How to present more than a trend value? -->
+                                    {{t | number:4}}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr ng-repeat-start="topic in corp.topics track by $index" class="table-secondary">
+                <td>&nbsp;</td>
+                <td scope="row">{{topic.name}}</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td ng-repeat="mtr in topic.metrics">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th ng-repeat="(ver, obj) in mtr.versions track by $index" class="col-sm text-center">
+                                {{ver}}
+                            </th>
+                            <th colspan="{{mtr.trend.length}}" class="text-center">
+                                &Delta;
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td ng-repeat="(ver, obj) in mtr.versions track by $index" class="col-sm">
+                                {{obj.value}}
+                            </td>
+                            <td ng-repeat="t in mtr.trend track by $index" class="{{t > 0 ? 'bg-success' : (t < 0 ? 'bg-danger' : 'bg-warning')}}">
+                                <!-- How to present more than a trend value? -->
+                                {{t | number:4}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr ng-repeat-start="qg in topic['query-groups']">
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td scope="row">{{qg.name}}</td>
+                <td>&nbsp;</td>
+                <td ng-repeat="mtr in qg.metrics">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th ng-repeat="(ver, obj) in mtr.versions" class="col-sm text-center">
+                                {{ver}}
+                            </th>
+                            <th colspan="{{mtr.trend.length}}" class="text-center">
+                                &Delta;
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td ng-repeat="(ver, obj) in mtr.versions" class="col-sm">
+                                {{obj.value}}
+                            </td>
+                            <td ng-repeat="t in mtr.trend track by $index" class="{{t > 0 ? 'bg-success' : (t < 0 ? 'bg-danger' : 'bg-warning')}}">
+                                <!-- How to present more than a trend value? -->
+                                {{t | number:4}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr ng-repeat-start="qe in qg['query-evaluations']">
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td class="text-center">
+                    &nbsp;
+                </td>
+                <td scope="row" class="code">
+                    <pre><code>{{qe.query}}</code></pre>
+                    <i
+                            style="cursor:pointer"
+                            ng-show="vm.isDetailOpen[qe.query]!=true"
+                            class="fas fa-caret-right"
+                            ng-click="vm.isDetailOpen[qe.query] = !vm.isDetailOpen[qe.query]"></i>
+                    <i
+                            style="cursor:pointer"
+                            ng-show="vm.isDetailOpen[qe.query]==true"
+                            class="fas fa-caret-down"
+                            ng-click="vm.isDetailOpen[qe.query] = !vm.isDetailOpen[qe.query]"></i>
+
+                </td>
+                <td ng-repeat="mtr in qe.metrics">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th ng-repeat="(ver, obj) in mtr.versions" class="col-sm text-center">
+                                {{ver}}
+                            </th>
+                            <th colspan="{{mtr.trend.length}}" class="text-center">
+                                &Delta;
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td ng-repeat="(ver, obj) in mtr.versions" class="col-sm">
+                                {{obj.value}}
+                            </td>
+                            <td ng-repeat="t in mtr.trend track by $index" class="{{t > 0 ? 'bg-success' : (t < 0 ? 'bg-danger' : 'bg-warning')}}">
+                                <!-- How to present more than a trend value? -->
+                                {{t | number:4}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+
+            <tr ng-show="vm.isDetailOpen[qe.query]">
+                <td colspan="{{4 + vm.getMetricsCount()}}">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead>
+                            <th class="bg-dark text-light text-center">&nbsp;</th>
+                            <th class="bg-dark text-light text-center" ng-repeat="n in [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]">#{{n}}</th>
+                        </thead>
+                        <tbody>
+                            <tr role="row" ng-repeat="(version, result) in qe.results">
+                                <th scope="row">
+                                    Ver. {{version}} <br> Hits: {{result['total-hits']}}
+                                </th>
+                                <td ng-repeat="hit in result.hits.slice(0, 10)">
+                                    <table class="table table-bordered table-sm">
+                                        <tr ng-repeat="(field, value) in hit" ng-if="!field.startsWith('_')">
+                                            <td class="bg-dark text-light">{{field}}</td>
+                                            <td class="{{hit._isRelevant?'text-info':'text-danger'}}">{{value}}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr ng-repeat-end ng-hide="true">
+                <td></td>
+            </tr>
+
+            <tr ng-repeat-end ng-hide="true">
+                <td></td>
+            </tr>
+            <tr ng-repeat-end ng-hide="true">
+                <td></td>
+            </tr>
+            <tr ng-repeat-end ng-hide="true">
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
