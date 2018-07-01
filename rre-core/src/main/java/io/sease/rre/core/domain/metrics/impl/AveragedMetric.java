@@ -1,6 +1,5 @@
 package io.sease.rre.core.domain.metrics.impl;
 
-import io.sease.rre.Calculator;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
@@ -14,8 +13,8 @@ import static io.sease.rre.Calculator.sum;
 /**
  * A metric which is the mathematic mean of other collected metrics.
  *
- * @since 1.0
  * @author agazzarini
+ * @since 1.0
  */
 public class AveragedMetric extends Metric {
 
@@ -71,13 +70,13 @@ public class AveragedMetric extends Metric {
     /**
      * Collects a new (metric) value.
      *
-     * @param version the version associated with the collected (metric) value.
+     * @param version         the version associated with the collected (metric) value.
      * @param additionalValue the collected value.
      */
     public void collect(final String version, final BigDecimal additionalValue) {
         ((MutableValueFactory)
-                values.computeIfAbsent(version, v ->  valueFactory()))
-                    .collect(additionalValue);
+                values.computeIfAbsent(version, v -> valueFactory()))
+                .collect(additionalValue);
     }
 
     @Override

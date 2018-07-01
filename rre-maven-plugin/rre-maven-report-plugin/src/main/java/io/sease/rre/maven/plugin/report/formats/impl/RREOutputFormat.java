@@ -2,8 +2,8 @@ package io.sease.rre.maven.plugin.report.formats.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.RREMavenReport;
+import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import okhttp3.*;
 

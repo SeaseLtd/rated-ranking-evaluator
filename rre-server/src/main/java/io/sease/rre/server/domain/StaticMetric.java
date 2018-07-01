@@ -6,8 +6,6 @@ import io.sease.rre.core.domain.metrics.ValueFactory;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import static java.util.Optional.ofNullable;
-
 /**
  * A metric holder, which is not itself a metric but contains some metric data (actually name and value).
  * This is needed on RRE server side because here we no longer have the metrics definitions (in terms of classes / subclasses)

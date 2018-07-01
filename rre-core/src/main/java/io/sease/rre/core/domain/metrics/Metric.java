@@ -21,14 +21,14 @@ import static java.util.stream.IntStream.range;
  * Supertype layer for all metrics.
  * An evaluation metric, within an information retrieval system context,
  * is used to assess how well the search results satisfied the user's query intent.
- *
+ * <p>
  * A metric doesn't provide directly a value: this because within the RRE data model we can have several versions of
  * the same metric associated to different configurations. Although the metric is always the same, the value can
  * change between version; as consequence of that, the "value" computation itself is delegated to a special class
  * called, not surprisingly, {@link ValueFactory}.
  *
- * @see ValueFactory
  * @author agazzarini
+ * @see ValueFactory
  * @since 1.0
  */
 public abstract class Metric implements HitsCollector {

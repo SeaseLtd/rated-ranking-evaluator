@@ -9,8 +9,8 @@ import java.util.List;
  * a subject (with a given level of granularity) which defines a user's search intent.
  *
  * @author agazzarini
- * @since 1.0
  * @see <a href="https://en.wikipedia.org/wiki/Information_needs">Information Need (Wikipedia)</a>
+ * @since 1.0
  */
 public class Topic extends DomainMember<QueryGroup> {
     @JsonProperty("query-groups")

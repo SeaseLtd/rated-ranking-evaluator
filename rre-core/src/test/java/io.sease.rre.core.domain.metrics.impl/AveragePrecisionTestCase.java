@@ -79,7 +79,7 @@ public class AveragePrecisionTestCase extends BaseTestCase {
 
     /**
      * Scenario: 10 judgments, 15 search results, 10 relevant results in top positions.
-     */ 
+     */
     @Test
     public void _10_judgments_15_search_results_10_relevant_results_at_top() {
         final ObjectNode judgements = mapper.createObjectNode();

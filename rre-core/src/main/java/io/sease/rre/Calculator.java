@@ -19,7 +19,7 @@ public abstract class Calculator {
      * @param addends the numbers that will be added together.
      * @return the sum of all input addends.
      */
-    public static BigDecimal sum(final BigDecimal ... addends) {
+    public static BigDecimal sum(final BigDecimal... addends) {
         return stream(addends).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -29,14 +29,14 @@ public abstract class Calculator {
      * @param numbers the numbers that will be added together.
      * @return the product of all input numbers.
      */
-    public static BigDecimal multiply(final BigDecimal ... numbers) {
+    public static BigDecimal multiply(final BigDecimal... numbers) {
         return stream(numbers).reduce(BigDecimal.ONE, BigDecimal::multiply);
     }
 
     /**
      * Executes a subtraction between the two numbers.
      *
-     * @param minuend the minuend.
+     * @param minuend   the minuend.
      * @param subtraend the subtraend.
      * @return the result of the subtraction.
      */
@@ -48,7 +48,7 @@ public abstract class Calculator {
      * Executes a division between the two numbers.
      *
      * @param dividend the dividend.
-     * @param divisor the divisor.
+     * @param divisor  the divisor.
      * @return the result of the division.
      */
     public static BigDecimal divide(final BigDecimal dividend, final BigDecimal divisor) {
@@ -59,7 +59,7 @@ public abstract class Calculator {
      * Executes a division between the two numbers.
      *
      * @param dividend the dividend.
-     * @param divisor the divisor.
+     * @param divisor  the divisor.
      * @return the result of the division.
      */
     public static BigDecimal divide(final BigDecimal dividend, final int divisor) {
@@ -70,7 +70,7 @@ public abstract class Calculator {
      * Executes a division between the two numbers.
      *
      * @param dividend the dividend.
-     * @param divisor the divisor.
+     * @param divisor  the divisor.
      * @return the result of the division.
      */
     public static BigDecimal divide(final BigDecimal dividend, final long divisor) {

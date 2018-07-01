@@ -39,7 +39,7 @@ public class ReciprocalRankTestCase extends BaseTestCase {
     public void firstRelevantResultAtFirstPosition() {
         final String relevantDocumentId = "3";
 
-        final String [] documents = {relevantDocumentId, "4","8","9","991","98","245"};
+        final String[] documents = {relevantDocumentId, "4", "8", "9", "991", "98", "245"};
 
         final ObjectNode judgements = mapper.createObjectNode();
         judgements.set(relevantDocumentId, createJudgmentNode(2));
@@ -63,7 +63,7 @@ public class ReciprocalRankTestCase extends BaseTestCase {
     public void firstMaxRelevantResultAtFourthPosition() {
         final String relevantDocumentId = "3";
 
-        final String [] documents = {"5","8","9",relevantDocumentId,"991","98","245"};
+        final String[] documents = {"5", "8", "9", relevantDocumentId, "991", "98", "245"};
 
         final ObjectNode judgements = mapper.createObjectNode();
         judgements.set(relevantDocumentId, createJudgmentNode(3));
@@ -78,7 +78,7 @@ public class ReciprocalRankTestCase extends BaseTestCase {
                 .map(this::searchHit)
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
-        assertEquals(1/4d, cut.valueFactory(A_VERSION).value().doubleValue(), 0);
+        assertEquals(1 / 4d, cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**
@@ -89,7 +89,7 @@ public class ReciprocalRankTestCase extends BaseTestCase {
     public void firstMaxRelevantResultAtFirstPosition() {
         final String relevantDocumentId = "3";
 
-        final String [] documents = {relevantDocumentId, "5","8","9","991","98","245"};
+        final String[] documents = {relevantDocumentId, "5", "8", "9", "991", "98", "245"};
 
         final ObjectNode judgements = mapper.createObjectNode();
         judgements.set(relevantDocumentId, createJudgmentNode(3));
@@ -113,7 +113,7 @@ public class ReciprocalRankTestCase extends BaseTestCase {
     public void firstMaxRelevantResultAtSecondPosition() {
         final String relevantDocumentId = "3";
 
-        final String [] documents = {"5",relevantDocumentId, "8","9","991","98","245"};
+        final String[] documents = {"5", relevantDocumentId, "8", "9", "991", "98", "245"};
 
         final ObjectNode judgements = mapper.createObjectNode();
         judgements.set(relevantDocumentId, createJudgmentNode(3));
@@ -137,7 +137,7 @@ public class ReciprocalRankTestCase extends BaseTestCase {
     public void firstRelevantResultAtSecondPosition() {
         final String relevantDocumentId = "3";
 
-        final String [] documents = {"4",relevantDocumentId, "8","9","991","98","245"};
+        final String[] documents = {"4", relevantDocumentId, "8", "9", "991", "98", "245"};
 
         final ObjectNode judgements = mapper.createObjectNode();
         judgements.set(relevantDocumentId, createJudgmentNode(2));

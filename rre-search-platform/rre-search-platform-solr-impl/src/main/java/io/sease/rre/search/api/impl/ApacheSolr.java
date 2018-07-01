@@ -15,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
@@ -92,13 +91,13 @@ public class ApacheSolr implements SearchPlatform {
         });
 
         proxy.getCoreContainer().getAllCoreNames()
-                .forEach(coreName -> proxy.getCoreContainer().unload(coreName,true,true, false));
+                .forEach(coreName -> proxy.getCoreContainer().unload(coreName, true, true, false));
 
         solrHome.deleteOnExit();
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString, final String [] fields, final int maxRows) {
+    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString, final String[] fields, final int maxRows) {
         try {
             final SolrQuery query =
                     new SolrQuery()
@@ -107,16 +106,16 @@ public class ApacheSolr implements SearchPlatform {
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode queryDef = mapper.readTree(queryString);
 
-            for (final Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext();) {
+            for (final Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext(); ) {
                 final Map.Entry<String, JsonNode> field = iterator.next();
                 query.add(field.getKey(), field.getValue().asText());
             }
 
             return of(proxy.query(coreName, query))
                     .map(response ->
-                        new QueryOrSearchResponse(
-                            response.getResults().getNumFound(),
-                            new ArrayList<Map<String, Object>>(response.getResults())))
+                            new QueryOrSearchResponse(
+                                    response.getResults().getNumFound(),
+                                    new ArrayList<Map<String, Object>>(response.getResults())))
                     .get();
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
@@ -130,11 +129,11 @@ public class ApacheSolr implements SearchPlatform {
      */
     private void prepareSolrHome(final File folder) {
         folder.mkdirs();
-        try(final BufferedWriter writer = new BufferedWriter(new FileWriter(new File(folder, "solr.xml")))) {
+        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(new File(folder, "solr.xml")))) {
             writer.write("<solr/>");
 
             final File dummyCoreHome = new File(folder, "dummy");
-            final File dummyCoreConf = new File(dummyCoreHome , "conf");
+            final File dummyCoreConf = new File(dummyCoreHome, "conf");
             dummyCoreConf.mkdirs();
 
             Files.copy(getClass().getResourceAsStream("/schema.xml"), new File(dummyCoreConf, "schema.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);

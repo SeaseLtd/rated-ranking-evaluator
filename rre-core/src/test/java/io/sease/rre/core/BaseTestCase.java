@@ -70,7 +70,7 @@ public abstract class BaseTestCase {
             setUp();
         });
     }
-    
+
     /**
      * Creates a JSON object node representation of a document judgment.
      *

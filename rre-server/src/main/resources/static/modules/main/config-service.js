@@ -2,6 +2,7 @@
     angular.module('myApp').factory('ConfigService', ConfigService);
 
     ConfigService.$inject = ['$log'];
+
     function ConfigService($log, $http) {
 
         /**

@@ -52,7 +52,7 @@ public abstract class ValueFactory implements HitsCollector {
      * Returns the judgment associated with the given identifier.
      *
      * @param id the document identifier.
-     * @return an optional describing the judgment associated with the given identifier. 
+     * @return an optional describing the judgment associated with the given identifier.
      */
     protected Optional<JsonNode> judgment(final String id) {
         return ofNullable(owner.relevantDocuments).map(judgements -> judgements.get(id));
@@ -83,7 +83,7 @@ public abstract class ValueFactory implements HitsCollector {
     @Override
     public String toString() {
         return owner.getName() +
-                "("  + ofNullable(version).orElse("N.A.") + ") = " +
+                "(" + ofNullable(version).orElse("N.A.") + ") = " +
                 getValue();
     }
 }

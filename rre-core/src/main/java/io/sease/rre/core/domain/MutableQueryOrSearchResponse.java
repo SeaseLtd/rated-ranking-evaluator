@@ -1,6 +1,5 @@
 package io.sease.rre.core.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.sease.rre.core.domain.metrics.HitsCollector;
 

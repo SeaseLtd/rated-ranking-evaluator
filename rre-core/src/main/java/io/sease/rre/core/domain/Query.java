@@ -51,9 +51,9 @@ public class Query extends DomainMember<Query> implements HitsCollector {
                 metrics.stream()
                         .map(metric -> new AbstractMap.SimpleEntry<>(metric.getName(), metric))
                         .collect(
-                            toLinkedMap(
-                                    AbstractMap.SimpleEntry::getKey,
-                                    AbstractMap.SimpleEntry::getValue)));
+                                toLinkedMap(
+                                        AbstractMap.SimpleEntry::getKey,
+                                        AbstractMap.SimpleEntry::getValue)));
     }
 
     @Override
@@ -106,13 +106,15 @@ public class Query extends DomainMember<Query> implements HitsCollector {
         return ofNullable(relevantDocuments).map(judgements -> judgements.get(id));
     }
 
-    private static <T, K, U> Collector<T, ?, Map<K,U>> toLinkedMap(
+    private static <T, K, U> Collector<T, ?, Map<K, U>> toLinkedMap(
             Function<? super T, ? extends K> keyMapper,
-            Function<? super T, ? extends U> valueMapper)  {
+            Function<? super T, ? extends U> valueMapper) {
         return toMap(
                 keyMapper,
                 valueMapper,
-                (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); },
+                (u, v) -> {
+                    throw new IllegalStateException(String.format("Duplicate key %s", u));
+                },
                 LinkedHashMap::new);
     }
 

@@ -7,7 +7,6 @@ public class EvaluationMetadata {
     public final List<String> metrics;
 
     /**
-     *
      * @param versions
      * @param metrics
      */
