@@ -9,7 +9,11 @@ For a detailed description of the project, please visit
 
 At the moment Apache Solr and Elasticsearch are supported (see the documentation for supported versions). 
 
-RRE is a multi-module project which consists of:
+The following picture illustrates the RRE ecosystem:
+
+https://user-images.githubusercontent.com/7569632/42134581-e2d50736-7d3e-11e8-8b8e-8b9ab134079b.png
+
+As you can see, there are a lot modules already in place and planned (those with the dashed border)
 
 * **a core**, that is the central library which is in charge to produce the evaluation results
 * a **search-platform API**: for abstracting (and binding) the underlying search platform
