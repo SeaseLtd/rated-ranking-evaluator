@@ -1,24 +1,23 @@
 {
   "query": {
-    "multi_match": {
-      "query": "$query",
-      "fields": [
-        "all_content",
-        "title^1.2"
-      ]
+    "match": {
+      "name": {
+        "query": "$query",
+        "minimum_should_match": "3<-75% 9<-85%"
+      }
     }
   },
   "filter": {
     "bool": {
-      "must": [
+      "should": [
         {
           "term": {
-            "search_api_combined_2": "$filter_1"
+            "number_of_strings": "$filter_1"
           }
         },
         {
           "term": {
-            "field_parent_category": "$filter_2"
+            "number_of_strings": "$filter_2"
           }
         }
       ]

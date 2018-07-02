@@ -17,10 +17,16 @@
               }
             },
             {
-              "template": "filter_by_language.json",
+              "template": "only_q.json",
+              "placeholders": {
+                "$query": "fender Bass"
+              }
+            },
+            {
+              "template": "filter_by_number_of_strings.json",
               "placeholders": {
                 "$query": "Fender",
-                "$lang": "eng"
+                "$strings": 4
               }
             }
           ],
@@ -46,7 +52,7 @@
             {
               "template": "only_q.json",
               "placeholders": {
-                "$query": "Jazz"
+                "$query": "Jazz bass"
               }
             }
           ],

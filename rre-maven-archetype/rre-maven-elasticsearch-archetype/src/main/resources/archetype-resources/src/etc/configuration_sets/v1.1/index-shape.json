@@ -8,16 +8,18 @@
           "type": "stop",
           "stopwords": [
             "advanced",
-            "basics"
+            "basics",
+            "bass"
           ]
         }
       },
       "analyzer": {
-        "trigrams": {
+        "raw_text": {
           "tokenizer": "standard",
           "filter": [
             "standard",
-            "lowercase"
+            "lowercase",
+            "en_stopwords"
           ]
         }
       }
@@ -30,7 +32,11 @@
       },
       "properties": {
         "name": {
-          "type": "text"
+          "type": "text",
+          "analyzer": "raw_text"
+        },
+        "number_of_strings": {
+          "type": "integer"
         }
       }
     }

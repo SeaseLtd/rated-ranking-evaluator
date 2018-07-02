@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-search-platform-solr-impl</artifactId>
-    <version>7.1.0</version>
+    <version>5.4.1</version>
     <name>RRE - Apache Solr platform binding</name>
     <dependencies>
         <dependency>

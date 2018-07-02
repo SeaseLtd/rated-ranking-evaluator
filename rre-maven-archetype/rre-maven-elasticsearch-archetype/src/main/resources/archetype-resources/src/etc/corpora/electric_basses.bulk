@@ -1,8 +1,8 @@
 {"index" : {"_index":"dataset1","_type":"doc","_id":"1"}}
-{"name":"Fender Jazz Bass"}
+{"name":"Fender Jazz Bass", "number_of_strings": 4}
 {"index" : {"_index":"dataset1","_type":"doc","_id":"2"}}
-{"name":"Fender Precision Bass"}
+{"name":"Fender Precision", "number_of_strings": 4}
 {"index" : {"_index":"dataset1","_type":"doc","_id":"3"}}
-{"name":"Warwick Corvette"}
+{"name":"Warwick Corvette Bass", "number_of_strings": 5}
 {"index" : {"_index":"dataset1","_type":"doc","_id":"4"}}
-{"name":"Warwick Thumb"}
+{"name":"Warwick Thumb", "number_of_strings": 6}

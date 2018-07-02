@@ -2,6 +2,7 @@
 <schema name="Dummy schema" version="1.2">
     <types>
         <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+        <fieldType name="int" class="solr.TrieIntField" precisionStep="8" omitNorms="true" positionIncrementGap="0" indexed="true" stored="true"/>
         <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
             <analyzer>
                 <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -12,7 +13,7 @@
     <fields>
         <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
         <field name="name" type="text" indexed="true" stored="true" required="true" multiValued="false"/>
-        <field name="language" type="string" indexed="true" stored="true" required="false" multiValued="false"/>
+        <field name="number_of_strings" type="int" required="false" multiValued="false"/>
     </fields>
     <uniqueKey>id</uniqueKey>
 </schema>
