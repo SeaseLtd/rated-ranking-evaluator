@@ -4,7 +4,7 @@
     "number_of_replicas": 0,
     "analysis": {
       "analyzer": {
-        "trigrams": {
+        "raw_text": {
           "tokenizer": "standard",
           "filter": [
             "standard",
@@ -21,7 +21,11 @@
       },
       "properties": {
         "name": {
-          "type": "text"
+          "type": "text",
+          "analyzer": "raw_text"
+        },
+        "number_of_strings": {
+          "type": "integer"
         }
       }
     }

@@ -58,7 +58,7 @@ public abstract class Func {
         try {
             return mapper.readTree(file);
         } catch (final IOException exception) {
-            throw new IllegalArgumentException(exception);
+            throw new IllegalArgumentException(file.getAbsolutePath(), exception);
         }
     }
 

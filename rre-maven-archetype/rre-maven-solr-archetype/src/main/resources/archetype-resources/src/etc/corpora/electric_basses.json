@@ -1,18 +1,22 @@
 [
   {
     "id": 1,
-    "name": "Fender Jazz Bass"
+    "name": "Fender Jazz Bass",
+    "number_of_strings": 4
   },
   {
     "id": 2,
-    "name": "Fender Precision Bass"
+    "name": "Fender Precision Bass",
+    "number_of_strings": 4
   },
   {
     "id": 3,
-    "name": "Warwick Corvette"
+    "name": "Warwick Corvette Bass",
+    "number_of_strings": 5
   },
   {
     "id": 4,
-    "name": "Warwick Thumb"
+    "name": "Warwick Thumb",
+    "number_of_strings": 6
   }
 ]

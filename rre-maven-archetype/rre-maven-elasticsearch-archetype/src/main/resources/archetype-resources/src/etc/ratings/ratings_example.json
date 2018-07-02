@@ -1,7 +1,7 @@
 {
   "index": "basses",
   "corpora_file": "electric_basses.bulk",
-  "id_field": "id",
+  "id_field": "_id",
   "topics": [
     {
       "description": "Fender basses",
@@ -20,6 +20,12 @@
               "template": "no_filtered_query_shape.json",
               "placeholders": {
                 "$query": "Fender"
+              }
+            },
+            {
+              "template": "no_filtered_query_shape.json",
+              "placeholders": {
+                "$query": "Fender bass"
               }
             }
           ],
@@ -46,6 +52,12 @@
               "template": "no_filtered_query_shape.json",
               "placeholders": {
                 "$query": "Jazz"
+              }
+            },
+            {
+              "template": "no_filtered_query_shape.json",
+              "placeholders": {
+                "$query": "Jazz Bass"
               }
             }
           ],
