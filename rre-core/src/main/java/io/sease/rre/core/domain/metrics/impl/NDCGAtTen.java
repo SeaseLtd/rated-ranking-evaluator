@@ -58,6 +58,11 @@ public class NDCGAtTen extends Metric {
                     return relevantDocuments.size() == 0 ? BigDecimal.ONE : BigDecimal.ZERO;
                 }
 
+                final BigDecimal idealDcg = idealDcg(relevantDocuments);
+                if (dcg.equals(BigDecimal.ZERO) && idealDcg.equals(BigDecimal.ZERO)) {
+                    return BigDecimal.ZERO;
+                }
+
                 return dcg.divide(idealDcg(relevantDocuments), 2, RoundingMode.FLOOR);
             }
         };
@@ -83,7 +88,7 @@ public class NDCGAtTen extends Metric {
             Arrays.fill(gains, howManyVeryVeryRelevantDocs, howManyVeryVeryRelevantDocs + Math.min((windowSize - howManyVeryVeryRelevantDocs), howManyVeryRelevantDocs), 1);
         }
 
-        BigDecimal result = new BigDecimal(gains[0]);
+        BigDecimal result = gains.length > 0 ? new BigDecimal(gains[0]) : BigDecimal.ZERO;
         for (int i = 1; i < gains.length; i++) {
             result = result.add(new BigDecimal(gains[i] / (Math.log(i + 1) / Math.log(2))));
         }
