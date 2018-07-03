@@ -54,7 +54,7 @@ public abstract class BaseTestCase {
     }
 
     /**
-     * If there are no relevant results and we haven't an empty resultset, then P should be 0.
+     * If there are no relevant results and we haven't an empty resultset, then the value should be 0.
      */
     @Test
     public void noRelevantDocumentsWithSearchResults() {
@@ -66,7 +66,9 @@ public abstract class BaseTestCase {
                     .map(this::searchHit)
                     .forEach(hit -> cut().collect(hit, counter.incrementAndGet(), A_VERSION));
 
-            assertEquals(BigDecimal.ZERO.doubleValue(), cut().valueFactory(A_VERSION).value().doubleValue(), 0);
+            assertEquals(
+                    BigDecimal.ZERO.doubleValue(),
+                    cut().valueFactory(A_VERSION).value().doubleValue(), 0);
             setUp();
         });
     }
@@ -95,5 +97,29 @@ public abstract class BaseTestCase {
         final Map<String, Object> doc = new HashMap<>();
         doc.put("id", id);
         return doc;
+    }
+
+    /**
+     * If all results in the window are relevant, then the metric value is 1.
+     */
+    public void maximum() {
+        stream(DOCUMENTS_SETS).forEach(set -> {
+            final ObjectNode judgements = mapper.createObjectNode();
+            stream(set).forEach(docid -> judgements.set(docid, createJudgmentNode(3)));
+
+            cut().setRelevantDocuments(judgements);
+            cut().setTotalHits(set.length, A_VERSION);
+
+            stream(set)
+                    .map(this::searchHit)
+                    .forEach(hit -> cut().collect(hit, counter.incrementAndGet(), A_VERSION));
+
+            assertEquals(
+                    "Fail to assert dataset with " + set.length + "items.",
+                    BigDecimal.ONE.doubleValue(),
+                    cut().valueFactory(A_VERSION).value().doubleValue(),
+                    0);
+            setUp();
+        });
     }
 }

@@ -5,7 +5,6 @@ import io.sease.rre.core.BaseTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,24 +34,7 @@ public class PrecisionTestCase extends BaseTestCase {
      */
     @Test
     public void maximumPrecision() {
-        stream(DOCUMENTS_SETS).forEach(set -> {
-            final ObjectNode judgements = mapper.createObjectNode();
-            stream(set).forEach(docid -> judgements.set(docid, createJudgmentNode(3)));
-
-            cut.setRelevantDocuments(judgements);
-            cut.setTotalHits(set.length, A_VERSION);
-
-            stream(set)
-                    .map(this::searchHit)
-                    .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
-
-            assertEquals(
-                    "Fail to assert dataset with " + set.length + "items.",
-                    BigDecimal.ONE.doubleValue(),
-                    cut.valueFactory(A_VERSION).value().doubleValue(),
-                    0.0);
-            setUp();
-        });
+       maximum();
     }
 
     /**

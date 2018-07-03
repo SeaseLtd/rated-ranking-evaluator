@@ -35,24 +35,7 @@ public class AveragePrecisionTestCase extends BaseTestCase {
      */
     @Test
     public void maximumAveragePrecision() {
-        stream(DOCUMENTS_SETS).forEach(set -> {
-            final ObjectNode judgements = mapper.createObjectNode();
-            stream(set).forEach(docid -> judgements.set(docid, createJudgmentNode(3)));
-
-            cut.setRelevantDocuments(judgements);
-            cut.setTotalHits(set.length, A_VERSION);
-
-            stream(set)
-                    .map(this::searchHit)
-                    .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
-
-            assertEquals(
-                    "Fail to assert dataset with " + set.length + "items.",
-                    BigDecimal.ONE.doubleValue(),
-                    cut.valueFactory(A_VERSION).value().doubleValue(),
-                    0);
-            setUp();
-        });
+        maximum();
     }
 
     /**
