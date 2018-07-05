@@ -54,4 +54,11 @@ public interface SearchPlatform extends Closeable {
      * @return the response of the query execution.
      */
     QueryOrSearchResponse executeQuery(String indexName, String query, final String[] fields, int maxRows);
+
+    /**
+     * Returns the name of this search platform.
+     *
+     * @return the name of this search platform.
+     */
+    String getName();
 }
