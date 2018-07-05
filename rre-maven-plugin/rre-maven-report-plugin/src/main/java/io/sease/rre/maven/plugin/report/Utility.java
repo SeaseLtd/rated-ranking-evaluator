@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static java.util.Optional.ofNullable;
+
 /**
  * Shared utilities.
  *
@@ -36,6 +38,11 @@ public abstract class Utility {
      * @return a stream consisting of all children of the given JSON node.
      */
     public static Stream<JsonNode> all(final JsonNode parent, final String name) {
-        return StreamSupport.stream(parent.get(name).spliterator(), false);
+        return ofNullable(parent.get(name))
+                .map(node -> StreamSupport.stream(parent.get(name).spliterator(), false))
+                .orElseGet(() -> {
+                    //LOGGER.error("WARNING: \"" + name + "\" node is empty!");
+                    return Stream.empty();});
+//        return StreamSupport.stream(parent.get(name).spliterator(), false);
     }
 }
