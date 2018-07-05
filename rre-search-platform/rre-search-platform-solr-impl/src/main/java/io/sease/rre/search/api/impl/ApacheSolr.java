@@ -122,6 +122,11 @@ public class ApacheSolr implements SearchPlatform {
         }
     }
 
+    @Override
+    public String getName() {
+        return "Apache Solr";
+    }
+
     /**
      * Setup the Solr instance by preparing a minimal solr.home directory.
      *
