@@ -6,6 +6,8 @@ import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -30,6 +32,8 @@ import static java.util.stream.Collectors.toList;
  * @since 1.0
  */
 public class Engine {
+    private final static Logger LOGGER = LogManager.getLogger(Engine.class);
+
     private final File configurationsFolder;
     private final File corporaFolder;
     private final File ratingsFolder;
@@ -82,35 +86,63 @@ public class Engine {
     @SuppressWarnings("unchecked")
     public Evaluation evaluate(final Map<String, Object> configuration) {
         try {
+            LOGGER.info("RRE: New evaluation session is starting...");
+
             platform.beforeStart(configuration);
+
+            LOGGER.info("RRE: Search Platform in use: " + platform.getName());
+            LOGGER.info("RRE: Starting " + platform.getName() + "...");
+
             platform.start();
+
+            LOGGER.info("RRE: " + platform.getName() + " Search Platform successfully started.");
+
             platform.afterStart();
 
             final Evaluation evaluation = new Evaluation();
             final List<Query> queries = new ArrayList<>();
 
             ratings().forEach(ratingsNode -> {
-                final String indexName = ratingsNode.get(INDEX_NAME).asText();
-                final String idFieldName = ratingsNode.get(ID_FIELD_NAME).asText(DEFAULT_ID_FIELD_NAME);
-                final File data = new File(corporaFolder, ratingsNode.get(CORPORA_FILENAME).asText());
+                LOGGER.info("RRE: Ratings Set processing starts");
+
+                final String indexName =
+                                requireNonNull(
+                                        ratingsNode.get(INDEX_NAME),
+                                        "WARNING!!! \"" + INDEX_NAME + "\" attribute not found!").asText();
+                final String idFieldName =
+                                requireNonNull(
+                                        ratingsNode.get(ID_FIELD_NAME),
+                                        "WARNING!!! \"" + ID_FIELD_NAME + "\" attribute not found!")
+                                        .asText(DEFAULT_ID_FIELD_NAME);
+                final File data =
+                        new File(
+                            corporaFolder,
+                            requireNonNull(
+                                    ratingsNode.get(CORPORA_FILENAME),
+                                    "WARNING!!! \"" + CORPORA_FILENAME + "\" attribute not found!").asText());
                 final String queryPlaceholder = ofNullable(ratingsNode.get("query_placeholder")).map(JsonNode::asText).orElse("$query");
 
                 if (!data.canRead()) {
-                    throw new IllegalArgumentException("Unable to read the corpus file " + data.getAbsolutePath());
+                    throw new IllegalArgumentException("RRE: WARNING!!! Unable to read the corpus file " + data.getAbsolutePath());
                 }
+
+                LOGGER.info("RRE: Index name => " + indexName);
+                LOGGER.info("RRE: ID Field name => " + idFieldName);
+                LOGGER.info("RRE: Test Collection => " + data.getAbsolutePath());
+                LOGGER.info("RRE: Ratings Set processing starts");
 
                 prepareData(indexName, data);
 
                 final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
-                all(ratingsNode.get(TOPICS))
+                all(ratingsNode.get(TOPICS), "topics")
                         .forEach(topicNode -> {
                             final Topic topic = corpus.findOrCreate(topicNode.get(DESCRIPTION).asText(), Topic::new);
-                            all(topicNode.get(QUERY_GROUPS))
+                            all(topicNode.get(QUERY_GROUPS), "query_groups")
                                     .forEach(groupNode -> {
                                         final QueryGroup group =
                                                 topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
                                         final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
-                                        all(groupNode.get(QUERIES))
+                                        all(groupNode.get(QUERIES), "queries")
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
                                                     final JsonNode relevantDocuments = groupNode.get(RELEVANT_DOCUMENTS);
@@ -144,6 +176,7 @@ public class Engine {
             return evaluation;
         } finally {
             platform.beforeStop();
+            LOGGER.info("RRE: " + platform.getName() + " Search Platform shutdown procedure executed.");
         }
     }
 
@@ -172,8 +205,8 @@ public class Engine {
                         return metric;
                     } catch (final Exception exception) {
                         throw new IllegalArgumentException(exception);
-                    }
-                })
+                    }})
+                .peek(metric -> LOGGER.info("RRE: Found metric definition \"" + metric.getName() + " which maps to " + metric.getClass()))
                 .collect(toList());
     }
 
@@ -186,6 +219,9 @@ public class Engine {
      * @return the query template associated with the given name.
      */
     private String queryTemplate(final Optional<String> defaultTemplateName, final Optional<String> templateName, final String version) {
+        final File versionFolder = new File(templatesFolder, version);
+        final File actualTemplateFolder = versionFolder.canRead() ? versionFolder : templatesFolder;
+
         try {
             final String templateNameInUse =
                     templateName.orElseGet(
@@ -193,7 +229,7 @@ public class Engine {
                                     () -> new IllegalArgumentException("Unable to determine the query template.")));
             return of(templateNameInUse)
                     .map(name -> name.contains("${version}") ? name.replace("${version}", version) : name)
-                    .map(name -> new File(templatesFolder, name))
+                    .map(name -> new File(actualTemplateFolder, name))
                     .map(this::templateContent)
                     .orElseThrow(() -> new IllegalArgumentException("Unable to determine the query template."));
         } catch (final Exception exception) {
@@ -221,9 +257,14 @@ public class Engine {
      * @return the ratings / judgements for this evaluation suite.
      */
     private Stream<JsonNode> ratings() {
-        return stream(
-                requireNonNull(ratingsFolder.listFiles(ONLY_JSON_FILES), "Unable to find the ratings folder."))
-                .map(Func::toJson);
+        final File [] ratingsFiles =
+                requireNonNull(
+                        ratingsFolder.listFiles(ONLY_JSON_FILES),
+                        "Unable to find the ratings folder.");
+
+        LOGGER.info("RRE: found " + ratingsFiles.length + " ratings sets.");
+
+        return stream(ratingsFiles).map(Func::toJson);
     }
 
     /**
@@ -232,8 +273,12 @@ public class Engine {
      * @param source the parent JSON node.
      * @return a stream consisting of all children of the given JSON node.
      */
-    private Stream<JsonNode> all(final JsonNode source) {
-        return StreamSupport.stream(source.spliterator(), false);
+    private Stream<JsonNode> all(final JsonNode source, final String name) {
+        return ofNullable(source)
+                .map(node -> StreamSupport.stream(source.spliterator(), false))
+                .orElseGet(() -> {
+                    LOGGER.error("RRE: WARNING!!! \"" + name + "\" node is not defined or empty!");
+                    return Stream.empty();});
     }
 
     /**
@@ -247,8 +292,11 @@ public class Engine {
         stream(versionFolders)
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(file -> (file.isDirectory() && file.getName().equals(indexName))
-                        || (file.isFile() && file.getName().startsWith("index")))
+                        || (file.isFile() && file.getName().equals("index-shape.json")))
+                .peek(file -> LOGGER.info("RRE: Loading the Test Collection into " + platform.getName() + ", configuration version " + file.getParentFile().getName()))
                 .forEach(fileOrFolder -> platform.load(data, fileOrFolder, indexFqdn(indexName, fileOrFolder.getParentFile().getName())));
+
+        LOGGER.info("RRE: " + platform.getName() + " has been correctly loaded.");
 
         this.versions = stream(versionFolders).map(File::getName).collect(toList());
     }

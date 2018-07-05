@@ -114,6 +114,11 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
+    public String getName() {
+        return "Elasticsearch";
+    }
+
+    @Override
     public void start() {
         try {
             elasticsearch.start();

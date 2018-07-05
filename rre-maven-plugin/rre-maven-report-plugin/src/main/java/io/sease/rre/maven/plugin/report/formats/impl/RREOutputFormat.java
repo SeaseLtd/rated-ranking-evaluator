@@ -30,13 +30,13 @@ public class RREOutputFormat implements OutputFormat {
 
             try (final Response response = new OkHttpClient().newCall(request).execute()) {
                 if (response.code() != 200) {
-                    System.out.println("Exception while communicating with RREServer. Return code was: " + response.code());
+                    plugin.getLog().error("Exception while communicating with RREServer. Return code was: " + response.code());
                 } else {
-                    System.out.println("Evaluation data has been correctly sent to RRE Server located at " + plugin.getEndpoint());
+                    plugin.getLog().info("Evaluation data has been correctly sent to RRE Server located at " + plugin.getEndpoint());
                 }
             }
         } catch (final Exception exception) {
-            exception.printStackTrace();
+            plugin.getLog().error("RRE: Unable to connect to RRE Server. See below for further details.", exception);
         }
     }
 }

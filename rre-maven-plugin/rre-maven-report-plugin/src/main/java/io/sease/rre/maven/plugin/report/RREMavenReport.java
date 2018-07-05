@@ -2,6 +2,7 @@ package io.sease.rre.maven.plugin.report;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.RREOutputFormat;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static io.sease.rre.maven.plugin.report.Utility.all;
+import static java.util.Optional.ofNullable;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
@@ -73,7 +75,12 @@ public class RREMavenReport extends AbstractMavenReport {
         final List<String> versions =
                 all(evaluationData, "corpora")
                         .limit(1)
-                        .map(corpusNode -> corpusNode.get("metrics").iterator().next().get("versions"))
+                        .map(corpusNode -> ofNullable(corpusNode.get("metrics"))
+                                                .map(JsonNode::iterator)
+                                                .filter(Iterator::hasNext)
+                                                .map(Iterator::next)
+                                                .map(node -> node.get("versions"))
+                                                .orElseGet(() -> new ObjectMapper().createObjectNode()))
                         .flatMap(versionsNode -> stream(spliteratorUnknownSize(versionsNode.fieldNames(), Spliterator.ORDERED), false))
                         .collect(toList());
 
