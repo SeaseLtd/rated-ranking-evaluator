@@ -12,10 +12,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.StreamSupport;
 
@@ -112,27 +109,54 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         font.setBold(true);
         bold.setFont(font);
         final AtomicInteger versionCounter = new AtomicInteger(4);
-        metadata.metrics.forEach(metric ->
+        metadata.metrics.forEach(metric -> {
+
                 metadata.versions.forEach(
                         name -> {
                             final int columnIndex = versionCounter.getAndIncrement();
                             final Cell qgHeaderCell = header.createCell(columnIndex, CellType.STRING);
                             qgHeaderCell.setCellValue(name);
                             qgHeaderCell.setCellStyle(bold);
-                        }));
+                        });
+
+            LinkedList<Integer> deltaColumns = new LinkedList<>();
+                metadata.versions
+                        .stream()
+                        .skip(1)
+                        .forEach(name -> {
+                            final int columnIndex = versionCounter.getAndIncrement();
+                            deltaColumns.add(columnIndex);
+                            final Cell qgHeaderCell = header.createCell(columnIndex, CellType.STRING);
+                            qgHeaderCell.setCellValue("DELTA");
+                            qgHeaderCell.setCellStyle(bold);
+                        });
+                try {
+                    sheet.addMergedRegion(
+                        new CellRangeAddress(
+                                header.getRowNum(),
+                                header.getRowNum(),
+                                deltaColumns.getFirst(),
+                                deltaColumns.getFirst() + deltaColumns.size()));
+                } catch (final Exception ignore) {
+                }
+
+
+        });
         return header;
     }
 
     private void writeMetrics(final JsonNode ownerNode, final XSSFRow row) {
         AtomicInteger counter = new AtomicInteger();
         ownerNode.get("metrics").fields()
-                .forEachRemaining(entry ->
-                        entry.getValue().get("versions").fields()
-                                .forEachRemaining(vEntry -> {
-                                    final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
-                                    double value = vEntry.getValue().get("value").asDouble();
-                                    vCell.setCellValue(value);
-                                }));
+                .forEachRemaining(entry -> {
+                    final List<Double> delta = new ArrayList<>();
+                    entry.getValue().get("versions").fields()
+                            .forEachRemaining(vEntry -> {
+                                final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
+                                double value = vEntry.getValue().get("value").asDouble();
+                                vCell.setCellValue(value);
+                            });
+                });
 
     }
 
