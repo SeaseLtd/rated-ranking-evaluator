@@ -148,13 +148,15 @@ public class SpreadsheetOutputFormat implements OutputFormat {
     private void writeMetrics(final JsonNode ownerNode, final XSSFRow row) {
         AtomicInteger counter = new AtomicInteger();
         ownerNode.get("metrics").fields()
-                .forEachRemaining(entry ->
-                        entry.getValue().get("versions").fields()
-                                .forEachRemaining(vEntry -> {
-                                    final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
-                                    double value = vEntry.getValue().get("value").asDouble();
-                                    vCell.setCellValue(value);
-                                }));
+                .forEachRemaining(entry -> {
+                    final List<Double> delta = new ArrayList<>();
+                    entry.getValue().get("versions").fields()
+                            .forEachRemaining(vEntry -> {
+                                final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
+                                double value = vEntry.getValue().get("value").asDouble();
+                                vCell.setCellValue(value);
+                            });
+                });
 
     }
 
