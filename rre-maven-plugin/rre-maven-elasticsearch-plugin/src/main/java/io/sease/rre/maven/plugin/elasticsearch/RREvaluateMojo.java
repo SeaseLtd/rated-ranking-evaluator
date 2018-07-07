@@ -62,7 +62,7 @@ public class RREvaluateMojo extends AbstractMojo {
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("path.home", "/tmp");
-            configuration.put("http.port", port);
+            configuration.put("network.host", port);
 
             write(engine.evaluate(configuration));
         } catch (final IOException exception) {

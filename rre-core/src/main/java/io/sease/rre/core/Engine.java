@@ -1,6 +1,9 @@
 package io.sease.rre.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.Func;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.Metric;
@@ -43,6 +46,8 @@ public class Engine {
 
     private final SearchPlatform platform;
     private final String[] fields;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -145,7 +150,7 @@ public class Engine {
                                         all(groupNode.get(QUERIES), "queries")
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
-                                                    final JsonNode relevantDocuments = groupNode.get(RELEVANT_DOCUMENTS);
+                                                    final JsonNode relevantDocuments = relevantDocuments(groupNode.get(RELEVANT_DOCUMENTS));
                                                     final Query queryEvaluation = group.findOrCreate(queryString, Query::new);
                                                     queryEvaluation.setIdFieldName(idFieldName);
                                                     queryEvaluation.setRelevantDocuments(relevantDocuments);
@@ -180,6 +185,29 @@ public class Engine {
         }
     }
 
+    private JsonNode relevantDocuments(final JsonNode relevantDocumentsDefiniton) {
+        if (relevantDocumentsDefiniton.size() == 0) return relevantDocumentsDefiniton;
+
+        final boolean gainToArrayMode = relevantDocumentsDefiniton.fields().next().getValue().isArray();
+        if (gainToArrayMode) {
+
+            final ObjectNode relevantDocumentsContainer = mapper.createObjectNode();
+
+            relevantDocumentsDefiniton.fields()
+                    .forEachRemaining(entry -> {
+                        final int gain = Integer.parseInt(entry.getKey());
+                        entry.getValue().iterator().forEachRemaining(node -> {
+                            final ObjectNode doc = mapper.createObjectNode();
+                            doc.put("gain", gain);
+                            relevantDocumentsContainer.replace(node.asText(), doc);
+                        });
+                    });
+            return relevantDocumentsContainer;
+        } else {
+            return relevantDocumentsDefiniton;
+        }
+    }
+
     /**
      * Creates a new set of metrics.
      *
@@ -206,7 +234,6 @@ public class Engine {
                     } catch (final Exception exception) {
                         throw new IllegalArgumentException(exception);
                     }})
-                .peek(metric -> LOGGER.info("RRE: Found metric definition \"" + metric.getName() + " which maps to " + metric.getClass()))
                 .collect(toList());
     }
 
