@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
+import io.sease.rre.search.api.UnableToLoadDataException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -107,7 +109,21 @@ public class Elasticsearch implements SearchPlatform {
                                 .source(document, XContentType.JSON)).setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
             }
 
-            proxy.bulk(bulkRequest).actionGet();
+            final BulkResponse response = proxy.bulk(bulkRequest).actionGet();
+            if (response.hasFailures()) {
+                final String message =
+                        "Unable to load datafile (" +
+                                data.getAbsolutePath() +
+                                ") in " +
+                                getName() +
+                                " using the index shape (" +
+                                indexShapeFile.getAbsolutePath() +
+                                ") into the index " +
+                                indexName +
+                                ". Error message is: " +
+                                response.buildFailureMessage();
+                throw new UnableToLoadDataException(message);
+            }
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
