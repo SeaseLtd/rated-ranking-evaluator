@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.maven.plugin.report.RREMavenReport;
 import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
+import one.util.streamex.DoubleStreamEx;
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
@@ -14,10 +16,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static io.sease.rre.maven.plugin.report.Utility.all;
 import static io.sease.rre.maven.plugin.report.Utility.pretty;
+import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -122,7 +126,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
             LinkedList<Integer> deltaColumns = new LinkedList<>();
                 metadata.versions
                         .stream()
-                        .skip(1)
+                        .skip(2)
                         .forEach(name -> {
                             final int columnIndex = versionCounter.getAndIncrement();
                             deltaColumns.add(columnIndex);
@@ -147,24 +151,74 @@ public class SpreadsheetOutputFormat implements OutputFormat {
 
     private void writeMetrics(final JsonNode ownerNode, final XSSFRow row) {
         AtomicInteger counter = new AtomicInteger();
+
         ownerNode.get("metrics").fields()
                 .forEachRemaining(entry -> {
-                    final List<Double> delta = new ArrayList<>();
                     entry.getValue().get("versions").fields()
                             .forEachRemaining(vEntry -> {
                                 final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
                                 double value = vEntry.getValue().get("value").asDouble();
                                 vCell.setCellValue(value);
                             });
+
+
+                    final double [] delta =
+                            DoubleStreamEx.of(
+                                StreamSupport.stream(entry.getValue().get("versions").spliterator(), false)
+                                .mapToDouble(vNode -> vNode.get("value").asDouble()))
+                                .pairMap( (a, b) -> b - a).toArray();
+
+                    stream(delta).forEach(v -> {
+                        final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
+                        vCell.setCellValue(v);
+                        if (v == 0) {
+                            vCell.setCellStyle(yellow);
+                        } else if (v > 0) {
+                            vCell.setCellStyle(green);
+                        } else {
+                            vCell.setCellStyle(red);
+                        }
+                    });
                 });
 
     }
+
+    private CellStyle green;
+    private CellStyle red;
+    private CellStyle yellow;
 
     @Override
     public void writeReport(final JsonNode data, EvaluationMetadata metadata, final Locale locale, final RREMavenReport plugin) {
         final XSSFWorkbook workbook = new XSSFWorkbook();
         final CellStyle topAlign = workbook.createCellStyle();
         topAlign.setVerticalAlignment(VerticalAlignment.TOP);
+
+        byte[] rgb = new byte[3];
+        rgb[0] = (byte) 40; // red
+        rgb[1] = (byte) 167; // green
+        rgb[2] = (byte) 169; // blue
+        XSSFColor myColor = new XSSFColor(rgb, null);
+
+        final Font redFont = workbook.createFont();
+        redFont.setBold(true);
+        redFont.setColor(IndexedColors.RED.getIndex());
+
+        final Font greenFont = workbook.createFont();
+        greenFont.setBold(true);
+        greenFont.setColor(IndexedColors.GREEN.getIndex());
+
+        final Font yFont = workbook.createFont();
+        yFont.setBold(true);
+        yFont.setColor(IndexedColors.ORANGE.getIndex());
+
+        green = workbook.createCellStyle();
+        green.setFont(greenFont);
+
+        red = workbook.createCellStyle();
+        red.setFont(redFont);
+
+        yellow = workbook.createCellStyle();
+        yellow.setFont(yFont);
 
         final AtomicInteger rowCount = new AtomicInteger(3);
 
@@ -190,7 +244,6 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                 topicCell.setCellValue(topic.get("name").asText());
 
                                 writeMetrics(topic, topicRow);
-
 
                                 all(topic, "query-groups")
                                         .forEach(group -> {
