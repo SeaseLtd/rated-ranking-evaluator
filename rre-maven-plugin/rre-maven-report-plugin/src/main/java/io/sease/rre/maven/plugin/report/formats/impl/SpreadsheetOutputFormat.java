@@ -83,17 +83,17 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         final AtomicInteger counter = new AtomicInteger(0);
         metadata.metrics
                 .forEach(name -> {
-                    final int columnIndex = 3 + (counter.getAndIncrement() * metadata.howManyVersions());
+                    final int columnIndex = 3 + (counter.getAndIncrement() * ((metadata.howManyVersions() * 2) - 1));
                     final Cell qgHeaderCell = header.createCell(columnIndex, CellType.STRING);
                     qgHeaderCell.setCellValue(name);
                     qgHeaderCell.setCellStyle(bold);
-                    try {
+                   try {
                         sheet.addMergedRegion(
                                 new CellRangeAddress(
                                         header.getRowNum(),
                                         header.getRowNum(),
                                         columnIndex,
-                                        columnIndex + (metadata.howManyVersions() - 1)));
+                                        columnIndex + ((metadata.howManyVersions() * 2) - 2)));
                     } catch (final Exception ignore) {
                     }
                 });
@@ -112,7 +112,6 @@ public class SpreadsheetOutputFormat implements OutputFormat {
 
         final AtomicInteger versionCounter = new AtomicInteger(3);
         metadata.metrics.forEach(metric -> {
-
                 metadata.versions.forEach(
                         name -> {
                             final int columnIndex = versionCounter.getAndIncrement();
@@ -124,7 +123,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
             LinkedList<Integer> deltaColumns = new LinkedList<>();
                 metadata.versions
                         .stream()
-                        .skip(2)
+                        .skip(1)
                         .forEach(name -> {
                             final int columnIndex = versionCounter.getAndIncrement();
                             deltaColumns.add(columnIndex);
@@ -138,7 +137,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                 header.getRowNum(),
                                 header.getRowNum(),
                                 deltaColumns.getFirst(),
-                                deltaColumns.getFirst() + deltaColumns.size()));
+                                deltaColumns.getLast()));
                 } catch (final Exception ignore) {
                 }
 
