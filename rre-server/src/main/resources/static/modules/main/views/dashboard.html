@@ -39,7 +39,7 @@
                         <td ng-repeat="(ver, obj) in mtr.versions" class="col-sm">
                             {{obj.value}}
                         </td>
-                        <td ng-repeat="t in mtr.trend"
+                        <td ng-repeat="t in mtr.trend track by $index"
                             class="{{t > 0 ? 'bg-success' : (t < 0 ? 'bg-danger' : 'bg-warning')}}">
                             <!-- How to present more than a trend value? -->
                             {{t | number:4}}

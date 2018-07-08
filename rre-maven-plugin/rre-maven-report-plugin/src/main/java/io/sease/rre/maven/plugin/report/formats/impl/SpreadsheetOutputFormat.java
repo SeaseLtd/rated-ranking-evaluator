@@ -5,7 +5,6 @@ import io.sease.rre.maven.plugin.report.RREMavenReport;
 import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import one.util.streamex.DoubleStreamEx;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static io.sease.rre.maven.plugin.report.Utility.all;
@@ -43,23 +41,19 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         boldAndCentered.setFont(font);
         boldAndCentered.setAlignment(HorizontalAlignment.CENTER);
 
-        final Cell corpusHeaderCell = header.createCell(0, CellType.STRING);
-        corpusHeaderCell.setCellValue("Corpus");
-        corpusHeaderCell.setCellStyle(bold);
-
-        final Cell topicHeaderCell = header.createCell(1, CellType.STRING);
+        final Cell topicHeaderCell = header.createCell(0, CellType.STRING);
         topicHeaderCell.setCellValue("Topic");
         topicHeaderCell.setCellStyle(bold);
 
-        final Cell qgHeaderCell = header.createCell(2, CellType.STRING);
+        final Cell qgHeaderCell = header.createCell(1, CellType.STRING);
         qgHeaderCell.setCellValue("Query Group");
         qgHeaderCell.setCellStyle(bold);
 
-        final Cell qHeaderCell = header.createCell(3, CellType.STRING);
+        final Cell qHeaderCell = header.createCell(2, CellType.STRING);
         qHeaderCell.setCellValue("Query");
         qHeaderCell.setCellStyle(bold);
 
-        final Cell mHeaderCell = header.createCell(4, CellType.STRING);
+        final Cell mHeaderCell = header.createCell(3, CellType.STRING);
         mHeaderCell.setCellValue("Metric");
         mHeaderCell.setCellStyle(bold);
 
@@ -68,8 +62,8 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                     new CellRangeAddress(
                             header.getRowNum(),
                             header.getRowNum(),
-                            4,
-                            4 + (metadata.howManyMetrics() * metadata.howManyVersions())));
+                            3,
+                            3 + (metadata.howManyMetrics() * metadata.howManyVersions())));
         } catch (final Exception ignore) {
         }
 
@@ -84,6 +78,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         font.setBold(true);
         bold.setFont(font);
         bold.setAlignment(HorizontalAlignment.CENTER);
+        ((XSSFFont) font).getCTFont().addNewB();
 
         final AtomicInteger counter = new AtomicInteger(0);
         metadata.metrics
@@ -112,6 +107,9 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         final Font font = sheet.getWorkbook().createFont();
         font.setBold(true);
         bold.setFont(font);
+        bold.setAlignment(HorizontalAlignment.CENTER);
+        ((XSSFFont) font).getCTFont().addNewB();
+
         final AtomicInteger versionCounter = new AtomicInteger(4);
         metadata.metrics.forEach(metric -> {
 
@@ -220,10 +218,9 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         yellow = workbook.createCellStyle();
         yellow.setFont(yFont);
 
-        final AtomicInteger rowCount = new AtomicInteger(3);
-
         all(data, "corpora")
                 .forEach(corpus -> {
+                    final AtomicInteger rowCount = new AtomicInteger(3);
                     final String name = corpus.get("name").asText();
                     final XSSFSheet spreadsheet = workbook.createSheet(name);
 
@@ -232,15 +229,15 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                     versionsHeader(spreadsheet, metadata);
 
                     final XSSFRow corpusRow = spreadsheet.createRow(rowCount.getAndIncrement());
-                    final Cell nCell = corpusRow.createCell(0, CellType.STRING);
-                    nCell.setCellValue(name);
+                    // final Cell nCell = corpusRow.createCell(0, CellType.STRING);
+                    //nCell.setCellValue(name);
 
                     writeMetrics(corpus, corpusRow);
 
                     all(corpus, "topics")
                             .forEach(topic -> {
                                 final XSSFRow topicRow = spreadsheet.createRow(rowCount.getAndIncrement());
-                                final Cell topicCell = topicRow.createCell(1, CellType.STRING);
+                                final Cell topicCell = topicRow.createCell(0, CellType.STRING);
                                 topicCell.setCellValue(topic.get("name").asText());
 
                                 writeMetrics(topic, topicRow);
@@ -248,7 +245,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                 all(topic, "query-groups")
                                         .forEach(group -> {
                                             final XSSFRow groupRow = spreadsheet.createRow(rowCount.getAndIncrement());
-                                            final Cell groupCell = groupRow.createCell(2, CellType.STRING);
+                                            final Cell groupCell = groupRow.createCell(1, CellType.STRING);
                                             groupCell.setCellValue(group.get("name").asText());
 
                                             writeMetrics(group, groupRow);
@@ -256,7 +253,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                             all(group, "query-evaluations")
                                                     .forEach(qeval -> {
                                                         final XSSFRow qRow = spreadsheet.createRow(rowCount.getAndIncrement());
-                                                        final Cell qCell = qRow.createCell(3, CellType.STRING);
+                                                        final Cell qCell = qRow.createCell(2, CellType.STRING);
                                                         qCell.setCellValue(pretty(qeval.get("query")));
 
                                                         writeMetrics(qeval, qRow);
@@ -265,7 +262,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                         });
                             });
 
-                    for (int i = 0; i < (metadata.howManyVersions() * metadata.howManyMetrics() + 4); i++) {
+                    for (int i = 0; i < (metadata.howManyVersions() * metadata.howManyMetrics() + 2); i++) {
                         spreadsheet.autoSizeColumn(i);
                     }
 
