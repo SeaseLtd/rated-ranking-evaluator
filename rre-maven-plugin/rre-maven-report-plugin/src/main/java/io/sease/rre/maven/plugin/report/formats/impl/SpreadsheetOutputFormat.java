@@ -83,7 +83,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         final AtomicInteger counter = new AtomicInteger(0);
         metadata.metrics
                 .forEach(name -> {
-                    final int columnIndex = 4 + (counter.getAndIncrement() * metadata.howManyVersions());
+                    final int columnIndex = 3 + (counter.getAndIncrement() * metadata.howManyVersions());
                     final Cell qgHeaderCell = header.createCell(columnIndex, CellType.STRING);
                     qgHeaderCell.setCellValue(name);
                     qgHeaderCell.setCellStyle(bold);
@@ -110,7 +110,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         bold.setAlignment(HorizontalAlignment.CENTER);
         ((XSSFFont) font).getCTFont().addNewB();
 
-        final AtomicInteger versionCounter = new AtomicInteger(4);
+        final AtomicInteger versionCounter = new AtomicInteger(3);
         metadata.metrics.forEach(metric -> {
 
                 metadata.versions.forEach(
@@ -154,7 +154,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                 .forEachRemaining(entry -> {
                     entry.getValue().get("versions").fields()
                             .forEachRemaining(vEntry -> {
-                                final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
+                                final Cell vCell = row.createCell(3 + counter.getAndIncrement(), CellType.NUMERIC);
                                 double value = vEntry.getValue().get("value").asDouble();
                                 vCell.setCellValue(value);
                             });
@@ -167,7 +167,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                 .pairMap( (a, b) -> b - a).toArray();
 
                     stream(delta).forEach(v -> {
-                        final Cell vCell = row.createCell(4 + counter.getAndIncrement(), CellType.NUMERIC);
+                        final Cell vCell = row.createCell(3 + counter.getAndIncrement(), CellType.NUMERIC);
                         vCell.setCellValue(v);
                         if (v == 0) {
                             vCell.setCellStyle(yellow);
@@ -272,7 +272,7 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                             .skip(5)
                             .filter(Objects::nonNull)
                             .forEach(row -> {
-                                XSSFCell c = (XSSFCell) row.getCell(3);
+                                XSSFCell c = (XSSFCell) row.getCell(2);
                                 ofNullable(c).ifPresent(poiCell -> {
                                     float tallestCell = -1;
                                     String value = poiCell.getStringCellValue();
