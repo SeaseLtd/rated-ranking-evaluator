@@ -12,6 +12,11 @@
     <name>RRE - Core libraries</name>
     <dependencies>
         <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.10.0</version>
+        </dependency>
+        <dependency>
             <groupId>io.sease</groupId>
             <artifactId>rre-search-platform-api</artifactId>
             <version>1.0</version>
