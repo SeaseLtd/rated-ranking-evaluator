@@ -1,3 +1,5 @@
+<img src="https://user-images.githubusercontent.com/7569632/42744038-a10351c8-88c9-11e8-858b-3a1e832dba4d.jpeg" alt="RRE" width="150px"/>
+
 # Rated Ranking Evaluator
 
 The Rated Ranking Evaluator (RRE) is a search quality evaluation tool which, as the name suggests, evaluates the quality of results coming from a search infrastructure. 
