@@ -1,6 +1,5 @@
 package io.sease.rre.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -131,6 +130,8 @@ public class Engine {
                     throw new IllegalArgumentException("RRE: WARNING!!! Unable to read the corpus file " + data.getAbsolutePath());
                 }
 
+                LOGGER.info("");
+                LOGGER.info("*********************************");
                 LOGGER.info("RRE: Index name => " + indexName);
                 LOGGER.info("RRE: ID Field name => " + idFieldName);
                 LOGGER.info("RRE: Test Collection => " + data.getAbsolutePath());
@@ -142,14 +143,23 @@ public class Engine {
                 all(ratingsNode.get(TOPICS), "topics")
                         .forEach(topicNode -> {
                             final Topic topic = corpus.findOrCreate(topicNode.get(DESCRIPTION).asText(), Topic::new);
+
+                            LOGGER.info("TOPIC: " + topic.getName());
+
                             all(topicNode.get(QUERY_GROUPS), "query_groups")
                                     .forEach(groupNode -> {
                                         final QueryGroup group =
                                                 topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
+
+                                        LOGGER.info("\tQUERY GROUP: " + group.getName());
+
                                         final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
                                         all(groupNode.get(QUERIES), "queries")
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
+
+                                                    LOGGER.info("\t\tQUERY: " + queryString);
+
                                                     final JsonNode relevantDocuments = relevantDocuments(groupNode.get(RELEVANT_DOCUMENTS));
                                                     final Query queryEvaluation = group.findOrCreate(queryString, Query::new);
                                                     queryEvaluation.setIdFieldName(idFieldName);
@@ -185,8 +195,9 @@ public class Engine {
         }
     }
 
-    private JsonNode relevantDocuments(final JsonNode relevantDocumentsDefiniton) {
+    public JsonNode relevantDocuments(final JsonNode relevantDocumentsDefiniton) {
         if (relevantDocumentsDefiniton.size() == 0) return relevantDocumentsDefiniton;
+        if (relevantDocumentsDefiniton == null) return mapper.createArrayNode();
 
         final boolean gainToArrayMode = relevantDocumentsDefiniton.fields().next().getValue().isArray();
         if (gainToArrayMode) {
