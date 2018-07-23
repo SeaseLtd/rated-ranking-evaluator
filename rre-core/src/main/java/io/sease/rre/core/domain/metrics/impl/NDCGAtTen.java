@@ -63,13 +63,13 @@ public class NDCGAtTen extends Metric {
                     return BigDecimal.ZERO;
                 }
 
-                return dcg.divide(idealDcg(relevantDocuments), 2, RoundingMode.FLOOR);
+                return dcg.divide(idealDcg, 2, RoundingMode.FLOOR);
             }
         };
     }
 
     private BigDecimal idealDcg(final JsonNode relevantDocuments) {
-        final int windowSize = Math.min(relevantDocuments.size(), 10); // TODO make it dynamic
+        final int windowSize = Math.min(relevantDocuments.size(), 10);
         final int[] gains = new int[windowSize];
 
         final Map<Integer, List<JsonNode>> groups = StreamSupport.stream(relevantDocuments.spliterator(), false).collect(groupingBy(doc -> doc.get("gain").intValue()));
