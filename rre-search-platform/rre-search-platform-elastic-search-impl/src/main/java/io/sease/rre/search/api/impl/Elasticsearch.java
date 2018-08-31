@@ -24,14 +24,15 @@ import org.elasticsearch.transport.Netty4Plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.elasticsearch.client.Requests.*;
 import static org.elasticsearch.node.InternalSettingsPreparer.prepareEnvironment;
@@ -73,7 +74,7 @@ public class Elasticsearch implements SearchPlatform {
                 .put("http.enabled", "true")
                 .put("path.logs", logsFolder.getAbsolutePath())
                 .put("path.data", dataFolder.getAbsolutePath());
-        elasticsearch = new RRENode(settings.build(), asList(Netty4Plugin.class, CommonAnalysisPlugin.class));
+        elasticsearch = new RRENode(settings.build(), plugins(configuration));
     }
 
     @Override
@@ -174,7 +175,7 @@ public class Elasticsearch implements SearchPlatform {
                     qresponse.getHits().totalHits,
                     stream(qresponse.getHits().getHits())
                             .map(hit -> {
-                                final Map<String, Object> result = new HashMap(hit.getSourceAsMap());
+                                final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
                                 result.put("_id", hit.getId());
                                 return result;
                             })
@@ -182,5 +183,30 @@ public class Elasticsearch implements SearchPlatform {
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Class<? extends Plugin>> plugins(final Map<String, Object> configuration) {
+        final List<Class<? extends Plugin>> defaultPlugins = asList(Netty4Plugin.class, CommonAnalysisPlugin.class);
+        final List<? extends Class<? extends Plugin>> customPlugins =
+                ofNullable((List<String>)configuration.get("plugins"))
+                        .map(plugins ->
+                                plugins.stream()
+                                        .map(String::trim)
+                                        .filter(v -> !v.isEmpty())
+                                        .map(v -> {
+                                            try {
+                                                return (Class<? extends Plugin>)Class.forName(v, true, Thread.currentThread().getContextClassLoader());
+                                            } catch (final Exception exception) {
+                                                throw new IllegalArgumentException(exception);
+                                            }
+                                        })
+                                        .collect(toList()))
+                        .orElse(emptyList());
+
+        final List<Class<? extends Plugin>> plugins = new ArrayList<>(defaultPlugins);
+        plugins.addAll(customPlugins);
+
+        return plugins;
     }
 }
