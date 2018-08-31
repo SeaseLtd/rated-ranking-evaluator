@@ -20,4 +20,6 @@ public interface Field {
     String NAME = "name";
     String DESCRIPTION = "description";
     String RELEVANT_DOCUMENTS = "relevant_documents";
+
+    String DUMMY_VALUE = "DUMMY";
 }

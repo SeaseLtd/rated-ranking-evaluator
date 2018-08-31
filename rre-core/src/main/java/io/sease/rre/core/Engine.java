@@ -15,12 +15,14 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static io.sease.rre.Field.*;
 import static io.sease.rre.Func.*;
 import static java.util.Arrays.stream;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -47,6 +49,13 @@ public class Engine {
     private final String[] fields;
 
     private ObjectMapper mapper = new ObjectMapper();
+
+    private final Supplier<Stream<JsonNode>> dummyNodeSupplier = () -> {
+        final ObjectNode node = mapper.createObjectNode();
+        node.put(NAME, DUMMY_VALUE);
+        node.put(DESCRIPTION, DUMMY_VALUE);
+        return singletonList((JsonNode)node).stream();
+    };
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -140,13 +149,18 @@ public class Engine {
                 prepareData(indexName, data);
 
                 final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
-                all(ratingsNode.get(TOPICS), "topics")
+                all(ratingsNode, TOPICS, dummyNodeSupplier)
                         .forEach(topicNode -> {
-                            final Topic topic = corpus.findOrCreate(topicNode.get(DESCRIPTION).asText(), Topic::new);
+                            final Topic topic =
+                                    corpus.findOrCreate(
+                                            ofNullable(topicNode.get(DESCRIPTION))
+                                                    .orElse(topicNode.get(NAME))
+                                                    .asText(),
+                                            Topic::new);
 
                             LOGGER.info("TOPIC: " + topic.getName());
 
-                            all(topicNode.get(QUERY_GROUPS), "query_groups")
+                            all(topicNode, QUERY_GROUPS, dummyNodeSupplier)
                                     .forEach(groupNode -> {
                                         final QueryGroup group =
                                                 topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
@@ -154,7 +168,7 @@ public class Engine {
                                         LOGGER.info("\tQUERY GROUP: " + group.getName());
 
                                         final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
-                                        all(groupNode.get(QUERIES), "queries")
+                                        all(groupNode, QUERIES, dummyNodeSupplier)
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
 
@@ -196,8 +210,8 @@ public class Engine {
     }
 
     public JsonNode relevantDocuments(final JsonNode relevantDocumentsDefiniton) {
-        if (relevantDocumentsDefiniton.size() == 0) return relevantDocumentsDefiniton;
         if (relevantDocumentsDefiniton == null) return mapper.createArrayNode();
+        if (relevantDocumentsDefiniton.size() == 0) return relevantDocumentsDefiniton;
 
         final boolean gainToArrayMode = relevantDocumentsDefiniton.fields().next().getValue().isArray();
         if (gainToArrayMode) {
@@ -311,12 +325,10 @@ public class Engine {
      * @param source the parent JSON node.
      * @return a stream consisting of all children of the given JSON node.
      */
-    private Stream<JsonNode> all(final JsonNode source, final String name) {
-        return ofNullable(source)
+    private Stream<JsonNode> all(final JsonNode source, final String name, final Supplier<Stream<JsonNode>> streamSupplier) {
+        return ofNullable(source.get(name))
                 .map(node -> StreamSupport.stream(source.spliterator(), false))
-                .orElseGet(() -> {
-                    LOGGER.error("RRE: WARNING!!! \"" + name + "\" node is not defined or empty!");
-                    return Stream.empty();});
+                .orElseGet(() -> Stream.of(source));
     }
 
     /**
