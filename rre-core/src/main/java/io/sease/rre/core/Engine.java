@@ -90,6 +90,13 @@ public class Engine {
 
     private List<String> versions;
 
+    public String name(final JsonNode node) {
+        return ofNullable(
+                ofNullable(node.get(DESCRIPTION)).orElse(node.get(NAME)))
+                .map(JsonNode::asText)
+                .orElse(DUMMY_VALUE);
+    }
+
     /**
      * Executes the evaluation process.
      *
@@ -144,26 +151,19 @@ public class Engine {
                 LOGGER.info("RRE: Index name => " + indexName);
                 LOGGER.info("RRE: ID Field name => " + idFieldName);
                 LOGGER.info("RRE: Test Collection => " + data.getAbsolutePath());
-                LOGGER.info("RRE: Ratings Set processing starts");
 
                 prepareData(indexName, data);
 
                 final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
                 all(ratingsNode, TOPICS, dummyNodeSupplier)
                         .forEach(topicNode -> {
-                            final Topic topic =
-                                    corpus.findOrCreate(
-                                            ofNullable(topicNode.get(DESCRIPTION))
-                                                    .orElse(topicNode.get(NAME))
-                                                    .asText(),
-                                            Topic::new);
+                            final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
 
                             LOGGER.info("TOPIC: " + topic.getName());
 
                             all(topicNode, QUERY_GROUPS, dummyNodeSupplier)
                                     .forEach(groupNode -> {
-                                        final QueryGroup group =
-                                                topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
+                                        final QueryGroup group = topic.findOrCreate(name(groupNode), QueryGroup::new);
 
                                         LOGGER.info("\tQUERY GROUP: " + group.getName());
 
@@ -327,7 +327,7 @@ public class Engine {
      */
     private Stream<JsonNode> all(final JsonNode source, final String name, final Supplier<Stream<JsonNode>> streamSupplier) {
         return ofNullable(source.get(name))
-                .map(node -> StreamSupport.stream(source.spliterator(), false))
+                .map(node -> StreamSupport.stream(node.spliterator(), false))
                 .orElseGet(() -> Stream.of(source));
     }
 

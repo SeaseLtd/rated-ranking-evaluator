@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.StreamSupport;
 
@@ -233,11 +234,16 @@ public class SpreadsheetOutputFormat implements OutputFormat {
 
                     writeMetrics(corpus, corpusRow);
 
+                    final AtomicBoolean hideTopicColumn = new AtomicBoolean();
+
                     all(corpus, "topics")
                             .forEach(topic -> {
                                 final XSSFRow topicRow = spreadsheet.createRow(rowCount.getAndIncrement());
                                 final Cell topicCell = topicRow.createCell(0, CellType.STRING);
-                                topicCell.setCellValue(topic.get("name").asText());
+
+                                final String topicName = topic.get("name").asText();
+                                hideTopicColumn.set("DUMMY".equals(topicName));
+                                topicCell.setCellValue(topicName);
 
                                 writeMetrics(topic, topicRow);
 
@@ -294,7 +300,11 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                 });
 
                             });
+
+                        spreadsheet.setColumnHidden(0, hideTopicColumn.get());
                 });
+
+
 
         plugin.getReportOutputDirectory().mkdirs();
 
