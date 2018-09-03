@@ -15,6 +15,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -48,6 +49,13 @@ public class Engine {
 
     private ObjectMapper mapper = new ObjectMapper();
 
+    private final Supplier<Stream<JsonNode>>
+            unnamedNode = () ->
+                Stream.of(
+                    mapper.createObjectNode()
+                        .put(NAME, UNNAMED)
+                        .put(DESCRIPTION, UNNAMED));
+
     /**
      * Builds a new {@link Engine} instance with the given data.
      *
@@ -80,6 +88,13 @@ public class Engine {
     }
 
     private List<String> versions;
+
+    public String name(final JsonNode node) {
+        return ofNullable(
+                ofNullable(node.get(DESCRIPTION)).orElse(node.get(NAME)))
+                .map(JsonNode::asText)
+                .orElse(UNNAMED);
+    }
 
     /**
      * Executes the evaluation process.
@@ -135,26 +150,24 @@ public class Engine {
                 LOGGER.info("RRE: Index name => " + indexName);
                 LOGGER.info("RRE: ID Field name => " + idFieldName);
                 LOGGER.info("RRE: Test Collection => " + data.getAbsolutePath());
-                LOGGER.info("RRE: Ratings Set processing starts");
 
                 prepareData(indexName, data);
 
                 final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
-                all(ratingsNode.get(TOPICS), "topics")
+                all(ratingsNode, TOPICS, unnamedNode)
                         .forEach(topicNode -> {
-                            final Topic topic = corpus.findOrCreate(topicNode.get(DESCRIPTION).asText(), Topic::new);
+                            final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
 
                             LOGGER.info("TOPIC: " + topic.getName());
 
-                            all(topicNode.get(QUERY_GROUPS), "query_groups")
+                            all(topicNode, QUERY_GROUPS, unnamedNode)
                                     .forEach(groupNode -> {
-                                        final QueryGroup group =
-                                                topic.findOrCreate(groupNode.get(NAME).asText(), QueryGroup::new);
+                                        final QueryGroup group = topic.findOrCreate(name(groupNode), QueryGroup::new);
 
                                         LOGGER.info("\tQUERY GROUP: " + group.getName());
 
                                         final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
-                                        all(groupNode.get(QUERIES), "queries")
+                                        all(groupNode, QUERIES, unnamedNode)
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
 
@@ -196,8 +209,8 @@ public class Engine {
     }
 
     public JsonNode relevantDocuments(final JsonNode relevantDocumentsDefiniton) {
-        if (relevantDocumentsDefiniton.size() == 0) return relevantDocumentsDefiniton;
         if (relevantDocumentsDefiniton == null) return mapper.createArrayNode();
+        if (relevantDocumentsDefiniton.size() == 0) return relevantDocumentsDefiniton;
 
         final boolean gainToArrayMode = relevantDocumentsDefiniton.fields().next().getValue().isArray();
         if (gainToArrayMode) {
@@ -311,12 +324,10 @@ public class Engine {
      * @param source the parent JSON node.
      * @return a stream consisting of all children of the given JSON node.
      */
-    private Stream<JsonNode> all(final JsonNode source, final String name) {
-        return ofNullable(source)
-                .map(node -> StreamSupport.stream(source.spliterator(), false))
-                .orElseGet(() -> {
-                    LOGGER.error("RRE: WARNING!!! \"" + name + "\" node is not defined or empty!");
-                    return Stream.empty();});
+    private Stream<JsonNode> all(final JsonNode source, final String name, final Supplier<Stream<JsonNode>> streamSupplier) {
+        return ofNullable(source.get(name))
+                .map(node -> StreamSupport.stream(node.spliterator(), false))
+                .orElseGet(() -> Stream.of(source));
     }
 
     /**
