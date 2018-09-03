@@ -21,5 +21,5 @@ public interface Field {
     String DESCRIPTION = "description";
     String RELEVANT_DOCUMENTS = "relevant_documents";
 
-    String DUMMY_VALUE = "DUMMY";
+    String UNNAMED = "Unnamed";
 }
