@@ -14,7 +14,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.StreamSupport;
 
@@ -30,7 +29,7 @@ import static java.util.Optional.ofNullable;
  * @since 1.0
  */
 public class SpreadsheetOutputFormat implements OutputFormat {
-    private XSSFRow topHeader(final XSSFSheet sheet, EvaluationMetadata metadata) {
+    private void topHeader(final XSSFSheet sheet, EvaluationMetadata metadata) {
         final XSSFRow header = sheet.createRow(0);
 
         final CellStyle bold = sheet.getWorkbook().createCellStyle();
@@ -65,21 +64,18 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                             header.getRowNum(),
                             3,
                             3 + (metadata.howManyMetrics() * metadata.howManyVersions())));
-        } catch (final Exception ignore) {
-        }
-
-        return header;
+        } catch (final Exception ignore) {}
     }
 
-    private XSSFRow metricsHeader(final XSSFSheet sheet, final EvaluationMetadata metadata) {
+    private void metricsHeader(final XSSFSheet sheet, final EvaluationMetadata metadata) {
         final XSSFRow header = sheet.createRow(1);
 
         final CellStyle bold = sheet.getWorkbook().createCellStyle();
-        final Font font = sheet.getWorkbook().createFont();
+        final XSSFFont font = sheet.getWorkbook().createFont();
         font.setBold(true);
         bold.setFont(font);
         bold.setAlignment(HorizontalAlignment.CENTER);
-        ((XSSFFont) font).getCTFont().addNewB();
+        font.getCTFont().addNewB();
 
         final AtomicInteger counter = new AtomicInteger(0);
         metadata.metrics
@@ -98,18 +94,17 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                     } catch (final Exception ignore) {
                     }
                 });
-        return header;
     }
 
-    private XSSFRow versionsHeader(final XSSFSheet sheet, final EvaluationMetadata metadata) {
+    private void versionsHeader(final XSSFSheet sheet, final EvaluationMetadata metadata) {
         final XSSFRow header = sheet.createRow(2);
 
         final CellStyle bold = sheet.getWorkbook().createCellStyle();
-        final Font font = sheet.getWorkbook().createFont();
+        final XSSFFont font = sheet.getWorkbook().createFont();
         font.setBold(true);
         bold.setFont(font);
         bold.setAlignment(HorizontalAlignment.CENTER);
-        ((XSSFFont) font).getCTFont().addNewB();
+        font.getCTFont().addNewB();
 
         final AtomicInteger versionCounter = new AtomicInteger(3);
         metadata.metrics.forEach(metric -> {
@@ -144,7 +139,6 @@ public class SpreadsheetOutputFormat implements OutputFormat {
 
 
         });
-        return header;
     }
 
     private void writeMetrics(final JsonNode ownerNode, final XSSFRow row) {
@@ -191,12 +185,6 @@ public class SpreadsheetOutputFormat implements OutputFormat {
         final CellStyle topAlign = workbook.createCellStyle();
         topAlign.setVerticalAlignment(VerticalAlignment.TOP);
 
-        byte[] rgb = new byte[3];
-        rgb[0] = (byte) 40; // red
-        rgb[1] = (byte) 167; // green
-        rgb[2] = (byte) 169; // blue
-        XSSFColor myColor = new XSSFColor(rgb, null);
-
         final Font redFont = workbook.createFont();
         redFont.setBold(true);
         redFont.setColor(IndexedColors.RED.getIndex());
@@ -234,15 +222,12 @@ public class SpreadsheetOutputFormat implements OutputFormat {
 
                     writeMetrics(corpus, corpusRow);
 
-                    final AtomicBoolean hideTopicColumn = new AtomicBoolean();
-
                     all(corpus, "topics")
                             .forEach(topic -> {
                                 final XSSFRow topicRow = spreadsheet.createRow(rowCount.getAndIncrement());
                                 final Cell topicCell = topicRow.createCell(0, CellType.STRING);
 
                                 final String topicName = topic.get("name").asText();
-                                hideTopicColumn.set("DUMMY".equals(topicName));
                                 topicCell.setCellValue(topicName);
 
                                 writeMetrics(topic, topicRow);
@@ -300,8 +285,6 @@ public class SpreadsheetOutputFormat implements OutputFormat {
                                 });
 
                             });
-
-                        spreadsheet.setColumnHidden(0, hideTopicColumn.get());
                 });
 
 

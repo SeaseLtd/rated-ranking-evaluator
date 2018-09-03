@@ -22,7 +22,6 @@ import java.util.stream.StreamSupport;
 import static io.sease.rre.Field.*;
 import static io.sease.rre.Func.*;
 import static java.util.Arrays.stream;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -50,12 +49,12 @@ public class Engine {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    private final Supplier<Stream<JsonNode>> dummyNodeSupplier = () -> {
-        final ObjectNode node = mapper.createObjectNode();
-        node.put(NAME, DUMMY_VALUE);
-        node.put(DESCRIPTION, DUMMY_VALUE);
-        return singletonList((JsonNode)node).stream();
-    };
+    private final Supplier<Stream<JsonNode>>
+            unnamedNode = () ->
+                Stream.of(
+                    mapper.createObjectNode()
+                        .put(NAME, UNNAMED)
+                        .put(DESCRIPTION, UNNAMED));
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -94,7 +93,7 @@ public class Engine {
         return ofNullable(
                 ofNullable(node.get(DESCRIPTION)).orElse(node.get(NAME)))
                 .map(JsonNode::asText)
-                .orElse(DUMMY_VALUE);
+                .orElse(UNNAMED);
     }
 
     /**
@@ -155,20 +154,20 @@ public class Engine {
                 prepareData(indexName, data);
 
                 final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
-                all(ratingsNode, TOPICS, dummyNodeSupplier)
+                all(ratingsNode, TOPICS, unnamedNode)
                         .forEach(topicNode -> {
                             final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
 
                             LOGGER.info("TOPIC: " + topic.getName());
 
-                            all(topicNode, QUERY_GROUPS, dummyNodeSupplier)
+                            all(topicNode, QUERY_GROUPS, unnamedNode)
                                     .forEach(groupNode -> {
                                         final QueryGroup group = topic.findOrCreate(name(groupNode), QueryGroup::new);
 
                                         LOGGER.info("\tQUERY GROUP: " + group.getName());
 
                                         final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
-                                        all(groupNode, QUERIES, dummyNodeSupplier)
+                                        all(groupNode, QUERIES, unnamedNode)
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
 
