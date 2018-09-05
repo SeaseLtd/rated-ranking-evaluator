@@ -5,24 +5,19 @@ import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Evaluation;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.Elasticsearch;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * RREvalutation Mojo (Apache Solr binding).
@@ -53,6 +48,12 @@ public class RREvaluateMojo extends AbstractMojo {
 
     @Parameter(name = "plugins")
     private List<String> plugins;
+
+    @Parameter(name = "include")
+    private List<String> include;
+
+    @Parameter(name = "exclude")
+    private List<String> exclude;
 
     @Parameter(name = "fields", defaultValue = "")
     private String fields;
@@ -85,7 +86,9 @@ public class RREvaluateMojo extends AbstractMojo {
                     ratingsFolder,
                     templatesFolder,
                     metrics,
-                    fields.split(","));
+                    fields.split(","),
+                    exclude,
+                    include);
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("path.home", "/tmp");
