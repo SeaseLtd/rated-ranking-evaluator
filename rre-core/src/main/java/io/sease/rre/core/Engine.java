@@ -15,13 +15,13 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static io.sease.rre.Field.*;
 import static io.sease.rre.Func.*;
 import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -42,6 +42,9 @@ public class Engine {
     private final File ratingsFolder;
     private final File templatesFolder;
 
+    private final List<String> include;
+    private final List<String> exclude;
+
     private final List<Class<? extends Metric>> availableMetricsDefs;
 
     private final SearchPlatform platform;
@@ -49,12 +52,7 @@ public class Engine {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    private final Supplier<Stream<JsonNode>>
-            unnamedNode = () ->
-                Stream.of(
-                    mapper.createObjectNode()
-                        .put(NAME, UNNAMED)
-                        .put(DESCRIPTION, UNNAMED));
+    private List<String> versions;
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -72,7 +70,9 @@ public class Engine {
             final String ratingsFolderPath,
             final String templatesFolderPath,
             final List<String> metrics,
-            final String[] fields) {
+            final String[] fields,
+            final List<String> exclude,
+            final List<String> include) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
@@ -80,14 +80,15 @@ public class Engine {
         this.platform = platform;
         this.fields = safe(fields);
 
+        this.exclude = ofNullable(exclude).orElse(emptyList());
+        this.include = ofNullable(include).orElse(emptyList());
+
         this.availableMetricsDefs =
                 metrics.stream()
                         .map(Func::newMetricDefinition)
                         .filter(Objects::nonNull)
                         .collect(toList());
     }
-
-    private List<String> versions;
 
     public String name(final JsonNode node) {
         return ofNullable(
@@ -154,20 +155,20 @@ public class Engine {
                 prepareData(indexName, data);
 
                 final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
-                all(ratingsNode, TOPICS, unnamedNode)
+                all(ratingsNode, TOPICS)
                         .forEach(topicNode -> {
                             final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
 
                             LOGGER.info("TOPIC: " + topic.getName());
 
-                            all(topicNode, QUERY_GROUPS, unnamedNode)
+                            all(topicNode, QUERY_GROUPS)
                                     .forEach(groupNode -> {
                                         final QueryGroup group = topic.findOrCreate(name(groupNode), QueryGroup::new);
 
                                         LOGGER.info("\tQUERY GROUP: " + group.getName());
 
                                         final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
-                                        all(groupNode, QUERIES, unnamedNode)
+                                        all(groupNode, QUERIES)
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
 
@@ -324,7 +325,7 @@ public class Engine {
      * @param source the parent JSON node.
      * @return a stream consisting of all children of the given JSON node.
      */
-    private Stream<JsonNode> all(final JsonNode source, final String name, final Supplier<Stream<JsonNode>> streamSupplier) {
+    private Stream<JsonNode> all(final JsonNode source, final String name) {
         return ofNullable(source.get(name))
                 .map(node -> StreamSupport.stream(node.spliterator(), false))
                 .orElseGet(() -> Stream.of(source));
@@ -337,7 +338,16 @@ public class Engine {
      * @param data      the dataset.
      */
     private void prepareData(final String indexName, final File data) {
-        final File[] versionFolders = safe(configurationsFolder.listFiles(ONLY_DIRECTORIES));
+        final File[] versionFolders =
+                safe(configurationsFolder.listFiles(
+                        file -> ONLY_DIRECTORIES.accept(file)
+                                    && (include.isEmpty() || include.contains(file.getName()) || include.stream().anyMatch(rule -> file.getName().matches(rule)))
+                                    && (exclude.isEmpty() || (!exclude.contains(file.getName()) && exclude.stream().noneMatch(rule -> file.getName().matches(rule))))));
+
+        if (versionFolders == null || versionFolders.length == 0) {
+            throw new IllegalArgumentException("RRE: no target versions available. Check the configuration set folder and include/exclude clauses.");
+        }
+
         stream(versionFolders)
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(file -> (file.isDirectory() && file.getName().equals(indexName))
@@ -347,7 +357,12 @@ public class Engine {
 
         LOGGER.info("RRE: " + platform.getName() + " has been correctly loaded.");
 
-        this.versions = stream(versionFolders).map(File::getName).collect(toList());
+        this.versions =
+                stream(versionFolders)
+                        .map(File::getName)
+                        .collect(toList());
+
+        LOGGER.info("RRE: target versions are " + String.join(",", versions));
     }
 
     /**
