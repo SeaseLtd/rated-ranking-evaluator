@@ -44,6 +44,12 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "fields", defaultValue = "*,score")
     private String fields;
 
+    @Parameter(name = "include")
+    private List<String> include;
+
+    @Parameter(name = "exclude")
+    private List<String> exclude;
+
     @Override
     public void execute() throws MojoExecutionException {
         try (final SearchPlatform platform = new ApacheSolr()) {
@@ -54,7 +60,9 @@ public class RREvaluateMojo extends AbstractMojo {
                     ratingsFolder,
                     templatesFolder,
                     metrics,
-                    fields.split(","));
+                    fields.split(","),
+                    exclude,
+                    include);
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("solr.home", "/tmp");
