@@ -6,6 +6,7 @@ import org.apache.htrace.fasterxml.jackson.databind.JsonNode;
 import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -52,7 +53,10 @@ public class ApacheSolr implements SearchPlatform {
         proxy.getCoreContainer().create(targetIndexName, configFolder.toPath(), emptyMap(), true);
 
         try {
-            new JsonUpdateRequest(new FileInputStream(data)).process(proxy, targetIndexName);
+            UpdateResponse response = new JsonUpdateRequest(new FileInputStream(data)).process(proxy, targetIndexName);
+            if (response.getStatus() != 0) {
+                throw new IllegalArgumentException("Received an error status from Solr: " + response.getStatus());
+            }
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
