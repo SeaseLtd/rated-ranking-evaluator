@@ -12,12 +12,18 @@ import io.sease.rre.search.api.SearchPlatform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static io.sease.rre.Field.*;
 import static io.sease.rre.Func.*;
@@ -135,12 +141,8 @@ public class Engine {
                                         ratingsNode.get(ID_FIELD_NAME),
                                         "WARNING!!! \"" + ID_FIELD_NAME + "\" attribute not found!")
                                         .asText(DEFAULT_ID_FIELD_NAME);
-                final File data =
-                        new File(
-                            corporaFolder,
-                            requireNonNull(
-                                    ratingsNode.get(CORPORA_FILENAME),
-                                    "WARNING!!! \"" + CORPORA_FILENAME + "\" attribute not found!").asText());
+
+                final File data = data(ratingsNode);
                 final String queryPlaceholder = ofNullable(ratingsNode.get("query_placeholder")).map(JsonNode::asText).orElse("$query");
 
                 if (!data.canRead()) {
@@ -209,6 +211,55 @@ public class Engine {
         }
     }
 
+    File data(final JsonNode ratingsNode) {
+        final File corporaFile =
+                new File(
+                        corporaFolder,
+                        requireNonNull(
+                                ratingsNode.get(CORPORA_FILENAME),
+                                "WARNING!!! \"" + CORPORA_FILENAME + "\" attribute not found!").asText());
+        return corporaFile.getName().endsWith(".zip") ? unzipAndGet(corporaFile) : corporaFile;
+    }
+
+    private File unzipAndGet(final File corporaFile) {
+        LOGGER.info("RRE: found a compressed corpora file: " + corporaFile.getAbsolutePath());
+
+        final File outputFolder = new File(System.getProperty("java.io.tmpdir"));
+
+        LOGGER.info("RRE: uncompressing corpora file under: " + outputFolder.getAbsolutePath());
+
+        try (final ZipInputStream zInputStream = new ZipInputStream(new FileInputStream((corporaFile)))) {
+            ZipEntry entry = zInputStream.getNextEntry();
+            while (entry != null) {
+                if (entry.getName().endsWith(".json")) {
+                    LOGGER.info("RRE: found a corpora candidate within the archive: " + entry.getName());
+
+                    final File outputFile = new File(outputFolder, entry.getName());
+                    try (final BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outputFile))) {
+                        final byte[] buffer = new byte[1024];
+                        int read;
+                        while ((read = zInputStream.read(buffer)) != -1) {
+                            bos.write(buffer, 0, read);
+                        }
+                        return outputFile;
+                    }
+                }
+
+                zInputStream.closeEntry();
+                entry = zInputStream.getNextEntry();
+            }
+            throw new IllegalArgumentException("Unable to find a valid dataset within the compressed corpora file: " + corporaFile.getAbsolutePath());
+        } catch (final IOException exception) {
+            throw new IllegalArgumentException("Unable to read the compressed corpora file: " + corporaFile.getAbsolutePath());
+        }
+    }
+
+    /**
+     * Creates the object representation of relevant documents (i.e judgements).
+     *
+     * @param relevantDocumentsDefiniton the relevant documents definition as found in the ratings.json
+     * @return the object representation of relevant documents (i.e judgements).
+     */
     public JsonNode relevantDocuments(final JsonNode relevantDocumentsDefiniton) {
         if (relevantDocumentsDefiniton == null) return mapper.createArrayNode();
         if (relevantDocumentsDefiniton.size() == 0) return relevantDocumentsDefiniton;
