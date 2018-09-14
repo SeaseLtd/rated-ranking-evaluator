@@ -3,6 +3,7 @@ package io.sease.rre.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.sease.rre.Field;
 import io.sease.rre.Func;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.Metric;
@@ -191,7 +192,6 @@ public class Engine {
                                                                         query(queryNode, sharedTemplate, version),
                                                                         fields,
                                                                         Math.max(10, relevantDocuments.size()));
-
                                                         queryEvaluation.setTotalHits(response.totalHits(), version);
                                                         response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), version));
                                                     });
@@ -215,15 +215,13 @@ public class Engine {
 
         final boolean gainToArrayMode = relevantDocumentsDefiniton.fields().next().getValue().isArray();
         if (gainToArrayMode) {
-
             final ObjectNode relevantDocumentsContainer = mapper.createObjectNode();
-
             relevantDocumentsDefiniton.fields()
                     .forEachRemaining(entry -> {
                         final int gain = Integer.parseInt(entry.getKey());
                         entry.getValue().iterator().forEachRemaining(node -> {
                             final ObjectNode doc = mapper.createObjectNode();
-                            doc.put("gain", gain);
+                            doc.put(Field.GAIN, gain);
                             relevantDocumentsContainer.replace(node.asText(), doc);
                         });
                     });

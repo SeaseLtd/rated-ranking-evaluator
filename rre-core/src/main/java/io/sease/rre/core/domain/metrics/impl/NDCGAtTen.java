@@ -1,6 +1,7 @@
 package io.sease.rre.core.domain.metrics.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.sease.rre.Func;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import static io.sease.rre.Field.GAIN;
+import static io.sease.rre.Func.gainOrRatingNode;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 
@@ -22,6 +24,8 @@ import static java.util.stream.Collectors.groupingBy;
  * @since 1.0
  */
 public class NDCGAtTen extends Metric {
+    private final static BigDecimal TWO = new BigDecimal(2);
+
     /**
      * Builds a new NDCGAtTen metric.
      */
@@ -39,15 +43,13 @@ public class NDCGAtTen extends Metric {
                 if (rank > 10) return;
                 judgment(id(hit))
                         .ifPresent(judgment -> {
+                            final BigDecimal value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(TWO);
                             switch (rank) {
                                 case 1:
-                                    dcg = judgment.get(GAIN) == null || judgment.get(GAIN).isNull()
-                                            ? new BigDecimal(2)
-                                            : judgment.get(GAIN).decimalValue();
+                                    dcg = value;
                                     break;
                                 default:
-                                    final double gain = judgment.get(GAIN).asDouble(2);
-                                    dcg = dcg.add(new BigDecimal(gain / (Math.log(rank) / Math.log(2))));
+                                    dcg = dcg.add(new BigDecimal(value.doubleValue() / (Math.log(rank) / Math.log(2))));
                             }
                         });
             }
@@ -72,7 +74,9 @@ public class NDCGAtTen extends Metric {
         final int windowSize = Math.min(relevantDocuments.size(), 10);
         final int[] gains = new int[windowSize];
 
-        final Map<Integer, List<JsonNode>> groups = StreamSupport.stream(relevantDocuments.spliterator(), false).collect(groupingBy(doc -> doc.get("gain").intValue()));
+        final Map<Integer, List<JsonNode>> groups =
+                StreamSupport.stream(relevantDocuments.spliterator(), false)
+                                .collect(groupingBy(doc -> gainOrRatingNode(doc).map(JsonNode::intValue).orElse(2)));
 
         final int veryVeryRelevantDocsCount = groups.getOrDefault(3, emptyList()).size();
         final int howManyVeryVeryRelevantDocs = Math.min(veryVeryRelevantDocsCount, windowSize);

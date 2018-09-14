@@ -9,8 +9,12 @@ import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
+import static io.sease.rre.Field.GAIN;
+import static io.sease.rre.Field.RATING;
 import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 
 /**
  * Shared functions / utilities.
@@ -77,4 +81,13 @@ public abstract class Func {
         }
     }
 
+    /**
+     * Returns the (child) node which declares the gain/rating associated with a given document.
+     *
+     * @param owner the owner (relevant) document.
+     * @return the (child) node which declares the gain/rating associated with a given document.
+     */
+    public static Optional<JsonNode> gainOrRatingNode(final JsonNode owner) {
+        return ofNullable(ofNullable(owner.get(GAIN)).orElse(owner.get(RATING)));
+    }
 }
