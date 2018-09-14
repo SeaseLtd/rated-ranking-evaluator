@@ -8,6 +8,8 @@ package io.sease.rre;
  */
 public interface Field {
     String GAIN = "gain";
+    String RATING = "rating";
+
     String INDEX_NAME = "index";
     String ID_FIELD_NAME = "id_field";
 

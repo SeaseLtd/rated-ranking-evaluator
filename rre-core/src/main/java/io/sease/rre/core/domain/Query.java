@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.Field;
+import io.sease.rre.Func;
 import io.sease.rre.core.domain.metrics.HitsCollector;
 import io.sease.rre.core.domain.metrics.Metric;
 
@@ -68,7 +69,7 @@ public class Query extends DomainMember<Query> implements HitsCollector {
 
         judgment(id(hit)).ifPresent(jNode -> {
             hit.put("_isRelevant", true);
-            hit.put("_gain", jNode.get(Field.GAIN).asInt());
+            hit.put("_gain", Func.gainOrRatingNode(jNode).map(JsonNode::asInt).orElse(2));
         });
 
         results.computeIfAbsent(version, v -> new MutableQueryOrSearchResponse()).collect(hit, rank, version);

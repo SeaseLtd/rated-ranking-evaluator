@@ -3,6 +3,7 @@ package io.sease.rre.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.sease.rre.Field;
 import io.sease.rre.core.domain.metrics.Metric;
 import org.junit.Test;
 
@@ -81,7 +82,7 @@ public abstract class BaseTestCase {
      */
     protected JsonNode createJudgmentNode(final int gain) {
         final ObjectNode judgment = mapper.createObjectNode();
-        judgment.put("gain", gain);
+        judgment.put(Field.GAIN, gain);
         return judgment;
     }
 

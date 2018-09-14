@@ -1,6 +1,8 @@
 package io.sease.rre.core.domain.metrics.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.Field;
+import io.sease.rre.Func;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
@@ -32,7 +34,7 @@ public class ReciprocalRank extends Metric {
             public void collect(final Map<String, Object> hit, final int rank, final String version) {
                 judgment(id(hit))
                         .ifPresent(hitData -> {
-                            final int gain = hitData.get(Field.GAIN).asInt();
+                            final int gain = Func.gainOrRatingNode(hitData).map(JsonNode::asInt).orElse(2);
                             if (gain > maxGain) {
                                 this.rank = rank;
                                 this.maxGain = gain;
