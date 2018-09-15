@@ -7,6 +7,7 @@ import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.solr.core.CoreContainer;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,6 +16,7 @@ import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -32,6 +34,8 @@ public class ApacheSolr implements SearchPlatform {
 
     private EmbeddedSolrServer proxy;
     private File solrHome;
+    private File coreProperties;
+    private File renamedCoreProperties;
 
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
@@ -39,6 +43,7 @@ public class ApacheSolr implements SearchPlatform {
                 (String) configuration.getOrDefault("solr.home", "/tmp"),
                 String.valueOf(System.currentTimeMillis()));
         prepareSolrHome(solrHome);
+
 
         final File parentDataDir = new File((String) configuration.getOrDefault("solr.data.dir", "/tmp"));
         System.setProperty(
@@ -50,6 +55,12 @@ public class ApacheSolr implements SearchPlatform {
 
     @Override
     public void load(final File data, final File configFolder, final String targetIndexName) {
+        coreProperties = new File(configFolder, "core.properties");
+        if (coreProperties.exists()) {
+            renamedCoreProperties = new File(configFolder, "core.properties.ignore");
+            coreProperties.renameTo(renamedCoreProperties);
+        }
+
         proxy.getCoreContainer().create(targetIndexName, configFolder.toPath(), emptyMap(), true);
 
         try {
@@ -94,8 +105,14 @@ public class ApacheSolr implements SearchPlatform {
             }
         });
 
-        proxy.getCoreContainer().getAllCoreNames()
-                .forEach(coreName -> proxy.getCoreContainer().unload(coreName, true, true, false));
+        ofNullable(proxy)
+                .map(EmbeddedSolrServer::getCoreContainer)
+                .map(CoreContainer::getAllCoreNames)
+                .orElse(Collections.emptyList())
+                .forEach(coreName ->
+                            proxy.getCoreContainer().unload(coreName, true, true, false));
+
+        ofNullable(renamedCoreProperties).ifPresent(file -> file.renameTo(coreProperties));
 
         solrHome.deleteOnExit();
     }
