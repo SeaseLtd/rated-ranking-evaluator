@@ -27,7 +27,7 @@ public class StaticMetric extends Metric {
 
     public void collect(final String version, final BigDecimal value) {
         values.computeIfAbsent(version, v ->
-                new ValueFactory(this) {
+                new ValueFactory(this, version) {
                     @Override
                     public BigDecimal value() {
                         return value;
@@ -42,8 +42,8 @@ public class StaticMetric extends Metric {
     }
 
     @Override
-    public ValueFactory valueFactory() {
-        return new ValueFactory(this) {
+    public ValueFactory createValueFactory(final String version) {
+        return new ValueFactory(this, version) {
             @Override
             public BigDecimal value() {
                 return BigDecimal.TEN;

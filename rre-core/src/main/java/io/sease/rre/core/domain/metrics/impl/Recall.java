@@ -24,8 +24,8 @@ public class Recall extends Metric {
     }
 
     @Override
-    public ValueFactory valueFactory() {
-        return new ValueFactory(this) {
+    public ValueFactory createValueFactory(final String version) {
+        return new ValueFactory(this, version) {
             final AtomicInteger relevantItemsFound = new AtomicInteger();
 
             @Override

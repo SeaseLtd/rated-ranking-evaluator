@@ -1,7 +1,6 @@
 package io.sease.rre.core.domain.metrics.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.Field;
 import io.sease.rre.Func;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.ValueFactory;
@@ -11,7 +10,7 @@ import java.math.RoundingMode;
 import java.util.Map;
 
 /**
- * Reciprocal Rank metric
+ * The reciprocal rank of a query response is the multiplicative inverse of the rank of the first correct answer.
  *
  * @author agazzarini
  * @since 1.0
@@ -25,8 +24,8 @@ public class ReciprocalRank extends Metric {
     }
 
     @Override
-    public ValueFactory valueFactory() {
-        return new ValueFactory(this) {
+    public ValueFactory createValueFactory(final String version) {
+        return new ValueFactory(this, version) {
             private int rank;
             private int maxGain;
 

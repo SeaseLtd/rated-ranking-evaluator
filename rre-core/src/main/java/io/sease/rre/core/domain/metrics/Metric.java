@@ -37,6 +37,7 @@ public abstract class Metric implements HitsCollector {
     protected String idFieldName = DEFAULT_ID_FIELD_NAME;
     protected JsonNode relevantDocuments;
     protected Map<String, ValueFactory> values = new LinkedHashMap<>();
+    protected List<String> versions;
 
     /**
      * Sets into this metrics the different versions available in the current evaluation process.
@@ -44,7 +45,8 @@ public abstract class Metric implements HitsCollector {
      * @param versions the different versions available in the current evaluation process.
      */
     public void setVersions(final List<String> versions) {
-        versions.forEach(version -> values.put(version, valueFactory()));
+        this.versions = versions;
+        versions.forEach(version -> values.put(version, createValueFactory(version)));
     }
 
     /**
@@ -126,7 +128,7 @@ public abstract class Metric implements HitsCollector {
      *
      * @return the factory which will be used for actually computing metric value(s).
      */
-    public abstract ValueFactory valueFactory();
+    public abstract ValueFactory createValueFactory(final String version);
 
     /**
      * Returns a map of the available versions with the corresponding value factory.
@@ -144,6 +146,6 @@ public abstract class Metric implements HitsCollector {
      * @return the {@link ValueFactory} instance associated with a given version.
      */
     public ValueFactory valueFactory(final String version) {
-        return values.getOrDefault(version, valueFactory());
+        return values.get(version);
     }
 }
