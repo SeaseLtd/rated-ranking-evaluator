@@ -33,8 +33,8 @@ public class AveragedMetric extends Metric {
          *
          * @param owner the owner metric.
          */
-        private MutableValueFactory(final Metric owner) {
-            super(owner);
+        private MutableValueFactory(final Metric owner, final String version) {
+            super(owner, version);
         }
 
         @Override
@@ -75,12 +75,12 @@ public class AveragedMetric extends Metric {
      */
     public void collect(final String version, final BigDecimal additionalValue) {
         ((MutableValueFactory)
-                values.computeIfAbsent(version, v -> valueFactory()))
+                values.computeIfAbsent(version, this::createValueFactory))
                 .collect(additionalValue);
     }
 
     @Override
-    public ValueFactory valueFactory() {
-        return new MutableValueFactory(this);
+    public ValueFactory createValueFactory(final String version) {
+        return new MutableValueFactory(this, version);
     }
 }

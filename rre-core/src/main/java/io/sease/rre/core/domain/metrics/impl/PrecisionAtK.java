@@ -29,8 +29,8 @@ public class PrecisionAtK extends Metric {
     }
 
     @Override
-    public ValueFactory valueFactory() {
-        return new ValueFactory(this) {
+    public ValueFactory createValueFactory(final String version) {
+        return new ValueFactory(this, version) {
             private final List<Map<String, Object>> collected = new ArrayList<>();
 
             @Override

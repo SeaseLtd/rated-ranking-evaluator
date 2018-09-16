@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static io.sease.rre.Calculator.divide;
 
 /**
- * AveragePrecision is the fraction of the documents retrieved that are relevant to the user's information need.
+ * Precision is the fraction of the documents retrieved that are relevant to the user's information need.
  *
  * @author agazzarini
  * @since 1.0
@@ -24,8 +24,8 @@ public class Precision extends Metric {
     }
 
     @Override
-    public ValueFactory valueFactory() {
-        return new ValueFactory(this) {
+    public ValueFactory createValueFactory(final String version) {
+        return new ValueFactory(this, version) {
             final AtomicInteger relevantItemsFound = new AtomicInteger();
 
             @Override
