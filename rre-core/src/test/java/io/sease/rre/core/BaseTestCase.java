@@ -51,7 +51,7 @@ public abstract class BaseTestCase {
         cut().setRelevantDocuments(mapper.createObjectNode());
         cut().setTotalHits(0, A_VERSION);
 
-        assertEquals(BigDecimal.ONE, cut().valueFactory(A_VERSION).value());
+        assertEquals(BigDecimal.ONE.doubleValue(), cut().valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 
     /**
@@ -116,7 +116,7 @@ public abstract class BaseTestCase {
                     .forEach(hit -> cut().collect(hit, counter.incrementAndGet(), A_VERSION));
 
             assertEquals(
-                    "Fail to assert dataset with " + set.length + "items.",
+                    "Fail to assert dataset with " + set.length + " items.",
                     BigDecimal.ONE.doubleValue(),
                     cut().valueFactory(A_VERSION).value().doubleValue(),
                     0);

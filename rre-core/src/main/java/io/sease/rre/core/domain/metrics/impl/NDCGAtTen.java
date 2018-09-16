@@ -1,7 +1,6 @@
 package io.sease.rre.core.domain.metrics.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.Func;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
-import static io.sease.rre.Field.GAIN;
 import static io.sease.rre.Func.gainOrRatingNode;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
@@ -34,8 +32,8 @@ public class NDCGAtTen extends Metric {
     }
 
     @Override
-    public ValueFactory valueFactory() {
-        return new ValueFactory(this) {
+    public ValueFactory createValueFactory(final String version) {
+        return new ValueFactory(this, version) {
             private BigDecimal dcg = BigDecimal.ZERO;
 
             @Override
