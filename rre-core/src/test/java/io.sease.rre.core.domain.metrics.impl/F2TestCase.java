@@ -53,7 +53,7 @@ public class F2TestCase extends BaseTestCase {
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
         assertEquals(
-                0.8,
+                0.9095,
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0.002);
     }
@@ -78,7 +78,7 @@ public class F2TestCase extends BaseTestCase {
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
         assertEquals(
-                0.4,
+                0.455,
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0.002);
     }
@@ -108,7 +108,7 @@ public class F2TestCase extends BaseTestCase {
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
         assertEquals(
-                0.4,
+                0.455,
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0.002);
     }
