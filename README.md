@@ -37,7 +37,8 @@ The metrics that are part of the current RRE release are:
 * **Precision at 10**: this metric measures the number of relevant results in the top 10 search results
 * **Reciprocal Rank**: it is the multiplicative inverse of the rank of the first "correct" answer: 1 for first place, 1/2 for second place, 1/3 for third and so on. 
 * **Average Precision**: the area under the precision-recall curve.
-* **NDCG at 10**: it is the multiplicative inverse of the rank of the first "correct" answer: 1 for first place, 1/2 for second place, 1/3 for third and so on. 
+* **NDCG at 10**: it is the multiplicative inverse of the rank of the first "correct" answer: 1 for first place, 1/2 for second place, 1/3 for third and so on.     
+* **F-Measure**: it measures the effectiveness of retrieval with respect to a user who attaches β times as much importance to recall as precision. RRE provides the three most popular F-Measure instances: F0.5, F1 and F2
 
 On top of those "leaf" metrics, which are computed at query level, RRE provides a rich nested data model, where the same metric can be aggregated at several levels.
 For example, queries are grouped in Query Groups and Query Groups are grouped in Topics. 
