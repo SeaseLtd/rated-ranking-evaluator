@@ -2,6 +2,7 @@ package io.sease.rre.search.api.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.UnableToLoadDataException;
@@ -26,8 +27,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -54,6 +57,8 @@ public class Elasticsearch implements SearchPlatform {
     private Node elasticsearch;
     private final ObjectMapper mapper = new ObjectMapper();
 
+    private File nodeConfigFolder;
+
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
         final File logsFolder = new File("target/elasticsearch/logs");
@@ -64,6 +69,9 @@ public class Elasticsearch implements SearchPlatform {
 
         logsFolder.mkdirs();
         dataFolder.mkdirs();
+
+        nodeConfigFolder = new File((String) configuration.get("path.home"), "config");
+        nodeConfigFolder.mkdir();
 
         final Settings.Builder settings = Settings.builder()
                 .put("path.home", (String) configuration.get("path.home"))
@@ -90,6 +98,17 @@ public class Elasticsearch implements SearchPlatform {
             if (proxy.admin().indices().exists(indicesExistsRequest(indexName)).actionGet().isExists()) {
                 proxy.admin().indices().delete(deleteIndexRequest(indexName)).actionGet();
             }
+
+            List<JsonNode> protectedKeywordsPaths = esconfig.findParents("keywords_path");
+            List<JsonNode> synonymsPaths = esconfig.findParents("synonyms_path");
+            List<JsonNode> stopwordsPaths = esconfig.findParents("stopwords_path");
+
+            final File configurationFolder = indexShapeFile.getParentFile();
+            final String namespace = configurationFolder.getName();
+
+            insertNamespaces(protectedKeywordsPaths, "keywords_path", configurationFolder, namespace);
+            insertNamespaces(synonymsPaths, "synonyms_path", configurationFolder, namespace);
+            insertNamespaces(stopwordsPaths, "stopwords_path", configurationFolder, namespace);
 
             final CreateIndexRequest request = createIndexRequest(indexName)
                     .settings(Settings.builder().loadFromSource(mapper.writeValueAsString(esconfig.get("settings")), XContentType.JSON).build())
@@ -208,5 +227,24 @@ public class Elasticsearch implements SearchPlatform {
         plugins.addAll(customPlugins);
 
         return plugins;
+    }
+
+    private void insertNamespaces(final List<JsonNode> parents, final String pathAttributeName, final File configurationFolder, final String namespace) {
+        parents.forEach(parentNode -> {
+            final String path = parentNode.get(pathAttributeName).asText();
+            final File declaredPath = new File(configurationFolder, path);
+
+            final String originalFilename = declaredPath.getName();
+            final String namespacedFilename = namespace + "_" + declaredPath.getName();
+
+            final File targetPath = new File(nodeConfigFolder, namespacedFilename);
+
+            try {
+                Files.copy(declaredPath.toPath(), targetPath.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                ((ObjectNode)parentNode).put(pathAttributeName, path.replace(originalFilename, namespacedFilename));
+            } catch (IOException exception) {
+                throw new RuntimeException("Unable to deal with configuration file " + declaredPath.getAbsolutePath() + ". Target path was " + targetPath.getAbsolutePath());
+            }
+        });
     }
 }
