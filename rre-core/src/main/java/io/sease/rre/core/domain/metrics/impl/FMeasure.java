@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The F-measure measures the effectiveness of retrieval with respect to a user who attaches β times as much importance to recall as precision.
+ * The F-measure measures the effectiveness of retrieval with respect to a user who attaches (beta) times as much importance to recall as precision.
  * In statistical analysis of binary classification, the F1 score (also F-score or F-measure) is a measure of a test's accuracy.
  * It considers both the precision p and the recall r of the test to compute the score: p is the number of correct positive results
  * divided by the number of all positive results returned by the classifier, and r is the number of correct positive results
