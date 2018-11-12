@@ -61,4 +61,13 @@ public interface SearchPlatform extends Closeable {
      * @return the name of this search platform.
      */
     String getName();
+
+    /**
+     * Does the platform require a refresh, outside of any concerns about
+     * corpora updates, etc. This is likely to be true when the data directory
+     * has been deleted, for example.
+     *
+     * @return {@code true} if the platform needs to be refreshed.
+     */
+    boolean isRefreshRequired();
 }

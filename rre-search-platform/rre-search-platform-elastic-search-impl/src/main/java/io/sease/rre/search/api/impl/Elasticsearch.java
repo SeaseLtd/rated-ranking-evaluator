@@ -3,9 +3,12 @@ package io.sease.rre.search.api.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.sease.rre.DirectoryUtils;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.UnableToLoadDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -25,12 +28,9 @@ import org.elasticsearch.transport.Netty4Plugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -47,6 +47,8 @@ import static org.elasticsearch.node.InternalSettingsPreparer.prepareEnvironment
  * @since 1.0
  */
 public class Elasticsearch implements SearchPlatform {
+    private static final Logger LOGGER = LogManager.getLogger(Elasticsearch.class);
+
     private static class RRENode extends Node {
         RRENode(final Settings settings, final Collection<Class<? extends Plugin>> plugins) {
             super(prepareEnvironment(settings, null), plugins);
@@ -58,17 +60,28 @@ public class Elasticsearch implements SearchPlatform {
     private final ObjectMapper mapper = new ObjectMapper();
 
     private File nodeConfigFolder;
+    private boolean mustRefresh = false;
 
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
         final File logsFolder = new File("target/elasticsearch/logs");
-        final File dataFolder = new File("target/elasticsearch/data");
+        final File dataFolder = new File((String) configuration.get("path.data"));
 
         logsFolder.delete();
-        dataFolder.delete();
-
         logsFolder.mkdirs();
-        dataFolder.mkdirs();
+
+        if ((Boolean) configuration.get("forceRefresh") && dataFolder.exists()) {
+            try {
+                DirectoryUtils.deleteDirectory(dataFolder);
+            } catch (IOException e) {
+                LOGGER.error("Could not delete data directory - expect data to be stale!", e);
+            }
+            dataFolder.delete();
+        }
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+            mustRefresh = true;
+        }
 
         nodeConfigFolder = new File((String) configuration.get("path.home"), "config");
         nodeConfigFolder.mkdir();
@@ -171,7 +184,7 @@ public class Elasticsearch implements SearchPlatform {
 
     @Override
     public void beforeStop() {
-        // TODO: remove everything
+        // Nothing to do here, unless we want to delete the data directory
     }
 
     @Override
@@ -202,6 +215,11 @@ public class Elasticsearch implements SearchPlatform {
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    @Override
+    public boolean isRefreshRequired() {
+        return mustRefresh;
     }
 
     @SuppressWarnings("unchecked")
