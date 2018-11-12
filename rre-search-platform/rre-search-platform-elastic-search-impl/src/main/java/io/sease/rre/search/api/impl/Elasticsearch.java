@@ -247,4 +247,9 @@ public class Elasticsearch implements SearchPlatform {
             }
         });
     }
+
+    @Override
+    public boolean isSearchPlatformFile(File file) {
+        return file.isFile() && file.getName().equals("index-shape.json");
+    }
 }
