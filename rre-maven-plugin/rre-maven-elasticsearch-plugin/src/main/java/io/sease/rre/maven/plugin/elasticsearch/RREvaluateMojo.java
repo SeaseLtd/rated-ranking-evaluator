@@ -43,6 +43,15 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "templates-folder", defaultValue = "${basedir}/src/etc/templates")
     private String templatesFolder;
 
+    @Parameter(name = "data-folder", defaultValue = "target/elasticsearch/data")
+    private String dataFolder;
+
+    @Parameter(name = "force-refresh", defaultValue = "true")
+    private boolean forceRefresh;
+
+    @Parameter(name = "checksum-file")
+    private String checksumFile;
+
     @Parameter(name = "metrics", defaultValue = "io.sease.rre.core.domain.metrics.impl.PrecisionAtOne,io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo,io.sease.rre.core.domain.metrics.impl.PrecisionAtThree,io.sease.rre.core.domain.metrics.impl.PrecisionAtTen")
     private List<String> metrics;
 
@@ -88,12 +97,15 @@ public class RREvaluateMojo extends AbstractMojo {
                     metrics,
                     fields.split(","),
                     exclude,
-                    include);
+                    include,
+                    checksumFile);
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("path.home", "/tmp");
+            configuration.put("path.data", dataFolder);
             configuration.put("network.host", port);
             configuration.put("plugins", plugins);
+            configuration.put("forceRefresh", forceRefresh);
 
             write(engine.evaluate(configuration));
         } catch (final IOException exception) {

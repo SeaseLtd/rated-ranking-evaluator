@@ -14,10 +14,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -57,6 +53,8 @@ public class Engine {
     private final SearchPlatform platform;
     private final String[] fields;
 
+    private FileUpdateChecker fileUpdateChecker;
+
     private ObjectMapper mapper = new ObjectMapper();
 
     private List<String> versions;
@@ -79,7 +77,8 @@ public class Engine {
             final List<String> metrics,
             final String[] fields,
             final List<String> exclude,
-            final List<String> include) {
+            final List<String> include,
+            final String checksumFilepath) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
@@ -95,6 +94,21 @@ public class Engine {
                         .map(Func::newMetricDefinition)
                         .filter(Objects::nonNull)
                         .collect(toList());
+
+        initialiseFileUpdateChecker(checksumFilepath);
+    }
+
+    private void initialiseFileUpdateChecker(String checksumFile) {
+        if (checksumFile != null) {
+            try {
+                fileUpdateChecker = new FileUpdateChecker(checksumFile);
+            } catch (IOException e) {
+                LOGGER.warn("Could not create file update checker: " + e.getMessage());
+                fileUpdateChecker = null;
+            }
+        } else {
+            fileUpdateChecker = null;
+        }
     }
 
     public String name(final JsonNode node) {
@@ -387,6 +401,7 @@ public class Engine {
      * @param data      the dataset.
      */
     private void prepareData(final String indexName, final File data) {
+        LOGGER.info("Preparing data for " + indexName + " from " + data.getAbsolutePath());
         final File[] versionFolders =
                 safe(configurationsFolder.listFiles(
                         file -> ONLY_DIRECTORIES.accept(file)
@@ -397,7 +412,10 @@ public class Engine {
             throw new IllegalArgumentException("RRE: no target versions available. Check the configuration set folder and include/exclude clauses.");
         }
 
+        boolean corporaChanged = folderHasChanged(corporaFolder);
+
         stream(versionFolders)
+                .filter(versionFolder -> (folderHasChanged(versionFolder) || corporaChanged || platform.isRefreshRequired()))
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(file -> (file.isDirectory() && file.getName().equals(indexName))
                         || (file.isFile() && file.getName().equals("index-shape.json")))
@@ -411,7 +429,33 @@ public class Engine {
                         .map(File::getName)
                         .collect(toList());
 
+        flushFileChecksums();
+
         LOGGER.info("RRE: target versions are " + String.join(",", versions));
+    }
+
+    private boolean folderHasChanged(File folder) {
+        boolean ret = true;
+
+        if (fileUpdateChecker != null) {
+            try {
+                ret = fileUpdateChecker.directoryHasChanged(folder.getAbsolutePath());
+            } catch (IOException e) {
+                LOGGER.warn("Could not check file update status for " + folder + " :: " + e.getMessage());
+            }
+        }
+
+        return ret;
+    }
+
+    private void flushFileChecksums() {
+        if (fileUpdateChecker != null) {
+            try {
+                fileUpdateChecker.writeChecksums();
+            } catch (IOException e) {
+                LOGGER.error("Could not write file checksums :: " + e.getMessage());
+            }
+        }
     }
 
     /**

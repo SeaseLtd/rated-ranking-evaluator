@@ -1,22 +1,21 @@
 package io.sease.rre.search.api.impl;
 
+import io.sease.rre.DirectoryUtils;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import org.apache.htrace.fasterxml.jackson.databind.JsonNode;
 import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
-import org.apache.solr.core.CoreContainer;
+import org.apache.solr.common.SolrException;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -31,24 +30,32 @@ import static java.util.Optional.ofNullable;
  * @since 1.0
  */
 public class ApacheSolr implements SearchPlatform {
+    private final static Logger LOGGER = LogManager.getLogger(ApacheSolr.class);
 
     private EmbeddedSolrServer proxy;
     private File solrHome;
     private File coreProperties;
     private File renamedCoreProperties;
 
+    private boolean refreshRequired = false;
+
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
         solrHome = new File(
-                (String) configuration.getOrDefault("solr.home", "/tmp"),
-                String.valueOf(System.currentTimeMillis()));
-        prepareSolrHome(solrHome);
+                (String) configuration.getOrDefault("solr.home", System.getProperty("java.io.tmpdir")));
 
-
-        final File parentDataDir = new File((String) configuration.getOrDefault("solr.data.dir", "/tmp"));
-        System.setProperty(
-                "solr.data.dir",
-                new File(parentDataDir, String.valueOf(System.currentTimeMillis())).getAbsolutePath());
+        if ((Boolean) configuration.get("forceRefresh") && solrHome.exists()) {
+            try {
+                DirectoryUtils.deleteDirectory(solrHome);
+            } catch (IOException e) {
+                LOGGER.error("Could not delete data directory - expect data to be stale!", e);
+            }
+        }
+        if (!solrHome.exists()) {
+            // If no data directory, refresh is required even if nothing else has changed
+            prepareSolrHome(solrHome);
+            refreshRequired = true;
+        }
 
         proxy = new EmbeddedSolrServer(solrHome.toPath(), "dummy");
     }
@@ -61,7 +68,27 @@ public class ApacheSolr implements SearchPlatform {
             coreProperties.renameTo(renamedCoreProperties);
         }
 
-        proxy.getCoreContainer().create(targetIndexName, configFolder.toPath(), emptyMap(), true);
+        // Copy files from configFolder into solrHome/targetIndexName
+        File targetIndexDir = new File(solrHome, targetIndexName);
+        try {
+            // Make sure the directory is deleted before copying to it
+            DirectoryUtils.deleteDirectory(targetIndexDir);
+            DirectoryUtils.copyDirectory(configFolder, targetIndexDir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            // Using absolute path for the targetIndexDir, otherwise Solr can put the core.properties in the wrong place.
+            proxy.getCoreContainer().create(targetIndexName, targetIndexDir.toPath().toAbsolutePath(), emptyMap(), true);
+        } catch (SolrException e) {
+            if (e.code() == SolrException.ErrorCode.SERVER_ERROR.code) {
+                // Core already exists - ignore
+                LOGGER.debug("Core " + targetIndexName + " already exists - skipping index creation");
+            } else {
+                LOGGER.error("Caught Solr exception creating core :: " + e.getMessage());
+            }
+        }
 
         try {
             UpdateResponse response = new JsonUpdateRequest(new FileInputStream(data)).process(proxy, targetIndexName);
@@ -85,14 +112,14 @@ public class ApacheSolr implements SearchPlatform {
 
     @Override
     public void beforeStop() {
-        ofNullable(proxy).ifPresent(solr -> {
-            try {
-                solr.deleteByQuery("*:*");
-                solr.commit();
-            } catch (final Exception exception) {
-                exception.printStackTrace();
-            }
-        });
+//        ofNullable(proxy).ifPresent(solr -> {
+//            try {
+//                solr.deleteByQuery("*:*");
+//                solr.commit();
+//            } catch (final Exception exception) {
+//                exception.printStackTrace();
+//            }
+//        });
     }
 
     @Override
@@ -105,16 +132,16 @@ public class ApacheSolr implements SearchPlatform {
             }
         });
 
-        ofNullable(proxy)
-                .map(EmbeddedSolrServer::getCoreContainer)
-                .map(CoreContainer::getAllCoreNames)
-                .orElse(Collections.emptyList())
-                .forEach(coreName ->
-                            proxy.getCoreContainer().unload(coreName, true, true, false));
+//        ofNullable(proxy)
+//                .map(EmbeddedSolrServer::getCoreContainer)
+//                .map(CoreContainer::getAllCoreNames)
+//                .orElse(Collections.emptyList())
+//                .forEach(coreName ->
+//                            proxy.getCoreContainer().unload(coreName, true, true, false));
 
         ofNullable(renamedCoreProperties).ifPresent(file -> file.renameTo(coreProperties));
 
-        solrHome.deleteOnExit();
+//        solrHome.deleteOnExit();
     }
 
     @Override
@@ -146,6 +173,11 @@ public class ApacheSolr implements SearchPlatform {
     @Override
     public String getName() {
         return "Apache Solr";
+    }
+
+    @Override
+    public boolean isRefreshRequired() {
+        return refreshRequired;
     }
 
     /**
