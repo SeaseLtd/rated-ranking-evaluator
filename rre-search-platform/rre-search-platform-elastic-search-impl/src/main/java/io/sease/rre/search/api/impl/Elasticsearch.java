@@ -256,4 +256,9 @@ public class Elasticsearch implements SearchPlatform {
     public boolean isSearchPlatformFile(String indexName, File file) {
         return file.isFile() && file.getName().equals("index-shape.json");
     }
+
+    @Override
+    public boolean isCorporaRequired() {
+        return true;
+    }
 }
