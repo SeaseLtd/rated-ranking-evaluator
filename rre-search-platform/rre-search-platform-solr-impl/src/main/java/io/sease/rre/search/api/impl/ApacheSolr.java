@@ -171,4 +171,16 @@ public class ApacheSolr implements SearchPlatform {
             throw new RuntimeException(exception);
         }
     }
+
+    @Override
+    public boolean isSearchPlatformFile(File file) {
+        boolean ret = false;
+
+        if (file.isDirectory()) {
+            String[] fileContent = file.list((dir, name) -> (name.equals("solrconfig.xml")));
+            ret = fileContent.length == 1;
+        }
+
+        return ret;
+    }
 }

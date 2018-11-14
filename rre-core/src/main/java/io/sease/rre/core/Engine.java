@@ -399,8 +399,7 @@ public class Engine {
 
         stream(versionFolders)
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
-                .filter(file -> (file.isDirectory() && file.getName().equals(indexName))
-                        || (file.isFile() && file.getName().equals("index-shape.json")))
+                .filter(platform::isSearchPlatformFile)
                 .peek(file -> LOGGER.info("RRE: Loading the Test Collection into " + platform.getName() + ", configuration version " + file.getParentFile().getName()))
                 .forEach(fileOrFolder -> platform.load(data, fileOrFolder, indexFqdn(indexName, fileOrFolder.getParentFile().getName())));
 
