@@ -14,10 +14,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -81,7 +77,7 @@ public class Engine {
             final List<String> exclude,
             final List<String> include) {
         this.configurationsFolder = new File(configurationsFolderPath);
-        this.corporaFolder = new File(corporaFolderPath);
+        this.corporaFolder = corporaFolderPath == null ? null : new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
         this.templatesFolder = new File(templatesFolderPath);
         this.platform = platform;
@@ -133,31 +129,29 @@ public class Engine {
                 LOGGER.info("RRE: Ratings Set processing starts");
 
                 final String indexName =
-                                requireNonNull(
-                                        ratingsNode.get(INDEX_NAME),
-                                        "WARNING!!! \"" + INDEX_NAME + "\" attribute not found!").asText();
+                        requireNonNull(
+                                ratingsNode.get(INDEX_NAME),
+                                "WARNING!!! \"" + INDEX_NAME + "\" attribute not found!").asText();
                 final String idFieldName =
-                                requireNonNull(
-                                        ratingsNode.get(ID_FIELD_NAME),
-                                        "WARNING!!! \"" + ID_FIELD_NAME + "\" attribute not found!")
-                                        .asText(DEFAULT_ID_FIELD_NAME);
+                        requireNonNull(
+                                ratingsNode.get(ID_FIELD_NAME),
+                                "WARNING!!! \"" + ID_FIELD_NAME + "\" attribute not found!")
+                                .asText(DEFAULT_ID_FIELD_NAME);
 
                 final File data = data(ratingsNode);
                 final String queryPlaceholder = ofNullable(ratingsNode.get("query_placeholder")).map(JsonNode::asText).orElse("$query");
-
-                if (!data.canRead()) {
-                    throw new IllegalArgumentException("RRE: WARNING!!! Unable to read the corpus file " + data.getAbsolutePath());
-                }
 
                 LOGGER.info("");
                 LOGGER.info("*********************************");
                 LOGGER.info("RRE: Index name => " + indexName);
                 LOGGER.info("RRE: ID Field name => " + idFieldName);
-                LOGGER.info("RRE: Test Collection => " + data.getAbsolutePath());
+                if (data != null) {
+                    LOGGER.info("RRE: Test Collection => " + data.getAbsolutePath());
+                }
 
                 prepareData(indexName, data);
 
-                final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
+                final Corpus corpus = evaluation.findOrCreate(platform.isCorporaRequired() ? data.getName() : indexName, Corpus::new);
                 all(ratingsNode, TOPICS)
                         .forEach(topicNode -> {
                             final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
@@ -212,13 +206,30 @@ public class Engine {
     }
 
     File data(final JsonNode ratingsNode) {
-        final File corporaFile =
-                new File(
-                        corporaFolder,
-                        requireNonNull(
-                                ratingsNode.get(CORPORA_FILENAME),
-                                "WARNING!!! \"" + CORPORA_FILENAME + "\" attribute not found!").asText());
-        return corporaFile.getName().endsWith(".zip") ? unzipAndGet(corporaFile) : corporaFile;
+        final File retFile;
+
+        if (platform.isCorporaRequired()) {
+            final File corporaFile =
+                    new File(
+                            corporaFolder,
+                            requireNonNull(
+                                    ratingsNode.get(CORPORA_FILENAME),
+                                    "WARNING!!! \"" + CORPORA_FILENAME + "\" attribute not found!").asText());
+
+            if (corporaFile.getName().endsWith(".zip")) {
+                retFile = unzipAndGet(corporaFile);
+            } else {
+                retFile = corporaFile;
+            }
+
+            if (!retFile.canRead()) {
+                throw new IllegalArgumentException("RRE: WARNING!!! Unable to read the corpus file " + retFile.getAbsolutePath());
+            }
+        } else {
+            retFile = null;
+        }
+
+        return retFile;
     }
 
     private File unzipAndGet(final File corporaFile) {
@@ -387,11 +398,13 @@ public class Engine {
      * @param data      the dataset.
      */
     private void prepareData(final String indexName, final File data) {
+        LOGGER.info("Preparing data for " + indexName + (data == null ? "" : " from " + data.getAbsolutePath()));
+
         final File[] versionFolders =
                 safe(configurationsFolder.listFiles(
                         file -> ONLY_DIRECTORIES.accept(file)
-                                    && (include.isEmpty() || include.contains(file.getName()) || include.stream().anyMatch(rule -> file.getName().matches(rule)))
-                                    && (exclude.isEmpty() || (!exclude.contains(file.getName()) && exclude.stream().noneMatch(rule -> file.getName().matches(rule))))));
+                                && (include.isEmpty() || include.contains(file.getName()) || include.stream().anyMatch(rule -> file.getName().matches(rule)))
+                                && (exclude.isEmpty() || (!exclude.contains(file.getName()) && exclude.stream().noneMatch(rule -> file.getName().matches(rule))))));
 
         if (versionFolders == null || versionFolders.length == 0) {
             throw new IllegalArgumentException("RRE: no target versions available. Check the configuration set folder and include/exclude clauses.");

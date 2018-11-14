@@ -67,9 +67,16 @@ public interface SearchPlatform extends Closeable {
      * Ie. can it be used to initialise and/or configure a search platform
      * index?
      *
+     * @param indexName the index name being processed.
      * @param file the file to be tested.
      * @return {@code true} if the file is a search platform config file or
      * directory.
      */
-    boolean isSearchPlatformFile(File file);
+    boolean isSearchPlatformFile(String indexName, File file);
+
+    /**
+     * @return {@code true} if this platform requires a corpora file to be
+     * loaded in order to run.
+     */
+    boolean isCorporaRequired();
 }

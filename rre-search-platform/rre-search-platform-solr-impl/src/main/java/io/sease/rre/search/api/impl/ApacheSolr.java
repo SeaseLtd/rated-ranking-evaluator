@@ -176,4 +176,9 @@ public class ApacheSolr implements SearchPlatform {
     public boolean isSearchPlatformFile(String indexName, File file) {
         return file.isDirectory() && file.getName().equals(indexName);
     }
+
+    @Override
+    public boolean isCorporaRequired() {
+        return true;
+    }
 }
