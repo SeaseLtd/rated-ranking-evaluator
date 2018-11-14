@@ -189,7 +189,7 @@ public class Elasticsearch implements SearchPlatform {
         try {
             final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
             final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(q)).size(maxRows).fetchSource(fields, null);
-            final SearchResponse qresponse = proxy.search(new SearchRequest(indexName).source(qBuilder)).actionGet();
+            final SearchResponse qresponse = executeQuery(new SearchRequest(indexName).source(qBuilder));
             return new QueryOrSearchResponse(
                     qresponse.getHits().totalHits,
                     stream(qresponse.getHits().getHits())
@@ -202,6 +202,10 @@ public class Elasticsearch implements SearchPlatform {
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    protected SearchResponse executeQuery(SearchRequest request) throws IOException {
+        return proxy.search(request).actionGet();
     }
 
     @SuppressWarnings("unchecked")
@@ -249,7 +253,7 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
-    public boolean isSearchPlatformFile(File file) {
+    public boolean isSearchPlatformFile(String indexName, File file) {
         return file.isFile() && file.getName().equals("index-shape.json");
     }
 }

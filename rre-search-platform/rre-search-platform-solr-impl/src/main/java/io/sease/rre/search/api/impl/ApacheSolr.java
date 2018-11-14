@@ -173,14 +173,7 @@ public class ApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public boolean isSearchPlatformFile(File file) {
-        boolean ret = false;
-
-        if (file.isDirectory()) {
-            String[] fileContent = file.list((dir, name) -> (name.equals("solrconfig.xml")));
-            ret = fileContent.length == 1;
-        }
-
-        return ret;
+    public boolean isSearchPlatformFile(String indexName, File file) {
+        return file.isDirectory() && file.getName().equals(indexName);
     }
 }

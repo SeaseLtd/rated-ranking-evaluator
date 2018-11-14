@@ -13,6 +13,8 @@ import static org.junit.Assert.assertTrue;
 
 public class ApacheSolrTest {
 
+    private static final String INDEX_NAME = "test";
+
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -26,17 +28,17 @@ public class ApacheSolrTest {
     @Test
     public void isSearchPlatformFile_returnsFalseWhenNotDirectory() throws Exception {
         File dummyFile = tempFolder.newFile();
-        assertFalse(platform.isSearchPlatformFile(dummyFile));
+        assertFalse(platform.isSearchPlatformFile(INDEX_NAME, dummyFile));
     }
 
     @Test
     public void isSearchPlatformFile_returnsFalseWhenDirectoryNotContainSolrConfig() {
-        assertFalse(platform.isSearchPlatformFile(tempFolder.getRoot()));
+        assertFalse(platform.isSearchPlatformFile(INDEX_NAME, tempFolder.getRoot()));
     }
 
     @Test
     public void isSearchPlatformFile_returnsTrueWhenDirectoryContainsSolrConfig() throws Exception {
-        File configFile = tempFolder.newFile("solrconfig.xml");
-        assertTrue(platform.isSearchPlatformFile(tempFolder.getRoot()));
+        File configFile = tempFolder.newFolder(INDEX_NAME);
+        assertTrue(platform.isSearchPlatformFile(INDEX_NAME, configFile));
     }
 }
