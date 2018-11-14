@@ -138,20 +138,18 @@ public class Engine {
                                 "WARNING!!! \"" + ID_FIELD_NAME + "\" attribute not found!")
                                 .asText(DEFAULT_ID_FIELD_NAME);
 
-                final File data = data(ratingsNode);
+                final Optional<File> data = data(ratingsNode);
                 final String queryPlaceholder = ofNullable(ratingsNode.get("query_placeholder")).map(JsonNode::asText).orElse("$query");
 
                 LOGGER.info("");
                 LOGGER.info("*********************************");
                 LOGGER.info("RRE: Index name => " + indexName);
                 LOGGER.info("RRE: ID Field name => " + idFieldName);
-                if (data != null) {
-                    LOGGER.info("RRE: Test Collection => " + data.getAbsolutePath());
-                }
 
-                prepareData(indexName, data);
+                data.ifPresent(file -> LOGGER.info("RRE: Test Collection => " + file.getAbsolutePath()));
+                prepareData(indexName, data.orElse(null));
 
-                final Corpus corpus = evaluation.findOrCreate(platform.isCorporaRequired() ? data.getName() : indexName, Corpus::new);
+                final Corpus corpus = evaluation.findOrCreate(data.map(File::getName).orElse(indexName), Corpus::new);
                 all(ratingsNode, TOPICS)
                         .forEach(topicNode -> {
                             final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
@@ -205,7 +203,7 @@ public class Engine {
         }
     }
 
-    File data(final JsonNode ratingsNode) {
+    private Optional<File> data(final JsonNode ratingsNode) {
         final File retFile;
 
         if (platform.isCorporaRequired()) {
@@ -229,7 +227,7 @@ public class Engine {
             retFile = null;
         }
 
-        return retFile;
+        return Optional.ofNullable(retFile);
     }
 
     private File unzipAndGet(final File corporaFile) {
@@ -398,7 +396,11 @@ public class Engine {
      * @param data      the dataset.
      */
     private void prepareData(final String indexName, final File data) {
-        LOGGER.info("Preparing data for " + indexName + (data == null ? "" : " from " + data.getAbsolutePath()));
+        if (data != null) {
+            LOGGER.info("Preparing data for " + indexName + " from " + data.getAbsolutePath());
+        } else {
+            LOGGER.info("Preparing platform for " + indexName);
+        }
 
         final File[] versionFolders =
                 safe(configurationsFolder.listFiles(
