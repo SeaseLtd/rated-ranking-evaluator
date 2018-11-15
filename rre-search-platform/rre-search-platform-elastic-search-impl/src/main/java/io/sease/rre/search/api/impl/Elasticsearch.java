@@ -25,12 +25,9 @@ import org.elasticsearch.transport.Netty4Plugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -187,25 +184,32 @@ public class Elasticsearch implements SearchPlatform {
     @Override
     public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String[] fields, final int maxRows) {
         try {
-            final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
-            final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(q)).size(maxRows).fetchSource(fields, null);
-            final SearchResponse qresponse = executeQuery(new SearchRequest(indexName).source(qBuilder));
-            return new QueryOrSearchResponse(
-                    qresponse.getHits().totalHits,
-                    stream(qresponse.getHits().getHits())
-                            .map(hit -> {
-                                final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
-                                result.put("_id", hit.getId());
-                                return result;
-                            })
-                            .collect(toList()));
+            final SearchResponse qresponse = proxy.search(buildSearchRequest(indexName, query, fields, maxRows)).actionGet();
+            return convertResponse(qresponse);
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
     }
 
-    protected SearchResponse executeQuery(SearchRequest request) throws IOException {
-        return proxy.search(request).actionGet();
+    SearchRequest buildSearchRequest(final String indexName, final String query, final String[] fields, final int maxRows) throws IOException {
+        final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
+        final SearchSourceBuilder qBuilder = new SearchSourceBuilder()
+                .query(QueryBuilders.wrapperQuery(q))
+                .size(maxRows)
+                .fetchSource(fields, null);
+        return new SearchRequest(indexName).source(qBuilder);
+    }
+
+    QueryOrSearchResponse convertResponse(final SearchResponse searchResponse) {
+        return new QueryOrSearchResponse(
+                searchResponse.getHits().totalHits,
+                stream(searchResponse.getHits().getHits())
+                        .map(hit -> {
+                            final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
+                            result.put("_id", hit.getId());
+                            return result;
+                        })
+                        .collect(toList()));
     }
 
     @SuppressWarnings("unchecked")

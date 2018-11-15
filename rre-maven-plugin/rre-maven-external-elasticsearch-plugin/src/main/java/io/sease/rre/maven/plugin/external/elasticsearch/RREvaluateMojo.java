@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +46,11 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "fields", defaultValue = "")
     private String fields;
 
-    @Parameter(name = "hosts", defaultValue = "http://localhost:9200", required = true)
-    private List<String> hosts;
+    @Parameter(name = "include")
+    private List<String> include;
+
+    @Parameter(name = "exclude")
+    private List<String> exclude;
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -74,11 +78,10 @@ public class RREvaluateMojo extends AbstractMojo {
                     templatesFolder,
                     metrics,
                     fields.split(","),
-                    null,
-                    null);
+                    exclude,
+                    include);
 
-            final Map<String, Object> configuration = new HashMap<>();
-            configuration.put("hosts", hosts);
+            final Map<String, Object> configuration = Collections.emptyMap();
 
             write(engine.evaluate(configuration));
         } catch (final IOException exception) {
