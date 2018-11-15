@@ -77,14 +77,14 @@ public class ExternalElasticsearch extends Elasticsearch {
 
         try {
             final SearchRequest request = buildSearchRequest(indexSettingsMap.get(indexName).getIndex(), query, fields, maxRows);
-            final SearchResponse response = executeQuery(indexName, request);
+            final SearchResponse response = runQuery(indexName, request);
             return convertResponse(response);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private SearchResponse executeQuery(final String indexKey, final SearchRequest request) throws IOException {
+    private SearchResponse runQuery(final String indexKey, final SearchRequest request) throws IOException {
         RestHighLevelClient client = indexClients.get(indexKey);
         if (client == null) {
             throw new RuntimeException("No HTTP client found for index " + indexKey);
