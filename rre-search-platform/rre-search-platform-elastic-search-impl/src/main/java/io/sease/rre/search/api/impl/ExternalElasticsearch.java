@@ -30,17 +30,12 @@ public class ExternalElasticsearch extends Elasticsearch {
     private static final String NAME = "External Elasticsearch";
     static final String SETTINGS_FILE = "index-settings.json";
 
-    private RestHighLevelClient client;
-
     private final Map<String, IndexSettings> indexSettingsMap = new HashMap<>();
+    private final Map<String, RestHighLevelClient> indexClients = new HashMap<>();
 
     @Override
     public void beforeStart(Map<String, Object> configuration) {
-        HttpHost[] hosts = ((List<String>) configuration.get("hosts")).stream()
-                .map(HttpHost::create)
-                .toArray(HttpHost[]::new);
-
-        client = new RestHighLevelClient(RestClient.builder(hosts));
+        // No-op for this implementation
     }
 
     @Override
@@ -50,30 +45,50 @@ public class ExternalElasticsearch extends Elasticsearch {
 
     @Override
     public void load(File corpus, File settingsFile, String targetIndexName) {
+        // Corpus file is not used for this implementation
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         try {
-            // Load the index settings for this version of the index
+            // Load the index settings for this version of the search platform
             IndexSettings settings = mapper.readValue(settingsFile, IndexSettings.class);
             indexSettingsMap.put(targetIndexName, settings);
+            indexClients.put(targetIndexName, initialiseClient(settings.getHostUrls()));
         } catch (IOException e) {
             LOGGER.error("Could not read settings from " + settingsFile.getName() + " :: " + e.getMessage());
         }
     }
 
+    private RestHighLevelClient initialiseClient(List<String> hosts) {
+        // Convert hosts to HTTP host objects
+        HttpHost[] httpHosts = hosts.stream()
+                .map(HttpHost::create)
+                .toArray(HttpHost[]::new);
+
+        return new RestHighLevelClient(RestClient.builder(httpHosts));
+    }
+
     @Override
-    public QueryOrSearchResponse executeQuery(String indexName, String query, String[] fields, int maxRows) {
+    public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String[] fields, final int maxRows) {
         // Find the actual index to search
         if (!indexSettingsMap.containsKey(indexName)) {
             throw new IllegalArgumentException("Cannot find settings for index " + indexName);
         }
 
-        return super.executeQuery(indexSettingsMap.get(indexName).getIndex(), query, fields, maxRows);
+        try {
+            final SearchRequest request = buildSearchRequest(indexSettingsMap.get(indexName).getIndex(), query, fields, maxRows);
+            final SearchResponse response = executeQuery(indexName, request);
+            return convertResponse(response);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @Override
-    protected SearchResponse executeQuery(SearchRequest request) throws IOException {
+    private SearchResponse executeQuery(final String indexKey, final SearchRequest request) throws IOException {
+        RestHighLevelClient client = indexClients.get(indexKey);
+        if (client == null) {
+            throw new RuntimeException("No HTTP client found for index " + indexKey);
+        }
         return client.search(request);
     }
 
@@ -94,10 +109,14 @@ public class ExternalElasticsearch extends Elasticsearch {
 
     @Override
     public void close() {
+        indexClients.values().forEach(this::closeClient);
+    }
+
+    private void closeClient(RestHighLevelClient client) {
         try {
             client.close();
         } catch (IOException e) {
-            LOGGER.error("Caught IOException closing ES HTTP client :: " + e.getMessage());
+            LOGGER.error("Caught IOException closing ES HTTP Client :: " + e.getMessage());
         }
     }
 
@@ -106,13 +125,21 @@ public class ExternalElasticsearch extends Elasticsearch {
 
         @JsonProperty("index")
         private final String index;
+        @JsonProperty("hostUrls")
+        private final List<String> hostUrls;
 
-        public IndexSettings(@JsonProperty("index") String index) {
+        public IndexSettings(@JsonProperty("index") String index,
+                             @JsonProperty("hostUrls") List<String> hostUrls) {
             this.index = index;
+            this.hostUrls = hostUrls;
         }
 
-        public String getIndex() {
+        String getIndex() {
             return index;
+        }
+
+        List<String> getHostUrls() {
+            return hostUrls;
         }
     }
 }
