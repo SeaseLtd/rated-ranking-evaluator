@@ -38,7 +38,7 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "templates-folder", defaultValue = "${basedir}/src/etc/templates")
     private String templatesFolder;
 
-    @Parameter(name = "data-folder", defaultValue = "/tmp")
+    @Parameter(name = "data-folder")
     private String dataFolder;
 
     @Parameter(name = "force-refresh", defaultValue = "true")
@@ -75,7 +75,9 @@ public class RREvaluateMojo extends AbstractMojo {
                     checksumFile);
 
             final Map<String, Object> configuration = new HashMap<>();
-            configuration.put("solr.home", dataFolder);
+            if (dataFolder != null && !dataFolder.isEmpty()) {
+                configuration.put("solr.home", dataFolder);
+            }
             configuration.put("forceRefresh", forceRefresh);
 
             write(engine.evaluate(configuration));

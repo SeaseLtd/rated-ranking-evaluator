@@ -11,11 +11,13 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrException;
+import org.apache.solr.core.CoreContainer;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -38,11 +40,18 @@ public class ApacheSolr implements SearchPlatform {
     private File renamedCoreProperties;
 
     private boolean refreshRequired = false;
+    private boolean defaultSolrHome = false;
 
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
-        solrHome = new File(
-                (String) configuration.getOrDefault("solr.home", System.getProperty("java.io.tmpdir")));
+        if (configuration.containsKey("solr.home")) {
+            // Use external, configured Solr home directory
+            solrHome = new File((String) configuration.get("solr.home"));
+        } else {
+            // Use tmp directory (will be deleted after processing)
+            solrHome = new File(System.getProperty("java.io.tmpdir"), String.valueOf(System.currentTimeMillis()));
+            defaultSolrHome = true;
+        }
 
         if ((Boolean) configuration.get("forceRefresh") && solrHome.exists()) {
             try {
@@ -112,14 +121,18 @@ public class ApacheSolr implements SearchPlatform {
 
     @Override
     public void beforeStop() {
-//        ofNullable(proxy).ifPresent(solr -> {
-//            try {
-//                solr.deleteByQuery("*:*");
-//                solr.commit();
-//            } catch (final Exception exception) {
-//                exception.printStackTrace();
-//            }
-//        });
+        // If using the default Solr home (eg. /tmp), clear the index in
+        // preparation for deleting the tmp directory later.
+        if (defaultSolrHome) {
+            ofNullable(proxy).ifPresent(solr -> {
+                try {
+                    solr.deleteByQuery("*:*");
+                    solr.commit();
+                } catch (final Exception exception) {
+                    exception.printStackTrace();
+                }
+            });
+        }
     }
 
     @Override
@@ -132,16 +145,19 @@ public class ApacheSolr implements SearchPlatform {
             }
         });
 
-//        ofNullable(proxy)
-//                .map(EmbeddedSolrServer::getCoreContainer)
-//                .map(CoreContainer::getAllCoreNames)
-//                .orElse(Collections.emptyList())
-//                .forEach(coreName ->
-//                            proxy.getCoreContainer().unload(coreName, true, true, false));
+        if (defaultSolrHome) {
+            // If using the default Solr home (eg. /tmp), unload and set
+            // directory for deletion.
+            ofNullable(proxy)
+                    .map(EmbeddedSolrServer::getCoreContainer)
+                    .map(CoreContainer::getAllCoreNames)
+                    .orElse(Collections.emptyList())
+                    .forEach(coreName ->
+                            proxy.getCoreContainer().unload(coreName, true, true, false));
+            solrHome.deleteOnExit();
+        }
 
         ofNullable(renamedCoreProperties).ifPresent(file -> file.renameTo(coreProperties));
-
-//        solrHome.deleteOnExit();
     }
 
     @Override
