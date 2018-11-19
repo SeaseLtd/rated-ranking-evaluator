@@ -201,12 +201,10 @@ public class Elasticsearch implements SearchPlatform {
                                 return result;
                             })
                             .collect(toList()));
-        }
-        catch (ElasticsearchException e) {
+        } catch (final ElasticsearchException e) {
             LOGGER.error("Caught ElasticsearchException :: " + e.getMessage());
             return new QueryOrSearchResponse(0, Collections.emptyList());
-        }
-        catch (final IOException exception) {
+        } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
     }
