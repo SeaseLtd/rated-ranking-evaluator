@@ -143,12 +143,10 @@ public class ApacheSolr implements SearchPlatform {
                                     response.getResults().getNumFound(),
                                     new ArrayList<Map<String, Object>>(response.getResults())))
                     .get();
-        }
-        catch (SolrException e) {
+        } catch (SolrException e) {
             LOGGER.error("Caught Solr exception :: " + e.getMessage());
             return new QueryOrSearchResponse(0, Collections.emptyList());
-        }
-        catch (final Exception exception) {
+        } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
     }
