@@ -6,7 +6,12 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 
-public class DirectoryUtils {
+/**
+ * Utilities for handling entire directories.
+ *
+ * @author Matt Pearce (matt@flax.co.uk)
+ */
+public abstract class DirectoryUtils {
 
     /**
      * Recursively delete a directory. Will silently ignore directories that
@@ -34,6 +39,14 @@ public class DirectoryUtils {
         }
     }
 
+    /**
+     * Copy an entire directory, with contents, from a source location to a
+     * destination.
+     *
+     * @param sourceLocation the File representing the source directory.
+     * @param targetLocation the File representing the destination.
+     * @throws IOException if any of the files cannot be coped.
+     */
     public static void copyDirectory(File sourceLocation , File targetLocation) throws IOException {
         if (sourceLocation.isDirectory()) {
             if (!targetLocation.exists()) {
