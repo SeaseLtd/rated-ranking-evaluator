@@ -3,6 +3,7 @@ package io.sease.rre.maven.plugin.elasticsearch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.Elasticsearch;
 import org.apache.maven.plugin.AbstractMojo;
@@ -18,6 +19,8 @@ import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * RREvalutation Mojo (Apache Solr binding).
@@ -60,6 +63,9 @@ public class RREvaluateMojo extends AbstractMojo {
 
     @Parameter(name = "port", defaultValue = "9200")
     private int port;
+
+    @Parameter(name = "persistence")
+    private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -113,5 +119,10 @@ public class RREvaluateMojo extends AbstractMojo {
 
         final ObjectMapper mapper = new ObjectMapper();
         mapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFolder, "evaluation.json"), evaluation);
+    }
+
+    PersistenceConfiguration getPersistence() {
+        return persistence;
+//        return ofNullable(persistence).orElse(PersistenceConfiguration.defaultConfiguration());
     }
 }
