@@ -34,6 +34,8 @@ import static java.util.Optional.ofNullable;
 public class ApacheSolr implements SearchPlatform {
     private final static Logger LOGGER = LogManager.getLogger(ApacheSolr.class);
 
+    private static final Logger LOGGER = LogManager.getLogger(ApacheSolr.class);
+
     private EmbeddedSolrServer proxy;
     private File solrHome;
     private File coreProperties;
@@ -181,6 +183,9 @@ public class ApacheSolr implements SearchPlatform {
                                     response.getResults().getNumFound(),
                                     new ArrayList<Map<String, Object>>(response.getResults())))
                     .get();
+        } catch (SolrException e) {
+            LOGGER.error("Caught Solr exception :: " + e.getMessage());
+            return new QueryOrSearchResponse(0, Collections.emptyList());
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
