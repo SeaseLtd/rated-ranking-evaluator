@@ -94,7 +94,8 @@ public class RREvaluateMojo extends AbstractMojo {
                     metrics,
                     fields.split(","),
                     exclude,
-                    include);
+                    include,
+                    persistence);
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("path.home", "/tmp");
