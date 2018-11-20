@@ -9,6 +9,7 @@ import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.UnableToLoadDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -212,6 +213,9 @@ public class Elasticsearch implements SearchPlatform {
                                 return result;
                             })
                             .collect(toList()));
+        } catch (final ElasticsearchException e) {
+            LOGGER.error("Caught ElasticsearchException :: " + e.getMessage());
+            return new QueryOrSearchResponse(0, Collections.emptyList());
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
