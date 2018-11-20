@@ -3,6 +3,7 @@ package io.sease.rre.maven.plugin.solr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.ApacheSolr;
 import org.apache.maven.plugin.AbstractMojo;
@@ -50,6 +51,9 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "exclude")
     private List<String> exclude;
 
+    @Parameter(name = "persistence")
+    private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
+
     @Override
     public void execute() throws MojoExecutionException {
         try (final SearchPlatform platform = new ApacheSolr()) {
@@ -62,7 +66,8 @@ public class RREvaluateMojo extends AbstractMojo {
                     metrics,
                     fields.split(","),
                     exclude,
-                    include);
+                    include,
+                    persistence);
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("solr.home", "/tmp");
