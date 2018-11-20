@@ -7,6 +7,11 @@ import java.util.Map;
 /**
  * A persistence handler can be used to record the output from all queries
  * run during an evaluation.
+ * <p>
+ * Exceptions during processing are expected to be handled internally.
+ * Exceptions thrown during the {@link #beforeStart()} and {@link #start()}
+ * stages may be passed up the stack, to alert the PersistenceManager that
+ * the handler could not be started for some reason.
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
@@ -22,17 +27,30 @@ public interface PersistenceHandler {
     void configure(String name, Map<String, Object> configuration);
 
     /**
-     * Execute any necessary tasks required to initialise the handler.
+     * @return the configuration name for this handler instance.
      */
-    void beforeStart();
+    String getName();
+
+    /**
+     * Execute any necessary tasks required to initialise the handler.
+     *
+     * @throws PersistenceException if any pre-start checks fail. This should
+     *                              be used to report breaking failures - eg. issues that will stop the
+     *                              handler from starting.
+     */
+    void beforeStart() throws PersistenceException;
 
     /**
      * Execute any necessary start-up tasks.
+     *
+     * @throws PersistenceException if the handler cannot be started for any
+     *                              reason.
      */
-    void start();
+    void start() throws PersistenceException;
 
     /**
      * Record a query.
+     *
      * @param q the query.
      */
     void recordQuery(Query q);
