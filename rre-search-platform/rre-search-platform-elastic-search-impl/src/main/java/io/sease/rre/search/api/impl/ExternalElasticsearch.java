@@ -7,6 +7,7 @@ import io.sease.rre.search.api.QueryOrSearchResponse;
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestClient;
@@ -14,6 +15,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +81,9 @@ public class ExternalElasticsearch extends Elasticsearch {
             final SearchRequest request = buildSearchRequest(indexSettingsMap.get(indexName).getIndex(), query, fields, maxRows);
             final SearchResponse response = runQuery(indexName, request);
             return convertResponse(response);
+        } catch (final ElasticsearchException e) {
+            LOGGER.error("Caught ElasticsearchException :: " + e.getMessage());
+            return new QueryOrSearchResponse(0, Collections.emptyList());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
