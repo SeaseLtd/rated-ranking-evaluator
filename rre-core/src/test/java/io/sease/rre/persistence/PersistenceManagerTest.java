@@ -5,7 +5,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ConcurrentModificationException;
 import java.util.Map;
+
+import static org.junit.Assert.fail;
 
 /**
  * Unit tests for the PersistenceManager class.
@@ -26,16 +29,28 @@ public class PersistenceManagerTest {
         this.persistenceManager = null;
     }
 
-    @Test(expected = RuntimeException.class)
-    public void managerThrowsRuntimeException_whenAllHandlersFailBeforeStart() throws Exception {
-        persistenceManager.registerHandler(failingHandler);
-        persistenceManager.beforeStart();
+    @Test
+    public void managerThrowsRuntimeException_whenAllHandlersFailBeforeStart() {
+        try {
+            persistenceManager.registerHandler(failingHandler);
+            persistenceManager.beforeStart();
+        } catch (ConcurrentModificationException e) {
+            fail("Unexpected ConcurrentModificationException: " + e.getMessage());
+        } catch (RuntimeException e) {
+            // Expected
+        }
     }
 
-    @Test(expected = RuntimeException.class)
-    public void managerThrowsRuntimeException_whenAllHandlersFailStart() throws Exception {
-        persistenceManager.registerHandler(failingHandler);
-        persistenceManager.start();
+    @Test
+    public void managerThrowsRuntimeException_whenAllHandlersFailStart() {
+        try {
+            persistenceManager.registerHandler(failingHandler);
+            persistenceManager.start();
+        } catch (ConcurrentModificationException e) {
+            fail("Unexpected ConcurrentModificationException: " + e.getMessage());
+        } catch (RuntimeException e) {
+            // Expected
+        }
     }
 
     private PersistenceHandler failingHandler = new PersistenceHandler() {
