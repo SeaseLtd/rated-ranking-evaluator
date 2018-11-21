@@ -1,8 +1,6 @@
 package io.sease.rre.maven.plugin.elasticsearch;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
-import io.sease.rre.core.domain.Evaluation;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.Elasticsearch;
@@ -19,8 +17,6 @@ import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static java.util.Optional.ofNullable;
 
 /**
  * RREvalutation Mojo (Apache Solr binding).
@@ -102,28 +98,14 @@ public class RREvaluateMojo extends AbstractMojo {
             configuration.put("network.host", port);
             configuration.put("plugins", plugins);
 
-            write(engine.evaluate(configuration));
+            engine.evaluate(configuration);
         } catch (final IOException exception) {
             throw new MojoExecutionException(exception.getMessage(), exception);
         }
     }
 
-    /**
-     * Writes out the evaluation result.
-     *
-     * @param evaluation the evaluation result.
-     * @throws IOException in case of I/O failure.
-     */
-    private void write(final Evaluation evaluation) throws IOException {
-        final File outputFolder = new File("target/rre");
-        outputFolder.mkdirs();
-
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFolder, "evaluation.json"), evaluation);
-    }
-
+    // Used by unit test
     PersistenceConfiguration getPersistence() {
         return persistence;
-//        return ofNullable(persistence).orElse(PersistenceConfiguration.defaultConfiguration());
     }
 }
