@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.UnableToLoadDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -44,6 +47,8 @@ import static org.elasticsearch.node.InternalSettingsPreparer.prepareEnvironment
  * @since 1.0
  */
 public class Elasticsearch implements SearchPlatform {
+    private static final Logger LOGGER = LogManager.getLogger(Elasticsearch.class);
+
     private static class RRENode extends Node {
         RRENode(final Settings settings, final Collection<Class<? extends Plugin>> plugins) {
             super(prepareEnvironment(settings, null), plugins);
@@ -186,6 +191,9 @@ public class Elasticsearch implements SearchPlatform {
         try {
             final SearchResponse qresponse = proxy.search(buildSearchRequest(indexName, query, fields, maxRows)).actionGet();
             return convertResponse(qresponse);
+        } catch (final ElasticsearchException e) {
+            LOGGER.error("Caught ElasticsearchException :: " + e.getMessage());
+            return new QueryOrSearchResponse(0, Collections.emptyList());
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
