@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,16 +56,25 @@ public class JsonPersistenceHandler implements PersistenceHandler {
     @Override
     public void beforeStart() throws PersistenceException {
         // Delete the output file if it already exists
-        File outFile = new File(outputFilepath);
-        if (outFile.exists()) {
+        Path outPath = Paths.get(outputFilepath);
+        if (Files.exists(outPath)) {
             try {
-                Files.delete(outFile.toPath());
+                Files.delete(outPath);
             } catch (IOException e) {
                 throw new PersistenceException("Cannot delete pre-existing output file " + outputFilepath, e);
             }
+        } else {
+            // Make sure the file's parent directory exists
+            if (outPath.getParent() != null) {
+                try {
+                    Files.createDirectories(outPath.getParent());
+                } catch (IOException e) {
+                    throw new PersistenceException("Cannot create output directory " + outPath.getParent(), e);
+                }
+            }
         }
 
-        try (FileOutputStream fos = new FileOutputStream(outFile)) {
+        try (FileOutputStream fos = new FileOutputStream(outPath.toFile())) {
             fos.write(new byte[0]);
         } catch (IOException e) {
             throw new PersistenceException("Cannot write to output file " + outputFilepath, e);

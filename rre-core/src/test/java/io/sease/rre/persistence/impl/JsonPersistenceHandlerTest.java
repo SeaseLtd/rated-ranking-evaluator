@@ -68,6 +68,19 @@ public class JsonPersistenceHandlerTest {
     }
 
     @Test
+    public void beforeStartPasses_whenDestinationDirNotExist() throws Exception {
+        Map<String, Object> config = new HashMap<>();
+        config.put(JsonPersistenceHandler.DESTINATION_FILE_CONFIGKEY, folder.getRoot().getAbsolutePath() + "/target/rre/evaluation.json");
+        handler.configure(HANDLER_NAME, config);
+
+        handler.beforeStart();
+
+        File target = new File(folder.getRoot(), "target/rre/evaluation.json");
+        assertTrue(target.exists());
+        assertTrue(target.canWrite());
+    }
+
+    @Test
     public void beforeStop_handlesEmptyQueryList() throws Exception {
         File outFile = folder.newFile();
         Map<String, Object> config = new HashMap<>();
