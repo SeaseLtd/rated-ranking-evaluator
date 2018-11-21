@@ -8,6 +8,7 @@ import io.sease.rre.Func;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.persistence.PersistenceConfiguration;
+import io.sease.rre.persistence.PersistenceHandler;
 import io.sease.rre.persistence.PersistenceManager;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
@@ -105,6 +106,7 @@ public class Engine {
 
         this.persistenceConfiguration = persistenceConfiguration;
         this.persistenceManager = new PersistenceManager();
+        initialisePersistenceManager();
     }
 
     public String name(final JsonNode node) {
@@ -112,6 +114,19 @@ public class Engine {
                 ofNullable(node.get(DESCRIPTION)).orElse(node.get(NAME)))
                 .map(JsonNode::asText)
                 .orElse(UNNAMED);
+    }
+
+    private void initialisePersistenceManager() {
+        persistenceConfiguration.getHandlers().forEach((n, h) -> {
+            try {
+                // Instantiate the handler
+                PersistenceHandler handler = (PersistenceHandler) Class.forName(h).newInstance();
+                handler.configure(n, persistenceConfiguration.getHandlerConfigurationByName(n));
+                persistenceManager.registerHandler(handler);
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                LOGGER.error("[" + n + "] Caught exception instantiating persistence handler :: " + e.getMessage());
+            }
+        });
     }
 
     /**
@@ -126,11 +141,13 @@ public class Engine {
             LOGGER.info("RRE: New evaluation session is starting...");
 
             platform.beforeStart(configuration);
+            persistenceManager.beforeStart();
 
             LOGGER.info("RRE: Search Platform in use: " + platform.getName());
             LOGGER.info("RRE: Starting " + platform.getName() + "...");
 
             platform.start();
+            persistenceManager.start();
 
             LOGGER.info("RRE: " + platform.getName() + " Search Platform successfully started.");
 
@@ -207,6 +224,9 @@ public class Engine {
                                                         queryEvaluation.setTotalHits(response.totalHits(), persistVersion(version));
                                                         response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), persistVersion(version)));
                                                     });
+
+                                                    // Persist the query result
+                                                    persistenceManager.recordQuery(queryEvaluation);
                                                 });
                                     });
                         });
@@ -217,7 +237,10 @@ public class Engine {
             return evaluation;
         } finally {
             platform.beforeStop();
+            persistenceManager.beforeStop();
             LOGGER.info("RRE: " + platform.getName() + " Search Platform shutdown procedure executed.");
+            LOGGER.info("RRE: Stopping persistence manager");
+            persistenceManager.stop();
         }
     }
 

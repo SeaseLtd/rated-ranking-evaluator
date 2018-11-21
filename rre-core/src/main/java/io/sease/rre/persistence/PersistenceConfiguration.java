@@ -26,13 +26,14 @@ public class PersistenceConfiguration {
     // Supplying type params for nested map breaks Maven initialisation
     private Map<String, Map> handlerConfiguration;
 
+    @SuppressWarnings("unused")
     public PersistenceConfiguration() {
         // Do nothing - required for Maven initialisation
     }
 
-    PersistenceConfiguration(boolean useTimestampAsVersion,
-                             Map<String, String> handlers,
-                             Map<String, Map> handlerConfiguration) {
+    private PersistenceConfiguration(boolean useTimestampAsVersion,
+                                     Map<String, String> handlers,
+                                     Map<String, Map> handlerConfiguration) {
         this.useTimestampAsVersion = useTimestampAsVersion;
         this.handlers = handlers;
         this.handlerConfiguration = handlerConfiguration;
@@ -67,6 +68,16 @@ public class PersistenceConfiguration {
      */
     public Map<String, Map> getHandlerConfiguration() {
         return handlerConfiguration;
+    }
+
+    public Map<String, Object> getHandlerConfigurationByName(String name) {
+        Map<String, Object> configMap = new HashMap<>();
+
+        if (handlerConfiguration.get(name) != null) {
+            handlerConfiguration.get(name).forEach((k, v) -> configMap.put(String.valueOf(k), v));
+        }
+
+        return configMap;
     }
 
     /**

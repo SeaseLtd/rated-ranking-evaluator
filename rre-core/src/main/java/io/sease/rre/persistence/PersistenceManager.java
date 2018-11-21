@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,32 +29,35 @@ public class PersistenceManager {
     private final List<PersistenceHandler> handlers = new ArrayList<>();
 
     public void registerHandler(PersistenceHandler handler) {
+        LOGGER.info("Registering handler " + handler.getName() + " -> " + handler.getClass().getCanonicalName());
         handlers.add(handler);
     }
 
-    public void beforeStart() throws PersistenceException {
-        handlers.parallelStream().forEach(h -> {
+    public void beforeStart() {
+        for (Iterator<PersistenceHandler> it = handlers.iterator(); it.hasNext(); ) {
+            PersistenceHandler h = it.next();
             try {
                 h.beforeStart();
             } catch (PersistenceException e) {
                 LOGGER.error("beforeStart failed for handler [" + h.getName() + "] :: " + e.getMessage());
-                handlers.remove(h);
+                it.remove();
             }
-        });
+        }
 
         // Check that there are handlers available
         checkHandlers();
     }
 
     public void start() {
-        handlers.parallelStream().forEach(h -> {
+        for (Iterator<PersistenceHandler> it = handlers.iterator(); it.hasNext(); ) {
+            PersistenceHandler h = it.next();
             try {
                 h.start();
             } catch (PersistenceException e) {
                 LOGGER.error("[" + h.getName() + "] failed to start :: " + e.getMessage());
-                handlers.remove(h);
+                it.remove();
             }
-        });
+        }
 
         checkHandlers();
     }
