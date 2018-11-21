@@ -4,9 +4,12 @@ import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import org.apache.htrace.fasterxml.jackson.databind.JsonNode;
 import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.solr.common.SolrException;
 import org.apache.solr.core.CoreContainer;
 
 import java.io.BufferedWriter;
@@ -31,6 +34,8 @@ import static java.util.Optional.ofNullable;
  * @since 1.0
  */
 public class ApacheSolr implements SearchPlatform {
+
+    private static final Logger LOGGER = LogManager.getLogger(ApacheSolr.class);
 
     private EmbeddedSolrServer proxy;
     private File solrHome;
@@ -138,6 +143,9 @@ public class ApacheSolr implements SearchPlatform {
                                     response.getResults().getNumFound(),
                                     new ArrayList<Map<String, Object>>(response.getResults())))
                     .get();
+        } catch (SolrException e) {
+            LOGGER.error("Caught Solr exception :: " + e.getMessage());
+            return new QueryOrSearchResponse(0, Collections.emptyList());
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }
