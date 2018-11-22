@@ -10,10 +10,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TransferQueue;
 import java.util.stream.Collectors;
@@ -42,7 +39,7 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
     private List<String> baseUrls;
     private String index;
 
-    private RestHighLevelClient client;
+    private ElasticsearchSearchEngine elasticsearch;
 
     @Override
     public void configure(String name, Map<String, Object> configuration) {
@@ -79,7 +76,7 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
                     .toArray(HttpHost[]::new);
 
             // Initialise the client
-            client = new RestHighLevelClient(RestClient.builder(httpHosts));
+            elasticsearch = new ElasticsearchSearchEngine(new RestHighLevelClient(RestClient.builder(httpHosts)));
         } catch (final IllegalArgumentException e) {
             throw new PersistenceException(e);
         }
@@ -88,28 +85,40 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
     @Override
     public void start() throws PersistenceException {
         // Make sure the cluster is alive
+        if (!elasticsearch.isAvailable()) {
+            throw new PersistenceException("Elasticsearch cluster at [" + String.join(", ", baseUrls) + "] not available!");
+        }
     }
 
     @Override
     public void recordQuery(Query q) {
+        // Convert the query into ES query report objects
 
+        // Add the query reports to the queue
     }
 
     @Override
     public void beforeStop() {
-
+        // Clear the query queue, if not empty
     }
 
     @Override
     public void stop() {
         try {
-            client.close();
+            elasticsearch.close();
         } catch (final IOException e) {
             LOGGER.error("Caught IOException closing Elasticsearch client :: " + e.getMessage());
         }
     }
 
+
+    // Testing method
     List<String> getBaseUrls() {
         return baseUrls;
+    }
+
+    // Testing method
+    void setElasticsearch(ElasticsearchSearchEngine es) {
+        this.elasticsearch = es;
     }
 }
