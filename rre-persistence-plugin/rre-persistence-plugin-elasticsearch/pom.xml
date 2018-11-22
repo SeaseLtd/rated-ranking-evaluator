@@ -46,6 +46,12 @@
             <version>2.7.14</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-netty</artifactId>
+            <version>5.4.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>
