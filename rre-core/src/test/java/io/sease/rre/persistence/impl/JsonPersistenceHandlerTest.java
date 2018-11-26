@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,18 +42,22 @@ public class JsonPersistenceHandlerTest {
 
     @Test
     public void beforeStartThrowsException_whenFileCannotBeDeleted() throws Exception {
-        File outFile = folder.newFile();
-        outFile.setReadOnly();
+        File outDir = folder.newFolder();
+        File outFile = new File(outDir, "temp.json");
 
         Map<String, Object> config = new HashMap<>();
-        config.put(JsonPersistenceHandler.DESTINATION_FILE_CONFIGKEY, outFile.getAbsolutePath());
+        // Pass the output directory - won't be able to delete since not empty
+        config.put(JsonPersistenceHandler.DESTINATION_FILE_CONFIGKEY, outDir.getAbsolutePath());
         handler.configure(HANDLER_NAME, config);
 
-        try {
-            handler.beforeStart();
-            fail("Expected PersistenceException");
-        } catch (PersistenceException e) {
-            // Expected behaviour
+        try (FileWriter fw = new FileWriter(outFile)) {
+            fw.write("blah");
+            try {
+                handler.beforeStart();
+                fail("Expected PersistenceException");
+            } catch (PersistenceException e) {
+                // Expected behaviour
+            }
         }
     }
 
