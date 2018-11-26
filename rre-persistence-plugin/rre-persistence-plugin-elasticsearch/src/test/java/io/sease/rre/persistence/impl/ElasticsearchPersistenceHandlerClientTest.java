@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
  */
 public class ElasticsearchPersistenceHandlerClientTest {
 
-    private final ElasticsearchSearchEngine elasticsearch = mock(ElasticsearchSearchEngine.class);
+    private final ElasticsearchConnector elasticsearch = mock(ElasticsearchConnector.class);
 
     private ElasticsearchPersistenceHandler handler;
 
