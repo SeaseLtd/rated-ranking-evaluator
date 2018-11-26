@@ -1,0 +1,1840 @@
+{
+  "name": "Ranking Evaluation Report - created on Monday, November 26, 2018",
+  "metrics": {
+    "P": {
+      "name": "P",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "1.0000"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0000
+      ]
+    },
+    "R": {
+      "name": "R",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "0.9167"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0833
+      ]
+    },
+    "RR@10": {
+      "name": "RR@10",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "1.0000"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0000
+      ]
+    },
+    "AP": {
+      "name": "AP",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "0.9167"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0833
+      ]
+    },
+    "NDCG@10": {
+      "name": "NDCG@10",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "0.9167"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0833
+      ]
+    },
+    "P@1": {
+      "name": "P@1",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "1.0000"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0000
+      ]
+    },
+    "P@2": {
+      "name": "P@2",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "1.0000"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0000
+      ]
+    },
+    "P@3": {
+      "name": "P@3",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "1.0000"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0000
+      ]
+    },
+    "P@10": {
+      "name": "P@10",
+      "versions": {
+        "v1.0": {
+          "totalHits": 0,
+          "value": "1.0000"
+        },
+        "v1.1": {
+          "totalHits": 0,
+          "value": "1.0000"
+        }
+      },
+      "trend": [
+        0.0000
+      ]
+    }
+  },
+  "corpora": [
+    {
+      "name": "electric_basses.bulk",
+      "metrics": {
+        "P": {
+          "name": "P",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "1.0000"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0000
+          ]
+        },
+        "R": {
+          "name": "R",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "0.9167"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0833
+          ]
+        },
+        "RR@10": {
+          "name": "RR@10",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "1.0000"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0000
+          ]
+        },
+        "AP": {
+          "name": "AP",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "0.9167"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0833
+          ]
+        },
+        "NDCG@10": {
+          "name": "NDCG@10",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "0.9167"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0833
+          ]
+        },
+        "P@1": {
+          "name": "P@1",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "1.0000"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0000
+          ]
+        },
+        "P@2": {
+          "name": "P@2",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "1.0000"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0000
+          ]
+        },
+        "P@3": {
+          "name": "P@3",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "1.0000"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0000
+          ]
+        },
+        "P@10": {
+          "name": "P@10",
+          "versions": {
+            "v1.0": {
+              "totalHits": 0,
+              "value": "1.0000"
+            },
+            "v1.1": {
+              "totalHits": 0,
+              "value": "1.0000"
+            }
+          },
+          "trend": [
+            0.0000
+          ]
+        }
+      },
+      "topics": [
+        {
+          "name": "Fender basses",
+          "metrics": {
+            "P": {
+              "name": "P",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0000
+              ]
+            },
+            "R": {
+              "name": "R",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "0.9167"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0833
+              ]
+            },
+            "RR@10": {
+              "name": "RR@10",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0000
+              ]
+            },
+            "AP": {
+              "name": "AP",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "0.9167"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0833
+              ]
+            },
+            "NDCG@10": {
+              "name": "NDCG@10",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "0.9167"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0833
+              ]
+            },
+            "P@1": {
+              "name": "P@1",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0000
+              ]
+            },
+            "P@2": {
+              "name": "P@2",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0000
+              ]
+            },
+            "P@3": {
+              "name": "P@3",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0000
+              ]
+            },
+            "P@10": {
+              "name": "P@10",
+              "versions": {
+                "v1.0": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                },
+                "v1.1": {
+                  "totalHits": 0,
+                  "value": "1.0000"
+                }
+              },
+              "trend": [
+                0.0000
+              ]
+            }
+          },
+          "query-groups": [
+            {
+              "name": "The group tests several searches on the Fender brand",
+              "metrics": {
+                "P": {
+                  "name": "P",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "R": {
+                  "name": "R",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "0.8334"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.1666
+                  ]
+                },
+                "RR@10": {
+                  "name": "RR@10",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "AP": {
+                  "name": "AP",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "0.8334"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.1666
+                  ]
+                },
+                "NDCG@10": {
+                  "name": "NDCG@10",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "0.8334"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.1666
+                  ]
+                },
+                "P@1": {
+                  "name": "P@1",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "P@2": {
+                  "name": "P@2",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "P@3": {
+                  "name": "P@3",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "P@10": {
+                  "name": "P@10",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                }
+              },
+              "query-evaluations": [
+                {
+                  "metrics": {
+                    "P": {
+                      "name": "P",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "R": {
+                      "name": "R",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "RR@10": {
+                      "name": "RR@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "AP": {
+                      "name": "AP",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00000000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00000000"
+                        }
+                      },
+                      "trend": [
+                        0E-8
+                      ]
+                    },
+                    "NDCG@10": {
+                      "name": "NDCG@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@1": {
+                      "name": "P@1",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@2": {
+                      "name": "P@2",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@3": {
+                      "name": "P@3",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@10": {
+                      "name": "P@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    }
+                  },
+                  "query": "fender",
+                  "results": {
+                    "v1.0": {
+                      "total-hits": 2,
+                      "hits": [
+                        {
+                          "name": "Fender Precision",
+                          "number_of_strings": 4,
+                          "_id": "2",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        },
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    },
+                    "v1.1": {
+                      "total-hits": 2,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        },
+                        {
+                          "name": "Fender Precision",
+                          "number_of_strings": 4,
+                          "_id": "2",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "metrics": {
+                    "P": {
+                      "name": "P",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "R": {
+                      "name": "R",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "RR@10": {
+                      "name": "RR@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "AP": {
+                      "name": "AP",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00000000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00000000"
+                        }
+                      },
+                      "trend": [
+                        0E-8
+                      ]
+                    },
+                    "NDCG@10": {
+                      "name": "NDCG@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@1": {
+                      "name": "P@1",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@2": {
+                      "name": "P@2",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@3": {
+                      "name": "P@3",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@10": {
+                      "name": "P@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    }
+                  },
+                  "query": "Fender",
+                  "results": {
+                    "v1.0": {
+                      "total-hits": 2,
+                      "hits": [
+                        {
+                          "name": "Fender Precision",
+                          "number_of_strings": 4,
+                          "_id": "2",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        },
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    },
+                    "v1.1": {
+                      "total-hits": 2,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        },
+                        {
+                          "name": "Fender Precision",
+                          "number_of_strings": 4,
+                          "_id": "2",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "metrics": {
+                    "P": {
+                      "name": "P",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "R": {
+                      "name": "R",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "0.5000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.5000
+                      ]
+                    },
+                    "RR@10": {
+                      "name": "RR@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "AP": {
+                      "name": "AP",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "0.50000000"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00000000"
+                        }
+                      },
+                      "trend": [
+                        0.50000000
+                      ]
+                    },
+                    "NDCG@10": {
+                      "name": "NDCG@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "0.50"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.50
+                      ]
+                    },
+                    "P@1": {
+                      "name": "P@1",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@2": {
+                      "name": "P@2",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@3": {
+                      "name": "P@3",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@10": {
+                      "name": "P@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 2,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    }
+                  },
+                  "query": "Fender bass",
+                  "results": {
+                    "v1.0": {
+                      "total-hits": 1,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    },
+                    "v1.1": {
+                      "total-hits": 2,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        },
+                        {
+                          "name": "Fender Precision",
+                          "number_of_strings": 4,
+                          "_id": "2",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Several searches on a given model (Jazz bass)",
+              "metrics": {
+                "P": {
+                  "name": "P",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "R": {
+                  "name": "R",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "RR@10": {
+                  "name": "RR@10",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "AP": {
+                  "name": "AP",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "NDCG@10": {
+                  "name": "NDCG@10",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "P@1": {
+                  "name": "P@1",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "P@2": {
+                  "name": "P@2",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "P@3": {
+                  "name": "P@3",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                },
+                "P@10": {
+                  "name": "P@10",
+                  "versions": {
+                    "v1.0": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    },
+                    "v1.1": {
+                      "totalHits": 0,
+                      "value": "1.0000"
+                    }
+                  },
+                  "trend": [
+                    0.0000
+                  ]
+                }
+              },
+              "query-evaluations": [
+                {
+                  "metrics": {
+                    "P": {
+                      "name": "P",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "R": {
+                      "name": "R",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "RR@10": {
+                      "name": "RR@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "AP": {
+                      "name": "AP",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00000000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00000000"
+                        }
+                      },
+                      "trend": [
+                        0E-8
+                      ]
+                    },
+                    "NDCG@10": {
+                      "name": "NDCG@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@1": {
+                      "name": "P@1",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@2": {
+                      "name": "P@2",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@3": {
+                      "name": "P@3",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@10": {
+                      "name": "P@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    }
+                  },
+                  "query": "jazz",
+                  "results": {
+                    "v1.0": {
+                      "total-hits": 1,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    },
+                    "v1.1": {
+                      "total-hits": 1,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "metrics": {
+                    "P": {
+                      "name": "P",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "R": {
+                      "name": "R",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "RR@10": {
+                      "name": "RR@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "AP": {
+                      "name": "AP",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00000000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00000000"
+                        }
+                      },
+                      "trend": [
+                        0E-8
+                      ]
+                    },
+                    "NDCG@10": {
+                      "name": "NDCG@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@1": {
+                      "name": "P@1",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@2": {
+                      "name": "P@2",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@3": {
+                      "name": "P@3",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@10": {
+                      "name": "P@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    }
+                  },
+                  "query": "Jazz",
+                  "results": {
+                    "v1.0": {
+                      "total-hits": 1,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    },
+                    "v1.1": {
+                      "total-hits": 1,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "metrics": {
+                    "P": {
+                      "name": "P",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "R": {
+                      "name": "R",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.0000"
+                        }
+                      },
+                      "trend": [
+                        0.0000
+                      ]
+                    },
+                    "RR@10": {
+                      "name": "RR@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "AP": {
+                      "name": "AP",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00000000"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00000000"
+                        }
+                      },
+                      "trend": [
+                        0E-8
+                      ]
+                    },
+                    "NDCG@10": {
+                      "name": "NDCG@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@1": {
+                      "name": "P@1",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@2": {
+                      "name": "P@2",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@3": {
+                      "name": "P@3",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    },
+                    "P@10": {
+                      "name": "P@10",
+                      "versions": {
+                        "v1.0": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        },
+                        "v1.1": {
+                          "totalHits": 1,
+                          "value": "1.00"
+                        }
+                      },
+                      "trend": [
+                        0.00
+                      ]
+                    }
+                  },
+                  "query": "Jazz Bass",
+                  "results": {
+                    "v1.0": {
+                      "total-hits": 1,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    },
+                    "v1.1": {
+                      "total-hits": 1,
+                      "hits": [
+                        {
+                          "name": "Fender Jazz Bass",
+                          "number_of_strings": 4,
+                          "_id": "1",
+                          "_isRelevant": true,
+                          "_gain": 3
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

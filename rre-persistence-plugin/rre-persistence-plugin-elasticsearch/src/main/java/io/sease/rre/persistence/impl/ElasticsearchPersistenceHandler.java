@@ -12,6 +12,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TransferQueue;
 import java.util.stream.Collectors;
 
@@ -38,8 +40,12 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
     // Elasticsearch configuration
     private List<String> baseUrls;
     private String index;
+    // Scheduler configuration
+    private int threadpoolSize = 2;
+    private long runIntervalMs = 500;
 
-    private ElasticsearchSearchEngine elasticsearch;
+    private ElasticsearchConnector elasticsearch;
+    private ScheduledExecutorService scheduledExecutor;
 
     @Override
     public void configure(String name, Map<String, Object> configuration) {
@@ -69,6 +75,11 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
 
     @Override
     public void beforeStart() throws PersistenceException {
+        initialiseElasticsearchConnector();
+        scheduledExecutor = new ScheduledThreadPoolExecutor(threadpoolSize);
+    }
+
+    private void initialiseElasticsearchConnector() throws PersistenceException {
         try {
             // Convert hosts to HTTP host objects
             final HttpHost[] httpHosts = baseUrls.stream()
@@ -76,7 +87,7 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
                     .toArray(HttpHost[]::new);
 
             // Initialise the client
-            elasticsearch = new ElasticsearchSearchEngine(new RestHighLevelClient(RestClient.builder(httpHosts)));
+            elasticsearch = new ElasticsearchConnector(new RestHighLevelClient(RestClient.builder(httpHosts)));
         } catch (final IllegalArgumentException e) {
             throw new PersistenceException(e);
         }
@@ -118,7 +129,7 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
     }
 
     // Testing method
-    void setElasticsearch(ElasticsearchSearchEngine es) {
+    void setElasticsearch(ElasticsearchConnector es) {
         this.elasticsearch = es;
     }
 }

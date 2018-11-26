@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.IOException;
@@ -18,16 +17,16 @@ import java.util.Map;
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
-public class ElasticsearchSearchEngine {
+public class ElasticsearchConnector {
 
-    private static final Logger LOGGER = LogManager.getLogger(ElasticsearchSearchEngine.class);
+    private static final Logger LOGGER = LogManager.getLogger(ElasticsearchConnector.class);
 
     static final String GET_METHOD = "GET";
     static final String CLUSTER_HEALTH_ENDPOINT = "/_cluster/health";
 
     private final RestHighLevelClient client;
 
-    public ElasticsearchSearchEngine(RestHighLevelClient client) {
+    public ElasticsearchConnector(RestHighLevelClient client) {
         this.client = client;
     }
 

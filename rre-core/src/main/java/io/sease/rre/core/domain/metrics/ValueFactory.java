@@ -80,6 +80,10 @@ public abstract class ValueFactory implements HitsCollector {
         return value().toPlainString();
     }
 
+    public long getTotalHits() {
+        return totalHits;
+    }
+
     @Override
     public String toString() {
         return owner.getName() +
