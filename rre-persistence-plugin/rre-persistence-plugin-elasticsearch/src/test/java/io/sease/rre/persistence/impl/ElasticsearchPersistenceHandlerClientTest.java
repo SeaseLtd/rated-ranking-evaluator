@@ -29,18 +29,22 @@ public class ElasticsearchPersistenceHandlerClientTest {
 
         Map<String, Object> config = new HashMap<>();
         config.put(ElasticsearchPersistenceHandler.BASE_URL_KEY, "http://elastic1:9200");
+        config.put(ElasticsearchPersistenceHandler.INDEX_KEY, "index");
         handler.configure("name", config);
     }
 
     @Test(expected = PersistenceException.class)
     public void startThrowsException_whenSearchEngineNotAvailable() throws Exception {
         when(elasticsearch.isAvailable()).thenReturn(false);
+        handler.beforeStart();
         handler.start();
     }
 
     @Test
     public void startBehaves_whenSearchEngineAvailable() throws Exception {
         when(elasticsearch.isAvailable()).thenReturn(true);
+        handler.beforeStart();
+        handler.setElasticsearch(elasticsearch);
         handler.start();
 
         verify(elasticsearch).isAvailable();

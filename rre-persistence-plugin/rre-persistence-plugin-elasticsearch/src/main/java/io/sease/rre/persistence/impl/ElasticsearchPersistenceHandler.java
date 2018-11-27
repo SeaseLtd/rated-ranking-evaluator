@@ -10,11 +10,10 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
-import java.util.concurrent.LinkedTransferQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TransferQueue;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +30,15 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
     private static final Logger LOGGER = LogManager.getLogger(ElasticsearchPersistenceHandler.class);
 
     static final String BASE_URL_KEY = "baseUrl";
+    static final String INDEX_KEY = "index";
+    static final String THREADPOOL_KEY = "threadpoolSize";
+    static final String RUN_INTERVAL_KEY = "runIntervalMs";
+    static final String BATCH_SIZE_KEY = "batchSize";
+
     static final String DEFAULT_HOST = "http://localhost:9200";
+    static final int DEFAULT_THREADPOOL = 2;
+    static final long DEFAULT_RUN_INTERVAL = 500;
+    static final int DEFAULT_BATCHSIZE = 500;
 
     private final TransferQueue<Query> queryQueue = new LinkedTransferQueue<>();
 
@@ -41,13 +48,15 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
     private List<String> baseUrls;
     private String index;
     // Scheduler configuration
-    private int threadpoolSize = 2;
-    private long runIntervalMs = 500;
+    private int threadpoolSize;
+    private long runIntervalMs;
+    private int batchSize;
 
     private ElasticsearchConnector elasticsearch;
     private ScheduledExecutorService scheduledExecutor;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void configure(String name, Map<String, Object> configuration) {
         this.name = name;
         // Extract the URL(s) - either a list of a single string
@@ -65,7 +74,16 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
             LOGGER.info("No base URL set for Elasticsearch - defaulting to " + DEFAULT_HOST);
             baseUrls = Collections.singletonList(DEFAULT_HOST);
         }
-        this.index = String.valueOf(configuration.get("index"));
+        // Extract the index name - required
+        if (!configuration.containsKey(INDEX_KEY)) {
+            throw new IllegalArgumentException("Missing index from Elasticsearch persistence configuration!");
+        }
+        this.index = (String) configuration.get("index");
+
+        // Extract the other properties, if set
+        threadpoolSize = (int) configuration.getOrDefault(THREADPOOL_KEY, DEFAULT_THREADPOOL);
+        runIntervalMs = (long) configuration.getOrDefault(RUN_INTERVAL_KEY, DEFAULT_RUN_INTERVAL);
+        batchSize = (int) configuration.getOrDefault(BATCH_SIZE_KEY, DEFAULT_BATCHSIZE);
     }
 
     @Override
@@ -81,6 +99,9 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
 
     private void initialiseElasticsearchConnector() throws PersistenceException {
         try {
+            // Check the HTTP core library version is correct
+            checkHttpHostVersion();
+
             // Convert hosts to HTTP host objects
             final HttpHost[] httpHosts = baseUrls.stream()
                     .map(HttpHost::create)
@@ -93,32 +114,76 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
         }
     }
 
+    private void checkHttpHostVersion() throws PersistenceException {
+        try {
+            HttpHost.class.getDeclaredMethod("create", String.class);
+        } catch (NoSuchMethodException e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            pw.println("No HttpHost::create method available - add the following plugin dependencies:");
+            pw.println("  org.apache.httpcomponents:httpcore:4.4+");
+            pw.println("  org.apache.httpcomponents:httpclient:4.5+");
+            pw.flush();
+            throw new PersistenceException(sw.toString());
+        }
+    }
+
     @Override
     public void start() throws PersistenceException {
         // Make sure the cluster is alive
         if (!elasticsearch.isAvailable()) {
             throw new PersistenceException("Elasticsearch cluster at [" + String.join(", ", baseUrls) + "] not available!");
         }
+
+        // Start the scheduled executor to store the queries in batches
+        scheduledExecutor.scheduleAtFixedRate(new QueryStorageRunnable(), runIntervalMs, runIntervalMs, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void recordQuery(Query q) {
-        // Convert the query into ES query report objects
-
-        // Add the query reports to the queue
+        if (!queryQueue.offer(q)) {
+            LOGGER.warn("Query item rejected by queue");
+        }
     }
 
     @Override
     public void beforeStop() {
         // Clear the query queue, if not empty
+        while (!queryQueue.isEmpty()) {
+            scheduledExecutor.execute(new QueryStorageRunnable());
+        }
     }
 
     @Override
     public void stop() {
+        // Wait for any final storage tasks to complete
+        try {
+            scheduledExecutor.awaitTermination(30, TimeUnit.SECONDS);
+        } catch (final InterruptedException e) {
+            LOGGER.error("Interrupted waiting for scheduled tasks to complete", e.getMessage());
+        }
+
+        // Close the ES connector
         try {
             elasticsearch.close();
         } catch (final IOException e) {
             LOGGER.error("Caught IOException closing Elasticsearch client :: " + e.getMessage());
+        }
+    }
+
+    private class QueryStorageRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            Collection<Query> queuedQueries = new ArrayList<>(batchSize);
+            queryQueue.drainTo(queuedQueries, batchSize);
+            if (!queuedQueries.isEmpty()) {
+                List<QueryVersionReport> reports = queuedQueries.stream()
+                        .map(QueryVersionReport::fromQuery)
+                        .flatMap(List::stream)
+                        .collect(Collectors.toList());
+                elasticsearch.storeItems(index, reports);
+            }
         }
     }
 

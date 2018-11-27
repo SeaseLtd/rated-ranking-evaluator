@@ -8,6 +8,7 @@ import io.sease.rre.Func;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.persistence.PersistenceConfiguration;
+import io.sease.rre.persistence.PersistenceException;
 import io.sease.rre.persistence.PersistenceHandler;
 import io.sease.rre.persistence.PersistenceManager;
 import io.sease.rre.search.api.QueryOrSearchResponse;
@@ -124,7 +125,7 @@ public class Engine {
                 handler.configure(n, persistenceConfiguration.getHandlerConfigurationByName(n));
                 persistenceManager.registerHandler(handler);
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-                LOGGER.error("[" + n + "] Caught exception instantiating persistence handler :: " + e.getMessage());
+                LOGGER.error("[" + n + "] Caught exception instantiating persistence handler :: " + e.getMessage(), e);
             }
         });
     }
@@ -154,7 +155,6 @@ public class Engine {
             platform.afterStart();
 
             final Evaluation evaluation = new Evaluation();
-            final List<Query> queries = new ArrayList<>();
 
             ratings().forEach(ratingsNode -> {
                 LOGGER.info("RRE: Ratings Set processing starts");
@@ -209,8 +209,6 @@ public class Engine {
                                                     queryEvaluation.setIdFieldName(idFieldName);
                                                     queryEvaluation.setRelevantDocuments(relevantDocuments);
 
-                                                    queries.add(queryEvaluation);
-
                                                     queryEvaluation.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, versions));
 
                                                     versions.forEach(version -> {
@@ -225,6 +223,9 @@ public class Engine {
                                                         response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), persistVersion(version)));
                                                     });
 
+                                                    // Update the metrics for the query before persisting
+                                                    queryEvaluation.notifyCollectedMetrics();
+
                                                     // Persist the query result
                                                     persistenceManager.recordQuery(queryEvaluation);
                                                 });
@@ -232,10 +233,9 @@ public class Engine {
                         });
             });
 
-            queries.forEach(Query::notifyCollectedMetrics);
-
             return evaluation;
         } finally {
+            LOGGER.info("RRE: " + platform.getName() + " Evaluation complete - preparing for shutdown");
             platform.beforeStop();
             persistenceManager.beforeStop();
             LOGGER.info("RRE: " + platform.getName() + " Search Platform shutdown procedure executed.");
