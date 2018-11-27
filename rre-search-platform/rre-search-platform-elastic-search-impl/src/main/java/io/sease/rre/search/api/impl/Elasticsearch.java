@@ -83,7 +83,8 @@ public class Elasticsearch implements SearchPlatform {
                 .put("http.port", (Integer) configuration.getOrDefault("network.host", 9200))
                 .put("http.enabled", "true")
                 .put("path.logs", logsFolder.getAbsolutePath())
-                .put("path.data", dataFolder.getAbsolutePath());
+                .put("path.data", dataFolder.getAbsolutePath())
+                .put("cluster.name", "rre_" + System.currentTimeMillis());
         elasticsearch = new RRENode(settings.build(), plugins(configuration));
     }
 
