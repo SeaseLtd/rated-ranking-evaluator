@@ -22,8 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class QueryVersionReportTest {
 
-    private static final String QUERY_JSON_FILE = "/evaluation.json";
-
     private static Evaluation evaluation;
 
     private Query firstQuery;
