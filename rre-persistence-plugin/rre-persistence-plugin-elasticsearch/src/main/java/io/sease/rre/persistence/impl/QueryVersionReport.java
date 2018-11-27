@@ -1,12 +1,14 @@
 package io.sease.rre.persistence.impl;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.MetricUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
@@ -57,6 +59,12 @@ public class QueryVersionReport {
      * @return a list of query versions, including metrics.
      */
     public static List<QueryVersionReport> fromQuery(final Query query) {
+        // Get the fixed metadata
+        final String corpora = findParentName(query, Corpus.class);
+        final String topic = findParentName(query, Topic.class);
+        final String queryGroup = findParentName(query, QueryGroup.class);
+        final String queryText = query.getName();
+
         // Extract the metrics first
         Map<String, Map<String, VersionMetric>> versionMetrics = new HashMap<>();
         Map<String, Long> versionHits = new HashMap<>();
@@ -64,19 +72,11 @@ public class QueryVersionReport {
             final String metricName = m.getName();
             final String sanitised = MetricUtils.sanitiseName(m);
             m.getVersions().forEach((version, valueFactory) -> {
-                if (!versionMetrics.containsKey(version)) {
-                    versionMetrics.put(version, new HashMap<>());
-                }
+                versionMetrics.putIfAbsent(version, new HashMap<>());
                 versionMetrics.get(version).put(sanitised, new VersionMetric(metricName, sanitised, valueFactory.value()));
                 versionHits.putIfAbsent(version, valueFactory.getTotalHits());
             });
         });
-
-        // Get the fixed metadata
-        final String corpora = findParentName(query, Corpus.class);
-        final String topic = findParentName(query, Topic.class);
-        final String queryGroup = findParentName(query, QueryGroup.class);
-        final String queryText = query.getName();
 
         // Convert to a list of QueryVersionReport items, and return
         return versionMetrics.keySet().stream()
@@ -142,14 +142,6 @@ public class QueryVersionReport {
         return metrics;
     }
 
-    /**
-     * Get the map of sanitised metric name to its value, so these
-     * can be stored at the top level and queried without using nested
-     * fields.
-     *
-     * @return the metric value map.
-     */
-    @JsonAnyGetter
     public Map<String, BigDecimal> getMetricValues() {
         return metricValues;
     }
