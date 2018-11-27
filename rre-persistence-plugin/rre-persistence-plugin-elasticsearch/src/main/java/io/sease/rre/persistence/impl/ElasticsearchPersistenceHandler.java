@@ -135,8 +135,25 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
             throw new PersistenceException("Elasticsearch cluster at [" + String.join(", ", baseUrls) + "] not available!");
         }
 
+        // Make sure the index exists or can be created
+        ensureIndexExists();
+
         // Start the scheduled executor to store the queries in batches
         scheduledExecutor.scheduleAtFixedRate(new QueryStorageRunnable(), runIntervalMs, runIntervalMs, TimeUnit.MILLISECONDS);
+    }
+
+    private void ensureIndexExists() throws PersistenceException {
+        try {
+            if (!elasticsearch.indexExists(index)) {
+                LOGGER.info("Creating index {}", index);
+                if (!elasticsearch.createIndex(index)) {
+                    LOGGER.warn("Could not create index {}", index);
+                    throw new PersistenceException("Index " + index + " is not available for writing");
+                }
+            }
+        } catch (IOException e) {
+            throw new PersistenceException(e);
+        }
     }
 
     @Override

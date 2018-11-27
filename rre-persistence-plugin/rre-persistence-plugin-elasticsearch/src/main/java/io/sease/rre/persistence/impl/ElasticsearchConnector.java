@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -14,7 +17,9 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -29,9 +34,11 @@ public class ElasticsearchConnector {
 
     private static final Logger LOGGER = LogManager.getLogger(ElasticsearchConnector.class);
 
+    private static final String MAPPINGS_FILE = "/es_config.json";
+
     static final String GET_METHOD = "GET";
     static final String CLUSTER_HEALTH_ENDPOINT = "/_cluster/health";
-    static final String DOC_MAPPING_TYPE = "doc";
+    static final String DOC_MAPPING_TYPE = "_doc";
 
     private final RestHighLevelClient client;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -40,6 +47,15 @@ public class ElasticsearchConnector {
         this.client = client;
     }
 
+    /**
+     * Is the Elasticsearch cluster available (and healthy)?
+     * <p>
+     * If this is not true, we won't be able to write anything to
+     * Elasticsearch, so the persistence handler should fail.
+     *
+     * @return {@code true} if the Elasticsearch cluster is available and
+     * healthy (ie. the cluster health status is green or yellow).
+     */
     public boolean isAvailable() {
         boolean ret = false;
 
@@ -66,6 +82,57 @@ public class ElasticsearchConnector {
         return ret;
     }
 
+    /**
+     * Check whether or not an index exists.
+     *
+     * @param index the name of the index to check.
+     * @return {@code true} if the index exists.
+     * @throws IOException if a problem occurs calling the server.
+     */
+    public boolean indexExists(String index) throws IOException {
+        return client.indices().exists(new GetIndexRequest().indices(index));
+    }
+
+    /**
+     * Create an index, using the mappings read from the mappings file.
+     *
+     * @param index the name of the index to create.
+     * @return {@code true} if the index was successfully created.
+     * @throws IOException if there are problems reading the mappings, or
+     *                     making the index creation request.
+     */
+    public boolean createIndex(String index) throws IOException {
+        // Build the request
+        CreateIndexRequest request = new CreateIndexRequest(index)
+                .source(readConfig(), XContentType.JSON);
+
+        CreateIndexResponse response = client.indices().create(request);
+
+        return response.isAcknowledged();
+    }
+
+    private String readConfig() throws IOException {
+        StringBuilder builder = new StringBuilder();
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(MAPPINGS_FILE)))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                builder.append(line);
+            }
+        } catch (IOException e) {
+            LOGGER.error("IOException reading mappings :: {}", e.getMessage());
+            throw (e);
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * Store a collection of items to an Elasticsearch index.
+     *
+     * @param index   the index the items should be written to.
+     * @param reports the items to store.
+     */
     public void storeItems(String index, Collection<QueryVersionReport> reports) {
         BulkProcessor.Listener listener = new BulkProcessor.Listener() {
             @Override
@@ -76,8 +143,8 @@ public class ElasticsearchConnector {
             @Override
             public void afterBulk(long l, BulkRequest bulkRequest, BulkResponse bulkResponse) {
                 if (bulkResponse.hasFailures()) {
-                    LOGGER.error("Bulk update request had failures!");
-                    LOGGER.error(bulkResponse.buildFailureMessage());
+                    LOGGER.warn("Bulk update request had failures!");
+                    LOGGER.warn(bulkResponse.buildFailureMessage());
                 }
             }
 
@@ -115,6 +182,11 @@ public class ElasticsearchConnector {
         return json;
     }
 
+    /**
+     * Close the Elasticsearch connector.
+     *
+     * @throws IOException if problems occur closing the connection.
+     */
     public void close() throws IOException {
         client.close();
     }
