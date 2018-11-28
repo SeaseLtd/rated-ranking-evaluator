@@ -31,7 +31,7 @@ public class JsonPersistenceHandler implements PersistenceHandler {
     static final String DESTINATION_FILE_CONFIGKEY = "destinationFile";
     static final String PRETTY_CONFIGKEY = "pretty";
 
-    private static final String DEFAULT_OUTPUT_FILE = "target/rre/evaluation.json";
+    public static final String DEFAULT_OUTPUT_FILE = "target/rre/evaluation.json";
 
     private static final Logger LOGGER = LogManager.getLogger(JsonPersistenceHandler.class);
 
