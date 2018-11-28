@@ -1,5 +1,6 @@
 package io.sease.rre.core.domain.metrics;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
@@ -80,6 +81,7 @@ public abstract class ValueFactory implements HitsCollector {
         return value().toPlainString();
     }
 
+    @JsonIgnore
     public long getTotalHits() {
         return totalHits;
     }
