@@ -10,7 +10,7 @@ process, with results being stored continuously as it progresses.
 The queries themselves are flattened, so that one document is created for
 each configuration set the query is run against. In other words, if you
 have three configuration versions, each query will generate three
-Elasticsearch documents, with the metrics for one version.
+Elasticsearch documents, each with the metrics for one version.
 
 
 ## Usage (Maven)
