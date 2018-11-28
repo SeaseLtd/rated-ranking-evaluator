@@ -11,7 +11,7 @@ import java.util.Map;
  * Exceptions during processing are expected to be handled internally.
  * Exceptions thrown during the {@link #beforeStart()} and {@link #start()}
  * stages may be passed up the stack, to alert the PersistenceManager that
- * the handler could not be started for some reason.
+ * the handler could not be started for some reason, and should not be used.
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
