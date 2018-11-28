@@ -60,7 +60,7 @@ public class QueryVersionReport {
      */
     public static List<QueryVersionReport> fromQuery(final Query query) {
         // Get the fixed metadata
-        final String corpora = findParentName(query, Corpus.class);
+        final String corpus = findParentName(query, Corpus.class);
         final String topic = findParentName(query, Topic.class);
         final String queryGroup = findParentName(query, QueryGroup.class);
         final String queryText = query.getName();
@@ -81,15 +81,15 @@ public class QueryVersionReport {
         // Convert to a list of QueryVersionReport items, and return
         return versionMetrics.keySet().stream()
                 .map(v -> new QueryVersionReport(
-                        createId(topic, queryGroup, query.getName(), v),
-                        corpora, topic, queryGroup, queryText, v, versionHits.get(v),
+                        createId(corpus, topic, queryGroup, query.getName(), v),
+                        corpus, topic, queryGroup, queryText, v, versionHits.get(v),
                         versionMetrics.get(v).values()))
                 .collect(Collectors.toList());
     }
 
-    private static String createId(String topic, String queryGroup, String queryText, String version) {
-        final StringBuilder builder = new StringBuilder(ofNullable(topic).orElse("topic"));
-        for (String s : new String[]{queryGroup, queryText, version}) {
+    private static String createId(String corpus, String topic, String queryGroup, String queryText, String version) {
+        final StringBuilder builder = new StringBuilder(ofNullable(corpus).orElse("corpus"));
+        for (String s : new String[]{topic, queryGroup, queryText, version}) {
             builder.append("_").append(ofNullable(s).orElse(""));
         }
         return DigestUtils.md5Hex(builder.toString());
