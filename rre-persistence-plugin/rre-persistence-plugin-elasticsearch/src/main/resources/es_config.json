@@ -34,6 +34,9 @@
               "type": "float"
             }
           }
+        },
+        "results": {
+          "enabled": false
         }
       }
     }
