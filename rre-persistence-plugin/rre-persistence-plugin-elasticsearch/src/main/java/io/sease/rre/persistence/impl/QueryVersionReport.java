@@ -1,14 +1,13 @@
 package io.sease.rre.persistence.impl;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.MetricUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
@@ -33,9 +32,11 @@ public class QueryVersionReport {
     private final long totalHits;
     private final Collection<VersionMetric> metrics;
     private final Map<String, BigDecimal> metricValues;
+    private final Collection<Result> results;
 
     public QueryVersionReport(String id, String corpora, String topic, String queryGroup, String queryText,
-                              String version, long totalHits, Collection<VersionMetric> metrics) {
+                              String version, long totalHits, Collection<VersionMetric> metrics,
+                              Collection<Result> results) {
         this.id = id;
         this.corpora = corpora;
         this.topic = topic;
@@ -46,6 +47,7 @@ public class QueryVersionReport {
         this.metrics = metrics;
         this.metricValues = metrics.stream()
                 .collect(Collectors.toMap(VersionMetric::getSanitisedName, VersionMetric::getValue));
+        this.results = results;
     }
 
     /**
@@ -78,13 +80,27 @@ public class QueryVersionReport {
             });
         });
 
+        // Extract the results
+        Map<String, Collection<Result>> results = extractResults(query);
+
         // Convert to a list of QueryVersionReport items, and return
         return versionMetrics.keySet().stream()
                 .map(v -> new QueryVersionReport(
                         createId(corpus, topic, queryGroup, query.getName(), v),
                         corpus, topic, queryGroup, queryText, v, versionHits.get(v),
-                        versionMetrics.get(v).values()))
+                        versionMetrics.get(v).values(), results.get(v)))
                 .collect(Collectors.toList());
+    }
+
+    private static Map<String, Collection<Result>> extractResults(Query query) {
+        Map<String, Collection<Result>> results = new HashMap<>();
+        query.getResults().forEach((v, rs) -> {
+            Collection<Result> hits = rs.hits().stream()
+                    .map(Result::new)
+                    .collect(Collectors.toList());
+            results.put(v, hits);
+        });
+        return results;
     }
 
     private static String createId(String corpus, String topic, String queryGroup, String queryText, String version) {
@@ -146,6 +162,9 @@ public class QueryVersionReport {
         return metricValues;
     }
 
+    public Collection<Result> getResults() {
+        return results;
+    }
 
     public static class VersionMetric {
 
@@ -172,4 +191,22 @@ public class QueryVersionReport {
         }
     }
 
+    public static class Result {
+
+        private final Map<String, Object> content = new HashMap<>();
+
+        public Result(Map<String, Object> resultContent) {
+            this.content.putAll(resultContent);
+        }
+
+        @JsonAnyGetter
+        public Map<String, Object> getContent() {
+            return content;
+        }
+
+        @JsonAnySetter
+        public void setContent(String field, Object value) {
+            content.put(field, value);
+        }
+    }
 }

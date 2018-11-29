@@ -167,7 +167,10 @@ The output documents look as follows:
     "rrAt10": 1,
     "pAt1": 1,
     "ap": 1
-  }
+  },
+  "results": [
+    ... result content ...
+  ]
 }
 ```
 
@@ -182,3 +185,8 @@ no option for using nested structures when generating output, so the
 `metricValues` mapping should be used instead. This only contains the output
 for each metric. Values can be referenced using `metricValues.p`,
 `metricValues.r`, and so on.
+
+The `results` field is present to allow checking of the result data returned
+by the searches. If using the default configuration, the field mapping is set
+to `enabled: false`, meaning that all content is stored but not indexed, and
+therefore is not searchable.
