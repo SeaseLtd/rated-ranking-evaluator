@@ -70,6 +70,16 @@ public class PersistenceConfiguration {
         return handlerConfiguration;
     }
 
+    /**
+     * Get the configuration for an individual handler, returning a map of
+     * configuration items keyed by the String value of their name. If there
+     * is no configuration, an empty map will be returned.
+     *
+     * @param name the name of the handler whose configuration is required.
+     * @return a String:Object map containing the configuration. Never
+     * {@code null}.
+     */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getHandlerConfigurationByName(String name) {
         Map<String, Object> configMap = new HashMap<>();
 
