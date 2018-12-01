@@ -1,0 +1,51 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.sease</groupId>
+    <artifactId>rre-maven-elasticsearch-plugin</artifactId>
+    <version>6.3.2</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>sease</id>
+            <url>https://raw.github.com/SeaseLtd/rated-ranking-evaluator/mvn-repo</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.sease</groupId>
+                <artifactId>rre-maven-elasticsearch-plugin</artifactId>
+                <version>${esVersion}</version>
+                <configuration>
+                    <persistence>
+                        <useTimestampAsVersion>true</useTimestampAsVersion>
+                        <handlers>
+                            <testJson>io.sease.rre.persistence.impl.JsonPersistenceHandler</testJson>
+                        </handlers>
+                        <handlerConfiguration>
+                            <testJson>
+                                <destinationFile>blah.txt</destinationFile>
+                            </testJson>
+                        </handlerConfiguration>
+                    </persistence>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>search-quality-evaluation</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>evaluate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

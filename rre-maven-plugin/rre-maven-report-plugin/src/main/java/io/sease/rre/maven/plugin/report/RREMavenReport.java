@@ -2,11 +2,11 @@ package io.sease.rre.maven.plugin.report;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.RREOutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.SpreadsheetOutputFormat;
+import io.sease.rre.persistence.impl.JsonPersistenceHandler;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.reporting.AbstractMavenReport;
@@ -34,6 +34,9 @@ public class RREMavenReport extends AbstractMavenReport {
 
     @Parameter(name = "endpoint", defaultValue = "http://127.0.0.1:8080")
     String endpoint;
+
+    @Parameter(name="evaluationFile", defaultValue = JsonPersistenceHandler.DEFAULT_OUTPUT_FILE)
+    String evaluationFile;
 
     private Map<String, OutputFormat> formatters = new HashMap<>();
 
@@ -131,7 +134,7 @@ public class RREMavenReport extends AbstractMavenReport {
      * @return a file reference to the evaluation output.
      */
     File evaluationOutputFile() {
-        final File file = new File("target/rre/evaluation.json");
+        final File file = new File(evaluationFile);
         if (!file.canRead()) {
             throw new RuntimeException("Unable to read RRE evaluation output file. Are you sure RRE executed successfully?");
         }
