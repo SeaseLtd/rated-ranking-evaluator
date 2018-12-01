@@ -1,8 +1,7 @@
 package io.sease.rre.maven.plugin.elasticsearch;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
-import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.Elasticsearch;
 import org.apache.maven.plugin.AbstractMojo;
@@ -61,6 +60,9 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "port", defaultValue = "9200")
     private int port;
 
+    @Parameter(name = "persistence")
+    private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
+
     @Override
     public void execute() throws MojoExecutionException {
         final URL [] urls = compilePaths.stream()
@@ -88,30 +90,22 @@ public class RREvaluateMojo extends AbstractMojo {
                     metrics,
                     fields.split(","),
                     exclude,
-                    include);
+                    include,
+                    persistence);
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("path.home", "/tmp");
             configuration.put("network.host", port);
             configuration.put("plugins", plugins);
 
-            write(engine.evaluate(configuration));
+            engine.evaluate(configuration);
         } catch (final IOException exception) {
             throw new MojoExecutionException(exception.getMessage(), exception);
         }
     }
 
-    /**
-     * Writes out the evaluation result.
-     *
-     * @param evaluation the evaluation result.
-     * @throws IOException in case of I/O failure.
-     */
-    private void write(final Evaluation evaluation) throws IOException {
-        final File outputFolder = new File("target/rre");
-        outputFolder.mkdirs();
-
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFolder, "evaluation.json"), evaluation);
+    // Used by unit test
+    PersistenceConfiguration getPersistence() {
+        return persistence;
     }
 }
