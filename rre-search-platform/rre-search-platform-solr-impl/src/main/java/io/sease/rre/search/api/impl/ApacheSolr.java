@@ -34,8 +34,6 @@ import static java.util.Optional.ofNullable;
 public class ApacheSolr implements SearchPlatform {
     private final static Logger LOGGER = LogManager.getLogger(ApacheSolr.class);
 
-    private static final Logger LOGGER = LogManager.getLogger(ApacheSolr.class);
-
     private EmbeddedSolrServer proxy;
     private File solrHome;
     private File coreProperties;

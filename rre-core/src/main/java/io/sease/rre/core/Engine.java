@@ -78,6 +78,8 @@ public class Engine {
      * @param fields                   the fields to retrieve with each result.
      * @param exclude                  a list of folders to exclude when scanning the configuration folders.
      * @param include                  a list of folders to include from the configuration folders.
+     * @param checksumFilepath         the path to the file used to store the configuration checksums.
+     * @param persistenceConfiguration the persistence framework configuration.
      */
     public Engine(
             final SearchPlatform platform,
@@ -371,7 +373,8 @@ public class Engine {
                         return metric;
                     } catch (final Exception exception) {
                         throw new IllegalArgumentException(exception);
-                    }})
+                    }
+                })
                 .collect(toList());
     }
 
