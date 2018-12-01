@@ -1,5 +1,6 @@
 package io.sease.rre.core.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.impl.AveragedMetric;
@@ -123,5 +124,10 @@ public abstract class DomainMember<C extends DomainMember> {
 
     public Map<String, Metric> getMetrics() {
         return metrics;
+    }
+
+    @JsonIgnore
+    public Optional<DomainMember> getParent() {
+        return ofNullable(parent);
     }
 }

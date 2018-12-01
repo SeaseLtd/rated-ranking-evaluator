@@ -185,7 +185,7 @@ public class Elasticsearch implements SearchPlatform {
 
     @Override
     public void beforeStop() {
-        // Nothing to do here, unless we want to delete the data directory
+        // TODO: remove everything
     }
 
     @Override
@@ -201,24 +201,35 @@ public class Elasticsearch implements SearchPlatform {
     @Override
     public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String[] fields, final int maxRows) {
         try {
-            final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
-            final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(q)).size(maxRows).fetchSource(fields, null);
-            final SearchResponse qresponse = proxy.search(new SearchRequest(indexName).source(qBuilder)).actionGet();
-            return new QueryOrSearchResponse(
-                    qresponse.getHits().totalHits,
-                    stream(qresponse.getHits().getHits())
-                            .map(hit -> {
-                                final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
-                                result.put("_id", hit.getId());
-                                return result;
-                            })
-                            .collect(toList()));
+            final SearchResponse qresponse = proxy.search(buildSearchRequest(indexName, query, fields, maxRows)).actionGet();
+            return convertResponse(qresponse);
         } catch (final ElasticsearchException e) {
             LOGGER.error("Caught ElasticsearchException :: " + e.getMessage());
             return new QueryOrSearchResponse(0, Collections.emptyList());
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    SearchRequest buildSearchRequest(final String indexName, final String query, final String[] fields, final int maxRows) throws IOException {
+        final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
+        final SearchSourceBuilder qBuilder = new SearchSourceBuilder()
+                .query(QueryBuilders.wrapperQuery(q))
+                .size(maxRows)
+                .fetchSource(fields, null);
+        return new SearchRequest(indexName).source(qBuilder);
+    }
+
+    QueryOrSearchResponse convertResponse(final SearchResponse searchResponse) {
+        return new QueryOrSearchResponse(
+                searchResponse.getHits().totalHits,
+                stream(searchResponse.getHits().getHits())
+                        .map(hit -> {
+                            final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
+                            result.put("_id", hit.getId());
+                            return result;
+                        })
+                        .collect(toList()));
     }
 
     @Override
@@ -268,5 +279,15 @@ public class Elasticsearch implements SearchPlatform {
                 throw new RuntimeException("Unable to deal with configuration file " + declaredPath.getAbsolutePath() + ". Target path was " + targetPath.getAbsolutePath());
             }
         });
+    }
+
+    @Override
+    public boolean isSearchPlatformFile(String indexName, File file) {
+        return file.isFile() && file.getName().equals("index-shape.json");
+    }
+
+    @Override
+    public boolean isCorporaRequired() {
+        return true;
     }
 }

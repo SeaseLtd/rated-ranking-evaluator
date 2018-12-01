@@ -14,5 +14,6 @@
     <modules>
         <module>rre-maven-solr-archetype</module>
         <module>rre-maven-elasticsearch-archetype</module>
+        <module>rre-maven-external-elasticsearch-archetype</module>
     </modules>
 </project>
