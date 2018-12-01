@@ -1,8 +1,7 @@
 package io.sease.rre.maven.plugin.solr;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
-import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.ApacheSolr;
 import org.apache.maven.plugin.AbstractMojo;
@@ -11,7 +10,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +48,9 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "exclude")
     private List<String> exclude;
 
+    @Parameter(name = "persistence")
+    private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
+
     @Override
     public void execute() throws MojoExecutionException {
         try (final SearchPlatform platform = new ApacheSolr()) {
@@ -62,28 +63,15 @@ public class RREvaluateMojo extends AbstractMojo {
                     metrics,
                     fields.split(","),
                     exclude,
-                    include);
+                    include,
+                    persistence);
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("solr.home", "/tmp");
 
-            write(engine.evaluate(configuration));
+            engine.evaluate(configuration);
         } catch (final IOException exception) {
             throw new MojoExecutionException(exception.getMessage(), exception);
         }
-    }
-
-    /**
-     * Writes out the evaluation result.
-     *
-     * @param evaluation the evaluation result.
-     * @throws IOException in case of I/O failure.
-     */
-    private void write(final Evaluation evaluation) throws IOException {
-        final File outputFolder = new File("target/rre");
-        outputFolder.mkdirs();
-
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFolder, "evaluation.json"), evaluation);
     }
 }

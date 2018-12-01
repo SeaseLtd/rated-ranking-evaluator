@@ -7,6 +7,9 @@ import io.sease.rre.Field;
 import io.sease.rre.Func;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.persistence.PersistenceConfiguration;
+import io.sease.rre.persistence.PersistenceHandler;
+import io.sease.rre.persistence.PersistenceManager;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import org.apache.logging.log4j.LogManager;
@@ -56,6 +59,10 @@ public class Engine {
     private ObjectMapper mapper = new ObjectMapper();
 
     private List<String> versions;
+    private String versionTimestamp = null;
+
+    private final PersistenceManager persistenceManager;
+    private final PersistenceConfiguration persistenceConfiguration;
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -65,6 +72,10 @@ public class Engine {
      * @param corporaFolderPath        the corpora folder path.
      * @param ratingsFolderPath        the ratings folder path.
      * @param templatesFolderPath      the query templates folder path.
+     * @param metrics                  the list of metric classes to include in the output.
+     * @param fields                   the fields to retrieve with each result.
+     * @param exclude                  a list of folders to exclude when scanning the configuration folders.
+     * @param include                  a list of folders to include from the configuration folders.
      */
     public Engine(
             final SearchPlatform platform,
@@ -75,7 +86,8 @@ public class Engine {
             final List<String> metrics,
             final String[] fields,
             final List<String> exclude,
-            final List<String> include) {
+            final List<String> include,
+            final PersistenceConfiguration persistenceConfiguration) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = corporaFolderPath == null ? null : new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
@@ -91,6 +103,10 @@ public class Engine {
                         .map(Func::newMetricDefinition)
                         .filter(Objects::nonNull)
                         .collect(toList());
+
+        this.persistenceConfiguration = persistenceConfiguration;
+        this.persistenceManager = new PersistenceManager();
+        initialisePersistenceManager();
     }
 
     public String name(final JsonNode node) {
@@ -98,6 +114,19 @@ public class Engine {
                 ofNullable(node.get(DESCRIPTION)).orElse(node.get(NAME)))
                 .map(JsonNode::asText)
                 .orElse(UNNAMED);
+    }
+
+    private void initialisePersistenceManager() {
+        persistenceConfiguration.getHandlers().forEach((n, h) -> {
+            try {
+                // Instantiate the handler
+                PersistenceHandler handler = (PersistenceHandler) Class.forName(h).newInstance();
+                handler.configure(n, persistenceConfiguration.getHandlerConfigurationByName(n));
+                persistenceManager.registerHandler(handler);
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                LOGGER.error("[" + n + "] Caught exception instantiating persistence handler :: " + e.getMessage());
+            }
+        });
     }
 
     /**
@@ -112,11 +141,13 @@ public class Engine {
             LOGGER.info("RRE: New evaluation session is starting...");
 
             platform.beforeStart(configuration);
+            persistenceManager.beforeStart();
 
             LOGGER.info("RRE: Search Platform in use: " + platform.getName());
             LOGGER.info("RRE: Starting " + platform.getName() + "...");
 
             platform.start();
+            persistenceManager.start();
 
             LOGGER.info("RRE: " + platform.getName() + " Search Platform successfully started.");
 
@@ -186,9 +217,12 @@ public class Engine {
                                                                         query(queryNode, sharedTemplate, version),
                                                                         fields,
                                                                         Math.max(10, relevantDocuments.size()));
-                                                        queryEvaluation.setTotalHits(response.totalHits(), version);
-                                                        response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), version));
+                                                        queryEvaluation.setTotalHits(response.totalHits(), persistVersion(version));
+                                                        response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), persistVersion(version)));
                                                     });
+
+                                                    // Persist the query result
+                                                    persistenceManager.recordQuery(queryEvaluation);
                                                 });
                                     });
                         });
@@ -199,7 +233,10 @@ public class Engine {
             return evaluation;
         } finally {
             platform.beforeStop();
+            persistenceManager.beforeStop();
             LOGGER.info("RRE: " + platform.getName() + " Search Platform shutdown procedure executed.");
+            LOGGER.info("RRE: Stopping persistence manager");
+            persistenceManager.stop();
         }
     }
 
@@ -316,7 +353,8 @@ public class Engine {
                         return metric;
                     } catch (final Exception exception) {
                         throw new IllegalArgumentException(exception);
-                    }})
+                    }
+                })
                 .collect(toList());
     }
 
@@ -367,7 +405,7 @@ public class Engine {
      * @return the ratings / judgements for this evaluation suite.
      */
     private Stream<JsonNode> ratings() {
-        final File [] ratingsFiles =
+        final File[] ratingsFiles =
                 requireNonNull(
                         ratingsFolder.listFiles(ONLY_JSON_FILES),
                         "Unable to find the ratings folder.");
@@ -425,6 +463,15 @@ public class Engine {
                         .map(File::getName)
                         .collect(toList());
 
+        if (persistenceConfiguration.isUseTimestampAsVersion()) {
+            if (versions.size() == 1) {
+                versionTimestamp = String.valueOf(System.currentTimeMillis());
+                LOGGER.info("Using local system timestamp as version tag : " + versionTimestamp);
+            } else {
+                LOGGER.warn("Persistence.useTimestampAsVersion == true, but multiple configurations exist - ignoring");
+            }
+        }
+
         LOGGER.info("RRE: target versions are " + String.join(",", versions));
     }
 
@@ -457,5 +504,18 @@ public class Engine {
             query = query.replace(name, queryNode.get("placeholders").get(name).asText());
         }
         return query;
+    }
+
+    /**
+     * Get the version to store when persisting query results.
+     *
+     * @param configVersion the configuration set version being evaluated.
+     * @return the given configVersion, or the version timestamp if and only
+     * if it is set (eg. there is a single version, and the persistence
+     * configuration indicates a timestamp should be used to version this
+     * evaluation data).
+     */
+    private String persistVersion(final String configVersion) {
+        return ofNullable(versionTimestamp).orElse(configVersion);
     }
 }
