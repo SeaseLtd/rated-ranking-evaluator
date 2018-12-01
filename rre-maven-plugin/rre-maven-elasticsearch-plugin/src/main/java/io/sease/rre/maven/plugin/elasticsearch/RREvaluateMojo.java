@@ -100,8 +100,8 @@ public class RREvaluateMojo extends AbstractMojo {
                     fields.split(","),
                     exclude,
                     include,
-                    persistence,
-                    checksumFile);
+                    checksumFile,
+                    persistence);
 
             final Map<String, Object> configuration = new HashMap<>();
             configuration.put("path.home", "/tmp");

@@ -3,6 +3,7 @@ package io.sease.rre.maven.plugin.external.elasticsearch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.ExternalElasticsearch;
 import org.apache.maven.plugin.AbstractMojo;
@@ -52,6 +53,9 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "exclude")
     private List<String> exclude;
 
+    @Parameter(name = "persistence")
+    private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
+
     @Override
     public void execute() throws MojoExecutionException {
         final URL[] urls = compilePaths.stream()
@@ -79,7 +83,9 @@ public class RREvaluateMojo extends AbstractMojo {
                     metrics,
                     fields.split(","),
                     exclude,
-                    include);
+                    include,
+                    null,
+                    persistence);
 
             final Map<String, Object> configuration = Collections.emptyMap();
 
