@@ -1,0 +1,4 @@
+{
+  "hostUrls": [ "http://localhost:9200" ],
+  "index": "music_v1.1"
+}
