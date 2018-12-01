@@ -3,6 +3,7 @@ package io.sease.rre.search.api.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.sease.rre.DirectoryUtils;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.UnableToLoadDataException;
@@ -60,17 +61,28 @@ public class Elasticsearch implements SearchPlatform {
     private final ObjectMapper mapper = new ObjectMapper();
 
     private File nodeConfigFolder;
+    private boolean mustRefresh = false;
 
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
         final File logsFolder = new File("target/elasticsearch/logs");
-        final File dataFolder = new File("target/elasticsearch/data");
+        final File dataFolder = new File((String) configuration.get("path.data"));
 
         logsFolder.delete();
-        dataFolder.delete();
-
         logsFolder.mkdirs();
-        dataFolder.mkdirs();
+
+        if ((Boolean) configuration.get("forceRefresh") && dataFolder.exists()) {
+            try {
+                DirectoryUtils.deleteDirectory(dataFolder);
+            } catch (IOException e) {
+                LOGGER.error("Could not delete data directory - expect data to be stale!", e);
+            }
+            dataFolder.delete();
+        }
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+            mustRefresh = true;
+        }
 
         nodeConfigFolder = new File((String) configuration.get("path.home"), "config");
         nodeConfigFolder.mkdir();
@@ -218,6 +230,11 @@ public class Elasticsearch implements SearchPlatform {
                             return result;
                         })
                         .collect(toList()));
+    }
+
+    @Override
+    public boolean isRefreshRequired() {
+        return mustRefresh;
     }
 
     @SuppressWarnings("unchecked")

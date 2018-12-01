@@ -56,6 +56,8 @@ public class Engine {
     private final SearchPlatform platform;
     private final String[] fields;
 
+    private FileUpdateChecker fileUpdateChecker;
+
     private ObjectMapper mapper = new ObjectMapper();
 
     private List<String> versions;
@@ -76,6 +78,8 @@ public class Engine {
      * @param fields                   the fields to retrieve with each result.
      * @param exclude                  a list of folders to exclude when scanning the configuration folders.
      * @param include                  a list of folders to include from the configuration folders.
+     * @param checksumFilepath         the path to the file used to store the configuration checksums.
+     * @param persistenceConfiguration the persistence framework configuration.
      */
     public Engine(
             final SearchPlatform platform,
@@ -87,6 +91,7 @@ public class Engine {
             final String[] fields,
             final List<String> exclude,
             final List<String> include,
+            final String checksumFilepath,
             final PersistenceConfiguration persistenceConfiguration) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = corporaFolderPath == null ? null : new File(corporaFolderPath);
@@ -107,6 +112,21 @@ public class Engine {
         this.persistenceConfiguration = persistenceConfiguration;
         this.persistenceManager = new PersistenceManager();
         initialisePersistenceManager();
+
+        initialiseFileUpdateChecker(checksumFilepath);
+    }
+
+    private void initialiseFileUpdateChecker(String checksumFile) {
+        if (checksumFile != null) {
+            try {
+                fileUpdateChecker = new FileUpdateChecker(checksumFile);
+            } catch (IOException e) {
+                LOGGER.warn("Could not create file update checker: " + e.getMessage());
+                fileUpdateChecker = null;
+            }
+        } else {
+            fileUpdateChecker = null;
+        }
     }
 
     public String name(final JsonNode node) {
@@ -450,7 +470,10 @@ public class Engine {
             throw new IllegalArgumentException("RRE: no target versions available. Check the configuration set folder and include/exclude clauses.");
         }
 
+        boolean corporaChanged = folderHasChanged(corporaFolder);
+
         stream(versionFolders)
+                .filter(versionFolder -> (folderHasChanged(versionFolder) || corporaChanged || platform.isRefreshRequired()))
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(file -> platform.isSearchPlatformFile(indexName, file))
                 .peek(file -> LOGGER.info("RRE: Loading the Test Collection into " + platform.getName() + ", configuration version " + file.getParentFile().getName()))
@@ -472,7 +495,33 @@ public class Engine {
             }
         }
 
+        flushFileChecksums();
+
         LOGGER.info("RRE: target versions are " + String.join(",", versions));
+    }
+
+    private boolean folderHasChanged(File folder) {
+        boolean ret = true;
+
+        if (fileUpdateChecker != null) {
+            try {
+                ret = fileUpdateChecker.directoryHasChanged(folder.getAbsolutePath());
+            } catch (IOException e) {
+                LOGGER.warn("Could not check file update status for " + folder + " :: " + e.getMessage());
+            }
+        }
+
+        return ret;
+    }
+
+    private void flushFileChecksums() {
+        if (fileUpdateChecker != null) {
+            try {
+                fileUpdateChecker.writeChecksums();
+            } catch (IOException e) {
+                LOGGER.error("Could not write file checksums :: " + e.getMessage());
+            }
+        }
     }
 
     /**
