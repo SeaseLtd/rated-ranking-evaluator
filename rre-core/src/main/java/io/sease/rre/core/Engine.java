@@ -57,6 +57,8 @@ public class Engine {
     private final SearchPlatform platform;
     private final String[] fields;
 
+    private FileUpdateChecker fileUpdateChecker;
+
     private ObjectMapper mapper = new ObjectMapper();
 
     private List<String> versions;
@@ -77,6 +79,8 @@ public class Engine {
      * @param fields                   the fields to retrieve with each result.
      * @param exclude                  a list of folders to exclude when scanning the configuration folders.
      * @param include                  a list of folders to include from the configuration folders.
+     * @param checksumFilepath         the path to the file used to store the configuration checksums.
+     * @param persistenceConfiguration the persistence framework configuration.
      */
     public Engine(
             final SearchPlatform platform,
@@ -88,9 +92,10 @@ public class Engine {
             final String[] fields,
             final List<String> exclude,
             final List<String> include,
+            final String checksumFilepath,
             final PersistenceConfiguration persistenceConfiguration) {
         this.configurationsFolder = new File(configurationsFolderPath);
-        this.corporaFolder = new File(corporaFolderPath);
+        this.corporaFolder = corporaFolderPath == null ? null : new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
         this.templatesFolder = new File(templatesFolderPath);
         this.platform = platform;
@@ -108,6 +113,21 @@ public class Engine {
         this.persistenceConfiguration = persistenceConfiguration;
         this.persistenceManager = new PersistenceManager();
         initialisePersistenceManager();
+
+        initialiseFileUpdateChecker(checksumFilepath);
+    }
+
+    private void initialiseFileUpdateChecker(String checksumFile) {
+        if (checksumFile != null) {
+            try {
+                fileUpdateChecker = new FileUpdateChecker(checksumFile);
+            } catch (IOException e) {
+                LOGGER.warn("Could not create file update checker: " + e.getMessage());
+                fileUpdateChecker = null;
+            }
+        } else {
+            fileUpdateChecker = null;
+        }
     }
 
     public String name(final JsonNode node) {
@@ -169,22 +189,18 @@ public class Engine {
                                 "WARNING!!! \"" + ID_FIELD_NAME + "\" attribute not found!")
                                 .asText(DEFAULT_ID_FIELD_NAME);
 
-                final File data = data(ratingsNode);
+                final Optional<File> data = data(ratingsNode);
                 final String queryPlaceholder = ofNullable(ratingsNode.get("query_placeholder")).map(JsonNode::asText).orElse("$query");
-
-                if (!data.canRead()) {
-                    throw new IllegalArgumentException("RRE: WARNING!!! Unable to read the corpus file " + data.getAbsolutePath());
-                }
 
                 LOGGER.info("");
                 LOGGER.info("*********************************");
                 LOGGER.info("RRE: Index name => " + indexName);
                 LOGGER.info("RRE: ID Field name => " + idFieldName);
-                LOGGER.info("RRE: Test Collection => " + data.getAbsolutePath());
 
-                prepareData(indexName, data);
+                data.ifPresent(file -> LOGGER.info("RRE: Test Collection => " + file.getAbsolutePath()));
+                prepareData(indexName, data.orElse(null));
 
-                final Corpus corpus = evaluation.findOrCreate(data.getName(), Corpus::new);
+                final Corpus corpus = evaluation.findOrCreate(data.map(File::getName).orElse(indexName), Corpus::new);
                 all(ratingsNode, TOPICS)
                         .forEach(topicNode -> {
                             final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
@@ -244,14 +260,31 @@ public class Engine {
         }
     }
 
-    File data(final JsonNode ratingsNode) {
-        final File corporaFile =
-                new File(
-                        corporaFolder,
-                        requireNonNull(
-                                ratingsNode.get(CORPORA_FILENAME),
-                                "WARNING!!! \"" + CORPORA_FILENAME + "\" attribute not found!").asText());
-        return corporaFile.getName().endsWith(".zip") ? unzipAndGet(corporaFile) : corporaFile;
+    private Optional<File> data(final JsonNode ratingsNode) {
+        final File retFile;
+
+        if (platform.isCorporaRequired()) {
+            final File corporaFile =
+                    new File(
+                            corporaFolder,
+                            requireNonNull(
+                                    ratingsNode.get(CORPORA_FILENAME),
+                                    "WARNING!!! \"" + CORPORA_FILENAME + "\" attribute not found!").asText());
+
+            if (corporaFile.getName().endsWith(".zip")) {
+                retFile = unzipAndGet(corporaFile);
+            } else {
+                retFile = corporaFile;
+            }
+
+            if (!retFile.canRead()) {
+                throw new IllegalArgumentException("RRE: WARNING!!! Unable to read the corpus file " + retFile.getAbsolutePath());
+            }
+        } else {
+            retFile = null;
+        }
+
+        return Optional.ofNullable(retFile);
     }
 
     private File unzipAndGet(final File corporaFile) {
@@ -421,6 +454,12 @@ public class Engine {
      * @param data      the dataset.
      */
     private void prepareData(final String indexName, final File data) {
+        if (data != null) {
+            LOGGER.info("Preparing data for " + indexName + " from " + data.getAbsolutePath());
+        } else {
+            LOGGER.info("Preparing platform for " + indexName);
+        }
+
         final File[] versionFolders =
                 safe(configurationsFolder.listFiles(
                         file -> ONLY_DIRECTORIES.accept(file)
@@ -431,10 +470,12 @@ public class Engine {
             throw new IllegalArgumentException("RRE: no target versions available. Check the configuration set folder and include/exclude clauses.");
         }
 
+        boolean corporaChanged = folderHasChanged(corporaFolder);
+
         stream(versionFolders)
+                .filter(versionFolder -> (folderHasChanged(versionFolder) || corporaChanged || platform.isRefreshRequired()))
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
-                .filter(file -> (file.isDirectory() && file.getName().equals(indexName))
-                        || (file.isFile() && file.getName().equals("index-shape.json")))
+                .filter(file -> platform.isSearchPlatformFile(indexName, file))
                 .peek(file -> LOGGER.info("RRE: Loading the Test Collection into " + platform.getName() + ", configuration version " + file.getParentFile().getName()))
                 .forEach(fileOrFolder -> platform.load(data, fileOrFolder, indexFqdn(indexName, fileOrFolder.getParentFile().getName())));
 
@@ -454,7 +495,33 @@ public class Engine {
             }
         }
 
+        flushFileChecksums();
+
         LOGGER.info("RRE: target versions are " + String.join(",", versions));
+    }
+
+    private boolean folderHasChanged(File folder) {
+        boolean ret = true;
+
+        if (fileUpdateChecker != null) {
+            try {
+                ret = fileUpdateChecker.directoryHasChanged(folder.getAbsolutePath());
+            } catch (IOException e) {
+                LOGGER.warn("Could not check file update status for " + folder + " :: " + e.getMessage());
+            }
+        }
+
+        return ret;
+    }
+
+    private void flushFileChecksums() {
+        if (fileUpdateChecker != null) {
+            try {
+                fileUpdateChecker.writeChecksums();
+            } catch (IOException e) {
+                LOGGER.error("Could not write file checksums :: " + e.getMessage());
+            }
+        }
     }
 
     /**

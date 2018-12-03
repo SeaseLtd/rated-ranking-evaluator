@@ -3,6 +3,7 @@ package io.sease.rre.search.api.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.sease.rre.DirectoryUtils;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.UnableToLoadDataException;
@@ -60,17 +61,28 @@ public class Elasticsearch implements SearchPlatform {
     private final ObjectMapper mapper = new ObjectMapper();
 
     private File nodeConfigFolder;
+    private boolean mustRefresh = false;
 
     @Override
     public void beforeStart(final Map<String, Object> configuration) {
         final File logsFolder = new File("target/elasticsearch/logs");
-        final File dataFolder = new File("target/elasticsearch/data");
+        final File dataFolder = new File((String) configuration.get("path.data"));
 
         logsFolder.delete();
-        dataFolder.delete();
-
         logsFolder.mkdirs();
-        dataFolder.mkdirs();
+
+        if ((Boolean) configuration.get("forceRefresh") && dataFolder.exists()) {
+            try {
+                DirectoryUtils.deleteDirectory(dataFolder);
+            } catch (IOException e) {
+                LOGGER.error("Could not delete data directory - expect data to be stale!", e);
+            }
+            dataFolder.delete();
+        }
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+            mustRefresh = true;
+        }
 
         nodeConfigFolder = new File((String) configuration.get("path.home"), "config");
         nodeConfigFolder.mkdir();
@@ -190,24 +202,40 @@ public class Elasticsearch implements SearchPlatform {
     @Override
     public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String[] fields, final int maxRows) {
         try {
-            final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
-            final SearchSourceBuilder qBuilder = new SearchSourceBuilder().query(QueryBuilders.wrapperQuery(q)).size(maxRows).fetchSource(fields, null);
-            final SearchResponse qresponse = proxy.search(new SearchRequest(indexName).source(qBuilder)).actionGet();
-            return new QueryOrSearchResponse(
-                    qresponse.getHits().totalHits,
-                    stream(qresponse.getHits().getHits())
-                            .map(hit -> {
-                                final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
-                                result.put("_id", hit.getId());
-                                return result;
-                            })
-                            .collect(toList()));
+            final SearchResponse qresponse = proxy.search(buildSearchRequest(indexName, query, fields, maxRows)).actionGet();
+            return convertResponse(qresponse);
         } catch (final ElasticsearchException e) {
             LOGGER.error("Caught ElasticsearchException :: " + e.getMessage());
             return new QueryOrSearchResponse(0, Collections.emptyList());
         } catch (final IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    SearchRequest buildSearchRequest(final String indexName, final String query, final String[] fields, final int maxRows) throws IOException {
+        final String q = mapper.writeValueAsString(mapper.readTree(query).get("query"));
+        final SearchSourceBuilder qBuilder = new SearchSourceBuilder()
+                .query(QueryBuilders.wrapperQuery(q))
+                .size(maxRows)
+                .fetchSource(fields, null);
+        return new SearchRequest(indexName).source(qBuilder);
+    }
+
+    QueryOrSearchResponse convertResponse(final SearchResponse searchResponse) {
+        return new QueryOrSearchResponse(
+                searchResponse.getHits().totalHits,
+                stream(searchResponse.getHits().getHits())
+                        .map(hit -> {
+                            final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
+                            result.put("_id", hit.getId());
+                            return result;
+                        })
+                        .collect(toList()));
+    }
+
+    @Override
+    public boolean isRefreshRequired() {
+        return mustRefresh;
     }
 
     @SuppressWarnings("unchecked")
@@ -252,5 +280,15 @@ public class Elasticsearch implements SearchPlatform {
                 throw new RuntimeException("Unable to deal with configuration file " + declaredPath.getAbsolutePath() + ". Target path was " + targetPath.getAbsolutePath());
             }
         });
+    }
+
+    @Override
+    public boolean isSearchPlatformFile(String indexName, File file) {
+        return file.isFile() && file.getName().equals("index-shape.json");
+    }
+
+    @Override
+    public boolean isCorporaRequired() {
+        return true;
     }
 }
