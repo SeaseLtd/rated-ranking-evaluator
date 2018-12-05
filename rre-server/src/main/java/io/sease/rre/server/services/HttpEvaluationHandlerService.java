@@ -30,6 +30,10 @@ public class HttpEvaluationHandlerService implements EvaluationHandlerService {
         return make(requestData);
     }
 
+    ObjectMapper getMapper() {
+        return mapper;
+    }
+
     /**
      * Creates an evaluation object from the input JSON data.
      *

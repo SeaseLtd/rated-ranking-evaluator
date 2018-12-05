@@ -14,10 +14,6 @@ import org.springframework.core.env.StandardEnvironment;
 @SpringBootApplication
 public class RREServer {
     public static void main(final String[] args) {
-        SpringApplication application = new SpringApplication(RREServer.class);
-        ConfigurableEnvironment environment = new StandardEnvironment();
-        environment.setDefaultProfiles("http");
-        application.setEnvironment(environment);
-        application.run(args);
+        SpringApplication.run(RREServer.class, args);
     }
 }
