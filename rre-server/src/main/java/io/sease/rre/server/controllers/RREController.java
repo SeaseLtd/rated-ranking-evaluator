@@ -19,7 +19,6 @@ import java.util.List;
 public class RREController {
     private Evaluation evaluation = new Evaluation();
     private EvaluationMetadata metadata = new EvaluationMetadata(Collections.emptyList(), Collections.emptyList());
-    private ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private EvaluationHandlerService evaluationHandler;
