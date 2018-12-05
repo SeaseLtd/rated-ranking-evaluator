@@ -6,6 +6,7 @@ import io.sease.rre.maven.plugin.report.domain.EvaluationMetadata;
 import io.sease.rre.maven.plugin.report.formats.OutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.RREOutputFormat;
 import io.sease.rre.maven.plugin.report.formats.impl.SpreadsheetOutputFormat;
+import io.sease.rre.maven.plugin.report.formats.impl.UrlRREOutputFormat;
 import io.sease.rre.persistence.impl.JsonPersistenceHandler;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -43,6 +44,7 @@ public class RREMavenReport extends AbstractMavenReport {
     {
         formatters.put("spreadsheet", new SpreadsheetOutputFormat());
         formatters.put("rre-server", new RREOutputFormat());
+        formatters.put("url-rre-server", new UrlRREOutputFormat());
     }
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -103,6 +105,10 @@ public class RREMavenReport extends AbstractMavenReport {
     @Override
     public String getDescription(final Locale locale) {
         return "N.A.";
+    }
+
+    public String getEvaluationFile() {
+        return evaluationFile;
     }
 
     /**
