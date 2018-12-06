@@ -9,7 +9,7 @@
          * Request interval in milliseconds
          * @type {number}
          */
-        var requestInterval = 5000;
+        var requestInterval = 60000;
 
         /**
          * The data request URL
