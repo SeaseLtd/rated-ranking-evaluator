@@ -3,12 +3,16 @@ package io.sease.rre.server.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.domain.*;
+import io.sease.rre.server.domain.EvaluationMetadata;
 import io.sease.rre.server.domain.StaticMetric;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.stream.StreamSupport.stream;
@@ -25,9 +29,27 @@ public class HttpEvaluationHandlerService implements EvaluationHandlerService {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
+    private Evaluation evaluation = new Evaluation();
+    private EvaluationMetadata metadata = new EvaluationMetadata(Collections.emptyList(), Collections.emptyList());
+
     @Override
-    public Evaluation processEvaluationRequest(final JsonNode requestData) {
-        return make(requestData);
+    public void processEvaluationRequest(final JsonNode requestData) throws EvaluationHandlerException {
+        evaluation = make(requestData);
+    }
+
+    @Override
+    public Evaluation getEvaluation() {
+        return evaluation;
+    }
+
+    @Override
+    public EvaluationMetadata getEvaluationMetadata() {
+        return metadata;
+    }
+
+    void setEvaluation(Evaluation eval) {
+        this.evaluation = eval;
+        this.metadata = extractEvaluationMetadata(eval);
     }
 
     ObjectMapper getMapper() {
@@ -98,5 +120,25 @@ public class HttpEvaluationHandlerService implements EvaluationHandlerService {
             });
             parent.getMetrics().put(metric.getName(), metric);
         });
+    }
+
+    /**
+     * Extract the evaluation metadata from an evaluation.
+     *
+     * @param evaluation the evaluation data.
+     * @return the evaluation metadata.
+     */
+    public static EvaluationMetadata extractEvaluationMetadata(final Evaluation evaluation) {
+        final List<String> metrics = new ArrayList<>(
+                evaluation.getChildren()
+                        .iterator().next()
+                        .getMetrics().keySet());
+
+        final List<String> versions = new ArrayList<>(
+                evaluation.getChildren()
+                        .iterator().next()
+                        .getMetrics().values().iterator().next().getVersions().keySet());
+
+        return new EvaluationMetadata(versions, metrics);
     }
 }
