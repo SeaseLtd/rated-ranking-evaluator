@@ -17,20 +17,17 @@ import java.util.List;
 
 @RestController
 public class RREController {
-    private Evaluation evaluation = new Evaluation();
-    private EvaluationMetadata metadata = new EvaluationMetadata(Collections.emptyList(), Collections.emptyList());
 
     @Autowired
     private EvaluationHandlerService evaluationHandler;
 
     @PostMapping("/evaluation")
     public void updateEvaluationData(@RequestBody final JsonNode requestBody) throws Exception {
-        this.evaluation = evaluationHandler.processEvaluationRequest(requestBody);
-        this.metadata = evaluationMetadata(evaluation);
+        evaluationHandler.processEvaluationRequest(requestBody);
     }
 
     public EvaluationMetadata getMetadata() {
-        return metadata;
+        return evaluationHandler.getEvaluationMetadata();
     }
 
     @ApiOperation(value = "Returns the evaluation data.")
@@ -42,27 +39,7 @@ public class RREController {
     })
     @GetMapping(value = "/evaluation", produces = { "application/json" })
     @ResponseBody
-    public Evaluation getEvaluationData() throws Exception {
-        return evaluation;
-    }
-
-    /**
-     * Creates the evaluation metadata.
-     *
-     * @param evaluation the evaluation data.
-     * @return the evaluation metadata.
-     */
-    private EvaluationMetadata evaluationMetadata(final Evaluation evaluation) {
-        final List<String> metrics = new ArrayList<>(
-                evaluation.getChildren()
-                        .iterator().next()
-                        .getMetrics().keySet());
-
-        final List<String> versions = new ArrayList<>(
-                evaluation.getChildren()
-                        .iterator().next()
-                        .getMetrics().values().iterator().next().getVersions().keySet());
-
-        return new EvaluationMetadata(versions, metrics);
+    public Evaluation getEvaluationData() {
+        return evaluationHandler.getEvaluation();
     }
 }
