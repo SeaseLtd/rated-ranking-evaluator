@@ -32,6 +32,7 @@
         <module>rre-search-platform</module>
         <module>rre-server</module>
         <module>rre-maven-archetype</module>
+        <module>rre-persistence-plugin</module>
     </modules>
 
     <distributionManagement>
