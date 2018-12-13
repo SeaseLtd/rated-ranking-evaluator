@@ -9,13 +9,13 @@
          * Request interval in milliseconds
          * @type {number}
          */
-        var requestInterval = 5000;
+        var requestInterval = 60000;
 
         /**
          * The data request URL
          * @type {string}
          */
-        var requestUrl = "http://127.0.0.1:8080/evaluation";
+        var requestUrl = "/evaluation";
 
         init();
 
