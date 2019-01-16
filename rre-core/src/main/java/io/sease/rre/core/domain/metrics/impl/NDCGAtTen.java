@@ -91,7 +91,7 @@ public class NDCGAtTen extends Metric {
         }
 
         if (howManyVeryVeryRelevantDocs + howManyVeryRelevantDocs < windowSize) {
-            Arrays.fill(gains, howManyVeryVeryRelevantDocs + howManyVeryRelevantDocs, gains.length - 1, 1);
+            Arrays.fill(gains, howManyVeryVeryRelevantDocs + howManyVeryRelevantDocs, gains.length, 1);
         }
 
         BigDecimal result = gains.length > 0 ? new BigDecimal(gains[0]) : BigDecimal.ZERO;
