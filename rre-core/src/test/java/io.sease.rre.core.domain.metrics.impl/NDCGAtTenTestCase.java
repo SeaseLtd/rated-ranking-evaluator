@@ -69,7 +69,7 @@ public class NDCGAtTenTestCase extends BaseTestCase {
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
         assertEquals(
-                0.67,
+                0.64,
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0);
     }
@@ -89,7 +89,7 @@ public class NDCGAtTenTestCase extends BaseTestCase {
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
         assertEquals(
-                0.32,
+                0.35,
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0);
     }
@@ -115,7 +115,7 @@ public class NDCGAtTenTestCase extends BaseTestCase {
         cut.collect(searchHit(FIFTEEN_SEARCH_HITS[9]), counter.incrementAndGet(), A_VERSION);
 
         assertEquals(
-                0.05,
+                0.06,
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0);
     }
