@@ -1,6 +1,7 @@
 package io.sease.rre.maven.plugin.elasticsearch;
 
 import io.sease.rre.core.Engine;
+import io.sease.rre.core.domain.metrics.SimpleMetricClassManager;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.Elasticsearch;
@@ -96,7 +97,7 @@ public class RREvaluateMojo extends AbstractMojo {
                     corporaFolder,
                     ratingsFolder,
                     templatesFolder,
-                    metrics,
+                    new SimpleMetricClassManager(metrics),
                     fields.split(","),
                     exclude,
                     include,

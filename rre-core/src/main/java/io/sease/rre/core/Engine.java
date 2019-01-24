@@ -7,8 +7,8 @@ import io.sease.rre.Field;
 import io.sease.rre.Func;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.core.domain.metrics.MetricClassManager;
 import io.sease.rre.persistence.PersistenceConfiguration;
-import io.sease.rre.persistence.PersistenceException;
 import io.sease.rre.persistence.PersistenceHandler;
 import io.sease.rre.persistence.PersistenceManager;
 import io.sease.rre.search.api.QueryOrSearchResponse;
@@ -18,7 +18,10 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -52,7 +55,7 @@ public class Engine {
     private final List<String> include;
     private final List<String> exclude;
 
-    private final List<Class<? extends Metric>> availableMetricsDefs;
+    private final MetricClassManager metricClassManager;
 
     private final SearchPlatform platform;
     private final String[] fields;
@@ -75,7 +78,7 @@ public class Engine {
      * @param corporaFolderPath        the corpora folder path.
      * @param ratingsFolderPath        the ratings folder path.
      * @param templatesFolderPath      the query templates folder path.
-     * @param metrics                  the list of metric classes to include in the output.
+     * @param metricClassManager       the manager class for the metrics being evaluated.
      * @param fields                   the fields to retrieve with each result.
      * @param exclude                  a list of folders to exclude when scanning the configuration folders.
      * @param include                  a list of folders to include from the configuration folders.
@@ -88,7 +91,7 @@ public class Engine {
             final String corporaFolderPath,
             final String ratingsFolderPath,
             final String templatesFolderPath,
-            final List<String> metrics,
+            final MetricClassManager metricClassManager,
             final String[] fields,
             final List<String> exclude,
             final List<String> include,
@@ -104,11 +107,7 @@ public class Engine {
         this.exclude = ofNullable(exclude).orElse(emptyList());
         this.include = ofNullable(include).orElse(emptyList());
 
-        this.availableMetricsDefs =
-                metrics.stream()
-                        .map(Func::newMetricDefinition)
-                        .filter(Objects::nonNull)
-                        .collect(toList());
+        this.metricClassManager = metricClassManager;
 
         this.persistenceConfiguration = persistenceConfiguration;
         this.persistenceManager = new PersistenceManager();
@@ -156,7 +155,6 @@ public class Engine {
      * @param configuration the engine configuration.
      * @return the evaluation result.
      */
-    @SuppressWarnings("unchecked")
     public Evaluation evaluate(final Map<String, Object> configuration) {
         try {
             LOGGER.info("RRE: New evaluation session is starting...");
@@ -225,7 +223,7 @@ public class Engine {
                                                     queryEvaluation.setIdFieldName(idFieldName);
                                                     queryEvaluation.setRelevantDocuments(relevantDocuments);
 
-                                                    queryEvaluation.prepare(availableMetrics(availableMetricsDefs, idFieldName, relevantDocuments, versions));
+                                                    queryEvaluation.prepare(availableMetrics(idFieldName, relevantDocuments, versions));
 
                                                     versions.forEach(version -> {
                                                         final AtomicInteger rank = new AtomicInteger(1);
@@ -351,22 +349,20 @@ public class Engine {
     /**
      * Creates a new set of metrics.
      *
-     * @param definitions          the metrics definitions.
      * @param idFieldName          the id fieldname.
      * @param relevantDocumentsMap the relevant documents for a given query.
      * @param versions             the available versions for a given query.
      * @return a new metrics set for the current query evaluation.
      */
     private List<Metric> availableMetrics(
-            final List<Class<? extends Metric>> definitions,
             final String idFieldName,
             final JsonNode relevantDocumentsMap,
             final List<String> versions) {
-        return definitions
+        return metricClassManager.getMetrics()
                 .stream()
-                .map(def -> {
+                .map(metricName -> {
                     try {
-                        final Metric metric = def.newInstance();
+                        final Metric metric = metricClassManager.instantiateMetric(metricName);
                         metric.setIdFieldName(idFieldName);
                         metric.setRelevantDocuments(relevantDocumentsMap);
                         metric.setVersions(versions);
@@ -374,8 +370,7 @@ public class Engine {
                     } catch (final Exception exception) {
                         throw new IllegalArgumentException(exception);
                     }
-                })
-                .collect(toList());
+                }).collect(toList());
     }
 
     /**

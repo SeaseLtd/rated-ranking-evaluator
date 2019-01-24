@@ -50,6 +50,7 @@ public interface SearchPlatform extends Closeable {
      *
      * @param indexName the index name that holds the data.
      * @param query     the query.
+     * @param fields    the fields to return.
      * @param maxRows   the maximum number of rows that will be returned.
      * @return the response of the query execution.
      */
@@ -77,7 +78,7 @@ public interface SearchPlatform extends Closeable {
      * index?
      *
      * @param indexName the index name being processed.
-     * @param file the file to be tested.
+     * @param file      the file to be tested.
      * @return {@code true} if the file is a search platform config file or
      * directory.
      */
