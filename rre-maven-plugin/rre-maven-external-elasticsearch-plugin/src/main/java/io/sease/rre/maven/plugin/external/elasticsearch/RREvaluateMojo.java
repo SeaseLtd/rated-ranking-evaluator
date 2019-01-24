@@ -3,6 +3,7 @@ package io.sease.rre.maven.plugin.external.elasticsearch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.core.domain.metrics.SimpleMetricClassManager;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.ExternalElasticsearch;
@@ -80,7 +81,7 @@ public class RREvaluateMojo extends AbstractMojo {
                     null,
                     ratingsFolder,
                     templatesFolder,
-                    metrics,
+                    new SimpleMetricClassManager(metrics),
                     fields.split(","),
                     exclude,
                     include,
