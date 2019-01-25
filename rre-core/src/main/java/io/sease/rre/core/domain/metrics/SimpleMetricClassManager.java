@@ -2,9 +2,7 @@ package io.sease.rre.core.domain.metrics;
 
 import io.sease.rre.Func;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Manager class for instantiating metrics configured for evaluation. This
@@ -20,12 +18,12 @@ public class SimpleMetricClassManager implements MetricClassManager {
     private final Map<String, Class<? extends Metric>> metricClasses = new HashMap<>();
 
     public SimpleMetricClassManager(Collection<String> metricClasses) {
-        this.metricNames = metricClasses;
+        this.metricNames = new ArrayList<>(metricClasses);
     }
 
     @Override
     public Collection<String> getMetrics() {
-        return metricNames;
+        return Collections.unmodifiableCollection(metricNames);
     }
 
     @Override
@@ -34,7 +32,7 @@ public class SimpleMetricClassManager implements MetricClassManager {
         return instantiateMetricClass(klazz);
     }
 
-    private Class<? extends Metric> findMetricClass(String metricName) throws IllegalArgumentException {
+    Class<? extends Metric> findMetricClass(String metricName) throws IllegalArgumentException {
         final Class<? extends Metric> klazz;
         if (metricClasses.containsKey(metricName)) {
             klazz = metricClasses.get(metricName);
@@ -49,10 +47,12 @@ public class SimpleMetricClassManager implements MetricClassManager {
     private Metric instantiateMetricClass(Class<? extends Metric> metricClass) throws InstantiationException {
         try {
             return metricClass.newInstance();
-        } catch (InstantiationException e) {
-            throw e;
         } catch (IllegalAccessException e) {
             throw new InstantiationException("Illegal access of class " + metricClass);
         }
+    }
+
+    void addMetricNames(Collection<String> names) {
+        metricNames.addAll(names);
     }
 }
