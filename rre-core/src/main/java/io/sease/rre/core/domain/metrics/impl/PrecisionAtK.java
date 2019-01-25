@@ -1,5 +1,6 @@
 package io.sease.rre.core.domain.metrics.impl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
@@ -23,7 +24,7 @@ public class PrecisionAtK extends Metric {
      *
      * @param k the precision bound.
      */
-    PrecisionAtK(final int k) {
+    PrecisionAtK(@JsonProperty("k") final int k) {
         super("P@" + k);
         this.k = k;
     }
