@@ -99,9 +99,6 @@
     <profiles>
         <profile>
             <id>pedantic</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
             <build>
                 <plugins>
                     <plugin>
