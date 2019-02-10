@@ -29,25 +29,25 @@ As you can see, there are a lot modules already in place and planned (those with
 The whole system has been built as a framework where metrics can be configured/activated and even plugged-in (of course, this option requires some development)
 The metrics that are part of the current RRE release are: 
 
-* **Precision**: the fraction of retrieved documents that are relevant
-* **Recall**: the fraction of relevant documents that are retrieved
+* **Precision**: the fraction of retrieved documents that are relevant.
+* **Recall**: the fraction of relevant documents that are retrieved.
 * **Precision at 1**: this metric indicates if the first top result in the list is relevant or not.
 * **Precision at 2**: same as above but it consider the first two results. 
 * **Precision at 3**: same as above but it consider the first three results. 
-* **Precision at 10**: this metric measures the number of relevant results in the top 10 search results
+* **Precision at 10**: this metric measures the number of relevant results in the top 10 search results.
 * **Reciprocal Rank**: it is the multiplicative inverse of the rank of the first "correct" answer: 1 for first place, 1/2 for second place, 1/3 for third and so on. 
 * **Average Precision**: the area under the precision-recall curve.
-* **NDCG at 10**: it is the multiplicative inverse of the rank of the first "correct" answer: 1 for first place, 1/2 for second place, 1/3 for third and so on.     
+* **NDCG at 10**: Normalized Discounted Cumulative Gain at 10; see: https://en.wikipedia.org/w/index.php?title=Discounted_cumulative_gain&section=4#Normalized_DCG
 * **F-Measure**: it measures the effectiveness of retrieval with respect to a user who attaches β times as much importance to recall as precision. RRE provides the three most popular F-Measure instances: F0.5, F1 and F2
 
 On top of those "leaf" metrics, which are computed at query level, RRE provides a rich nested data model, where the same metric can be aggregated at several levels.
 For example, queries are grouped in Query Groups and Query Groups are grouped in Topics. 
-That means the same metrics listed above are also available at upper levels using the arithmentic mean as aggregation criteria. 
-As consequence of that RRE provides also the following metrics:  
+That means the same metrics listed above are also available at upper levels using the arithmetic mean as aggregation criteria.
+As a consequence of that, RRE provides also the following metrics:
 
 * **Mean Average Precision**: the mean of the average precisions computed at query level. 
 * **Mean Reciprocal Rank**: the average of the reciprocal ranks computed at query level.
-* **all other metrics listed above** aggregared by their arithmetic mean
+* **all other metrics listed above** aggregated by their arithmetic mean.
 
 One the most important things you can see in the screenshot above is that RRE is able to keep track (and to make comparisons) between several versions of the system under evaluation. 
 

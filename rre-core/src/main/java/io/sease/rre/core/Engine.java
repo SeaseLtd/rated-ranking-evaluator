@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.sease.rre.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -5,7 +21,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.Field;
 import io.sease.rre.Func;
-import io.sease.rre.core.domain.*;
+import io.sease.rre.core.domain.Corpus;
+import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.core.domain.Query;
+import io.sease.rre.core.domain.QueryGroup;
+import io.sease.rre.core.domain.Topic;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
 import io.sease.rre.persistence.PersistenceConfiguration;
@@ -16,7 +36,11 @@ import io.sease.rre.search.api.SearchPlatform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.List;
@@ -28,8 +52,21 @@ import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static io.sease.rre.Field.*;
-import static io.sease.rre.Func.*;
+import static io.sease.rre.Field.CORPORA_FILENAME;
+import static io.sease.rre.Field.DEFAULT_ID_FIELD_NAME;
+import static io.sease.rre.Field.DESCRIPTION;
+import static io.sease.rre.Field.ID_FIELD_NAME;
+import static io.sease.rre.Field.INDEX_NAME;
+import static io.sease.rre.Field.NAME;
+import static io.sease.rre.Field.QUERIES;
+import static io.sease.rre.Field.QUERY_GROUPS;
+import static io.sease.rre.Field.RELEVANT_DOCUMENTS;
+import static io.sease.rre.Field.TOPICS;
+import static io.sease.rre.Field.UNNAMED;
+import static io.sease.rre.Func.ONLY_DIRECTORIES;
+import static io.sease.rre.Func.ONLY_JSON_FILES;
+import static io.sease.rre.Func.ONLY_NON_HIDDEN_FILES;
+import static io.sease.rre.Func.safe;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
@@ -471,6 +508,7 @@ public class Engine {
                 .filter(versionFolder -> (folderHasChanged(versionFolder) || corporaChanged || platform.isRefreshRequired()))
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(file -> platform.isSearchPlatformFile(indexName, file))
+                .sorted()
                 .peek(file -> LOGGER.info("RRE: Loading the Test Collection into " + platform.getName() + ", configuration version " + file.getParentFile().getName()))
                 .forEach(fileOrFolder -> platform.load(data, fileOrFolder, indexFqdn(indexName, fileOrFolder.getParentFile().getName())));
 
@@ -479,6 +517,7 @@ public class Engine {
         this.versions =
                 stream(versionFolders)
                         .map(File::getName)
+                        .sorted()
                         .collect(toList());
 
         if (persistenceConfiguration.isUseTimestampAsVersion()) {
