@@ -1,0 +1,68 @@
+{
+  "index": "core1",
+  "corpora_file": "electric_basses.json",
+  "id_field": "id",
+  "topics": [
+    {
+      "description": "Fender basses",
+      "query_groups": [
+        {
+          "name": "Brand search",
+          "description": "The group tests several searches on the Fender brand",
+          "queries": [
+            {
+              "template": "only_q.json",
+              "placeholders": {
+                "$query": "fender"
+              }
+            },
+            {
+              "template": "only_q.json",
+              "placeholders": {
+                "$query": "fender Bass"
+              }
+            },
+            {
+              "template": "filter_by_number_of_strings.json",
+              "placeholders": {
+                "$query": "Fender",
+                "$strings": 4
+              }
+            }
+          ],
+          "relevant_documents": {
+            "1": {
+              "gain": 3
+            },
+            "2": {
+              "gain": 3
+            }
+          }
+        },
+        {
+          "name": "Jazz bass search",
+          "description": "Several searches on a given model (Jazz bass)",
+          "queries": [
+            {
+              "template": "only_q.json",
+              "placeholders": {
+                "$query": "jazz"
+              }
+            },
+            {
+              "template": "only_q.json",
+              "placeholders": {
+                "$query": "Jazz bass"
+              }
+            }
+          ],
+          "relevant_documents": {
+            "1": {
+              "gain": 3
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

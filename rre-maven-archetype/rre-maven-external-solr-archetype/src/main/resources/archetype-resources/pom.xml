@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>${groupId}</groupId>
+    <artifactId>${artifactId}</artifactId>
+    <version>${version}</version>
+    <packaging>pom</packaging>
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <pluginRepositories>
+       <pluginRepository>
+          <id>sease</id>
+          <url>https://raw.github.com/SeaseLtd/rated-ranking-evaluator/mvn-repo</url>
+       </pluginRepository>
+    </pluginRepositories>         
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.sease</groupId>
+                <artifactId>rre-maven-external-solr-plugin</artifactId>
+                <version>${solrVersion}</version>
+                <!-- the configuration below is provided just for example, as it perfectly matches default values -->
+                <configuration>
+                    <configurations-folder>src/etc/configuration_sets</configurations-folder>
+                    <ratings-folder>src/etc/ratings</ratings-folder>
+                    <templates-folder>src/etc/templates</templates-folder>
+                    <fields>*,score</fields>
+                    <metrics>
+                        <param>io.sease.rre.core.domain.metrics.impl.Precision</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.Recall</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.ReciprocalRank</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.AveragePrecision</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.NDCGAtTen</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtOne</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTwo</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtThree</param>
+                        <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTen</param>
+                    </metrics>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>search-quality-evaluation</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>evaluate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.sease</groupId>
+                <artifactId>rre-maven-report-plugin</artifactId>
+                <version>1.0</version>
+                <configuration>
+                    <formats>
+                        <param>spreadsheet</param>
+                        <!-- IMPORTANT: uncomment the following line if you're running the RRE server -->
+                        <!--
+                            <param>rre-server</param>
+                        -->
+                    </formats>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>search-quality-evaluation-reporting</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
