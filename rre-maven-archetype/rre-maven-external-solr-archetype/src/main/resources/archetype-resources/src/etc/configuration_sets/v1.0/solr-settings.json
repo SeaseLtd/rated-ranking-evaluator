@@ -1,0 +1,4 @@
+{
+  "baseUrls": [ "http://localhost:8983/solr" ],
+  "collectionName": "core1_v1.0"
+}
