@@ -1,0 +1,8 @@
+{
+  "baseUrls": [ "http://localhost:8983" ],
+  "collectionName": "test",
+  "zkHosts": [ "localhost:2181" ],
+  "zkChroot": "",
+  "connectionTimeoutMillis": 10000,
+  "socketTimeoutMillis": 60000
+}

@@ -33,6 +33,7 @@
         <module>rre-maven-report-plugin</module>
         <module>rre-maven-elasticsearch-plugin</module>
         <module>rre-maven-external-elasticsearch-plugin</module>
+        <module>rre-maven-external-solr-plugin</module>
     </modules>
     <packaging>pom</packaging>
     <properties>
