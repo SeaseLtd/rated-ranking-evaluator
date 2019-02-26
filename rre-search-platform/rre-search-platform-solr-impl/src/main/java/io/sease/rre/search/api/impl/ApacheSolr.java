@@ -188,7 +188,15 @@ public class ApacheSolr implements SearchPlatform {
 
             for (final Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext(); ) {
                 final Map.Entry<String, JsonNode> field = iterator.next();
-                query.add(field.getKey(), field.getValue().asText());
+                final String value;
+                if (field.getValue().isValueNode()) {
+                    value = field.getValue().asText();
+                } else {
+                    // Either an array or an object - use writeValueAsString() instead
+                    // to convert to a string. Useful for writing JSON queries without escaping them.
+                    value = mapper.writeValueAsString(field.getValue());
+                }
+                query.add(field.getKey(), value);
             }
 
             return of(proxy.query(coreName, query))
