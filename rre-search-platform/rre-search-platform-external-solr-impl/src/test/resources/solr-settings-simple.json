@@ -1,0 +1,4 @@
+{
+  "baseUrls": [ "http://localhost:8983" ],
+  "collectionName": "test"
+}
