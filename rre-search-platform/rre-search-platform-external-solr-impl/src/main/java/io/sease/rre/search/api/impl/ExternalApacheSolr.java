@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.common.SolrException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +113,8 @@ public class ExternalApacheSolr implements SearchPlatform {
                 query.add(field.getKey(), value);
             }
 
-            return of(clientManager.getSolrClient(indexName).query(indexSettingsMap.get(indexName).getCollectionName(), query))
+            return of(clientManager.getSolrClient(indexName)
+                    .query(indexSettingsMap.get(indexName).getCollectionName(), query, SolrRequest.METHOD.POST))
                     .map(response ->
                             new QueryOrSearchResponse(
                                     response.getResults().getNumFound(),
