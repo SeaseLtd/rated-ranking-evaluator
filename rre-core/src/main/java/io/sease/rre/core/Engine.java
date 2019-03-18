@@ -28,12 +28,14 @@ import io.sease.rre.core.domain.QueryGroup;
 import io.sease.rre.core.domain.Topic;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
+import io.sease.rre.core.evaluation.EvaluationConfiguration;
+import io.sease.rre.core.evaluation.EvaluationManager;
+import io.sease.rre.core.evaluation.EvaluationManagerFactory;
 import io.sease.rre.core.template.QueryTemplateManager;
 import io.sease.rre.core.template.impl.CachingQueryTemplateManager;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.persistence.PersistenceHandler;
 import io.sease.rre.persistence.PersistenceManager;
-import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,11 +49,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
@@ -98,8 +95,8 @@ public class Engine {
     private final PersistenceConfiguration persistenceConfiguration;
 
     private final QueryTemplateManager templateManager;
-
-    private final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
+    private final EvaluationConfiguration evaluationConfiguration;
+    private EvaluationManager evaluationManager;
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -145,6 +142,8 @@ public class Engine {
         initialisePersistenceManager();
 
         initialiseFileUpdateChecker(checksumFilepath);
+
+        this.evaluationConfiguration = EvaluationConfiguration.DEFAULT_CONFIG;
     }
 
     private void initialiseFileUpdateChecker(String checksumFile) {
@@ -247,7 +246,7 @@ public class Engine {
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
 
-                                                    LOGGER.info("\t\tQUERY: " + queryString);
+//                                                    LOGGER.info("\t\tQUERY: " + queryString);
 
                                                     final JsonNode relevantDocuments = relevantDocuments(groupNode.get(RELEVANT_DOCUMENTS));
                                                     final Query queryEvaluation = group.findOrCreate(queryString, Query::new);
@@ -256,27 +255,19 @@ public class Engine {
 
                                                     queryEvaluation.prepare(availableMetrics(idFieldName, relevantDocuments, versions));
 
-                                                    versions.forEach(version -> {
-                                                        final AtomicInteger rank = new AtomicInteger(1);
-                                                        final QueryOrSearchResponse response =
-                                                                platform.executeQuery(
-                                                                        indexFqdn(indexName, version),
-                                                                        query(queryNode, sharedTemplate, version),
-                                                                        fields,
-                                                                        Math.max(10, relevantDocuments.size()));
-                                                        queryEvaluation.setTotalHits(response.totalHits(), persistVersion(version));
-                                                        response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), persistVersion(version)));
-                                                    });
-
-                                                    // Update the metrics for the query before persisting
-                                                    queryEvaluation.notifyCollectedMetrics();
-
-                                                    // Persist the query result
-                                                    persistenceManager.recordQuery(queryEvaluation);
+                                                    evaluationManager.evaluateQuery(queryEvaluation, indexName, queryNode, sharedTemplate, relevantDocuments.size());
                                                 });
                                     });
                         });
             });
+
+            while (evaluationManager.isRunning()) {
+                LOGGER.info("  ... evaluating [{} / {}] ...", evaluationManager.getQueriesRemaining(), evaluationManager.getTotalQueries());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignore) {
+                }
+            }
 
             return evaluation;
         } finally {
@@ -482,6 +473,8 @@ public class Engine {
             }
         }
 
+        this.evaluationManager = EvaluationManagerFactory.instantiateEvaluationManager(evaluationConfiguration, platform, persistenceManager, templateManager, fields, versions, versionTimestamp);
+
         flushFileChecksums();
 
         LOGGER.info("RRE: target versions are " + String.join(",", versions));
@@ -512,7 +505,7 @@ public class Engine {
     }
 
     /**
-     * Returns the FDQN of the target index that will be used.
+     * Returns the FQDN of the target index that will be used.
      * Starting from the index name declared in the configuration, RRE uses an internal naming (which adds the version
      * name) for avoiding conflicts between versions.
      *
@@ -522,44 +515,5 @@ public class Engine {
      */
     private String indexFqdn(final String indexName, final String version) {
         return (indexName + "_" + version).toLowerCase();
-    }
-
-    /**
-     * Returns a query (as a string) that will be used for executing a specific evaluation.
-     * A query string is the result of replacing all placeholders found in the template.
-     *
-     * @param queryNode       the JSON query node (in ratings configuration).
-     * @param defaultTemplate the default template that will be used if a query doesn't declare it.
-     * @param version         the version being executed.
-     * @return a query (as a string) that will be used for executing a specific evaluation.
-     */
-    private String query(final JsonNode queryNode, final String defaultTemplate, final String version) {
-        try {
-            String query = templateManager.getTemplate(defaultTemplate, getQueryTemplate(queryNode).orElse(null), version);
-            for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
-                final String name = iterator.next();
-                query = query.replace(name, queryNode.get("placeholders").get(name).asText());
-            }
-            return query;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Optional<String> getQueryTemplate(JsonNode queryNode) {
-        return ofNullable(queryNode.get("template")).map(JsonNode::asText);
-    }
-
-    /**
-     * Get the version to store when persisting query results.
-     *
-     * @param configVersion the configuration set version being evaluated.
-     * @return the given configVersion, or the version timestamp if and only
-     * if it is set (eg. there is a single version, and the persistence
-     * configuration indicates a timestamp should be used to version this
-     * evaluation data).
-     */
-    private String persistVersion(final String configVersion) {
-        return ofNullable(versionTimestamp).orElse(configVersion);
     }
 }
