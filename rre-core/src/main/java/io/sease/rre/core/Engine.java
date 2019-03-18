@@ -28,6 +28,8 @@ import io.sease.rre.core.domain.QueryGroup;
 import io.sease.rre.core.domain.Topic;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
+import io.sease.rre.core.template.QueryTemplateManager;
+import io.sease.rre.core.template.impl.CachingQueryTemplateManager;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.persistence.PersistenceHandler;
 import io.sease.rre.persistence.PersistenceManager;
@@ -41,36 +43,25 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static io.sease.rre.Field.CORPORA_FILENAME;
-import static io.sease.rre.Field.DEFAULT_ID_FIELD_NAME;
-import static io.sease.rre.Field.DESCRIPTION;
-import static io.sease.rre.Field.ID_FIELD_NAME;
-import static io.sease.rre.Field.INDEX_NAME;
-import static io.sease.rre.Field.NAME;
-import static io.sease.rre.Field.QUERIES;
-import static io.sease.rre.Field.QUERY_GROUPS;
-import static io.sease.rre.Field.RELEVANT_DOCUMENTS;
-import static io.sease.rre.Field.TOPICS;
-import static io.sease.rre.Field.UNNAMED;
-import static io.sease.rre.Func.ONLY_DIRECTORIES;
-import static io.sease.rre.Func.ONLY_JSON_FILES;
-import static io.sease.rre.Func.ONLY_NON_HIDDEN_FILES;
-import static io.sease.rre.Func.safe;
+import static io.sease.rre.Field.*;
+import static io.sease.rre.Func.*;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
@@ -87,7 +78,6 @@ public class Engine {
     private final File configurationsFolder;
     private final File corporaFolder;
     private final File ratingsFolder;
-    private final File templatesFolder;
 
     private final List<String> include;
     private final List<String> exclude;
@@ -106,6 +96,10 @@ public class Engine {
 
     private final PersistenceManager persistenceManager;
     private final PersistenceConfiguration persistenceConfiguration;
+
+    private final QueryTemplateManager templateManager;
+
+    private final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -137,7 +131,7 @@ public class Engine {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = corporaFolderPath == null ? null : new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
-        this.templatesFolder = new File(templatesFolderPath);
+        this.templateManager = new CachingQueryTemplateManager(templatesFolderPath);
         this.platform = platform;
         this.fields = safe(fields);
 
@@ -248,7 +242,7 @@ public class Engine {
 
                                         LOGGER.info("\tQUERY GROUP: " + group.getName());
 
-                                        final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
+                                        final String sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText).orElse(null);
                                         all(groupNode, QUERIES)
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
@@ -411,47 +405,6 @@ public class Engine {
     }
 
     /**
-     * Loads the query template associated with the given name.
-     *
-     * @param defaultTemplateName the default template.
-     * @param templateName        the query template name.
-     * @param version             the current version being executed.
-     * @return the query template associated with the given name.
-     */
-    private String queryTemplate(final Optional<String> defaultTemplateName, final Optional<String> templateName, final String version) {
-        final File versionFolder = new File(templatesFolder, version);
-        final File actualTemplateFolder = versionFolder.canRead() ? versionFolder : templatesFolder;
-
-        try {
-            final String templateNameInUse =
-                    templateName.orElseGet(
-                            () -> defaultTemplateName.orElseThrow(
-                                    () -> new IllegalArgumentException("Unable to determine the query template.")));
-            return of(templateNameInUse)
-                    .map(name -> name.contains("${version}") ? name.replace("${version}", version) : name)
-                    .map(name -> new File(actualTemplateFolder, name))
-                    .map(this::templateContent)
-                    .orElseThrow(() -> new IllegalArgumentException("Unable to determine the query template."));
-        } catch (final Exception exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-
-    /**
-     * Reads a template content.
-     *
-     * @param file the template file.
-     * @return the template content.
-     */
-    private String templateContent(final File file) {
-        try {
-            return new String(Files.readAllBytes(file.toPath()));
-        } catch (final Exception exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-
-    /**
      * Loads the ratings associated with the given name.
      *
      * @return the ratings / judgements for this evaluation suite.
@@ -580,13 +533,21 @@ public class Engine {
      * @param version         the version being executed.
      * @return a query (as a string) that will be used for executing a specific evaluation.
      */
-    private String query(final JsonNode queryNode, final Optional<String> defaultTemplate, final String version) {
-        String query = queryTemplate(defaultTemplate, ofNullable(queryNode.get("template")).map(JsonNode::asText), version);
-        for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
-            final String name = iterator.next();
-            query = query.replace(name, queryNode.get("placeholders").get(name).asText());
+    private String query(final JsonNode queryNode, final String defaultTemplate, final String version) {
+        try {
+            String query = templateManager.getTemplate(defaultTemplate, getQueryTemplate(queryNode).orElse(null), version);
+            for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
+                final String name = iterator.next();
+                query = query.replace(name, queryNode.get("placeholders").get(name).asText());
+            }
+            return query;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return query;
+    }
+
+    private Optional<String> getQueryTemplate(JsonNode queryNode) {
+        return ofNullable(queryNode.get("template")).map(JsonNode::asText);
     }
 
     /**
