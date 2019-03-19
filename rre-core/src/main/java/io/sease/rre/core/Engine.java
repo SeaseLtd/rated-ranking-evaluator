@@ -112,6 +112,7 @@ public class Engine {
      * @param include                  a list of folders to include from the configuration folders.
      * @param checksumFilepath         the path to the file used to store the configuration checksums.
      * @param persistenceConfiguration the persistence framework configuration.
+     * @param evaluationConfiguration  the evaluation manager configuration.
      */
     public Engine(
             final SearchPlatform platform,
@@ -124,7 +125,8 @@ public class Engine {
             final List<String> exclude,
             final List<String> include,
             final String checksumFilepath,
-            final PersistenceConfiguration persistenceConfiguration) {
+            final PersistenceConfiguration persistenceConfiguration,
+            final EvaluationConfiguration evaluationConfiguration) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = corporaFolderPath == null ? null : new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
@@ -143,7 +145,7 @@ public class Engine {
 
         initialiseFileUpdateChecker(checksumFilepath);
 
-        this.evaluationConfiguration = EvaluationConfiguration.DEFAULT_CONFIG;
+        this.evaluationConfiguration = evaluationConfiguration;
     }
 
     private void initialiseFileUpdateChecker(String checksumFile) {

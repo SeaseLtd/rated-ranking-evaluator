@@ -20,6 +20,7 @@ import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
 import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
 import io.sease.rre.core.domain.metrics.SimpleMetricClassManager;
+import io.sease.rre.core.evaluation.EvaluationConfiguration;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.ApacheSolr;
@@ -82,6 +83,9 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "persistence")
     private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
 
+    @Parameter(name = "evaluation")
+    private EvaluationConfiguration evaluation = EvaluationConfiguration.DEFAULT_CONFIG;
+
     @Override
     public void execute() throws MojoExecutionException {
         try (final SearchPlatform platform = new ApacheSolr()) {
@@ -98,7 +102,8 @@ public class RREvaluateMojo extends AbstractMojo {
                     exclude,
                     include,
                     checksumFile,
-                    persistence);
+                    persistence,
+                    evaluation);
 
             final Map<String, Object> configuration = new HashMap<>();
             if (dataFolder != null && !dataFolder.isEmpty()) {
