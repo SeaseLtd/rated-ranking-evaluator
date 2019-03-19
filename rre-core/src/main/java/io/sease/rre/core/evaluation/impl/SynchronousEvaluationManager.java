@@ -37,8 +37,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SynchronousEvaluationManager extends BaseEvaluationManager implements EvaluationManager {
 
-    private final static Logger LOGGER = LogManager.getLogger(SynchronousEvaluationManager.class);
-
     private int queryCount;
 
     /**
@@ -58,7 +56,6 @@ public class SynchronousEvaluationManager extends BaseEvaluationManager implemen
 
     @Override
     public void evaluateQuery(Query query, String indexName, JsonNode queryNode, String defaultTemplate, int relevantDocCount) {
-        LOGGER.info("\t\tQUERY: " + query.getName());
         queryCount++;
 
         getVersions().forEach(version -> {
