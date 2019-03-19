@@ -45,7 +45,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -515,7 +514,7 @@ public class Engine {
      * @param version   the current version.
      * @return the FDQN of the target index that will be used.
      */
-    private String indexFqdn(final String indexName, final String version) {
+    public static String indexFqdn(final String indexName, final String version) {
         return (indexName + "_" + version).toLowerCase();
     }
 }

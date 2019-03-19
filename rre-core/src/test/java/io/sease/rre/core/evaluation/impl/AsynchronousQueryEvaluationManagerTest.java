@@ -27,7 +27,7 @@ import java.util.Collections;
 import static org.mockito.Mockito.mock;
 
 /**
- * Unit test for the asynchronous quey evaluation manager
+ * Unit tests for the asynchronous query evaluation manager.
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
