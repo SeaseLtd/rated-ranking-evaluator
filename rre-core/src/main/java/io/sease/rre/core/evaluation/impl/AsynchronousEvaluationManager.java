@@ -72,10 +72,7 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
     @Override
     public void evaluateQuery(Query query, String indexName, JsonNode queryNode, String defaultTemplate, int relevantDocCount) {
         evaluateQueryAsync(query, indexName, queryNode, defaultTemplate, relevantDocCount)
-                .thenAccept(q -> {
-                    LOGGER.info("\t\tQUERY: " + query.getName());
-                    completeQuery(q);
-                });
+                .thenAccept(this::completeQuery);
     }
 
     /**

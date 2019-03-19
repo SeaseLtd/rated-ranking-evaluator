@@ -247,7 +247,7 @@ public class Engine {
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
 
-//                                                    LOGGER.info("\t\tQUERY: " + queryString);
+                                                    LOGGER.info("\t\tQUERY: " + queryString);
 
                                                     final JsonNode relevantDocuments = relevantDocuments(groupNode.get(RELEVANT_DOCUMENTS));
                                                     final Query queryEvaluation = group.findOrCreate(queryString, Query::new);
@@ -263,7 +263,9 @@ public class Engine {
             });
 
             while (evaluationManager.isRunning()) {
-                LOGGER.info("  ... evaluating [{} / {}] ...", evaluationManager.getQueriesRemaining(), evaluationManager.getTotalQueries());
+                LOGGER.info("  ... completed {} / {} evaluations ...",
+                        (evaluationManager.getTotalQueries() - evaluationManager.getQueriesRemaining()),
+                        evaluationManager.getTotalQueries());
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ignore) {
