@@ -41,6 +41,17 @@ public class SynchronousEvaluationManager extends BaseEvaluationManager implemen
 
     private int queryCount;
 
+    /**
+     * Construct a synchronous (single-threaded) {@link EvaluationManager} instance to run
+     * evaluations.
+     *
+     * @param platform           the search engine in use.
+     * @param templateManager    the template manager.
+     * @param persistenceManager the persistence manager.
+     * @param fields             the fields to return from each query.
+     * @param versions           the query versions to run.
+     * @param versionTimestamp   the version timestamp.
+     */
     public SynchronousEvaluationManager(SearchPlatform platform, QueryTemplateManager templateManager, PersistenceManager persistenceManager, String[] fields, Collection<String> versions, String versionTimestamp) {
         super(platform, templateManager, persistenceManager, fields, versions, versionTimestamp);
     }

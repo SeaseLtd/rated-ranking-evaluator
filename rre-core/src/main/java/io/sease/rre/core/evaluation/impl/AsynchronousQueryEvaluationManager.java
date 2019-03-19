@@ -49,6 +49,19 @@ public class AsynchronousQueryEvaluationManager extends BaseEvaluationManager im
     private final ThreadPoolExecutor executor;
     private final ExecutorService queryExecutor;
 
+    /**
+     * Construct an asynchronous {@link EvaluationManager} instance to run
+     * evaluations using a threadpool of a given size. The threadpool will be
+     * divided between the evaluation and query handlers.
+     *
+     * @param platform           the search engine in use.
+     * @param templateManager    the template manager.
+     * @param persistenceManager the persistence manager.
+     * @param fields             the fields to return from each query.
+     * @param versions           the query versions to run.
+     * @param versionTimestamp   the version timestamp.
+     * @param threadpoolSize     the maximum number of threads to use.
+     */
     public AsynchronousQueryEvaluationManager(SearchPlatform platform, QueryTemplateManager templateManager, PersistenceManager persistenceManager, String[] fields, Collection<String> versions, String versionTimestamp, int threadpoolSize) {
         super(platform, templateManager, persistenceManager, fields, versions, versionTimestamp);
         int queryThreadpool = Math.min(threadpoolSize / 2, versions.size());

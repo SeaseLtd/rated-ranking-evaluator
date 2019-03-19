@@ -16,7 +16,6 @@
  */
 package io.sease.rre.core.evaluation;
 
-import io.sease.rre.core.domain.Evaluation;
 import io.sease.rre.core.evaluation.impl.AsynchronousEvaluationManager;
 import io.sease.rre.core.evaluation.impl.AsynchronousQueryEvaluationManager;
 import io.sease.rre.core.evaluation.impl.SynchronousEvaluationManager;
@@ -34,6 +33,18 @@ import java.util.Collection;
  */
 public abstract class EvaluationManagerFactory {
 
+    /**
+     * Instantiate an {@link EvaluationManager}, based on the configuration given.
+     *
+     * @param evaluationConfiguration the evaluation configuration.
+     * @param searchPlatform          the search platform in use.
+     * @param persistenceManager      the persistence manager.
+     * @param templateManager         the template manager.
+     * @param fields                  the fields to return from each query.
+     * @param versions                the versions being evaluated.
+     * @param versionTimestamp        the version timestamp, if required.
+     * @return an appropriate {@link EvaluationManager} for the configuration.
+     */
     public static EvaluationManager instantiateEvaluationManager(
             final EvaluationConfiguration evaluationConfiguration,
             final SearchPlatform searchPlatform,
