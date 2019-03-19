@@ -23,8 +23,6 @@ import io.sease.rre.core.template.QueryTemplateManager;
 import io.sease.rre.persistence.PersistenceManager;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
