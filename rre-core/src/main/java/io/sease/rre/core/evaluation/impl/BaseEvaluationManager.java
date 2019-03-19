@@ -17,6 +17,7 @@
 package io.sease.rre.core.evaluation.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Query;
 import io.sease.rre.core.template.QueryTemplateManager;
 import io.sease.rre.persistence.PersistenceManager;
@@ -65,7 +66,7 @@ abstract class BaseEvaluationManager {
 
     QueryOrSearchResponse executeQuery(String indexName, String version, JsonNode queryNode, String defaultTemplate, int relevantDocCount) {
         return platform.executeQuery(
-                indexFqdn(indexName, version),
+                Engine.indexFqdn(indexName, version),
                 query(queryNode, defaultTemplate, version),
                 fields,
                 Math.max(10, relevantDocCount));
@@ -80,19 +81,6 @@ abstract class BaseEvaluationManager {
     void completeQuery(Query query) {
         query.notifyCollectedMetrics();
         persistenceManager.recordQuery(query);
-    }
-
-    /**
-     * Returns the FQDN of the target index that will be used.
-     * Starting from the index name declared in the configuration, RRE uses an internal naming (which adds the version
-     * name) for avoiding conflicts between versions.
-     *
-     * @param indexName the index name.
-     * @param version   the current version.
-     * @return the FDQN of the target index that will be used.
-     */
-    private String indexFqdn(final String indexName, final String version) {
-        return (indexName + "_" + version).toLowerCase();
     }
 
     /**
