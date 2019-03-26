@@ -58,6 +58,11 @@
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtThree</param>
                         <param>io.sease.rre.core.domain.metrics.impl.PrecisionAtTen</param>
                     </metrics>
+                    <evaluation>
+                        <runAsync>true</runAsync>
+                        <runQueriesAsync>false</runQueriesAsync>
+                        <threadpoolSize>4</threadpoolSize>
+                    </evaluation>
                 </configuration>
                 <executions>
                     <execution>

@@ -22,6 +22,7 @@ import io.sease.rre.core.domain.Evaluation;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
 import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
 import io.sease.rre.core.domain.metrics.SimpleMetricClassManager;
+import io.sease.rre.core.evaluation.EvaluationConfiguration;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.impl.ExternalElasticsearch;
@@ -78,6 +79,9 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "persistence")
     private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
 
+    @Parameter(name = "evaluation")
+    private EvaluationConfiguration evaluation = EvaluationConfiguration.DEFAULT_CONFIG;
+
     @Override
     public void execute() throws MojoExecutionException {
         final URL[] urls = compilePaths.stream()
@@ -109,7 +113,8 @@ public class RREvaluateMojo extends AbstractMojo {
                     exclude,
                     include,
                     null,
-                    persistence);
+                    persistence,
+                    evaluation);
 
             final Map<String, Object> configuration = Collections.emptyMap();
 

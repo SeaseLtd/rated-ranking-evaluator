@@ -28,10 +28,14 @@ import io.sease.rre.core.domain.QueryGroup;
 import io.sease.rre.core.domain.Topic;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
+import io.sease.rre.core.evaluation.EvaluationConfiguration;
+import io.sease.rre.core.evaluation.EvaluationManager;
+import io.sease.rre.core.evaluation.EvaluationManagerFactory;
+import io.sease.rre.core.template.QueryTemplateManager;
+import io.sease.rre.core.template.impl.CachingQueryTemplateManager;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.persistence.PersistenceHandler;
 import io.sease.rre.persistence.PersistenceManager;
-import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,12 +45,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
@@ -70,7 +71,6 @@ import static io.sease.rre.Func.safe;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
@@ -87,7 +87,6 @@ public class Engine {
     private final File configurationsFolder;
     private final File corporaFolder;
     private final File ratingsFolder;
-    private final File templatesFolder;
 
     private final List<String> include;
     private final List<String> exclude;
@@ -107,6 +106,10 @@ public class Engine {
     private final PersistenceManager persistenceManager;
     private final PersistenceConfiguration persistenceConfiguration;
 
+    private final QueryTemplateManager templateManager;
+    private final EvaluationConfiguration evaluationConfiguration;
+    private EvaluationManager evaluationManager;
+
     /**
      * Builds a new {@link Engine} instance with the given data.
      *
@@ -121,6 +124,7 @@ public class Engine {
      * @param include                  a list of folders to include from the configuration folders.
      * @param checksumFilepath         the path to the file used to store the configuration checksums.
      * @param persistenceConfiguration the persistence framework configuration.
+     * @param evaluationConfiguration  the evaluation manager configuration.
      */
     public Engine(
             final SearchPlatform platform,
@@ -133,11 +137,12 @@ public class Engine {
             final List<String> exclude,
             final List<String> include,
             final String checksumFilepath,
-            final PersistenceConfiguration persistenceConfiguration) {
+            final PersistenceConfiguration persistenceConfiguration,
+            final EvaluationConfiguration evaluationConfiguration) {
         this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = corporaFolderPath == null ? null : new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
-        this.templatesFolder = new File(templatesFolderPath);
+        this.templateManager = new CachingQueryTemplateManager(templatesFolderPath);
         this.platform = platform;
         this.fields = safe(fields);
 
@@ -151,6 +156,8 @@ public class Engine {
         initialisePersistenceManager();
 
         initialiseFileUpdateChecker(checksumFilepath);
+
+        this.evaluationConfiguration = evaluationConfiguration;
     }
 
     private void initialiseFileUpdateChecker(String checksumFile) {
@@ -248,7 +255,7 @@ public class Engine {
 
                                         LOGGER.info("\tQUERY GROUP: " + group.getName());
 
-                                        final Optional<String> sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText);
+                                        final String sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText).orElse(null);
                                         all(groupNode, QUERIES)
                                                 .forEach(queryNode -> {
                                                     final String queryString = queryNode.findValue(queryPlaceholder).asText();
@@ -262,27 +269,21 @@ public class Engine {
 
                                                     queryEvaluation.prepare(availableMetrics(idFieldName, relevantDocuments, versions));
 
-                                                    versions.forEach(version -> {
-                                                        final AtomicInteger rank = new AtomicInteger(1);
-                                                        final QueryOrSearchResponse response =
-                                                                platform.executeQuery(
-                                                                        indexFqdn(indexName, version),
-                                                                        query(queryNode, sharedTemplate, version),
-                                                                        fields,
-                                                                        Math.max(10, relevantDocuments.size()));
-                                                        queryEvaluation.setTotalHits(response.totalHits(), persistVersion(version));
-                                                        response.hits().forEach(hit -> queryEvaluation.collect(hit, rank.getAndIncrement(), persistVersion(version)));
-                                                    });
-
-                                                    // Update the metrics for the query before persisting
-                                                    queryEvaluation.notifyCollectedMetrics();
-
-                                                    // Persist the query result
-                                                    persistenceManager.recordQuery(queryEvaluation);
+                                                    evaluationManager.evaluateQuery(queryEvaluation, indexName, queryNode, sharedTemplate, relevantDocuments.size());
                                                 });
                                     });
                         });
             });
+
+            while (evaluationManager.isRunning()) {
+                LOGGER.info("  ... completed {} / {} evaluations ...",
+                        (evaluationManager.getTotalQueries() - evaluationManager.getQueriesRemaining()),
+                        evaluationManager.getTotalQueries());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignore) {
+                }
+            }
 
             return evaluation;
         } finally {
@@ -411,47 +412,6 @@ public class Engine {
     }
 
     /**
-     * Loads the query template associated with the given name.
-     *
-     * @param defaultTemplateName the default template.
-     * @param templateName        the query template name.
-     * @param version             the current version being executed.
-     * @return the query template associated with the given name.
-     */
-    private String queryTemplate(final Optional<String> defaultTemplateName, final Optional<String> templateName, final String version) {
-        final File versionFolder = new File(templatesFolder, version);
-        final File actualTemplateFolder = versionFolder.canRead() ? versionFolder : templatesFolder;
-
-        try {
-            final String templateNameInUse =
-                    templateName.orElseGet(
-                            () -> defaultTemplateName.orElseThrow(
-                                    () -> new IllegalArgumentException("Unable to determine the query template.")));
-            return of(templateNameInUse)
-                    .map(name -> name.contains("${version}") ? name.replace("${version}", version) : name)
-                    .map(name -> new File(actualTemplateFolder, name))
-                    .map(this::templateContent)
-                    .orElseThrow(() -> new IllegalArgumentException("Unable to determine the query template."));
-        } catch (final Exception exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-
-    /**
-     * Reads a template content.
-     *
-     * @param file the template file.
-     * @return the template content.
-     */
-    private String templateContent(final File file) {
-        try {
-            return new String(Files.readAllBytes(file.toPath()));
-        } catch (final Exception exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-
-    /**
      * Loads the ratings associated with the given name.
      *
      * @return the ratings / judgements for this evaluation suite.
@@ -529,6 +489,8 @@ public class Engine {
             }
         }
 
+        this.evaluationManager = EvaluationManagerFactory.instantiateEvaluationManager(evaluationConfiguration, platform, persistenceManager, templateManager, fields, versions, versionTimestamp);
+
         flushFileChecksums();
 
         LOGGER.info("RRE: target versions are " + String.join(",", versions));
@@ -559,7 +521,7 @@ public class Engine {
     }
 
     /**
-     * Returns the FDQN of the target index that will be used.
+     * Returns the FQDN of the target index that will be used.
      * Starting from the index name declared in the configuration, RRE uses an internal naming (which adds the version
      * name) for avoiding conflicts between versions.
      *
@@ -567,38 +529,7 @@ public class Engine {
      * @param version   the current version.
      * @return the FDQN of the target index that will be used.
      */
-    private String indexFqdn(final String indexName, final String version) {
+    public static String indexFqdn(final String indexName, final String version) {
         return (indexName + "_" + version).toLowerCase();
-    }
-
-    /**
-     * Returns a query (as a string) that will be used for executing a specific evaluation.
-     * A query string is the result of replacing all placeholders found in the template.
-     *
-     * @param queryNode       the JSON query node (in ratings configuration).
-     * @param defaultTemplate the default template that will be used if a query doesn't declare it.
-     * @param version         the version being executed.
-     * @return a query (as a string) that will be used for executing a specific evaluation.
-     */
-    private String query(final JsonNode queryNode, final Optional<String> defaultTemplate, final String version) {
-        String query = queryTemplate(defaultTemplate, ofNullable(queryNode.get("template")).map(JsonNode::asText), version);
-        for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
-            final String name = iterator.next();
-            query = query.replace(name, queryNode.get("placeholders").get(name).asText());
-        }
-        return query;
-    }
-
-    /**
-     * Get the version to store when persisting query results.
-     *
-     * @param configVersion the configuration set version being evaluated.
-     * @return the given configVersion, or the version timestamp if and only
-     * if it is set (eg. there is a single version, and the persistence
-     * configuration indicates a timestamp should be used to version this
-     * evaluation data).
-     */
-    private String persistVersion(final String configVersion) {
-        return ofNullable(versionTimestamp).orElse(configVersion);
     }
 }
