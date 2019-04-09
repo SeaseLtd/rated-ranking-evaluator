@@ -36,6 +36,7 @@ The metrics that are part of the current RRE release are:
 * **Precision at 3**: same as above but it consider the first three results. 
 * **Precision at 10**: this metric measures the number of relevant results in the top 10 search results.
 * **Reciprocal Rank**: it is the multiplicative inverse of the rank of the first "correct" answer: 1 for first place, 1/2 for second place, 1/3 for third and so on. 
+* **Expected Reciprocal Rank (ERR)** An extention of Reciprocal Rank with graded relevance, measures the expected reciprocal length of time that the user will take to find a relevant document.
 * **Average Precision**: the area under the precision-recall curve.
 * **NDCG at 10**: Normalized Discounted Cumulative Gain at 10; see: https://en.wikipedia.org/w/index.php?title=Discounted_cumulative_gain&section=4#Normalized_DCG
 * **F-Measure**: it measures the effectiveness of retrieval with respect to a user who attaches β times as much importance to recall as precision. RRE provides the three most popular F-Measure instances: F0.5, F1 and F2
