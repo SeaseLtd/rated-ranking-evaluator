@@ -68,7 +68,12 @@ public class Elasticsearch implements SearchPlatform {
 
     private static class RRENode extends Node {
         RRENode(final Settings settings, final Collection<Class<? extends Plugin>> plugins) {
-            super(prepareEnvironment(settings, null), plugins);
+            super(prepareEnvironment(settings, null), plugins, true);
+        }
+
+        @Override
+        protected void registerDerivedNodeNameWithLogger(String s) {
+            // empty
         }
     }
 
