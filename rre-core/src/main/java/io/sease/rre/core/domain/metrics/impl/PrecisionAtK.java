@@ -69,4 +69,9 @@ public class PrecisionAtK extends Metric {
             }
         };
     }
+
+    @Override
+    public int getRequiredResults() {
+        return k;
+    }
 }

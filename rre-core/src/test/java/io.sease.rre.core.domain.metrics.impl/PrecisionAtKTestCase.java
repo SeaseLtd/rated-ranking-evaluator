@@ -34,12 +34,15 @@ import static org.junit.Assert.assertEquals;
  * @author worleydl
  */
 public class PrecisionAtKTestCase extends BaseTestCase {
+
+    private static final int K = 15;
+
     /**
      * Setup fixture for this test case.
      */
     @Before
     public void setUp() {
-        cut = new PrecisionAtK(15);
+        cut = new PrecisionAtK(K);
         cut.setVersions(Collections.singletonList(A_VERSION));
         counter = new AtomicInteger(0);
     }
@@ -50,6 +53,11 @@ public class PrecisionAtKTestCase extends BaseTestCase {
     @Test
     public void maximumPrecision() {
        maximum();
+    }
+
+    @Test
+    public void minimumResultsMatchesK() {
+        assertEquals(K, cut.getRequiredResults());
     }
 
     /**

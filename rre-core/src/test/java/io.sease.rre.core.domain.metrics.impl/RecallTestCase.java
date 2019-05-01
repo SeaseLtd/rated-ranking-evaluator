@@ -18,6 +18,7 @@ package io.sease.rre.core.domain.metrics.impl;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sease.rre.core.BaseTestCase;
+import io.sease.rre.core.domain.metrics.Metric;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,6 +45,11 @@ public class RecallTestCase extends BaseTestCase {
         cut = new Recall();
         cut.setVersions(Collections.singletonList(A_VERSION));
         counter = new AtomicInteger(0);
+    }
+
+    @Test
+    public void minimumResultsMatchesK() {
+        assertEquals(Metric.DEFAULT_REQUIRED_RESULTS, cut.getRequiredResults());
     }
 
     /**

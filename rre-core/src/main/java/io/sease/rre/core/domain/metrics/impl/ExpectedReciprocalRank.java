@@ -101,4 +101,9 @@ public class ExpectedReciprocalRank extends Metric {
         }
         return numer.divide(denom,8,RoundingMode.HALF_UP);
     }
+
+    @Override
+    public int getRequiredResults() {
+        return k;
+    }
 }
