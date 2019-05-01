@@ -34,14 +34,22 @@ import static org.junit.Assert.assertEquals;
  * @author worleydl
  */
 public class FMeasureAtKTestCase extends BaseTestCase {
+
+    private static final int K = 10;
+
     /**
      * Setup fixture for this test case.
      */
     @Before
     public void setUp() {
-        cut = new FMeasureAtK(1.0f, 10);
+        cut = new FMeasureAtK(1.0f, K);
         cut.setVersions(Collections.singletonList(A_VERSION));
         counter = new AtomicInteger(0);
+    }
+
+    @Test
+    public void minimumResultsMatchesK() {
+        assertEquals(K, cut.getRequiredResults());
     }
 
     /**
