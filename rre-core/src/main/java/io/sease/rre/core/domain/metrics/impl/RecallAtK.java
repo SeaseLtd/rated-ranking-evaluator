@@ -50,4 +50,9 @@ public class RecallAtK extends Metric {
             }
         };
     }
+
+    @Override
+    public int getRequiredResults() {
+        return k;
+    }
 }

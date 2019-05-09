@@ -30,13 +30,19 @@ import static org.junit.Assert.assertEquals;
 
 public class ExpectedReciprocalRankTestCase extends BaseTestCase {
 
+    private static final int K = 10;
+
     @Before
     public void setUp() {
-        cut = new ExpectedReciprocalRank(3, 10);
+        cut = new ExpectedReciprocalRank(3, K);
         cut.setVersions(Collections.singletonList(A_VERSION));
         counter = new AtomicInteger(0);
     }
 
+    @Test
+    public void minimumResultsMatchesK() {
+        assertEquals(K, cut.getRequiredResults());
+    }
 
     /**
      * Scenario: 15 judgments, 15 search results, 10 relevant results in top positions. NDCG = 1

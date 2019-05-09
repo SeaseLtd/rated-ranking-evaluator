@@ -107,4 +107,9 @@ public class FMeasureAtK extends Metric {
         precision.setIdFieldName(idFieldName);
         recall.setIdFieldName(idFieldName);
     }
+
+    @Override
+    public int getRequiredResults() {
+        return k;
+    }
 }
