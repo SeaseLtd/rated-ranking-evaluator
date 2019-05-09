@@ -46,6 +46,11 @@ public class PrecisionAtThreeTestCase extends BaseTestCase {
         counter = new AtomicInteger(0);
     }
 
+    @Test
+    public void minimumResultsMatchesK() {
+        assertEquals(3, cut.getRequiredResults());
+    }
+
     /**
      * If all results in the window are relevant, then the precision is 1.
      */

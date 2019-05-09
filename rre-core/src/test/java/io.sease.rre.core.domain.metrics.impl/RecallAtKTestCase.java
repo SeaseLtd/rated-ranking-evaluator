@@ -35,14 +35,22 @@ import static org.junit.Assert.assertEquals;
  * @author worleydl
  */
 public class RecallAtKTestCase extends BaseTestCase {
+
+    private static final int K = 15;
+
     /**
      * Setup fixture for this test case.
      */
     @Before
     public void setUp() {
-        cut = new RecallAtK(15);
+        cut = new RecallAtK(K);
         cut.setVersions(Collections.singletonList(A_VERSION));
         counter = new AtomicInteger(0);
+    }
+
+    @Test
+    public void minimumResultsMatchesK() {
+        assertEquals(K, cut.getRequiredResults());
     }
 
     /**

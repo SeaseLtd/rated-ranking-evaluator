@@ -48,6 +48,9 @@ import static java.util.stream.IntStream.range;
  * @since 1.0
  */
 public abstract class Metric implements HitsCollector {
+
+    public static final int DEFAULT_REQUIRED_RESULTS = 10;
+
     private final String name;
 
     protected String idFieldName = DEFAULT_ID_FIELD_NAME;
@@ -163,5 +166,9 @@ public abstract class Metric implements HitsCollector {
      */
     public ValueFactory valueFactory(final String version) {
         return values.get(version);
+    }
+
+    public int getRequiredResults() {
+        return DEFAULT_REQUIRED_RESULTS;
     }
 }
