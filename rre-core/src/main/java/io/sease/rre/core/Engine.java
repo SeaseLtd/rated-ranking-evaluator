@@ -489,7 +489,10 @@ public class Engine {
             }
         }
 
-        this.evaluationManager = EvaluationManagerFactory.instantiateEvaluationManager(evaluationConfiguration, platform, persistenceManager, templateManager, fields, versions, versionTimestamp);
+        // Initialise the evaluation manager, if it doesn't already exist
+        if (evaluationManager == null) {
+            evaluationManager = EvaluationManagerFactory.instantiateEvaluationManager(evaluationConfiguration, platform, persistenceManager, templateManager, fields, versions, versionTimestamp);
+        }
 
         flushFileChecksums();
 
