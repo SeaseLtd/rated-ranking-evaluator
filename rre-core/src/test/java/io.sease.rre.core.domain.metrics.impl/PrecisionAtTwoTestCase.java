@@ -46,6 +46,11 @@ public class PrecisionAtTwoTestCase extends BaseTestCase {
         counter = new AtomicInteger(0);
     }
 
+    @Test
+    public void minimumResultsMatchesK() {
+        assertEquals(2, cut.getRequiredResults());
+    }
+
     /**
      * If all results in the window are relevant, then the precision is 1.
      */

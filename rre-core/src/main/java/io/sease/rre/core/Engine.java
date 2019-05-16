@@ -100,6 +100,8 @@ public class Engine {
     private final VersionManager versionManager;
     private final EvaluationManager evaluationManager;
 
+    private Integer minimumRequiredResults = null;
+
     /**
      * Builds a new {@link Engine} instance with the given data.
      *
@@ -258,10 +260,12 @@ public class Engine {
                                                     queryEvaluation.setIdFieldName(idFieldName);
                                                     queryEvaluation.setRelevantDocuments(relevantDocuments);
 
-                                                    queryEvaluation.prepare(availableMetrics(idFieldName, relevantDocuments,
-                                                            new ArrayList<>(versionManager.getConfigurationVersions())));
+                                                    List<Metric> metrics = availableMetrics(idFieldName, relevantDocuments,
+                                                            new ArrayList<>(versionManager.getConfigurationVersions()));
+                                                    queryEvaluation.prepare(metrics);
 
-                                                    evaluationManager.evaluateQuery(queryEvaluation, indexName, queryNode, sharedTemplate, relevantDocuments.size());
+                                                    evaluationManager.evaluateQuery(queryEvaluation, indexName, queryNode, sharedTemplate,
+                                                            Math.max(relevantDocuments.size(), minimumRequiredResults(metrics)));
                                                 });
                                     });
                         });
@@ -401,6 +405,13 @@ public class Engine {
                         throw new IllegalArgumentException(exception);
                     }
                 }).collect(toList());
+    }
+
+    private int minimumRequiredResults(List<Metric> metrics) {
+        if (minimumRequiredResults == null) {
+            minimumRequiredResults = metrics.stream().map(Metric::getRequiredResults).max(Integer::compareTo).orElse(Metric.DEFAULT_REQUIRED_RESULTS);
+        }
+        return minimumRequiredResults;
     }
 
     /**
