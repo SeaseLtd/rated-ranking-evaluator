@@ -31,8 +31,9 @@ import io.sease.rre.core.domain.metrics.MetricClassManager;
 import io.sease.rre.core.evaluation.EvaluationConfiguration;
 import io.sease.rre.core.evaluation.EvaluationManager;
 import io.sease.rre.core.evaluation.EvaluationManagerFactory;
-import io.sease.rre.core.template.QueryTemplateManager;
 import io.sease.rre.core.template.impl.CachingQueryTemplateManager;
+import io.sease.rre.core.version.VersionManager;
+import io.sease.rre.core.version.VersionManagerImpl;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.persistence.PersistenceHandler;
 import io.sease.rre.persistence.PersistenceManager;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,12 +66,10 @@ import static io.sease.rre.Field.QUERY_GROUPS;
 import static io.sease.rre.Field.RELEVANT_DOCUMENTS;
 import static io.sease.rre.Field.TOPICS;
 import static io.sease.rre.Field.UNNAMED;
-import static io.sease.rre.Func.ONLY_DIRECTORIES;
 import static io.sease.rre.Func.ONLY_JSON_FILES;
 import static io.sease.rre.Func.ONLY_NON_HIDDEN_FILES;
 import static io.sease.rre.Func.safe;
 import static java.util.Arrays.stream;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
@@ -84,31 +84,21 @@ import static java.util.stream.Collectors.toList;
 public class Engine {
     private final static Logger LOGGER = LogManager.getLogger(Engine.class);
 
-    private final File configurationsFolder;
     private final File corporaFolder;
     private final File ratingsFolder;
-
-    private final List<String> include;
-    private final List<String> exclude;
 
     private final MetricClassManager metricClassManager;
 
     private final SearchPlatform platform;
-    private final String[] fields;
 
     private FileUpdateChecker fileUpdateChecker;
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    private List<String> versions;
-    private String versionTimestamp = null;
-
     private final PersistenceManager persistenceManager;
-    private final PersistenceConfiguration persistenceConfiguration;
 
-    private final QueryTemplateManager templateManager;
-    private final EvaluationConfiguration evaluationConfiguration;
-    private EvaluationManager evaluationManager;
+    private final VersionManager versionManager;
+    private final EvaluationManager evaluationManager;
 
     /**
      * Builds a new {@link Engine} instance with the given data.
@@ -139,25 +129,26 @@ public class Engine {
             final String checksumFilepath,
             final PersistenceConfiguration persistenceConfiguration,
             final EvaluationConfiguration evaluationConfiguration) {
-        this.configurationsFolder = new File(configurationsFolderPath);
         this.corporaFolder = corporaFolderPath == null ? null : new File(corporaFolderPath);
         this.ratingsFolder = new File(ratingsFolderPath);
-        this.templateManager = new CachingQueryTemplateManager(templatesFolderPath);
         this.platform = platform;
-        this.fields = safe(fields);
-
-        this.exclude = ofNullable(exclude).orElse(emptyList());
-        this.include = ofNullable(include).orElse(emptyList());
 
         this.metricClassManager = metricClassManager;
 
-        this.persistenceConfiguration = persistenceConfiguration;
         this.persistenceManager = new PersistenceManager();
-        initialisePersistenceManager();
+        initialisePersistenceManager(persistenceConfiguration);
+
+        this.versionManager = new VersionManagerImpl(new File(configurationsFolderPath), include, exclude, persistenceConfiguration.isUseTimestampAsVersion());
+        this.evaluationManager = EvaluationManagerFactory.instantiateEvaluationManager(
+                evaluationConfiguration,
+                platform,
+                persistenceManager,
+                new CachingQueryTemplateManager(templatesFolderPath),
+                safe(fields),
+                versionManager.getConfigurationVersions(),
+                versionManager.getVersionTimestamp());
 
         initialiseFileUpdateChecker(checksumFilepath);
-
-        this.evaluationConfiguration = evaluationConfiguration;
     }
 
     private void initialiseFileUpdateChecker(String checksumFile) {
@@ -180,7 +171,7 @@ public class Engine {
                 .orElse(UNNAMED);
     }
 
-    private void initialisePersistenceManager() {
+    private void initialisePersistenceManager(final PersistenceConfiguration persistenceConfiguration) {
         persistenceConfiguration.getHandlers().forEach((n, h) -> {
             try {
                 // Instantiate the handler
@@ -267,7 +258,8 @@ public class Engine {
                                                     queryEvaluation.setIdFieldName(idFieldName);
                                                     queryEvaluation.setRelevantDocuments(relevantDocuments);
 
-                                                    queryEvaluation.prepare(availableMetrics(idFieldName, relevantDocuments, versions));
+                                                    queryEvaluation.prepare(availableMetrics(idFieldName, relevantDocuments,
+                                                            new ArrayList<>(versionManager.getConfigurationVersions())));
 
                                                     evaluationManager.evaluateQuery(queryEvaluation, indexName, queryNode, sharedTemplate, relevantDocuments.size());
                                                 });
@@ -452,19 +444,9 @@ public class Engine {
             LOGGER.info("Preparing platform for " + indexName);
         }
 
-        final File[] versionFolders =
-                safe(configurationsFolder.listFiles(
-                        file -> ONLY_DIRECTORIES.accept(file)
-                                && (include.isEmpty() || include.contains(file.getName()) || include.stream().anyMatch(rule -> file.getName().matches(rule)))
-                                && (exclude.isEmpty() || (!exclude.contains(file.getName()) && exclude.stream().noneMatch(rule -> file.getName().matches(rule))))));
-
-        if (versionFolders == null || versionFolders.length == 0) {
-            throw new IllegalArgumentException("RRE: no target versions available. Check the configuration set folder and include/exclude clauses.");
-        }
-
         boolean corporaChanged = folderHasChanged(corporaFolder);
 
-        stream(versionFolders)
+        versionManager.getConfigurationVersionFolders().stream()
                 .filter(versionFolder -> (folderHasChanged(versionFolder) || corporaChanged || platform.isRefreshRequired()))
                 .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(file -> platform.isSearchPlatformFile(indexName, file))
@@ -474,29 +456,9 @@ public class Engine {
 
         LOGGER.info("RRE: " + platform.getName() + " has been correctly loaded.");
 
-        this.versions =
-                stream(versionFolders)
-                        .map(File::getName)
-                        .sorted()
-                        .collect(toList());
-
-        if (persistenceConfiguration.isUseTimestampAsVersion()) {
-            if (versions.size() == 1) {
-                versionTimestamp = String.valueOf(System.currentTimeMillis());
-                LOGGER.info("Using local system timestamp as version tag : " + versionTimestamp);
-            } else {
-                LOGGER.warn("Persistence.useTimestampAsVersion == true, but multiple configurations exist - ignoring");
-            }
-        }
-
-        // Initialise the evaluation manager, if it doesn't already exist
-        if (evaluationManager == null) {
-            evaluationManager = EvaluationManagerFactory.instantiateEvaluationManager(evaluationConfiguration, platform, persistenceManager, templateManager, fields, versions, versionTimestamp);
-        }
-
         flushFileChecksums();
 
-        LOGGER.info("RRE: target versions are " + String.join(",", versions));
+        LOGGER.info("RRE: target versions are " + String.join(",", versionManager.getConfigurationVersions()));
     }
 
     private boolean folderHasChanged(File folder) {
