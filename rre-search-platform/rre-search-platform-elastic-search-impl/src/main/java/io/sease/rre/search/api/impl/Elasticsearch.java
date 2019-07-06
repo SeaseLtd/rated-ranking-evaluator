@@ -16,6 +16,7 @@
  */
 package io.sease.rre.search.api.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -47,14 +48,21 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
-import static org.elasticsearch.client.Requests.*;
+import static org.elasticsearch.client.Requests.createIndexRequest;
+import static org.elasticsearch.client.Requests.deleteIndexRequest;
+import static org.elasticsearch.client.Requests.indicesExistsRequest;
 import static org.elasticsearch.node.InternalSettingsPreparer.prepareEnvironment;
 
 /**
@@ -146,9 +154,26 @@ public class Elasticsearch implements SearchPlatform {
             insertNamespaces(synonymsPaths, "synonyms_path", configurationFolder, namespace);
             insertNamespaces(stopwordsPaths, "stopwords_path", configurationFolder, namespace);
 
-            final CreateIndexRequest request = createIndexRequest(indexName)
-                    .settings(Settings.builder().loadFromSource(mapper.writeValueAsString(esconfig.get("settings")), XContentType.JSON).build())
-                    .mapping("doc", mapper.writeValueAsString(esconfig.get("mappings")), XContentType.JSON);
+            final CreateIndexRequest request = createIndexRequest(indexName);
+            ofNullable(esconfig.get("settings"))
+                    .ifPresent(settings -> {
+                        try {
+                            request.settings(Settings.builder().loadFromSource(mapper.writeValueAsString(settings), XContentType.JSON).build());
+                        } catch (JsonProcessingException exception) {
+                            LOGGER.error("Invalid \"settings\" section in Elasticsearch configuration. " +
+                                    "As consequence of that the entire section will be skipped.", exception);
+                        }
+                    });
+
+            ofNullable(esconfig.get("mappings"))
+                    .ifPresent(mappings -> {
+                        try {
+                            request.mapping("doc", mapper.writeValueAsString(mappings), XContentType.JSON);
+                        } catch (JsonProcessingException exception) {
+                            LOGGER.error("Invalid \"mappings\" section in Elasticsearch configuration. " +
+                                    "As consequence of that the entire section will be skipped.", exception);
+                        }
+                    });
 
             proxy.admin().indices().create(request).actionGet();
 
