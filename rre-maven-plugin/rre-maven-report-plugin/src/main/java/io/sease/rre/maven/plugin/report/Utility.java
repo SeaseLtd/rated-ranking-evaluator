@@ -56,9 +56,6 @@ public abstract class Utility {
     public static Stream<JsonNode> all(final JsonNode parent, final String name) {
         return ofNullable(parent.get(name))
                 .map(node -> StreamSupport.stream(parent.get(name).spliterator(), false))
-                .orElseGet(() -> {
-                    //LOGGER.error("WARNING: \"" + name + "\" node is empty!");
-                    return Stream.empty();});
-//        return StreamSupport.stream(parent.get(name).spliterator(), false);
+                .orElseGet(Stream::empty);
     }
 }
