@@ -30,7 +30,13 @@ import org.apache.maven.reporting.AbstractMavenReport;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Spliterator;
 
 import static io.sease.rre.maven.plugin.report.Utility.all;
 import static java.util.Optional.ofNullable;
@@ -68,12 +74,19 @@ public class RREMavenReport extends AbstractMavenReport {
     @Override
     protected void executeReport(final Locale locale) {
         final JsonNode evaluationData = evaluationAsJson();
+        final JsonNode corpora = evaluationData.get("corpora");
+
+        if (corpora == null || corpora.size() == 0) {
+            getLog().info("No evaluation data has been generated - no reports will be produced.");
+            return;
+        }
+
         formats.parallelStream()
                 .map(formatters::get)
                 .filter(Objects::nonNull)
                 .forEach(formatter ->
                         formatter.writeReport(
-                                evaluationAsJson(),
+                                evaluationData,
                                 evaluationMetadata(evaluationData),
                                 locale,
                                 this));
