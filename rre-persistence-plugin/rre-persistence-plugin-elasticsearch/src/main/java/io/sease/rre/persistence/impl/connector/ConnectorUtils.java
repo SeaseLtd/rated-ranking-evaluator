@@ -23,8 +23,6 @@ abstract class ConnectorUtils {
 
     private static final Logger LOGGER = LogManager.getLogger(ConnectorUtils.class);
 
-    static final String MAPPINGS_FILE = "/es7_config.json";
-
     /**
      * Get the input stream for a file on the local classpath (eg. one held in
      * the resources directory.
