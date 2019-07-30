@@ -22,7 +22,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -50,7 +49,7 @@ public class ElasticsearchConnector {
 
     private static final Logger LOGGER = LogManager.getLogger(ElasticsearchConnector.class);
 
-    private static final String MAPPINGS_FILE = "/es_config.json";
+    private static final String MAPPINGS_FILE = "/es7_config.json";
 
     static final String GET_METHOD = "GET";
     static final String CLUSTER_HEALTH_ENDPOINT = "/_cluster/health";
