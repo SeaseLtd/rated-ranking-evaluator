@@ -28,7 +28,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>rre-persistence-plugin-elasticsearch</artifactId>
-    <version>6.7.1</version>
+
+    <properties>
+        <elasticsearch.version>7.2.0</elasticsearch.version>
+    </properties>
 
     <name>RRE - Persistence Plugin - Elasticsearch</name>
     <description>A persistence plugin for storing query results to Elasticsearch</description>
@@ -37,13 +40,13 @@
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>${project.version}</version>
+            <version>${elasticsearch.version}</version>
         </dependency>
         <!-- Include ES direct dependency to exclude log4j -->
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
-            <version>${project.version}</version>
+            <version>${elasticsearch.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>

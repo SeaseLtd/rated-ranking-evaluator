@@ -33,7 +33,7 @@ Add the following to the `pom.xml`:
         <dependency>
           <groupId>io.sease</groupId>
           <artifactId>rre-persistence-plugin-elasticsearch</artifactId>
-          <version>${elasticsearch.version}</version>
+          <version>1.0</version>
         </dependency>
         <dependency>
           <groupId>org.apache.httpcomponents</groupId>

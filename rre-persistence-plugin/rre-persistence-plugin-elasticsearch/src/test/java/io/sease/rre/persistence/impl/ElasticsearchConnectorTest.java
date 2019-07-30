@@ -21,6 +21,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
@@ -36,6 +37,7 @@ import static org.mockserver.model.HttpResponse.response;
  * @author Matt Pearce (matt@flax.co.uk)
  */
 @SuppressWarnings("UnstableApiUsage")
+@Ignore
 public class ElasticsearchConnectorTest {
 
     private ElasticsearchConnector searchEngine;
