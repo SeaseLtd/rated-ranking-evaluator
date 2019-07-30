@@ -16,11 +16,11 @@
  */
 package io.sease.rre.search.api.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.DirectoryUtils;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
-import org.apache.htrace.fasterxml.jackson.databind.JsonNode;
-import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -29,7 +29,11 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.core.CoreContainer;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;

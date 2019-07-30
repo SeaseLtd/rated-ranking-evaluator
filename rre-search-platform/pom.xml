@@ -31,16 +31,17 @@
     <packaging>pom</packaging>
     <modules>
         <module>rre-search-platform-api</module>
+        <module>rre-search-platform-external-solr-impl</module>
         <module>rre-search-platform-solr-impl</module>
         <module>rre-search-platform-elastic-search-impl</module>
-        <module>rre-search-platform-external-solr-impl</module>
+
     </modules>
 
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -16,6 +16,7 @@
  */
 package io.sease.rre.search.api.impl;
 
+import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.cloud.MiniSolrCloudCluster;
@@ -31,15 +32,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertNotNull;
-
 /**
  * Unit tests for the SolrClientManager class.
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
-public class SolrClientManagerTest {
+public class SolrClientManagerTest extends SolrTestCaseJ4 {
 
     private final String TARGET_INDEX = "targetIndex";
 

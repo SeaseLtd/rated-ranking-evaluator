@@ -37,7 +37,7 @@
         <dependency>
             <groupId>io.sease</groupId>
             <artifactId>rre-core</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

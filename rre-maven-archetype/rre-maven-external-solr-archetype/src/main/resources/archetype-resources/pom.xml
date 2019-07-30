@@ -40,7 +40,14 @@
             <plugin>
                 <groupId>io.sease</groupId>
                 <artifactId>rre-maven-external-solr-plugin</artifactId>
-                <version>${solrVersion}</version>
+                <version>1.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.solr</groupId>
+                        <artifactId>solr-solrj</artifactId>
+                        <version>LATEST</version>
+                    </dependency>
+                </dependencies>
                 <!-- the configuration below is provided just for example, as it perfectly matches default values -->
                 <configuration>
                     <configurations-folder>src/etc/configuration_sets</configurations-folder>

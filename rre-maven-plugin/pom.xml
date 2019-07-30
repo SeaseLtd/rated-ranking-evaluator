@@ -30,14 +30,14 @@
     <name>RRE - Maven Plugins</name>
     <modules>
         <module>rre-maven-solr-plugin</module>
-        <module>rre-maven-report-plugin</module>
+        <module>rre-maven-external-solr-plugin</module>
         <module>rre-maven-elasticsearch-plugin</module>
         <module>rre-maven-external-elasticsearch-plugin</module>
-        <module>rre-maven-external-solr-plugin</module>
+        <module>rre-maven-report-plugin</module>
     </modules>
     <packaging>pom</packaging>
     <properties>
-        <maven.version>3.5.0</maven.version>
+        <maven.version>3.5.2</maven.version>
     </properties>
     <dependencies>
         <dependency>
@@ -138,7 +138,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.5.1</version>
+                <version>${maven.version}</version>
                 <configuration>
                     <goalPrefix>rre</goalPrefix>
                 </configuration>

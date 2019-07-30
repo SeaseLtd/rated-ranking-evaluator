@@ -33,6 +33,7 @@
         <jackson.version>2.9.4</jackson.version>
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <solrVersion>LATEST</solrVersion>
     </properties>
     <developers>
         <developer>
@@ -45,12 +46,12 @@
         </developer>
     </developers>
     <modules>
-        <module>rre-maven-plugin</module>
-        <module>rre-core</module>
         <module>rre-search-platform</module>
-        <module>rre-server</module>
         <module>rre-maven-archetype</module>
         <module>rre-persistence-plugin</module>
+        <module>rre-maven-plugin</module>
+        <module>rre-core</module>
+        <module>rre-server</module>
     </modules>
 
     <distributionManagement>

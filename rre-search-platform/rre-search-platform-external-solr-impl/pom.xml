@@ -8,12 +8,8 @@
         <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>rre-search-platform-external-solr-impl</artifactId>
-    <name>RRE - External Solr search platform binding</name>
-
-    <version>7.6.0</version>
-
+    <name>RRE - External Solr (version ${solrVersion}) search platform binding V${project.version}</name>
     <dependencies>
         <dependency>
             <groupId>io.sease</groupId>
@@ -23,12 +19,13 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>${project.version}</version>
+            <version>LATEST</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-test-framework</artifactId>
-            <version>${project.version}</version>
+            <version>LATEST</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
