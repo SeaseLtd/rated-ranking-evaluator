@@ -76,7 +76,7 @@ public class ElasticsearchConnector {
         boolean ret = false;
 
         try {
-            Response response = client.getLowLevelClient().performRequest(GET_METHOD, CLUSTER_HEALTH_ENDPOINT);
+            Response response = null;//client.getLowLevelClient().performRequest(GET_METHOD, CLUSTER_HEALTH_ENDPOINT);
             String body = EntityUtils.toString(response.getEntity());
             Map jsonMap = new ObjectMapper().readValue(body, Map.class);
             if (jsonMap.containsKey("status")) {
@@ -106,7 +106,7 @@ public class ElasticsearchConnector {
      * @throws IOException if a problem occurs calling the server.
      */
     public boolean indexExists(String index) throws IOException {
-        return client.indices().exists(new GetIndexRequest().indices(index));
+        return false; // client.indices().exists(new GetIndexRequest().indices(index));
     }
 
     /**
@@ -122,7 +122,7 @@ public class ElasticsearchConnector {
         CreateIndexRequest request = new CreateIndexRequest(index)
                 .source(readConfig(), XContentType.JSON);
 
-        CreateIndexResponse response = client.indices().create(request);
+        CreateIndexResponse response = null;//client.indices().create(request);
 
         return response.isAcknowledged();
     }
@@ -170,7 +170,7 @@ public class ElasticsearchConnector {
             }
         };
 
-        BulkProcessor processor = BulkProcessor.builder(client::bulkAsync, listener).build();
+        BulkProcessor processor = null;//BulkProcessor.builder(client::bulkAsync, listener).build();
 
         reports.forEach(r -> processor.add(
                 new IndexRequest(index, DOC_MAPPING_TYPE, r.getId())

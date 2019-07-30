@@ -1,0 +1,44 @@
+{
+  "settings": {},
+  "mappings": {
+    "doc": {
+      "dynamic_templates": [
+        {
+          "metric_values": {
+            "path_match": "metricValues.*",
+            "mapping": {
+              "type": "float"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "corpora": {
+          "type": "keyword"
+        },
+        "version": {
+          "type": "keyword"
+        },
+        "metrics": {
+          "properties": {
+            "name": {
+              "type": "keyword"
+            },
+            "sanitisedName": {
+              "type": "keyword"
+            },
+            "value": {
+              "type": "float"
+            }
+          }
+        },
+        "results": {
+          "enabled": false
+        }
+      }
+    }
+  }
+}

@@ -17,6 +17,7 @@
 package io.sease.rre.persistence.impl;
 
 import io.sease.rre.persistence.PersistenceException;
+import io.sease.rre.persistence.impl.connector.ElasticsearchConnector;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -100,12 +101,43 @@ public class ElasticsearchPersistenceHandlerClientTest {
     }
 
     @Test(expected = PersistenceException.class)
-    public void startThrowsException_whenIndexCanBeCreated() throws Exception {
+    public void startThrowsException_whenIndexCannotBeCreated() throws Exception {
+        when(elasticsearch.isAvailable()).thenReturn(true);
+        when(elasticsearch.indexExists(INDEX)).thenReturn(false);
+        when(elasticsearch.createIndex(INDEX)).thenReturn(false);
+
+        handler.beforeStart();
+        handler.setElasticsearch(elasticsearch);
+        handler.start();
+
+        verify(elasticsearch).isAvailable();
+        verify(elasticsearch).indexExists(INDEX);
+        verify(elasticsearch).createIndex(INDEX);
+    }
+
+    @Test(expected = PersistenceException.class)
+    public void startThrowsException_whenCreateIndexThrowsException() throws Exception {
+        when(elasticsearch.isAvailable()).thenReturn(true);
+        when(elasticsearch.indexExists(INDEX)).thenReturn(false);
+        when(elasticsearch.createIndex(INDEX)).thenThrow(new IOException("Error"));
+
+        handler.beforeStart();
+        handler.setElasticsearch(elasticsearch);
+        handler.start();
+
+        verify(elasticsearch).isAvailable();
+        verify(elasticsearch).indexExists(INDEX);
+        verify(elasticsearch).createIndex(INDEX);
+    }
+
+    @Test
+    public void startBehaves_whenIndexCanBeCreated() throws Exception {
         when(elasticsearch.isAvailable()).thenReturn(true);
         when(elasticsearch.indexExists(INDEX)).thenReturn(false);
         when(elasticsearch.createIndex(INDEX)).thenReturn(true);
 
         handler.beforeStart();
+        handler.setElasticsearch(elasticsearch);
         handler.start();
 
         verify(elasticsearch).isAvailable();
