@@ -82,6 +82,11 @@ public class ApacheSolr implements SearchPlatform {
             refreshRequired = true;
         }
 
+        File dataDir = new File(solrHome, "data");
+        dataDir.mkdirs();
+
+        System.setProperty("solr.data.dir", dataDir.getAbsolutePath());
+
         proxy = new EmbeddedSolrServer(solrHome.toPath(), "dummy");
     }
 
