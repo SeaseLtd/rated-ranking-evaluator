@@ -16,11 +16,11 @@
  */
 package io.sease.rre.search.api.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.DirectoryUtils;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
-import org.apache.htrace.fasterxml.jackson.databind.JsonNode;
-import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -28,6 +28,7 @@ import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.core.CoreContainer;
+import org.apache.solr.core.CoreDescriptor;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -36,8 +37,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-
-import static java.util.Collections.emptyMap;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 
@@ -87,7 +86,7 @@ public class ApacheSolr implements SearchPlatform {
 
         System.setProperty("solr.data.dir", dataDir.getAbsolutePath());
 
-        proxy = new EmbeddedSolrServer(solrHome.toPath(), "dummy");
+
     }
 
     @Override
@@ -108,20 +107,16 @@ public class ApacheSolr implements SearchPlatform {
             throw new RuntimeException(e);
         }
 
-        try {
-            // Using absolute path for the targetIndexDir, otherwise Solr can put the core.properties in the wrong place.
-            proxy.getCoreContainer().create(targetIndexName, targetIndexDir.toPath().toAbsolutePath(), emptyMap(), true);
-        } catch (SolrException e) {
-            if (e.code() == SolrException.ErrorCode.SERVER_ERROR.code) {
-                // Core already exists - ignore
-                LOGGER.debug("Core " + targetIndexName + " already exists - skipping index creation");
-            } else {
-                LOGGER.error("Caught Solr exception creating core :: " + e.getMessage());
-            }
+        if (proxy == null) {
+            CoreContainer container = new CoreContainer(solrHome.getAbsolutePath());
+            container.load();
+            container.create(new CoreDescriptor(container, targetIndexName, targetIndexDir.getAbsolutePath()));
+
+            proxy = new EmbeddedSolrServer(container, targetIndexName);
         }
 
         try {
-            UpdateResponse response = new JsonUpdateRequest(new FileInputStream(data)).process(proxy, targetIndexName);
+            UpdateResponse response = new JsonUpdateRequest(new FileInputStream(data)).process(proxy);
             if (response.getStatus() != 0) {
                 throw new IllegalArgumentException("Received an error status from Solr: " + response.getStatus());
             }
@@ -149,8 +144,8 @@ public class ApacheSolr implements SearchPlatform {
                 try {
                     solr.deleteByQuery("*:*");
                     solr.commit();
-                } catch (final Exception exception) {
-                    exception.printStackTrace();
+                } catch (final Exception exception)  {
+                    // Ignore
                 }
             });
         }
@@ -160,21 +155,13 @@ public class ApacheSolr implements SearchPlatform {
     public void close() {
         ofNullable(proxy).ifPresent(solr -> {
             try {
-                solr.close();
+                solr.shutdown();
             } catch (final Exception exception) {
-                exception.printStackTrace();
+                // Ignore
             }
         });
 
         if (defaultSolrHome) {
-            // If using the default Solr home (eg. /tmp), unload and set
-            // directory for deletion.
-            ofNullable(proxy)
-                    .map(EmbeddedSolrServer::getCoreContainer)
-                    .map(CoreContainer::getAllCoreNames)
-                    .orElse(Collections.emptyList())
-                    .forEach(coreName ->
-                            proxy.getCoreContainer().unload(coreName, true, true, false));
             solrHome.deleteOnExit();
         }
 
@@ -191,6 +178,7 @@ public class ApacheSolr implements SearchPlatform {
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode queryDef = mapper.readTree(queryString);
 
+
             for (final Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext(); ) {
                 final Map.Entry<String, JsonNode> field = iterator.next();
                 final String value;
@@ -204,7 +192,7 @@ public class ApacheSolr implements SearchPlatform {
                 query.add(field.getKey(), value);
             }
 
-            return of(proxy.query(coreName, query))
+            return of(proxy.query(query))
                     .map(response ->
                             new QueryOrSearchResponse(
                                     response.getResults().getNumFound(),

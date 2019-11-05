@@ -12,7 +12,7 @@
     <artifactId>rre-search-platform-external-solr-impl</artifactId>
     <name>RRE - External Solr search platform binding</name>
 
-    <version>7.6.0</version>
+    <version>4.10.4</version>
 
     <dependencies>
         <dependency>
@@ -24,6 +24,12 @@
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging-api</artifactId>
+            <version>1.1</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>

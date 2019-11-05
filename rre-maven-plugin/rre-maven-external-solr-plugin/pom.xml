@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>rre-maven-external-solr-plugin</artifactId>
-    <version>7.6.0</version>
+    <version>4.10.4</version>
     <packaging>maven-plugin</packaging>
     <name>RRE - Maven External Apache Solr Plugin</name>
     <dependencies>

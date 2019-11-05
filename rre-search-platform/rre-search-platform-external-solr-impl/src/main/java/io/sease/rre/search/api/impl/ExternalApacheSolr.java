@@ -114,7 +114,7 @@ public class ExternalApacheSolr implements SearchPlatform {
             }
 
             return of(clientManager.getSolrClient(indexName)
-                    .query(indexSettingsMap.get(indexName).getCollectionName(), query, SolrRequest.METHOD.POST))
+                    .query(query, SolrRequest.METHOD.POST))
                     .map(response ->
                             new QueryOrSearchResponse(
                                     response.getResults().getNumFound(),
@@ -169,7 +169,7 @@ public class ExternalApacheSolr implements SearchPlatform {
         @JsonProperty("socketTimeoutMillis")
         private final Integer socketTimeout;
 
-        public SolrSettings(@JsonProperty("baseUrls") List<String> baseUrls,
+        SolrSettings(@JsonProperty("baseUrls") List<String> baseUrls,
                             @JsonProperty("collectionName") String collectionName,
                             @JsonProperty("zkHosts") List<String> zkHosts,
                             @JsonProperty("zkChroot") String zkChroot,
@@ -195,7 +195,7 @@ public class ExternalApacheSolr implements SearchPlatform {
             }
         }
 
-        public List<String> getBaseUrls() {
+        List<String> getBaseUrls() {
             return baseUrls;
         }
 
@@ -203,7 +203,7 @@ public class ExternalApacheSolr implements SearchPlatform {
             return collectionName;
         }
 
-        public List<String> getZkHosts() {
+        List<String> getZkHosts() {
             return zkHosts;
         }
 
@@ -211,15 +211,15 @@ public class ExternalApacheSolr implements SearchPlatform {
             return Optional.ofNullable(zkChroot);
         }
 
-        public boolean hasZookeeperSettings() {
+        boolean hasZookeeperSettings() {
             return zkHosts != null && !zkHosts.isEmpty();
         }
 
-        public Integer getConnectionTimeout() {
+        Integer getConnectionTimeout() {
             return connectionTimeout;
         }
 
-        public Integer getSocketTimeout() {
+        Integer getSocketTimeout() {
             return socketTimeout;
         }
     }

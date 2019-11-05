@@ -16,17 +16,17 @@
  */
 package io.sease.rre.search.api.impl;
 
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.impl.SolrClientBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * Manager class for Solr Clients in use when connecting to external Solr instances.
@@ -35,9 +35,7 @@ import java.util.Map;
  */
 class SolrClientManager implements Closeable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SolrClientManager.class);
-
-    private final Map<String, SolrClient> indexClients = new HashMap<>();
+    private final Map<String, SolrServer> indexClients = new HashMap<>();
 
     /**
      * Build a SolrClient instance, associating it with a specific target index
@@ -49,39 +47,34 @@ class SolrClientManager implements Closeable {
      *                        containing the client connection details.
      */
     void buildSolrClient(String targetIndexName, ExternalApacheSolr.SolrSettings settings) {
-        final SolrClient client;
+        SolrServer client;
 
         if (settings.hasZookeeperSettings()) {
-            final CloudSolrClient.Builder builder = new CloudSolrClient.Builder(settings.getZkHosts(), settings.getZkChroot());
-            client = applyTimeoutSettings(builder, settings).build();
+            final StringJoiner joiner = new StringJoiner(",");
+            settings.getZkHosts().forEach(joiner::add);
+
+            final CloudSolrServer solr = new CloudSolrServer(joiner.toString());
+            client = solr;
         } else if (settings.getBaseUrls().size() > 1) {
-            final CloudSolrClient.Builder builder = new CloudSolrClient.Builder(settings.getBaseUrls());
-            client = applyTimeoutSettings(builder, settings).build();
+            try {
+                final LBHttpSolrServer solr = new LBHttpSolrServer(settings.getBaseUrls().toArray(new String[0]));
+                solr.setConnectionTimeout(settings.getConnectionTimeout());
+                solr.setSoTimeout(settings.getSocketTimeout());
+                client = solr;
+            } catch (Exception exception) {
+                HttpSolrServer solr = new HttpSolrServer(settings.getBaseUrls().get(0));
+                solr.setConnectionTimeout(settings.getConnectionTimeout());
+                solr.setSoTimeout(settings.getSocketTimeout());
+                client = solr;
+            }
         } else {
-            final HttpSolrClient.Builder builder = new HttpSolrClient.Builder(settings.getBaseUrls().get(0));
-            client = applyTimeoutSettings(builder, settings).build();
+            HttpSolrServer solr = new HttpSolrServer(settings.getBaseUrls().iterator().next());
+            ofNullable(settings.getConnectionTimeout()).ifPresent(solr::setConnectionTimeout);
+            ofNullable(settings.getSocketTimeout()).ifPresent(solr::setSoTimeout);
+            client = solr;
         }
 
         indexClients.put(targetIndexName, client);
-    }
-
-    /**
-     * Apply the timeout settings using methods common to all SolrClientBuilder
-     * implementations.
-     *
-     * @param builder  the SolrClientBuilder.
-     * @param settings the SolrSettings, containing the (optional) timeout settings.
-     * @param <C>      the type of SolrClientBuilder in use.
-     * @return the SolrClientBuilder with the timeout settings applied.
-     */
-    private <C extends SolrClientBuilder> C applyTimeoutSettings(C builder, ExternalApacheSolr.SolrSettings settings) {
-        if (settings.getConnectionTimeout() != null) {
-            builder.withConnectionTimeout(settings.getConnectionTimeout());
-        }
-        if (settings.getSocketTimeout() != null) {
-            builder.withSocketTimeout(settings.getSocketTimeout());
-        }
-        return builder;
     }
 
     /**
@@ -92,7 +85,7 @@ class SolrClientManager implements Closeable {
      * @return the client, or {@code null} if no client has been set for the
      * target index.
      */
-    SolrClient getSolrClient(String targetIndexName) {
+    SolrServer getSolrClient(String targetIndexName) {
         return indexClients.get(targetIndexName);
     }
 
@@ -100,12 +93,6 @@ class SolrClientManager implements Closeable {
      * Ensure that all of the index clients are closed.
      */
     public void close() {
-        indexClients.values().forEach(c -> {
-            try {
-                c.close();
-            } catch (IOException e) {
-                LOGGER.error("Caught IOException closing client: {}", e.getMessage());
-            }
-        });
+        indexClients.values().forEach(SolrServer::shutdown);
     }
 }

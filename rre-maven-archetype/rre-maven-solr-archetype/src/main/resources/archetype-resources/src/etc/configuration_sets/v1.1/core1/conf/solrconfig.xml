@@ -18,8 +18,8 @@
   under the License.
 -->
 <config>
-    <luceneMatchVersion>6.3.0</luceneMatchVersion>
-    <dataDir>${solr.data.dir:}/${solr.core.name:}</dataDir>
+    <luceneMatchVersion>LATEST</luceneMatchVersion>
+    <dataDir>${solr.data.dir:data}/${solr.core.name:}</dataDir>
     <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/>
     <codecFactory class="solr.SchemaCodecFactory"/>
     <schemaFactory class="ClassicIndexSchemaFactory"/>
