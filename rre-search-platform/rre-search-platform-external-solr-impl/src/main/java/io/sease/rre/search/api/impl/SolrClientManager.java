@@ -54,21 +54,25 @@ class SolrClientManager implements Closeable {
             settings.getZkHosts().forEach(joiner::add);
 
             final CloudSolrServer solr = new CloudSolrServer(joiner.toString());
+            solr.setDefaultCollection(targetIndexName);
             client = solr;
         } else if (settings.getBaseUrls().size() > 1) {
             try {
-                final LBHttpSolrServer solr = new LBHttpSolrServer(settings.getBaseUrls().toArray(new String[0]));
+                String [] urls = settings.getBaseUrls().stream()
+                        .map(url -> url + "/" + targetIndexName)
+                        .toArray(String[]::new);
+                final LBHttpSolrServer solr = new LBHttpSolrServer(urls);
                 solr.setConnectionTimeout(settings.getConnectionTimeout());
                 solr.setSoTimeout(settings.getSocketTimeout());
                 client = solr;
             } catch (Exception exception) {
-                HttpSolrServer solr = new HttpSolrServer(settings.getBaseUrls().get(0));
+                HttpSolrServer solr = new HttpSolrServer(settings.getBaseUrls().get(0) + "/" + targetIndexName);
                 solr.setConnectionTimeout(settings.getConnectionTimeout());
                 solr.setSoTimeout(settings.getSocketTimeout());
                 client = solr;
             }
         } else {
-            HttpSolrServer solr = new HttpSolrServer(settings.getBaseUrls().iterator().next());
+            HttpSolrServer solr = new HttpSolrServer(settings.getBaseUrls().iterator().next() + "/" + targetIndexName);
             ofNullable(settings.getConnectionTimeout()).ifPresent(solr::setConnectionTimeout);
             ofNullable(settings.getSocketTimeout()).ifPresent(solr::setSoTimeout);
             client = solr;
