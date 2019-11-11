@@ -48,23 +48,24 @@ public class VersionManagerImpl implements VersionManager {
                 findConfigurationFolders(configurationSetFolder,
                         Optional.ofNullable(include).orElse(Collections.emptyList()),
                         Optional.ofNullable(exclude).orElse(Collections.emptyList())));
-        if (configurationVersionFolders.isEmpty()) {
-            throw new IllegalArgumentException("RRE: no target versions available. Check the configuration set folder and include/exclude clauses.");
-        }
 
         this.configurationVersions = configurationVersionFolders.stream()
                 .map(File::getName)
                 .sorted()
                 .collect(Collectors.toList());
-
         versionTimestamp = useTimestampAsVersion ? calculateVersionTimestamp() : null;
     }
 
     private File[] findConfigurationFolders(File configurationSetFolder, Collection<String> include, Collection<String> exclude) {
-        return safe(configurationSetFolder.listFiles(
-                file -> ONLY_DIRECTORIES.accept(file)
-                        && (include.isEmpty() || include.contains(file.getName()) || include.stream().anyMatch(rule -> file.getName().matches(rule)))
-                        && (exclude.isEmpty() || (!exclude.contains(file.getName()) && exclude.stream().noneMatch(rule -> file.getName().matches(rule))))));
+        File[] emptyArray = new File[0];
+        if (configurationSetFolder.listFiles() == null) {
+            return emptyArray;
+        } else {
+            return safe(configurationSetFolder.listFiles(
+                    file -> ONLY_DIRECTORIES.accept(file)
+                            && (include.isEmpty() || include.contains(file.getName()) || include.stream().anyMatch(rule -> file.getName().matches(rule)))
+                            && (exclude.isEmpty() || (!exclude.contains(file.getName()) && exclude.stream().noneMatch(rule -> file.getName().matches(rule))))));
+        }
     }
 
     private String calculateVersionTimestamp() {
@@ -87,6 +88,11 @@ public class VersionManagerImpl implements VersionManager {
     @Override
     public Collection<String> getConfigurationVersions() {
         return configurationVersions;
+    }
+
+    @Override
+    public void addConfigurationVersion(String configVersion) {
+        this.configurationVersions.add(configVersion);
     }
 
     @Override

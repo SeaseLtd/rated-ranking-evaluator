@@ -40,6 +40,12 @@ public interface VersionManager {
     Collection<String> getConfigurationVersions();
 
     /**
+     * Add explicitly a new config version
+     * @param configVersion
+     */
+    void addConfigurationVersion(String configVersion);
+
+    /**
      * Retrieve the version timestamp to use, if appropriate.
      *
      * This is set in the persistence configuration, and will only be set if
