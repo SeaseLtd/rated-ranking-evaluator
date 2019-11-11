@@ -120,6 +120,31 @@ public class NDCGAtTenTestCase extends BaseTestCase {
      * Scenario: 10 judgments, 15 search results, 5 relevant results in top positions.
      */
     @Test
+    public void _10_judgments_15_search_results_5_relevant_results_various_degree() {
+        final ObjectNode judgements = mapper.createObjectNode();
+        stream(FIFTEEN_SEARCH_HITS).skip(0).forEach(docid -> judgements.set(docid, createJudgmentNode(1)));
+        stream(FIFTEEN_SEARCH_HITS).skip(1).forEach(docid -> judgements.set(docid, createJudgmentNode(2)));
+        stream(FIFTEEN_SEARCH_HITS).skip(2).forEach(docid -> judgements.set(docid, createJudgmentNode(3)));
+        stream(FIFTEEN_SEARCH_HITS).skip(3).forEach(docid -> judgements.set(docid, createJudgmentNode(4)));
+        stream(FIFTEEN_SEARCH_HITS).skip(4).forEach(docid -> judgements.set(docid, createJudgmentNode(2)));
+        stream(FIFTEEN_SEARCH_HITS).skip(5).forEach(docid -> judgements.set(docid, createJudgmentNode(0)));
+        cut.setRelevantDocuments(judgements);
+
+        cut.setTotalHits(FIFTEEN_SEARCH_HITS.length, A_VERSION);
+        stream(FIFTEEN_SEARCH_HITS)
+                .map(this::searchHit)
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
+
+        assertEquals(
+                0.62,
+                cut.valueFactory(A_VERSION).value().doubleValue(),
+                0);
+    }
+
+    /**
+     * Scenario: 10 judgments, 15 search results, 5 relevant results in top positions.
+     */
+    @Test
     public void _10_judgments_15_search_only_results_10th_relevant_result() {
         final ObjectNode judgements = mapper.createObjectNode();
         stream(FIFTEEN_SEARCH_HITS).limit(10).forEach(docid -> judgements.set(docid, createJudgmentNode(3)));

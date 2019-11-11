@@ -88,18 +88,22 @@ abstract class BaseEvaluationManager {
      * A query string is the result of replacing all placeholders found in the template.
      *
      * @param queryNode       the JSON query node (in ratings configuration).
-     * @param defaultTemplate the default template that will be used if a query doesn't declare it.
+     * @param template the default template that will be used if a query doesn't declare it.
      * @param version         the version being executed.
      * @return a query (as a string) that will be used for executing a specific evaluation.
      */
-    private String query(final JsonNode queryNode, final String defaultTemplate, final String version) {
+    private String query(final JsonNode queryNode, final String template, final String version) {
         try {
-            String query = templateManager.getTemplate(defaultTemplate, getQueryTemplate(queryNode).orElse(null), version);
-            for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
-                final String name = iterator.next();
-                query = query.replace(name, queryNode.get("placeholders").get(name).asText());
+            if (template == null) {
+                return queryNode.toString();
+            } else {
+                String query = templateManager.getTemplate(template, getQueryTemplate(queryNode).orElse(null), version);
+                for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
+                    final String name = iterator.next();
+                    query = query.replace(name, queryNode.get("placeholders").get(name).asText());
+                }
+                return query;
             }
-            return query;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
