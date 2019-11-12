@@ -12,7 +12,7 @@
     <artifactId>rre-search-platform-external-solr-impl</artifactId>
     <name>RRE - External Solr search platform binding</name>
 
-    <version>7.6.0</version>
+    <version>8.3.0</version>
 
     <dependencies>
         <dependency>
