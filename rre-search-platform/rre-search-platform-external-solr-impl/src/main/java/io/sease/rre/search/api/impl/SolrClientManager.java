@@ -16,10 +16,12 @@
  */
 package io.sease.rre.search.api.impl;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.impl.SolrClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +29,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * Manager class for Solr Clients in use when connecting to external Solr instances.
@@ -52,14 +56,12 @@ class SolrClientManager implements Closeable {
         final SolrClient client;
 
         if (settings.hasZookeeperSettings()) {
-            final CloudSolrClient.Builder builder = new CloudSolrClient.Builder(settings.getZkHosts(), settings.getZkChroot());
-            client = applyTimeoutSettings(builder, settings).build();
-        } else if (settings.getBaseUrls().size() > 1) {
-            final CloudSolrClient.Builder builder = new CloudSolrClient.Builder(settings.getBaseUrls());
-            client = applyTimeoutSettings(builder, settings).build();
+            client = new CloudSolrClient(
+                            settings.getZkHosts(),
+                            settings.getZkChroot().orElse("/"),
+                            httpClient(settings));
         } else {
-            final HttpSolrClient.Builder builder = new HttpSolrClient.Builder(settings.getBaseUrls().get(0));
-            client = applyTimeoutSettings(builder, settings).build();
+            client = new HttpSolrClient(settings.getBaseUrls().get(0), httpClient(settings));
         }
 
         indexClients.put(targetIndexName, client);
@@ -69,19 +71,16 @@ class SolrClientManager implements Closeable {
      * Apply the timeout settings using methods common to all SolrClientBuilder
      * implementations.
      *
-     * @param builder  the SolrClientBuilder.
      * @param settings the SolrSettings, containing the (optional) timeout settings.
-     * @param <C>      the type of SolrClientBuilder in use.
      * @return the SolrClientBuilder with the timeout settings applied.
      */
-    private <C extends SolrClientBuilder> C applyTimeoutSettings(C builder, ExternalApacheSolr.SolrSettings settings) {
-        if (settings.getConnectionTimeout() != null) {
-            builder.withConnectionTimeout(settings.getConnectionTimeout());
-        }
-        if (settings.getSocketTimeout() != null) {
-            builder.withSocketTimeout(settings.getSocketTimeout());
-        }
-        return builder;
+    private HttpClient httpClient(ExternalApacheSolr.SolrSettings settings) {
+        RequestConfig.Builder builder = RequestConfig.custom();
+
+        ofNullable(settings.getConnectionTimeout()).ifPresent(builder::setConnectTimeout);
+        ofNullable(settings.getSocketTimeout()).ifPresent(builder::setSocketTimeout);
+
+        return HttpClientBuilder.create().setDefaultRequestConfig(builder.build()).build();
     }
 
     /**

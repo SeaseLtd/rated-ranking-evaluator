@@ -16,11 +16,11 @@
  */
 package io.sease.rre.search.api.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.DirectoryUtils;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
-import org.apache.htrace.fasterxml.jackson.databind.JsonNode;
-import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -110,7 +110,7 @@ public class ApacheSolr implements SearchPlatform {
 
         try {
             // Using absolute path for the targetIndexDir, otherwise Solr can put the core.properties in the wrong place.
-            proxy.getCoreContainer().create(targetIndexName, targetIndexDir.toPath().toAbsolutePath(), emptyMap(), true);
+            proxy.getCoreContainer().create(targetIndexName, targetIndexDir.toPath().toAbsolutePath(), emptyMap());
         } catch (SolrException e) {
             if (e.code() == SolrException.ErrorCode.SERVER_ERROR.code) {
                 // Core already exists - ignore

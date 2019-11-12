@@ -16,6 +16,7 @@
  */
 package io.sease.rre.search.api.impl;
 
+import org.apache.solr.client.solrj.embedded.JettyConfig;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.cloud.MiniSolrCloudCluster;
@@ -67,29 +68,6 @@ public class SolrClientManagerTest {
 
         assertNotNull(clientManager.getSolrClient(TARGET_INDEX));
         assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof HttpSolrClient);
-    }
-
-    @Test
-    public void buildsCloudSolrClientForMultipleHosts() throws Exception {
-        // Set a dummy log directory, to stop Solr complaining at start-up
-        System.setProperty("solr.log.dir", tempFolder.newFolder("logs").getAbsolutePath());
-        // Build a mini cluster to test with - cannot initialise CloudSolrClient without something to connect to
-        MiniSolrCloudCluster cluster = new SolrCloudTestCase.Builder(2, tempFolder.newFolder().toPath())
-                .build();
-        // Get the base URLs - doing it this way since jsr.getBaseUrl() doesn't return a valid URL
-        List<String> baseUrls = cluster.getJettySolrRunners().stream()
-                .map(jsr -> "http://localhost:" + jsr.getLocalPort() + "/solr")
-                .collect(Collectors.toList());
-
-        ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(baseUrls,
-                "test", null, null, null, null);
-
-        clientManager.buildSolrClient(TARGET_INDEX, settings);
-
-        assertNotNull(clientManager.getSolrClient(TARGET_INDEX));
-        assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof CloudSolrClient);
-
-        cluster.shutdown();
     }
 
     @Test

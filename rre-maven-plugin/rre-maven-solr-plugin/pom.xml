@@ -27,7 +27,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-maven-solr-plugin</artifactId>
-    <version>7.4.0</version>
+    <version>5.5.5</version>
     <packaging>maven-plugin</packaging>
     <name>RRE - Maven Apache Solr Plugin</name>
     <dependencies>
