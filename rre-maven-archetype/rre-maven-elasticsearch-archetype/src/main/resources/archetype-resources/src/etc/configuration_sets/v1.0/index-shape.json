@@ -7,7 +7,6 @@
         "raw_text": {
           "tokenizer": "standard",
           "filter": [
-            "standard",
             "lowercase"
           ]
         }
@@ -16,9 +15,6 @@
   },
   "mappings": {
     "doc": {
-      "_all": {
-        "enabled": false
-      },
       "properties": {
         "name": {
           "type": "text",
