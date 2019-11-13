@@ -22,13 +22,15 @@ import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import static io.sease.rre.Func.gainOrRatingNode;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 
 /**
@@ -58,12 +60,14 @@ public class NDCGAtTen extends Metric {
                 judgment(id(hit))
                         .ifPresent(judgment -> {
                             final BigDecimal value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(TWO);
+                            BigDecimal numerator = TWO.pow(value.intValue()).subtract(BigDecimal.ONE);
                             switch (rank) {
                                 case 1:
-                                    dcg = value;
+                                    dcg = numerator;
                                     break;
                                 default:
-                                    dcg = dcg.add(new BigDecimal(value.doubleValue() / (Math.log(rank + 1) / Math.log(2))));
+                                    double den = Math.log(rank + 1) / Math.log(2);
+                                    dcg = dcg.add(numerator.divide(new BigDecimal(den), 2, RoundingMode.FLOOR));
                             }
                         });
             }
@@ -92,27 +96,24 @@ public class NDCGAtTen extends Metric {
                 StreamSupport.stream(relevantDocuments.spliterator(), false)
                                 .collect(groupingBy(doc -> gainOrRatingNode(doc).map(JsonNode::intValue).orElse(2)));
 
-        final int veryVeryRelevantDocsCount = groups.getOrDefault(3, emptyList()).size();
-        final int howManyVeryVeryRelevantDocs = Math.min(veryVeryRelevantDocsCount, windowSize);
-
-        final int veryRelevantDocsCount = groups.getOrDefault(2, emptyList()).size();
-        final int howManyVeryRelevantDocs = Math.min(veryRelevantDocsCount, windowSize - howManyVeryVeryRelevantDocs);
-
-        final int marginallyRelevantDocsCount = groups.getOrDefault(1, emptyList()).size();
-        final int howManyMarginallyRelevantDocs = Math.max(Math.min(marginallyRelevantDocsCount - howManyVeryRelevantDocs, 0), 0);
-
-        Arrays.fill(gains, 0, howManyVeryVeryRelevantDocs, 3);
-        if (howManyVeryVeryRelevantDocs < windowSize) {
-            Arrays.fill(gains, howManyVeryVeryRelevantDocs, howManyVeryVeryRelevantDocs + howManyVeryRelevantDocs, 2);
+        Set<Integer> ratingValues = groups.keySet();
+        List<Integer> ratingsSorted = new ArrayList(ratingValues);
+        Collections.sort(ratingsSorted, Collections.reverseOrder());
+        int startIndex = 0;
+        for (Integer ratingValue : ratingsSorted) {
+            if (startIndex < windowSize) {
+                List<JsonNode> docsPerRating = groups.get(ratingValue);
+                int endIndex = startIndex + docsPerRating.size();
+                Arrays.fill(gains, startIndex, Math.min(windowSize, endIndex), ratingValue);
+                startIndex = endIndex;
+            }
         }
-
-        if (howManyVeryVeryRelevantDocs + howManyVeryRelevantDocs < windowSize) {
-            Arrays.fill(gains, howManyVeryVeryRelevantDocs + howManyVeryRelevantDocs, gains.length, 1);
-        }
-
-        BigDecimal result = gains.length > 0 ? new BigDecimal(gains[0]) : BigDecimal.ZERO;
-        for (int i = 1; i < gains.length; i++) {
-            result = result.add(new BigDecimal(gains[i] / (Math.log(i + 2) / Math.log(2))));
+        
+        BigDecimal result = BigDecimal.ZERO;
+        for (int i = 1; i <= gains.length; i++) {
+            BigDecimal num = TWO.pow(gains[i-1]).subtract(BigDecimal.ONE);
+            double den = Math.log(i + 1) / Math.log(2);
+            result = result.add((num.divide(new BigDecimal(den), 2, RoundingMode.FLOOR)));
         }
 
         return result;

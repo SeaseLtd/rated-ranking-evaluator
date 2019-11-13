@@ -47,11 +47,6 @@ public class VersionManagerImplTest {
         configFolder = tmp.newFolder();
     }
 
-    @Test(expected=IllegalArgumentException.class)
-    public void constructorThrowsIllegalArgument_whenNoFoldersAvailable() {
-        new VersionManagerImpl(configFolder, null, null, false);
-    }
-
     @Test
     public void constructorInitialisesWithSingleFolder() throws Exception {
         File v1 = new File(configFolder, "v1");

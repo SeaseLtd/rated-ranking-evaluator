@@ -19,7 +19,6 @@ package io.sease.rre.core.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.Field;
 import io.sease.rre.Func;
 import io.sease.rre.core.domain.metrics.HitsCollector;
 import io.sease.rre.core.domain.metrics.Metric;
@@ -41,6 +40,8 @@ import static java.util.stream.Collectors.toMap;
 public class Query extends DomainMember<Query> implements HitsCollector {
     protected String idFieldName = DEFAULT_ID_FIELD_NAME;
     protected JsonNode relevantDocuments;
+    protected String searchEngineQueryRequest;
+    protected String blackBoxQueryRequest;
 
     @Override
     public DomainMember setName(final String query) {
@@ -152,5 +153,21 @@ public class Query extends DomainMember<Query> implements HitsCollector {
      */
     public void setRelevantDocuments(final JsonNode relevantDocuments) {
         this.relevantDocuments = relevantDocuments;
+    }
+
+    public String getSearchEngineQueryRequest() {
+        return searchEngineQueryRequest;
+    }
+
+    public void setSearchEngineQueryRequest(String searchEngineQueryRequest) {
+        this.searchEngineQueryRequest = searchEngineQueryRequest;
+    }
+
+    public String getBlackBoxQueryRequest() {
+        return blackBoxQueryRequest;
+    }
+
+    public void setBlackBoxQueryRequest(String blackBoxQueryRequest) {
+        this.blackBoxQueryRequest = blackBoxQueryRequest;
     }
 }
