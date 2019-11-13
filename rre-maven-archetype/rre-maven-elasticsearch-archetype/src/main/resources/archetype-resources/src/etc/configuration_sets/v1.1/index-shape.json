@@ -17,7 +17,6 @@
         "raw_text": {
           "tokenizer": "standard",
           "filter": [
-            "standard",
             "lowercase",
             "en_stopwords"
           ]
@@ -27,9 +26,6 @@
   },
   "mappings": {
     "doc": {
-      "_all": {
-        "enabled": false
-      },
       "properties": {
         "name": {
           "type": "text",
