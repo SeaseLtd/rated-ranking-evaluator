@@ -84,6 +84,10 @@ public class PersistenceManager {
         }
     }
 
+    public List<PersistenceHandler> getHandlers() {
+        return handlers;
+    }
+
     public void recordQuery(Query query) {
         handlers.parallelStream().forEach(h -> h.recordQuery(query));
     }
