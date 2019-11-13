@@ -48,7 +48,10 @@ public class VersionManagerImpl implements VersionManager {
                 findConfigurationFolders(configurationSetFolder,
                         Optional.ofNullable(include).orElse(Collections.emptyList()),
                         Optional.ofNullable(exclude).orElse(Collections.emptyList())));
-
+        if (configurationVersionFolders.isEmpty()) {
+            LOGGER.warn("RRE: no target versions available. Check the configuration set folder and include/exclude clauses.");
+        }
+        
         this.configurationVersions = configurationVersionFolders.stream()
                 .map(File::getName)
                 .sorted()
