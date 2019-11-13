@@ -58,6 +58,7 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.elasticsearch.client.Requests.createIndexRequest;
@@ -76,12 +77,7 @@ public class Elasticsearch implements SearchPlatform {
 
     private static class RRENode extends Node {
         RRENode(final Settings settings, final Collection<Class<? extends Plugin>> plugins) {
-            super(prepareEnvironment(settings, null), plugins, true);
-        }
-
-        @Override
-        protected void registerDerivedNodeNameWithLogger(String s) {
-            // empty
+            super(prepareEnvironment(settings, emptyMap(), null, () -> "ANodeName"), plugins, true);
         }
     }
 
@@ -122,7 +118,6 @@ public class Elasticsearch implements SearchPlatform {
                 .put("http.type", "netty4")
                 .put("network.host", "127.0.0.1")
                 .put("http.port", (Integer) configuration.getOrDefault("network.host", 9200))
-                .put("http.enabled", "true")
                 .put("path.logs", logsFolder.getAbsolutePath())
                 .put("path.data", dataFolder.getAbsolutePath())
                 .put("cluster.name", "rre_" + System.currentTimeMillis());
@@ -269,7 +264,7 @@ public class Elasticsearch implements SearchPlatform {
 
     QueryOrSearchResponse convertResponse(final SearchResponse searchResponse) {
         return new QueryOrSearchResponse(
-                searchResponse.getHits().totalHits,
+                searchResponse.getHits().getTotalHits().value,
                 stream(searchResponse.getHits().getHits())
                         .map(hit -> {
                             final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());

@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
@@ -110,7 +111,7 @@ public class ExternalElasticsearch extends Elasticsearch {
         if (client == null) {
             throw new RuntimeException("No HTTP client found for index " + indexKey);
         }
-        return client.search(request);
+        return client.search(request, RequestOptions.DEFAULT);
     }
 
     @Override

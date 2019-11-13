@@ -12,7 +12,7 @@
     <artifactId>rre-search-platform-external-solr-impl</artifactId>
     <name>RRE - External Solr search platform binding</name>
 
-    <version>7.6.0</version>
+    <version>8.3.0</version>
 
     <dependencies>
         <dependency>
@@ -24,6 +24,16 @@
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-alpn-java-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-alpn-java-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>

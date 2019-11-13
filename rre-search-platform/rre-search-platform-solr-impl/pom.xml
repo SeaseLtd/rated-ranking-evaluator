@@ -27,7 +27,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-search-platform-solr-impl</artifactId>
-    <version>7.4.0</version>
+    <version>8.3.0</version>
     <name>RRE - Apache Solr platform binding</name>
     <dependencies>
         <dependency>
@@ -39,11 +39,36 @@
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-alpn-java-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-alpn-java-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-alpn-java-server</artifactId>
+                </exclusion>
+                <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-alpn-java-client</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.4</version>
         </dependency>
     </dependencies>
     <build>
