@@ -58,7 +58,6 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.elasticsearch.client.Requests.createIndexRequest;
@@ -77,7 +76,12 @@ public class Elasticsearch implements SearchPlatform {
 
     private static class RRENode extends Node {
         RRENode(final Settings settings, final Collection<Class<? extends Plugin>> plugins) {
-            super(prepareEnvironment(settings, emptyMap(), null, () -> "ANodeName"), plugins, true);
+            super(prepareEnvironment(settings, null), plugins, true);
+        }
+
+        @Override
+        protected void registerDerivedNodeNameWithLogger(String s) {
+            // empty
         }
     }
 
@@ -264,7 +268,7 @@ public class Elasticsearch implements SearchPlatform {
 
     QueryOrSearchResponse convertResponse(final SearchResponse searchResponse) {
         return new QueryOrSearchResponse(
-                searchResponse.getHits().getTotalHits().value,
+                searchResponse.getHits().totalHits,
                 stream(searchResponse.getHits().getHits())
                         .map(hit -> {
                             final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
