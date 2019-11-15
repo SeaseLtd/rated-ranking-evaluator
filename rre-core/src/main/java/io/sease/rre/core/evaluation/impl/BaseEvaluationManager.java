@@ -93,13 +93,20 @@ abstract class BaseEvaluationManager {
      * @return a query (as a string) that will be used for executing a specific evaluation.
      */
     private String query(final JsonNode queryNode, final String defaultTemplate, final String version) {
+        // try to see if the query declares a template
+        String template = getQueryTemplate(queryNode).orElse(null);
         try {
-            String query = templateManager.getTemplate(defaultTemplate, getQueryTemplate(queryNode).orElse(null), version);
-            for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
-                final String name = iterator.next();
-                query = query.replace(name, queryNode.get("placeholders").get(name).asText());
+            // EE case
+            if (template == null && defaultTemplate == null) {
+                return queryNode.toString();
+            } else {
+                String query = templateManager.getTemplate(defaultTemplate, template, version);
+                for (final Iterator<String> iterator = queryNode.get("placeholders").fieldNames(); iterator.hasNext(); ) {
+                    final String name = iterator.next();
+                    query = query.replace(name, queryNode.get("placeholders").get(name).asText());
+                }
+                return query;
             }
-            return query;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
