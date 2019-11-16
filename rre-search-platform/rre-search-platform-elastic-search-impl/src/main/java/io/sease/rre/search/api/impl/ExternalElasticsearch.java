@@ -21,21 +21,21 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import org.apache.http.HttpHost;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.http.entity.StringEntity;
+import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * SearchPlatform implementation for connecting to and reading from an external
@@ -44,14 +44,12 @@ import java.util.Map;
  * @author Matt Pearce (matt@flax.co.uk)
  */
 public class ExternalElasticsearch extends Elasticsearch {
-
-    private static final Logger LOGGER = LogManager.getLogger(ExternalElasticsearch.class);
+    private static final Logger LOGGER = Logger.getLogger(ExternalElasticsearch.class);
     private static final String NAME = "External Elasticsearch";
     static final String SETTINGS_FILE = "index-settings.json";
 
     private final Map<String, IndexSettings> indexSettingsMap = new HashMap<>();
-    private final Map<String, RestHighLevelClient> indexClients = new HashMap<>();
-    private final List<RestClient> indexLowLevelClients = new ArrayList<>();
+    private final Map<String, RestClient> indexClients = new HashMap<>();
 
     @Override
     public void beforeStart(Map<String, Object> configuration) {
@@ -73,10 +71,7 @@ public class ExternalElasticsearch extends Elasticsearch {
             // Load the index settings for this version of the search platform
             IndexSettings settings = mapper.readValue(settingsFile, IndexSettings.class);
             indexSettingsMap.put(targetIndexName, settings);
-
-            RestClient lowLevelClient = initialiseLowLevelClient(settings.getHostUrls());
-            indexLowLevelClients.add(lowLevelClient);
-            indexClients.put(targetIndexName, new RestHighLevelClient(lowLevelClient));
+            indexClients.put(targetIndexName, initialiseLowLevelClient(settings.getHostUrls()));
         } catch (IOException e) {
             LOGGER.error("Could not read settings from " + settingsFile.getName() + " :: " + e.getMessage());
         }
@@ -111,11 +106,12 @@ public class ExternalElasticsearch extends Elasticsearch {
     }
 
     private SearchResponse runQuery(final String indexKey, final SearchRequest request) throws IOException {
-        RestHighLevelClient client = indexClients.get(indexKey);
+        RestClient client = indexClients.get(indexKey);
         if (client == null) {
             throw new RuntimeException("No HTTP client found for index " + indexKey);
         }
-        return client.search(request);
+
+        return client.performRequest("POST", "_search", emptyMap(), new StringEntity(request.source().toString()));
     }
 
     @Override

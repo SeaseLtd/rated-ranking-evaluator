@@ -24,8 +24,7 @@ import io.sease.rre.DirectoryUtils;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
 import io.sease.rre.search.api.UnableToLoadDataException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -62,7 +61,7 @@ import static java.util.stream.Collectors.toList;
 import static org.elasticsearch.client.Requests.createIndexRequest;
 import static org.elasticsearch.client.Requests.deleteIndexRequest;
 import static org.elasticsearch.client.Requests.indicesExistsRequest;
-import static org.elasticsearch.node.InternalSettingsPreparer.prepareEnvironment;
+import static org.elasticsearch.node.internal.InternalSettingsPreparer.prepareEnvironment;
 
 //import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
 
@@ -73,7 +72,7 @@ import static org.elasticsearch.node.InternalSettingsPreparer.prepareEnvironment
  * @since 1.0
  */
 public class Elasticsearch implements SearchPlatform {
-    private static final Logger LOGGER = LogManager.getLogger(Elasticsearch.class);
+    private static final Logger LOGGER = Logger.getLogger(Elasticsearch.class);
 
     private static class RRENode extends Node {
         RRENode(final Settings settings, final Collection<Class<? extends Plugin>> plugins) {
@@ -153,7 +152,7 @@ public class Elasticsearch implements SearchPlatform {
             ofNullable(esconfig.get("settings"))
                     .ifPresent(settings -> {
                         try {
-                            request.settings(Settings.builder().loadFromSource(mapper.writeValueAsString(settings), XContentType.JSON).build());
+                            request.settings(Settings.builder().loadFromSource(mapper.writeValueAsString(settings)).build());
                         } catch (JsonProcessingException exception) {
                             LOGGER.error("Invalid \"settings\" section in Elasticsearch configuration. " +
                                     "As consequence of that the entire section will be skipped.", exception);
@@ -264,10 +263,10 @@ public class Elasticsearch implements SearchPlatform {
 
     QueryOrSearchResponse convertResponse(final SearchResponse searchResponse) {
         return new QueryOrSearchResponse(
-                searchResponse.getHits().totalHits,
+                searchResponse.getHits().totalHits(),
                 stream(searchResponse.getHits().getHits())
                         .map(hit -> {
-                            final Map<String, Object> result = new HashMap<>(hit.getSourceAsMap());
+                            final Map<String, Object> result = new HashMap<>(hit.getSource());
                             result.put("_id", hit.getId());
                             return result;
                         })
