@@ -34,7 +34,6 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -65,6 +64,8 @@ import static org.elasticsearch.client.Requests.deleteIndexRequest;
 import static org.elasticsearch.client.Requests.indicesExistsRequest;
 import static org.elasticsearch.node.InternalSettingsPreparer.prepareEnvironment;
 
+//import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
+
 /**
  * Elasticsearch platform API implementation.
  *
@@ -76,12 +77,7 @@ public class Elasticsearch implements SearchPlatform {
 
     private static class RRENode extends Node {
         RRENode(final Settings settings, final Collection<Class<? extends Plugin>> plugins) {
-            super(prepareEnvironment(settings, null), plugins, true);
-        }
-
-        @Override
-        protected void registerDerivedNodeNameWithLogger(String s) {
-            // empty
+            super(prepareEnvironment(settings, null), plugins);
         }
     }
 
@@ -285,7 +281,7 @@ public class Elasticsearch implements SearchPlatform {
 
     @SuppressWarnings("unchecked")
     private List<Class<? extends Plugin>> plugins(final Map<String, Object> configuration) {
-        final List<Class<? extends Plugin>> defaultPlugins = asList(Netty4Plugin.class, CommonAnalysisPlugin.class);
+        final List<Class<? extends Plugin>> defaultPlugins = asList(Netty4Plugin.class);
         final List<? extends Class<? extends Plugin>> customPlugins =
                 ofNullable((List<String>)configuration.get("plugins"))
                         .map(plugins ->

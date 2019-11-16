@@ -26,12 +26,12 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +51,7 @@ public class ExternalElasticsearch extends Elasticsearch {
 
     private final Map<String, IndexSettings> indexSettingsMap = new HashMap<>();
     private final Map<String, RestHighLevelClient> indexClients = new HashMap<>();
+    private final List<RestClient> indexLowLevelClients = new ArrayList<>();
 
     @Override
     public void beforeStart(Map<String, Object> configuration) {
@@ -72,19 +73,22 @@ public class ExternalElasticsearch extends Elasticsearch {
             // Load the index settings for this version of the search platform
             IndexSettings settings = mapper.readValue(settingsFile, IndexSettings.class);
             indexSettingsMap.put(targetIndexName, settings);
-            indexClients.put(targetIndexName, initialiseClient(settings.getHostUrls()));
+
+            RestClient lowLevelClient = initialiseLowLevelClient(settings.getHostUrls());
+            indexLowLevelClients.add(lowLevelClient);
+            indexClients.put(targetIndexName, new RestHighLevelClient(lowLevelClient));
         } catch (IOException e) {
             LOGGER.error("Could not read settings from " + settingsFile.getName() + " :: " + e.getMessage());
         }
     }
 
-    private RestHighLevelClient initialiseClient(List<String> hosts) {
+    private RestClient initialiseLowLevelClient(List<String> hosts) {
         // Convert hosts to HTTP host objects
         HttpHost[] httpHosts = hosts.stream()
                 .map(HttpHost::create)
                 .toArray(HttpHost[]::new);
 
-        return new RestHighLevelClient(RestClient.builder(httpHosts));
+        return RestClient.builder(httpHosts).build();
     }
 
     @Override
@@ -111,7 +115,7 @@ public class ExternalElasticsearch extends Elasticsearch {
         if (client == null) {
             throw new RuntimeException("No HTTP client found for index " + indexKey);
         }
-        return client.search(request, RequestOptions.DEFAULT);
+        return client.search(request);
     }
 
     @Override
@@ -131,10 +135,10 @@ public class ExternalElasticsearch extends Elasticsearch {
 
     @Override
     public void close() {
-        indexClients.values().forEach(this::closeClient);
+        indexLowLevelClients.forEach(this::closeClient);
     }
 
-    private void closeClient(RestHighLevelClient client) {
+    private void closeClient(RestClient client) {
         try {
             client.close();
         } catch (IOException e) {

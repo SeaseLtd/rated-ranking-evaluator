@@ -27,7 +27,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-search-platform-elasticsearch-impl</artifactId>
-    <version>6.7.2</version>
+    <version>5.6.16</version>
     <name>RRE - Elasticsearch platform binding</name>
     <dependencies>
         <dependency>
@@ -66,10 +66,10 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.codelibs.elasticsearch.module</groupId>
-            <artifactId>analysis-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.codelibs.elasticsearch.module</groupId>-->
+<!--            <artifactId>analysis-common</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
     </dependencies>
 </project>
