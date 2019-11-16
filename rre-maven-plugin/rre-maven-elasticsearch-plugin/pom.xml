@@ -27,7 +27,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-maven-elasticsearch-plugin</artifactId>
-    <version>6.7.2</version>
+    <version>6.6.2</version>
     <packaging>maven-plugin</packaging>
     <name>RRE - Maven Elasticsearch Plugin</name>
     <dependencies>
