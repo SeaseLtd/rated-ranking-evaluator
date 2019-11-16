@@ -27,7 +27,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-search-platform-elasticsearch-impl</artifactId>
-    <version>6.1.4</version>
+    <version>6.0.1</version>
     <name>RRE - Elasticsearch platform binding</name>
     <dependencies>
         <dependency>
