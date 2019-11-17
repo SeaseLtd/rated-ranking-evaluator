@@ -24,6 +24,12 @@
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jdk.tools</artifactId>
+                    <groupId>jdk.tools</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -44,6 +50,10 @@
                     <groupId>org.restlet.jee</groupId>
                     <artifactId>org.restlet.ext.servlet</artifactId>
                 </exclusion>
+                    <exclusion>
+                        <artifactId>jdk.tools</artifactId>
+                        <groupId>jdk.tools</groupId>
+                    </exclusion>
             </exclusions>
         </dependency>
     </dependencies>
