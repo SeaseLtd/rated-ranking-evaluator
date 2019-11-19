@@ -3,11 +3,24 @@
   <groupId>io.sease</groupId>
   <artifactId>rre-maven-external-elasticsearch-plugin</artifactId>
   <versioning>
-    <latest>6.7.1</latest>
-    <release>6.7.1</release>
+    <latest>7.3.2</latest>
+    <release>7.3.2</release>
     <versions>
       <version>6.7.1</version>
+      <version>5.6.16</version>
+      <version>6.0.1</version>
+      <version>6.1.4</version>
+      <version>6.3.2</version>
+      <version>6.4.3</version>
+      <version>6.5.4</version>
+      <version>6.6.2</version>
+      <version>6.7.2</version>
+      <version>6.8.4</version>
+      <version>7.0.1</version>
+      <version>7.1.1</version>
+      <version>7.2.1</version>
+      <version>7.3.2</version>
     </versions>
-    <lastUpdated>20191117105453</lastUpdated>
+    <lastUpdated>20191119154118</lastUpdated>
   </versioning>
 </metadata>
