@@ -43,7 +43,7 @@ public interface SearchPlatform extends Closeable {
      * @param collection the name of the index where data will be indexed.
      * @param version the id of the configuration version
      */
-    void load(final File dataToBeIndexed, final File configFolder, final String collection, String version);
+    void load(final File dataToBeIndexed, final File configFolder, final String collection, final String version);
 
     /**
      * Returns the FQDN of the target index that will be used.
