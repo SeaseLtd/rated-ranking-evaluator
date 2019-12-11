@@ -38,13 +38,26 @@ public interface SearchPlatform extends Closeable {
 
     /**
      * Loads some data in a given index.
-     *
-     * @param corpus          the data.
+     *  @param dataToBeIndexed          the data.
      * @param configFolder    the folder that contains the configuration for the given index.
-     * @param targetIndexName the name of the index where data will be indexed.
+     * @param collection the name of the index where data will be indexed.
+     * @param version the id of the configuration version
      */
-    void load(final File corpus, final File configFolder, final String targetIndexName);
+    void load(final File dataToBeIndexed, final File configFolder, final String collection, String version);
 
+    /**
+     * Returns the FQDN of the target index that will be used.
+     * Starting from the index name declared in the configuration, RRE uses an internal naming (which adds the version
+     * name) for avoiding conflicts between versions.
+     *
+     * @param indexName the index name.
+     * @param version   the current version.
+     * @return the FDQN of the target index that will be used.
+     */
+    default String getFullyQualifiedDomainName(final String indexName, final String version) {
+        return (indexName + "_" + version).toLowerCase();
+    }
+    
     /**
      * Starts this search platform.
      */
@@ -64,13 +77,14 @@ public interface SearchPlatform extends Closeable {
      * Executes the given query.
      * The semantic of the input query may change between concrete platforms
      *
-     * @param indexName the index name that holds the data.
+     * @param collection the index name that holds the data.
+     * @param version the id of the configuration version
      * @param query     the query.
      * @param fields    the fields to return.
      * @param maxRows   the maximum number of rows that will be returned.
      * @return the response of the query execution.
      */
-    QueryOrSearchResponse executeQuery(String indexName, String query, final String[] fields, int maxRows);
+    QueryOrSearchResponse executeQuery(String collection, String version, String query, final String[] fields, int maxRows);
 
     /**
      * Returns the name of this search platform.
@@ -98,7 +112,7 @@ public interface SearchPlatform extends Closeable {
      * @return {@code true} if the file is a search platform config file or
      * directory.
      */
-    boolean isSearchPlatformFile(String indexName, File file);
+    boolean isSearchPlatformConfiguration(String indexName, File file);
 
     /**
      * @return {@code true} if this platform requires a corpora file to be
