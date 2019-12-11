@@ -51,7 +51,6 @@ public class ExternalApacheSolr implements SearchPlatform {
     private static final String NAME = "External Apache Solr";
     static final String SETTINGS_FILE = "solr-settings.json";
 
-    private final Map<String, SolrSettings> indexSettingsMap = new HashMap<>();
     private final SolrClientManager clientManager = new SolrClientManager();
 
     @Override
@@ -70,7 +69,7 @@ public class ExternalApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public void load(File corpus, File settingsFile, String targetIndexName) {
+    public void load(File dataToBeIndexed, File settingsFile, String collection, String version) {
         // Corpus file is not used for this implementation
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -78,8 +77,10 @@ public class ExternalApacheSolr implements SearchPlatform {
         try {
             // Load the index settings for this version of the search platform
             SolrSettings settings = mapper.readValue(settingsFile, SolrSettings.class);
-            indexSettingsMap.put(targetIndexName, settings);
-            clientManager.buildSolrClient(targetIndexName, settings);
+
+            if (clientManager.getSolrClient(version) == null) {
+                clientManager.buildSolrClient(version, settings);
+            }
         } catch (IOException e) {
             LOGGER.error("Could not read settings from " + settingsFile.getName() + " :: " + e.getMessage());
         }
@@ -91,7 +92,7 @@ public class ExternalApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(String indexName, String queryString, String[] fields, int maxRows) {
+    public QueryOrSearchResponse executeQuery(String collection, String version, String queryString, String[] fields, int maxRows) {
         try {
             final SolrQuery query =
                     new SolrQuery()
@@ -113,8 +114,8 @@ public class ExternalApacheSolr implements SearchPlatform {
                 query.add(field.getKey(), value);
             }
 
-            return of(clientManager.getSolrClient(indexName)
-                    .query(indexSettingsMap.get(indexName).getCollectionName(), query, SolrRequest.METHOD.POST))
+            return of(clientManager.getSolrClient(version)
+                    .query(collection, query, SolrRequest.METHOD.POST))
                     .map(response ->
                             new QueryOrSearchResponse(
                                     response.getResults().getNumFound(),
@@ -139,8 +140,8 @@ public class ExternalApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public boolean isSearchPlatformFile(String indexName, File file) {
-        return file.isFile() && file.getName().equals(SETTINGS_FILE);
+    public boolean isSearchPlatformConfiguration(String indexName, File searchEngineStartupSettings) {
+        return searchEngineStartupSettings.isFile() && searchEngineStartupSettings.getName().equals(SETTINGS_FILE);
     }
 
     @Override
@@ -158,8 +159,6 @@ public class ExternalApacheSolr implements SearchPlatform {
 
         @JsonProperty("baseUrls")
         private final List<String> baseUrls;
-        @JsonProperty("collectionName")
-        private final String collectionName;
         @JsonProperty("zkHosts")
         private final List<String> zkHosts;
         @JsonProperty("zkChroot")
@@ -170,13 +169,11 @@ public class ExternalApacheSolr implements SearchPlatform {
         private final Integer socketTimeout;
 
         public SolrSettings(@JsonProperty("baseUrls") List<String> baseUrls,
-                            @JsonProperty("collectionName") String collectionName,
                             @JsonProperty("zkHosts") List<String> zkHosts,
                             @JsonProperty("zkChroot") String zkChroot,
                             @JsonProperty("connectionTimeoutMillis") Integer connectionTimeout,
                             @JsonProperty("socketTimeoutMillis") Integer socketTimeout) throws IllegalArgumentException {
             this.baseUrls = baseUrls;
-            this.collectionName = collectionName;
             this.zkHosts = zkHosts;
             this.zkChroot = (zkChroot != null && zkChroot.length() > 0 ? zkChroot : null);
             this.connectionTimeout = connectionTimeout;
@@ -190,17 +187,10 @@ public class ExternalApacheSolr implements SearchPlatform {
             if ((baseUrls == null || baseUrls.isEmpty()) && !hasZookeeperSettings()) {
                 throw new IllegalArgumentException("Required configuration missing! No Solr or Zookeeper URLs set!");
             }
-            if (collectionName == null || collectionName.length() == 0) {
-                throw new IllegalArgumentException("Required configuration missing! No collectionName set!");
-            }
         }
 
         public List<String> getBaseUrls() {
             return baseUrls;
-        }
-
-        public String getCollectionName() {
-            return collectionName;
         }
 
         public List<String> getZkHosts() {

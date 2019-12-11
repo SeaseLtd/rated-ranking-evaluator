@@ -445,31 +445,39 @@ public class Engine {
     /**
      * Prepares the search platform with the given index name and dataset.
      *
-     * @param indexName the index name.
-     * @param data      the dataset.
+     * @param collection the index name.
+     * @param dataToBeIndexed      the dataset.
      */
-    private void prepareData(final String indexName, final File data) {
-        if (data != null) {
-            LOGGER.info("Preparing data for " + indexName + " from " + data.getAbsolutePath());
+    private void prepareData(final String collection, final File dataToBeIndexed) {
+        if (dataToBeIndexed != null) {
+            LOGGER.info("Preparing dataToBeIndexed for " + collection + " from " + dataToBeIndexed.getAbsolutePath());
         } else {
-            LOGGER.info("Preparing platform for " + indexName);
+            LOGGER.info("Preparing platform for " + collection);
         }
 
-        boolean corporaChanged = folderHasChanged(corporaFolder);
-
-        versionManager.getConfigurationVersionFolders().stream()
-                .filter(versionFolder -> (folderHasChanged(versionFolder) || corporaChanged || platform.isRefreshRequired()))
-                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
-                .filter(file -> platform.isSearchPlatformFile(indexName, file))
+        Stream<File> searchCollectionsConfigs = versionManager.getConfigurationVersionFolders().stream()
+                .filter(versionFolder -> isConfigurationReloadNecessary(versionFolder))
+                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))));
+        //each one of searchCollectionsConfigs stream elements is a full configuration for a search collection
+        searchCollectionsConfigs
+                .filter(file -> platform.isSearchPlatformConfiguration(collection, file))
                 .sorted()
-                .peek(file -> LOGGER.info("RRE: Loading the Test Collection into " + platform.getName() + ", configuration version " + file.getParentFile().getName()))
-                .forEach(fileOrFolder -> platform.load(data, fileOrFolder, indexFqdn(indexName, fileOrFolder.getParentFile().getName())));
+                .peek(searchPlatformConfiguration -> LOGGER.info("RRE: Loading the Search Engine " + platform.getName() + ", configuration version " + searchPlatformConfiguration.getParentFile().getName()))
+                .forEach(searchPlatformConfiguration -> {
+                    String version = searchPlatformConfiguration.getParentFile().getName();
+                    platform.load(dataToBeIndexed, searchPlatformConfiguration, collection, version);
+                });
 
         LOGGER.info("RRE: " + platform.getName() + " has been correctly loaded.");
 
         flushFileChecksums();
 
         LOGGER.info("RRE: target versions are " + String.join(",", versionManager.getConfigurationVersions()));
+    }
+
+    private boolean isConfigurationReloadNecessary( File versionFolder) {
+        boolean corporaChanged = folderHasChanged(corporaFolder);
+        return folderHasChanged(versionFolder) || corporaChanged || platform.isRefreshRequired();
     }
 
     private boolean folderHasChanged(File folder) {
@@ -496,16 +504,5 @@ public class Engine {
         }
     }
 
-    /**
-     * Returns the FQDN of the target index that will be used.
-     * Starting from the index name declared in the configuration, RRE uses an internal naming (which adds the version
-     * name) for avoiding conflicts between versions.
-     *
-     * @param indexName the index name.
-     * @param version   the current version.
-     * @return the FDQN of the target index that will be used.
-     */
-    public static String indexFqdn(final String indexName, final String version) {
-        return (indexName + "_" + version).toLowerCase();
-    }
+    
 }
