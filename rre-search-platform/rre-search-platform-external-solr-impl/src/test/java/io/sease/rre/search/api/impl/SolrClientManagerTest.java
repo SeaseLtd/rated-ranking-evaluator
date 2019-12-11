@@ -57,18 +57,18 @@ public class SolrClientManagerTest {
     @Test
     public void buildsHttpSolrClientForSingleHost() {
         ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(
-                Collections.singletonList("http://localhost:8983/solr"), "test", null, null, null, null);
+                Collections.singletonList("http://localhost:8983/solr"), null, null, null, null);
 
         clientManager.buildSolrClient(TARGET_INDEX, settings);
 
         assertNotNull(clientManager.getSolrClient(TARGET_INDEX));
         assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof HttpSolrClient);
     }
-
+    
     @Test
     public void buildsCloudSolrClientForZkHosts() {
         ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(
-                null, "test", Arrays.asList("localhost:2181", "localhost:2182"), null, null, null);
+                null, Arrays.asList("localhost:2181", "localhost:2182"), null, null, null);
 
         clientManager.buildSolrClient(TARGET_INDEX, settings);
 
