@@ -129,11 +129,11 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
-    public void load(final File data, File indexShapeFile, String indexName) {
+    public void load(final File dataToBeIndexed, File indexShapeFile, String collection, String version) {
         if (!indexShapeFile.getName().startsWith("index")) {
             throw new IllegalArgumentException("Unable to find an index-shape (i.e. settings + mappings) within the configuration folder.");
         }
-
+        String indexName = getFullyQualifiedDomainName(collection, version);
         try {
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode esconfig = mapper.readTree(indexShapeFile);
@@ -177,7 +177,7 @@ public class Elasticsearch implements SearchPlatform {
             proxy.admin().indices().create(request).actionGet();
 
             final BulkRequest bulkRequest = new BulkRequest();
-            final List<String> lines = Files.readAllLines(data.toPath());
+            final List<String> lines = Files.readAllLines(dataToBeIndexed.toPath());
 
             for (int i = 0; i < lines.size(); i += 2) {
                 JsonNode metadata = mapper.readTree(lines.get(i)).get("index");
@@ -193,7 +193,7 @@ public class Elasticsearch implements SearchPlatform {
             if (response.hasFailures()) {
                 final String message =
                         "Unable to load datafile (" +
-                                data.getAbsolutePath() +
+                                dataToBeIndexed.getAbsolutePath() +
                                 ") in " +
                                 getName() +
                                 " using the index shape (" +
@@ -245,7 +245,8 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String[] fields, final int maxRows) {
+    public QueryOrSearchResponse executeQuery(final String collection, String version, final String query, final String[] fields, final int maxRows) {
+        String indexName = getFullyQualifiedDomainName(collection, version);
         try {
             final SearchResponse qresponse = proxy.search(buildSearchRequest(indexName, query, fields, maxRows)).actionGet();
             return convertResponse(qresponse);
@@ -328,7 +329,7 @@ public class Elasticsearch implements SearchPlatform {
     }
 
     @Override
-    public boolean isSearchPlatformFile(String indexName, File file) {
+    public boolean isSearchPlatformConfiguration(String indexName, File file) {
         return file.isFile() && file.getName().equals("index-shape.json");
     }
 
