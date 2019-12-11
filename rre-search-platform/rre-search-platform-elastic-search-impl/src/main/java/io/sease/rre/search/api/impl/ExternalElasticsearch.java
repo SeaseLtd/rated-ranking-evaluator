@@ -48,7 +48,6 @@ public class ExternalElasticsearch extends Elasticsearch {
     private static final String NAME = "External Elasticsearch";
     static final String SETTINGS_FILE = "index-settings.json";
 
-    private final Map<String, IndexSettings> indexSettingsMap = new HashMap<>();
     private final Map<String, RestHighLevelClient> indexClients = new HashMap<>();
 
     @Override
@@ -62,7 +61,7 @@ public class ExternalElasticsearch extends Elasticsearch {
     }
 
     @Override
-    public void load(File corpus, File settingsFile, String targetIndexName) {
+    public void load(File dataToBeIndexed, File settingsFile, String collection, String version) {
         // Corpus file is not used for this implementation
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -70,8 +69,10 @@ public class ExternalElasticsearch extends Elasticsearch {
         try {
             // Load the index settings for this version of the search platform
             IndexSettings settings = mapper.readValue(settingsFile, IndexSettings.class);
-            indexSettingsMap.put(targetIndexName, settings);
-            indexClients.put(targetIndexName, initialiseClient(settings.getHostUrls()));
+            if (indexClients.get(version) == null) {
+                indexClients.put(version, initialiseClient(settings.getHostUrls()));
+            }
+
         } catch (IOException e) {
             LOGGER.error("Could not read settings from " + settingsFile.getName() + " :: " + e.getMessage());
         }
@@ -87,15 +88,11 @@ public class ExternalElasticsearch extends Elasticsearch {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String indexName, final String query, final String[] fields, final int maxRows) {
-        // Find the actual index to search
-        if (!indexSettingsMap.containsKey(indexName)) {
-            throw new IllegalArgumentException("Cannot find settings for index " + indexName);
-        }
+    public QueryOrSearchResponse executeQuery(final String collection, String version, final String query, final String[] fields, final int maxRows) {
 
         try {
-            final SearchRequest request = buildSearchRequest(indexSettingsMap.get(indexName).getIndex(), query, fields, maxRows);
-            final SearchResponse response = runQuery(indexName, request);
+            final SearchRequest request = buildSearchRequest(collection, query, fields, maxRows);
+            final SearchResponse response = runQuery(version, request);
             return convertResponse(response);
         } catch (final ElasticsearchException e) {
             LOGGER.error("Caught ElasticsearchException :: " + e.getMessage());
@@ -105,10 +102,10 @@ public class ExternalElasticsearch extends Elasticsearch {
         }
     }
 
-    private SearchResponse runQuery(final String indexKey, final SearchRequest request) throws IOException {
-        RestHighLevelClient client = indexClients.get(indexKey);
+    private SearchResponse runQuery(final String clientId, final SearchRequest request) throws IOException {
+        RestHighLevelClient client = indexClients.get(clientId);
         if (client == null) {
-            throw new RuntimeException("No HTTP client found for index " + indexKey);
+            throw new RuntimeException("No HTTP client found for index " + clientId);
         }
         return client.search(request);
     }
@@ -119,8 +116,8 @@ public class ExternalElasticsearch extends Elasticsearch {
     }
 
     @Override
-    public boolean isSearchPlatformFile(String indexName, File file) {
-        return file.isFile() && file.getName().equals(SETTINGS_FILE);
+    public boolean isSearchPlatformConfiguration(String indexName, File searchEngineStartupSettings) {
+        return searchEngineStartupSettings.isFile() && searchEngineStartupSettings.getName().equals(SETTINGS_FILE);
     }
 
     @Override
@@ -143,20 +140,12 @@ public class ExternalElasticsearch extends Elasticsearch {
 
 
     public static class IndexSettings {
-
-        @JsonProperty("index")
-        private final String index;
         @JsonProperty("hostUrls")
         private final List<String> hostUrls;
 
-        public IndexSettings(@JsonProperty("index") String index,
-                             @JsonProperty("hostUrls") List<String> hostUrls) {
-            this.index = index;
-            this.hostUrls = hostUrls;
-        }
+        public IndexSettings(@JsonProperty("hostUrls") List<String> hostUrls) {
 
-        String getIndex() {
-            return index;
+            this.hostUrls = hostUrls;
         }
 
         List<String> getHostUrls() {
