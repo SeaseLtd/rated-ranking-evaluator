@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
-public class ExternalApacheSolrTests {
+public class ExternalApacheSolrTest {
 
     private static final String INDEX_NAME = "test";
 
@@ -49,18 +49,18 @@ public class ExternalApacheSolrTests {
     @Test
     public void isSearchPlatformFile_returnsFalseWhenDirectory() throws Exception {
         File dummyFile = tempFolder.newFolder();
-        assertFalse(platform.isSearchPlatformFile(INDEX_NAME, dummyFile));
+        assertFalse(platform.isSearchPlatformConfiguration(INDEX_NAME, dummyFile));
     }
 
     @Test
     public void isSearchPlatformFile_returnsFalseWhenFileIsNotESConfig() throws Exception {
         File dummyFile = tempFolder.newFile();
-        assertFalse(platform.isSearchPlatformFile(INDEX_NAME, dummyFile));
+        assertFalse(platform.isSearchPlatformConfiguration(INDEX_NAME, dummyFile));
     }
 
     @Test
     public void isSearchPlatformFile_returnsTrueWhenDirectoryContainsConfig() throws Exception {
         File configFile = tempFolder.newFile(ExternalApacheSolr.SETTINGS_FILE);
-        assertTrue(platform.isSearchPlatformFile(INDEX_NAME, configFile));
+        assertTrue(platform.isSearchPlatformConfiguration(INDEX_NAME, configFile));
     }
 }
