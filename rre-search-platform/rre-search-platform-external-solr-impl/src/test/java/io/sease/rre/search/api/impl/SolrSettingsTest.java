@@ -69,17 +69,12 @@ public class SolrSettingsTest {
 
     @Test(expected=java.lang.IllegalArgumentException.class)
     public void constructorThrowsException_whenNoURLsSet() {
-        new ExternalApacheSolr.SolrSettings(null, "test", null, null, null, null);
-    }
-
-    @Test(expected=java.lang.IllegalArgumentException.class)
-    public void constructorThrowsException_whenNoCollectionSet() {
-        new ExternalApacheSolr.SolrSettings(Collections.singletonList("localhost:8983"), null, null, null, null, null);
+        new ExternalApacheSolr.SolrSettings(null, null, null, null, null);
     }
 
     @Test
     public void canConstructWithZkHostsOnly() {
-        ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(null, "test", Collections.singletonList("localhost:2181"), null, null, null);
+        ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(null, Collections.singletonList("localhost:2181"), null, null, null);
         assertNotNull(settings);
         assertTrue(settings.hasZookeeperSettings());
     }
