@@ -86,11 +86,10 @@ public class ApacheSolr implements SearchPlatform {
 
         System.setProperty("solr.data.dir", dataDir.getAbsolutePath());
 
-
     }
 
     @Override
-    public void load(final File data, final File configFolder, final String targetIndexName) {
+    public void load(final File dataToBeIndexed, final File configFolder, final String collection, String version) {
         coreProperties = new File(configFolder, "core.properties");
         if (coreProperties.exists()) {
             renamedCoreProperties = new File(configFolder, "core.properties.ignore");
@@ -98,7 +97,8 @@ public class ApacheSolr implements SearchPlatform {
         }
 
         // Copy files from configFolder into solrHome/targetIndexName
-        File targetIndexDir = new File(solrHome, targetIndexName);
+        String coreName = getFullyQualifiedDomainName(collection, version);
+        File targetIndexDir = new File(solrHome, coreName);
         try {
             // Make sure the directory is deleted before copying to it
             DirectoryUtils.deleteDirectory(targetIndexDir);
@@ -110,13 +110,13 @@ public class ApacheSolr implements SearchPlatform {
         if (proxy == null) {
             CoreContainer container = new CoreContainer(solrHome.getAbsolutePath());
             container.load();
-            container.create(new CoreDescriptor(container, targetIndexName, targetIndexDir.getAbsolutePath()));
+            container.create(new CoreDescriptor(container, coreName, targetIndexDir.getAbsolutePath()));
 
-            proxy = new EmbeddedSolrServer(container, targetIndexName);
+            proxy = new EmbeddedSolrServer(container, coreName);
         }
 
         try {
-            UpdateResponse response = new JsonUpdateRequest(new FileInputStream(data)).process(proxy);
+            UpdateResponse response = new JsonUpdateRequest(new FileInputStream(dataToBeIndexed)).process(proxy);
             if (response.getStatus() != 0) {
                 throw new IllegalArgumentException("Received an error status from Solr: " + response.getStatus());
             }
@@ -157,7 +157,7 @@ public class ApacheSolr implements SearchPlatform {
             try {
                 solr.shutdown();
             } catch (final Exception exception) {
-                // Ignore
+                exception.printStackTrace();
             }
         });
 
@@ -169,7 +169,7 @@ public class ApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString, final String[] fields, final int maxRows) {
+    public QueryOrSearchResponse executeQuery(final String collection, final String version, final String queryString, final String[] fields, final int maxRows) {
         try {
             final SolrQuery query =
                     new SolrQuery()
@@ -241,7 +241,7 @@ public class ApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public boolean isSearchPlatformFile(String indexName, File file) {
+    public boolean isSearchPlatformConfiguration(String indexName, File file) {
         return file.isDirectory() && file.getName().equals(indexName);
     }
 
