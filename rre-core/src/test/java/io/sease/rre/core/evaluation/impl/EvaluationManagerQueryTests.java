@@ -76,7 +76,7 @@ public class EvaluationManagerQueryTests {
         // Set up template manager
         when(templateManager.getTemplate(isNull(), eq(TEMPLATE), isA(String.class))).thenReturn(QUERY_TEMPLATE);
         // Set up platform for each version query
-        versions.forEach(v -> when(platform.executeQuery(eq(INDEX_NAME + "_" + v), eq(QUERY_VALUE), any(String[].class), anyInt()))
+        versions.forEach(v -> when(platform.executeQuery(eq(INDEX_NAME), eq(v), eq(QUERY_VALUE), any(String[].class), anyInt()))
                 .thenReturn(new QueryOrSearchResponse(0, Collections.emptyList())));
     }
 
@@ -124,7 +124,7 @@ public class EvaluationManagerQueryTests {
     }
 
     private void verifySearchPlatform() {
-        versions.forEach(v -> verify(platform).executeQuery(eq(INDEX_NAME + "_" + v), eq(QUERY_VALUE), eq(fields), anyInt()));
+        versions.forEach(v -> verify(platform).executeQuery(eq(INDEX_NAME), eq(v), eq(QUERY_VALUE), eq(fields), anyInt()));
     }
 
     private static Query buildQuery() throws IOException {

@@ -66,7 +66,7 @@ abstract class BaseEvaluationManager {
 
     QueryOrSearchResponse executeQuery(String indexName, String version, JsonNode queryNode, String defaultTemplate, int relevantDocCount) {
         return platform.executeQuery(
-                Engine.indexFqdn(indexName, version),
+                indexName, version,
                 query(queryNode, defaultTemplate, version),
                 fields,
                 Math.max(10, relevantDocCount));

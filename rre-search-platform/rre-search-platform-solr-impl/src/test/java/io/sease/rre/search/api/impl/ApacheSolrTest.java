@@ -44,17 +44,17 @@ public class ApacheSolrTest {
     @Test
     public void isSearchPlatformFile_returnsFalseWhenNotDirectory() throws Exception {
         File dummyFile = tempFolder.newFile();
-        assertFalse(platform.isSearchPlatformFile(INDEX_NAME, dummyFile));
+        assertFalse(platform.isSearchPlatformConfiguration(INDEX_NAME, dummyFile));
     }
 
     @Test
     public void isSearchPlatformFile_returnsFalseWhenDirectoryNotContainSolrConfig() {
-        assertFalse(platform.isSearchPlatformFile(INDEX_NAME, tempFolder.getRoot()));
+        assertFalse(platform.isSearchPlatformConfiguration(INDEX_NAME, tempFolder.getRoot()));
     }
 
     @Test
     public void isSearchPlatformFile_returnsTrueWhenDirectoryContainsSolrConfig() throws Exception {
         File configFile = tempFolder.newFolder(INDEX_NAME);
-        assertTrue(platform.isSearchPlatformFile(INDEX_NAME, configFile));
+        assertTrue(platform.isSearchPlatformConfiguration(INDEX_NAME, configFile));
     }
 }
