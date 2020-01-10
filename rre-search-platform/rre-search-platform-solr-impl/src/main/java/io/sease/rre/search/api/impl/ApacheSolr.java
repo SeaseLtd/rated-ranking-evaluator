@@ -91,7 +91,7 @@ public class ApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public void load(final File data, final File configFolder, final String targetIndexName) {
+    public void load(final File dataToBeIndexed, final File configFolder, final String collection, String version) {
         coreProperties = new File(configFolder, "core.properties");
         if (coreProperties.exists()) {
             renamedCoreProperties = new File(configFolder, "core.properties.ignore");
@@ -99,7 +99,8 @@ public class ApacheSolr implements SearchPlatform {
         }
 
         // Copy files from configFolder into solrHome/targetIndexName
-        File targetIndexDir = new File(solrHome, targetIndexName);
+        String coreName = getFullyQualifiedDomainName(collection, version);
+        File targetIndexDir = new File(solrHome, coreName);
         try {
             // Make sure the directory is deleted before copying to it
             DirectoryUtils.deleteDirectory(targetIndexDir);
@@ -110,18 +111,18 @@ public class ApacheSolr implements SearchPlatform {
 
         try {
             // Using absolute path for the targetIndexDir, otherwise Solr can put the core.properties in the wrong place.
-            proxy.getCoreContainer().create(targetIndexName, targetIndexDir.toPath().toAbsolutePath(), emptyMap(), true);
+            proxy.getCoreContainer().create(coreName, targetIndexDir.toPath().toAbsolutePath(), emptyMap(), true);
         } catch (SolrException e) {
             if (e.code() == SolrException.ErrorCode.SERVER_ERROR.code) {
                 // Core already exists - ignore
-                LOGGER.debug("Core " + targetIndexName + " already exists - skipping index creation");
+                LOGGER.debug("Core " + coreName + " already exists - skipping index creation");
             } else {
                 LOGGER.error("Caught Solr exception creating core :: " + e.getMessage());
             }
         }
 
         try {
-            UpdateResponse response = new JsonUpdateRequest(new FileInputStream(data)).process(proxy, targetIndexName);
+            UpdateResponse response = new JsonUpdateRequest(new FileInputStream(dataToBeIndexed)).process(proxy, coreName);
             if (response.getStatus() != 0) {
                 throw new IllegalArgumentException("Received an error status from Solr: " + response.getStatus());
             }
@@ -182,7 +183,8 @@ public class ApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String coreName, final String queryString, final String[] fields, final int maxRows) {
+    public QueryOrSearchResponse executeQuery(final String collection, final String version, final String queryString, final String[] fields, final int maxRows) {
+        String coreName = getFullyQualifiedDomainName(collection, version);
         try {
             final SolrQuery query =
                     new SolrQuery()
@@ -253,7 +255,7 @@ public class ApacheSolr implements SearchPlatform {
     }
 
     @Override
-    public boolean isSearchPlatformFile(String indexName, File file) {
+    public boolean isSearchPlatformConfiguration(String indexName, File file) {
         return file.isDirectory() && file.getName().equals(indexName);
     }
 
