@@ -113,7 +113,8 @@ public class ExternalApacheSolr implements SearchPlatform {
                 query.add(field.getKey(), value);
             }
 
-            return of(clientManager.getSolrClient(indexName)
+            String coreName = getFullyQualifiedDomainName(collection, version);
+            return of(clientManager.getSolrClient(coreName)
                     .query(query, SolrRequest.METHOD.POST))
                     .map(response ->
                             new QueryOrSearchResponse(
