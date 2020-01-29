@@ -42,7 +42,7 @@ import static java.util.stream.Collectors.groupingBy;
  */
 public class NDCGAtK extends Metric {
     private final static BigDecimal TWO = new BigDecimal(2);
-    private final int k;
+    final int k;
 
     /**
      * Builds a new NDCGAtK metric.
@@ -52,6 +52,11 @@ public class NDCGAtK extends Metric {
     public NDCGAtK(@JsonProperty("k") final int k) {
         super("NDCG@" + k);
         this.k = k;
+    }
+
+    @Override
+    public int getRequiredResults() {
+        return k;
     }
 
     @Override
