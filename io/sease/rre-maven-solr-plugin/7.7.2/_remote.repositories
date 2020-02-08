@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Fri Feb 07 20:03:10 CET 2020
+rre-maven-solr-plugin-7.7.2.jar>=
+rre-maven-solr-plugin-7.7.2.pom>=

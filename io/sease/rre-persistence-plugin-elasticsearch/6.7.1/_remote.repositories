@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Sat Feb 08 09:20:01 CET 2020
+rre-persistence-plugin-elasticsearch-6.7.1.jar>=
+rre-persistence-plugin-elasticsearch-6.7.1.pom>=

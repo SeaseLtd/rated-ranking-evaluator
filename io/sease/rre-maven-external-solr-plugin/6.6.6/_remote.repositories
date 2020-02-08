@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Fri Feb 07 20:01:45 CET 2020
+rre-maven-external-solr-plugin-6.6.6.jar>=
+rre-maven-external-solr-plugin-6.6.6.pom>=
