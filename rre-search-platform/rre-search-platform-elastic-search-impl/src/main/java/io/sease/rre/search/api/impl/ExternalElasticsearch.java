@@ -21,6 +21,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
@@ -28,6 +32,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.io.File;
@@ -71,7 +76,7 @@ public class ExternalElasticsearch extends Elasticsearch {
             // Load the index settings for this version of the search platform
             IndexSettings settings = mapper.readValue(settingsFile, IndexSettings.class);
             if (indexClients.get(version) == null) {
-                indexClients.put(version, initialiseClient(settings.getHostUrls()));
+                indexClients.put(version, initialiseClient(settings.getHostUrls(), settings.getUser(), settings.getPassword()));
             }
 
         } catch (IOException e) {
@@ -79,13 +84,24 @@ public class ExternalElasticsearch extends Elasticsearch {
         }
     }
 
-    private RestHighLevelClient initialiseClient(List<String> hosts) {
+    private RestHighLevelClient initialiseClient(List<String> hosts, String user, String password) {
         // Convert hosts to HTTP host objects
         HttpHost[] httpHosts = hosts.stream()
                 .map(HttpHost::create)
                 .toArray(HttpHost[]::new);
 
-        return new RestHighLevelClient(RestClient.builder(httpHosts));
+        RestClientBuilder restClientBuilder = RestClient.builder(httpHosts);
+        if (user != null && password != null) {
+            final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY,
+                    new UsernamePasswordCredentials(user, password));
+
+            restClientBuilder.setHttpClientConfigCallback(httpClientBuilder ->
+                    httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
+            );
+        }
+
+        return new RestHighLevelClient(restClientBuilder);
     }
 
     @Override
@@ -144,13 +160,30 @@ public class ExternalElasticsearch extends Elasticsearch {
         @JsonProperty("hostUrls")
         private final List<String> hostUrls;
 
-        public IndexSettings(@JsonProperty("hostUrls") List<String> hostUrls) {
+        @JsonProperty("user")
+        private final String user;
 
+        @JsonProperty("password")
+        private final String password;
+
+        public IndexSettings(@JsonProperty("hostUrls") List<String> hostUrls,
+                             @JsonProperty("user") String user,
+                             @JsonProperty("password") String password) {
             this.hostUrls = hostUrls;
+            this.user = user;
+            this.password = password;
         }
 
         List<String> getHostUrls() {
             return hostUrls;
+        }
+
+        String getUser() {
+            return user;
+        }
+
+        String getPassword() {
+            return password;
         }
     }
 }
