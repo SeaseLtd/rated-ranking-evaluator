@@ -91,10 +91,10 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "port", defaultValue = "9200")
     private int port;
 
-    @Parameter(name="maximumGrade", defaultValue="3")
-    private float maxGrade;
+    @Parameter(name="maximumGrade", defaultValue="3.0f")
+    private float maximumGrade;
 
-    @Parameter(name="missingGrade", defaultValue="2")
+    @Parameter(name="missingGrade", defaultValue="2.0f")
     private float missingGrade;
 
     @Parameter(name = "persistence")
@@ -122,7 +122,7 @@ public class RREvaluateMojo extends AbstractMojo {
 
         try (final SearchPlatform platform = new Elasticsearch()) {
             final MetricClassManager metricClassManager = MetricClassConfigurationManager.getInstance()
-                    .setDefaultMaximumGrade(maxGrade)
+                    .setDefaultMaximumGrade(maximumGrade)
                     .setDefaultMissingGrade(missingGrade)
                     .buildMetricClassManager(metrics, parameterizedMetrics);
             final Engine engine = new Engine(
