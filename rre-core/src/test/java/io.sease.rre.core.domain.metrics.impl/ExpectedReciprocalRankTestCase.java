@@ -34,7 +34,7 @@ public class ExpectedReciprocalRankTestCase extends BaseTestCase {
 
     @Before
     public void setUp() {
-        cut = new ExpectedReciprocalRank(3, K);
+        cut = new ExpectedReciprocalRank(3.0f, 2.0f, K);
         cut.setVersions(Collections.singletonList(A_VERSION));
         counter = new AtomicInteger(0);
     }
