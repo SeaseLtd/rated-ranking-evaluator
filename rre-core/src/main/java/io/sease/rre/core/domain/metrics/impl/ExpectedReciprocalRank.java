@@ -45,6 +45,14 @@ public class ExpectedReciprocalRank extends Metric {
 
     /**
      * Builds a new ExpectedReciprocalRank metric with the default gain unit function and one diversity topic.
+     *
+     * @param k            the top k reference elements used for building the measure.
+     * @param maxgrade     the maximum grade available when judging documents. If
+     *                     {@code null}, will default to {@link Metric#DEFAULT_MAX_GRADE}.
+     * @param defaultgrade the default grade to use when judging documents. If
+     *                     {@code null}, will default to either {@code maxgrade / 2}
+     *                     or {@link Metric#DEFAULT_MISSING_GRADE}, depending
+     *                     whether or not {@code maxgrade} has been specified.
      */
     public ExpectedReciprocalRank(@JsonProperty("maxgrade") final Float maxgrade,
                                   @JsonProperty("defaultgrade") final Float defaultgrade,
