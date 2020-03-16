@@ -19,6 +19,7 @@ package io.sease.rre.core.domain.metrics.impl;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.core.domain.metrics.MetricClassManagerFactory;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
@@ -62,20 +63,19 @@ public class NDCGAtK extends Metric {
      * Builds a new NDCGAtK metric.
      *
      * @param k the top k reference elements used for building the measure.
-     * @param maxgrade the maximum grade available when judging documents. If
-     *                 {@code null}, will default to {@link Metric#DEFAULT_MAX_GRADE}.
+     * @param maxgrade     the maximum grade available when judging documents. If
+     *                     {@code null}, will default to 3.
      * @param defaultgrade the default grade to use when judging documents. If
      *                     {@code null}, will default to either {@code maxgrade / 2}
-     *                     or {@link Metric#DEFAULT_MISSING_GRADE}, depending
-     *                     whether or not {@code maxgrade} has been specified.
+     *                     or 2, depending whether or not {@code maxgrade} has been specified.
      */
     public NDCGAtK(@JsonProperty("k") final int k,
                    @JsonProperty("maxgrade") final Float maxgrade,
                    @JsonProperty("defaultgrade") final Float defaultgrade) {
         super("NDCG@" + k);
         if (maxgrade == null) {
-            this.maxgrade = DEFAULT_MAX_GRADE;
-            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(DEFAULT_MISSING_GRADE);
+            this.maxgrade = MetricClassManagerFactory.getInstance().getDefaultMaximumGrade();
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(MetricClassManagerFactory.getInstance().getDefaultMissingGrade());
         } else {
             this.maxgrade = BigDecimal.valueOf(maxgrade);
             this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElseGet(() -> this.maxgrade.divide(TWO, 8, RoundingMode.HALF_UP));

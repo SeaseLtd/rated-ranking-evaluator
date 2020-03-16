@@ -18,8 +18,7 @@ package io.sease.rre.maven.plugin.solr;
 
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
-import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
-import io.sease.rre.core.domain.metrics.SimpleMetricClassManager;
+import io.sease.rre.core.domain.metrics.MetricClassManagerFactory;
 import io.sease.rre.core.evaluation.EvaluationConfiguration;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
@@ -31,6 +30,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +80,12 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "exclude")
     private List<String> exclude;
 
+    @Parameter(name="maximumGrade", defaultValue="3")
+    private float maxGrade;
+
+    @Parameter(name="missingGrade", defaultValue="2")
+    private float missingGrade;
+
     @Parameter(name = "persistence")
     private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
 
@@ -89,8 +95,10 @@ public class RREvaluateMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         try (final SearchPlatform platform = new ApacheSolr()) {
-            final MetricClassManager metricClassManager =
-                    parameterizedMetrics == null ? new SimpleMetricClassManager(metrics) : new ParameterizedMetricClassManager(metrics, parameterizedMetrics);
+            final MetricClassManager metricClassManager = MetricClassManagerFactory.getInstance()
+                    .setDefaultMaximumGrade(BigDecimal.valueOf(maxGrade))
+                    .setDefaultMissingGrade(BigDecimal.valueOf(missingGrade))
+                    .buildMetricClassManager(metrics, parameterizedMetrics);
             final Engine engine = new Engine(
                     platform,
                     configurationsFolder,
