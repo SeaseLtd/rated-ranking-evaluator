@@ -17,8 +17,8 @@
 package io.sease.rre.maven.plugin.solr;
 
 import io.sease.rre.core.Engine;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
-import io.sease.rre.core.domain.metrics.MetricClassManagerFactory;
 import io.sease.rre.core.evaluation.EvaluationConfiguration;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
@@ -30,7 +30,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,9 +94,9 @@ public class RREvaluateMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         try (final SearchPlatform platform = new ApacheSolr()) {
-            final MetricClassManager metricClassManager = MetricClassManagerFactory.getInstance()
-                    .setDefaultMaximumGrade(BigDecimal.valueOf(maxGrade))
-                    .setDefaultMissingGrade(BigDecimal.valueOf(missingGrade))
+            final MetricClassManager metricClassManager = MetricClassConfigurationManager.getInstance()
+                    .setDefaultMaximumGrade(maxGrade)
+                    .setDefaultMissingGrade(missingGrade)
                     .buildMetricClassManager(metrics, parameterizedMetrics);
             final Engine engine = new Engine(
                     platform,
