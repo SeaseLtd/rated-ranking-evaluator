@@ -75,7 +75,7 @@ public class RREvaluateMojo extends AbstractMojo {
     private List<String> exclude;
 
     @Parameter(name="maximumGrade", defaultValue="3")
-    private float maxGrade;
+    private float maximumGrade;
 
     @Parameter(name="missingGrade", defaultValue="2")
     private float missingGrade;
@@ -105,7 +105,7 @@ public class RREvaluateMojo extends AbstractMojo {
 
         try (final SearchPlatform platform = new ExternalElasticsearch()) {
             final MetricClassManager metricClassManager = MetricClassConfigurationManager.getInstance()
-                    .setDefaultMaximumGrade(maxGrade)
+                    .setDefaultMaximumGrade(maximumGrade)
                     .setDefaultMissingGrade(missingGrade)
                     .buildMetricClassManager(metrics, parameterizedMetrics);
             final Engine engine = new Engine(
