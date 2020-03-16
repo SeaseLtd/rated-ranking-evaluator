@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.sease.rre.core.TestData.A_VERSION;
+import static io.sease.rre.core.TestData.FIFTEEN_SEARCH_HITS;
 import static java.util.Arrays.stream;
 import static org.junit.Assert.assertEquals;
 
@@ -173,5 +174,23 @@ public class ReciprocalRankTestCase extends BaseTestCase {
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
         assertEquals(0.5d, cut.valueFactory(A_VERSION).value().doubleValue(), 0);
+    }
+
+    /**
+     * If the first relevant result is outside the first K results, the value
+     * should be 0.
+     */
+    @Test
+    public void firstRelevantResultOutsideKResults() {
+        final ObjectNode judgements = mapper.createObjectNode();
+        stream(FIFTEEN_SEARCH_HITS).skip(11).limit(1).forEach(docid -> judgements.set(docid, createJudgmentNode(3)));
+        cut.setRelevantDocuments(judgements);
+
+        cut.setTotalHits(FIFTEEN_SEARCH_HITS.length, A_VERSION);
+        stream(FIFTEEN_SEARCH_HITS)
+                .map(this::searchHit)
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
+
+        assertEquals(0.0d, cut.valueFactory(A_VERSION).value().doubleValue(), 0);
     }
 }
