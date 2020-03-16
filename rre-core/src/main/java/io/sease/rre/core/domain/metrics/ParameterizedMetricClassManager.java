@@ -21,6 +21,7 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
 
     private final static Logger LOGGER = LogManager.getLogger(ParameterizedMetricClassManager.class);
 
+    public static final String NAME_KEY = "name";
     private static final String METRIC_CLASS_KEY = "class";
 
     private final Map<String, Map<String, Object>> metricConfiguration;
@@ -52,11 +53,11 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
             classNames = Collections.emptyMap();
         } else {
             classNames = new HashMap<>();
-            incoming.forEach((k, configMap) -> {
+            incoming.forEach((metricName, configMap) -> {
                 if (!configMap.containsKey(METRIC_CLASS_KEY)) {
-                    throw new IllegalArgumentException("No class set for metric " + k);
+                    throw new IllegalArgumentException("No class set for metric " + metricName);
                 } else {
-                    classNames.put(k, (String) configMap.get(METRIC_CLASS_KEY));
+                    classNames.put(metricName, (String) configMap.get(METRIC_CLASS_KEY));
                 }
             });
         }
@@ -79,14 +80,14 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
             configurations = Collections.emptyMap();
         } else {
             configurations = new HashMap<>();
-            incoming.forEach((n, m) -> {
+            incoming.forEach((metricName, configOptions) -> {
                 Map<String, Object> config = new HashMap<>();
-                m.forEach((k, v) -> {
+                configOptions.forEach((k, v) -> {
                     if (!k.equals(METRIC_CLASS_KEY)) {
                         config.put((String) k, v);
                     }
                 });
-                configurations.put(n, config);
+                configurations.put(metricName, config);
             });
         }
         return configurations;

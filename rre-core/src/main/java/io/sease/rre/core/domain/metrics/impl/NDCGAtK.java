@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
+import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
@@ -56,7 +57,7 @@ public class NDCGAtK extends Metric {
      * @param k the top k reference elements used for building the measure.
      */
     public NDCGAtK(final int k) {
-        this(k, null, null);
+        this(k, null, null, null);
     }
 
     /**
@@ -68,11 +69,13 @@ public class NDCGAtK extends Metric {
      * @param defaultgrade the default grade to use when judging documents. If
      *                     {@code null}, will default to either {@code maxgrade / 2}
      *                     or 2, depending whether or not {@code maxgrade} has been specified.
+     * @param name         the name to use for this metric. If {@code null}, will default to {@code NDCG@k}.
      */
     public NDCGAtK(@JsonProperty("k") final int k,
                    @JsonProperty("maxgrade") final Float maxgrade,
-                   @JsonProperty("defaultgrade") final Float defaultgrade) {
-        super("NDCG@" + k);
+                   @JsonProperty("defaultgrade") final Float defaultgrade,
+                   @JsonProperty(ParameterizedMetricClassManager.NAME_KEY) final String name) {
+        super(Optional.ofNullable(name).orElse("NDCG@" + k));
         if (maxgrade == null) {
             this.maxgrade = MetricClassConfigurationManager.getInstance().getDefaultMaximumGrade();
             this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(MetricClassConfigurationManager.getInstance().getDefaultMissingGrade());
