@@ -19,8 +19,8 @@ package io.sease.rre.maven.plugin.external.elasticsearch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
-import io.sease.rre.core.domain.metrics.MetricClassManagerFactory;
 import io.sease.rre.core.evaluation.EvaluationConfiguration;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
@@ -33,7 +33,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
@@ -105,9 +104,9 @@ public class RREvaluateMojo extends AbstractMojo {
                                 Thread.currentThread().getContextClassLoader()));
 
         try (final SearchPlatform platform = new ExternalElasticsearch()) {
-            final MetricClassManager metricClassManager = MetricClassManagerFactory.getInstance()
-                    .setDefaultMaximumGrade(BigDecimal.valueOf(maxGrade))
-                    .setDefaultMissingGrade(BigDecimal.valueOf(missingGrade))
+            final MetricClassManager metricClassManager = MetricClassConfigurationManager.getInstance()
+                    .setDefaultMaximumGrade(maxGrade)
+                    .setDefaultMissingGrade(missingGrade)
                     .buildMetricClassManager(metrics, parameterizedMetrics);
             final Engine engine = new Engine(
                     platform,

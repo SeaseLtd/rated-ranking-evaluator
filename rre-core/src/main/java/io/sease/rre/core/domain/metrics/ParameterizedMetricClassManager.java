@@ -26,6 +26,7 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
     private final Map<String, Map<String, Object>> metricConfiguration;
     private final Map<String, String> metricClasses;
 
+    @SuppressWarnings("rawtypes")
     ParameterizedMetricClassManager(Collection<String> metricNames, Map<String, Map> metricConfiguration) {
         super(metricNames);
         this.metricClasses = extractParameterizedClassNames(metricConfiguration);
@@ -44,6 +45,7 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
      * @throws IllegalArgumentException if any of the configurations do not have a
      *                                  class property.
      */
+    @SuppressWarnings("rawtypes")
     private Map<String, String> extractParameterizedClassNames(final Map<String, Map> incoming) throws IllegalArgumentException {
         final Map<String, String> classNames;
         if (incoming == null) {
@@ -70,7 +72,7 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
      * @return an equivalent map containing configuration that can be used to
      * construct a Metric without stripping any content.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private Map<String, Map<String, Object>> convertMetricConfiguration(final Map<String, Map> incoming) {
         final Map<String, Map<String, Object>> configurations;
         if (incoming == null) {

@@ -19,7 +19,7 @@ package io.sease.rre.core.domain.metrics.impl;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.core.domain.metrics.Metric;
-import io.sease.rre.core.domain.metrics.MetricClassManagerFactory;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
@@ -74,8 +74,8 @@ public class NDCGAtK extends Metric {
                    @JsonProperty("defaultgrade") final Float defaultgrade) {
         super("NDCG@" + k);
         if (maxgrade == null) {
-            this.maxgrade = MetricClassManagerFactory.getInstance().getDefaultMaximumGrade();
-            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(MetricClassManagerFactory.getInstance().getDefaultMissingGrade());
+            this.maxgrade = MetricClassConfigurationManager.getInstance().getDefaultMaximumGrade();
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(MetricClassConfigurationManager.getInstance().getDefaultMissingGrade());
         } else {
             this.maxgrade = BigDecimal.valueOf(maxgrade);
             this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElseGet(() -> this.maxgrade.divide(TWO, 8, RoundingMode.HALF_UP));

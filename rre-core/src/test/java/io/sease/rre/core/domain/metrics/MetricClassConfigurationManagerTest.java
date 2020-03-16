@@ -3,8 +3,8 @@ package io.sease.rre.core.domain.metrics;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,11 +14,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Matt Pearce (mpearce@opensourceconnections.com)
  */
-public class MetricClassManagerFactoryTest {
+public class MetricClassConfigurationManagerTest {
 
-    private final MetricClassManagerFactory factory = MetricClassManagerFactory.getInstance();
+    private final MetricClassConfigurationManager factory = MetricClassConfigurationManager.getInstance();
 
-    private static final List<String> METRICS = Arrays.asList(
+    private static final Collection<String> METRICS = Arrays.asList(
             "io.sease.rre.core.domain.metrics.impl.PrecisionAtOne",
             "io.sease.rre.core.domain.metrics.impl.PrecisionAtK"
     );
