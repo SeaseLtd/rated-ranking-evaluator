@@ -23,14 +23,11 @@ import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.StreamSupport;
+import java.util.Optional;
 
 import static io.sease.rre.Func.gainOrRatingNode;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.groupingBy;
+import static java.math.BigDecimal.ONE;
 
 /**
  * ERR metric.
@@ -49,10 +46,17 @@ public class ExpectedReciprocalRank extends Metric {
     /**
      * Builds a new ExpectedReciprocalRank metric with the default gain unit function and one diversity topic.
      */
-    public ExpectedReciprocalRank(@JsonProperty("maxgrade") final float maxgrade, @JsonProperty("k") final int k) {
+    public ExpectedReciprocalRank(@JsonProperty("maxgrade") final Float maxgrade,
+                                  @JsonProperty("defaultgrade") final Float defaultgrade,
+                                  @JsonProperty("k") final int k) {
         super("ERR" + "@" + k);
-        this.fairgrade = BigDecimal.valueOf(Math.round(maxgrade/2));
-        this.maxgrade = BigDecimal.valueOf(maxgrade);
+        if (maxgrade == null) {
+            this.maxgrade = DEFAULT_MAX_GRADE;
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(DEFAULT_MISSING_GRADE);
+        } else {
+            this.maxgrade = BigDecimal.valueOf(maxgrade);
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElseGet(() -> this.maxgrade.divide(TWO, 8, RoundingMode.HALF_UP));
+        }
         this.k = k;
     }
 
@@ -60,33 +64,31 @@ public class ExpectedReciprocalRank extends Metric {
     public ValueFactory createValueFactory(final String version) {
         return new ValueFactory(this, version) {
             private BigDecimal ERR = BigDecimal.ZERO;
-            private BigDecimal trust = BigDecimal.ONE;
+            private BigDecimal trust = ONE;
             private BigDecimal value = fairgrade;
             private int totalHits = 0;
             private int totalDocs = 0;
 
             @Override
             public void collect(final Map<String, Object> hit, final int rank, final String version) {
-                if (++totalDocs>k) return;
+                if (++totalDocs > k) return;
                 value = fairgrade;
                 judgment(id(hit))
-                    .ifPresent(judgment -> {
-                        value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(fairgrade);
-                        totalHits++;
-                    });
+                        .ifPresent(judgment -> {
+                            value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(fairgrade);
+                            totalHits++;
+                        });
                 BigDecimal r = BigDecimal.valueOf(rank);
-                BigDecimal usefulness = gain(value,maxgrade);
-                BigDecimal discounted = usefulness.divide(r,8,RoundingMode.HALF_UP);
+                BigDecimal usefulness = gain(value, maxgrade);
+                BigDecimal discounted = usefulness.divide(r, 8, RoundingMode.HALF_UP);
                 ERR = ERR.add(trust.multiply(discounted));
-                trust = trust.multiply(BigDecimal.ONE.subtract(usefulness));
-                //System.out.println(String.valueOf(rank) + " -> " + value.toPlainString());
-                //System.out.println(value.toPlainString());
+                trust = trust.multiply(ONE.subtract(usefulness));
             }
 
             @Override
             public BigDecimal value() {
-                if (totalHits==0) {
-                    return (totalDocs == 0) ? BigDecimal.ONE : BigDecimal.ZERO;
+                if (totalHits == 0) {
+                    return (totalDocs == 0) ? ONE : BigDecimal.ZERO;
                 }
                 return ERR;
             }
@@ -94,12 +96,13 @@ public class ExpectedReciprocalRank extends Metric {
     }
 
     private BigDecimal gain(BigDecimal grade, BigDecimal max) {
-        final BigDecimal numer = TWO.pow(grade.intValue()).subtract(BigDecimal.ONE);
-        final BigDecimal denom = TWO.pow(max.intValue());
+        // Need to use Math.pow() here - BigDecimal.pow() is integer-only
+        final BigDecimal numer = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), grade.doubleValue())).subtract(ONE);
+        final BigDecimal denom = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), max.doubleValue()));
         if (denom.equals(BigDecimal.ZERO)) {
             return BigDecimal.ZERO;
         }
-        return numer.divide(denom,8,RoundingMode.HALF_UP);
+        return numer.divide(denom, 8, RoundingMode.HALF_UP);
     }
 
     @Override
