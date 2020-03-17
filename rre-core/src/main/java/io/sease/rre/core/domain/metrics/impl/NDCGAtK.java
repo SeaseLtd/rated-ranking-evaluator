@@ -72,8 +72,8 @@ public class NDCGAtK extends Metric {
      * @param name         the name to use for this metric. If {@code null}, will default to {@code NDCG@k}.
      */
     public NDCGAtK(@JsonProperty("k") final int k,
-                   @JsonProperty("maxgrade") final Float maxgrade,
-                   @JsonProperty("defaultgrade") final Float defaultgrade,
+                   @JsonProperty(ParameterizedMetricClassManager.MAXIMUM_GRADE_KEY) final Float maxgrade,
+                   @JsonProperty(ParameterizedMetricClassManager.MISSING_GRADE_KEY) final Float defaultgrade,
                    @JsonProperty(ParameterizedMetricClassManager.NAME_KEY) final String name) {
         super(Optional.ofNullable(name).orElse("NDCG@" + k));
         if (maxgrade == null) {

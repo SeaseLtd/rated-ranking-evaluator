@@ -56,8 +56,8 @@ public class ExpectedReciprocalRank extends Metric {
      *                     or 2, depending whether or not {@code maxgrade} has been specified.
      * @param name         the name to use for this metric. If {@code null}, will default to {@code ERR@k}.
      */
-    public ExpectedReciprocalRank(@JsonProperty("maxgrade") final Float maxgrade,
-                                  @JsonProperty("defaultgrade") final Float defaultgrade,
+    public ExpectedReciprocalRank(@JsonProperty(ParameterizedMetricClassManager.MAXIMUM_GRADE_KEY) final Float maxgrade,
+                                  @JsonProperty(ParameterizedMetricClassManager.MISSING_GRADE_KEY) final Float defaultgrade,
                                   @JsonProperty("k") final int k,
                                   @JsonProperty(ParameterizedMetricClassManager.NAME_KEY) final String name) {
         super(Optional.ofNullable(name).orElse("ERR@" + k));
