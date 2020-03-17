@@ -22,6 +22,9 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
     private final static Logger LOGGER = LogManager.getLogger(ParameterizedMetricClassManager.class);
 
     public static final String NAME_KEY = "name";
+    public static final String MAXIMUM_GRADE_KEY = "maximumGrade";
+    public static final String MISSING_GRADE_KEY = "missingGrade";
+
     private static final String METRIC_CLASS_KEY = "class";
 
     private final Map<String, Map<String, Object>> metricConfiguration;
