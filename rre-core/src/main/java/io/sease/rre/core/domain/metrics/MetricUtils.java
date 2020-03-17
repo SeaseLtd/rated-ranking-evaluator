@@ -65,7 +65,7 @@ public abstract class MetricUtils {
             ret = m.getName().toLowerCase()
                     .replace("@", "At")
                     .replace(".", "Point")
-                    .replaceAll("\\s+", "");
+                    .replaceAll("\\s+", "_");
         }
 
         return ret;
