@@ -31,7 +31,8 @@ public class MetricClassConfigurationManager {
     /**
      * Build the appropriate {@link MetricClassManager} for the metric
      * configuration passed.
-     * @param metrics the simple metric configurations - a list of metric classes.
+     *
+     * @param metrics              the simple metric configurations - a list of metric classes.
      * @param parameterizedMetrics the parameterized metric configuration, consisting
      *                             of class names and additional configuration.
      * @return a {@link MetricClassManager} that can instantiate all of the
@@ -58,6 +59,7 @@ public class MetricClassConfigurationManager {
 
     /**
      * Set the default maximum grade to use when evaluating metrics.
+     *
      * @param defaultMaximumGrade the grade to use.
      * @return the singleton manager instance.
      */
@@ -77,6 +79,7 @@ public class MetricClassConfigurationManager {
 
     /**
      * Set the default missing judgement grade to use when evaluating metrics.
+     *
      * @param defaultMissingGrade the grade to use.
      * @return the singleton manager instance.
      */

@@ -91,10 +91,10 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "port", defaultValue = "9200")
     private int port;
 
-    @Parameter(name="maximumGrade", defaultValue="3.0f")
+    @Parameter(name="maximumGrade", defaultValue="3")
     private float maximumGrade;
 
-    @Parameter(name="missingGrade", defaultValue="2.0f")
+    @Parameter(name="missingGrade", defaultValue="2")
     private float missingGrade;
 
     @Parameter(name = "persistence")
