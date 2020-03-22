@@ -12,20 +12,13 @@ import java.util.Map;
  */
 public class MetricClassConfigurationManager {
 
-    private static MetricClassConfigurationManager instance;
+    private static MetricClassConfigurationManager INSTANCE = new MetricClassConfigurationManager();
 
     private BigDecimal defaultMaximumGrade = BigDecimal.valueOf(3);
     private BigDecimal defaultMissingGrade = BigDecimal.valueOf(2);
 
-    private MetricClassConfigurationManager() {
-        // Private constructor
-    }
-
     public static MetricClassConfigurationManager getInstance() {
-        if (instance == null) {
-            instance = new MetricClassConfigurationManager();
-        }
-        return instance;
+        return INSTANCE;
     }
 
     /**
