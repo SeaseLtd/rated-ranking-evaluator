@@ -282,6 +282,7 @@ public class Engine {
                 } catch (InterruptedException ignore) {
                 }
             }
+            LOGGER.info("  ... completed all {} evaluations.", evaluationManager.getTotalQueries());
 
             return evaluation;
         } finally {
