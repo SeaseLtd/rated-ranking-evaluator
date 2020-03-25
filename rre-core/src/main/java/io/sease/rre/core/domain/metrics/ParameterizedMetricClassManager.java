@@ -21,12 +21,17 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
 
     private final static Logger LOGGER = LogManager.getLogger(ParameterizedMetricClassManager.class);
 
+    public static final String NAME_KEY = "name";
+    public static final String MAXIMUM_GRADE_KEY = "maximumGrade";
+    public static final String MISSING_GRADE_KEY = "missingGrade";
+
     private static final String METRIC_CLASS_KEY = "class";
 
     private final Map<String, Map<String, Object>> metricConfiguration;
     private final Map<String, String> metricClasses;
 
-    public ParameterizedMetricClassManager(Collection<String> metricNames, Map<String, Map> metricConfiguration) {
+    @SuppressWarnings("rawtypes")
+    ParameterizedMetricClassManager(Collection<String> metricNames, Map<String, Map> metricConfiguration) {
         super(metricNames);
         this.metricClasses = extractParameterizedClassNames(metricConfiguration);
         this.metricConfiguration = convertMetricConfiguration(metricConfiguration);
@@ -44,17 +49,18 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
      * @throws IllegalArgumentException if any of the configurations do not have a
      *                                  class property.
      */
+    @SuppressWarnings("rawtypes")
     private Map<String, String> extractParameterizedClassNames(final Map<String, Map> incoming) throws IllegalArgumentException {
         final Map<String, String> classNames;
         if (incoming == null) {
             classNames = Collections.emptyMap();
         } else {
             classNames = new HashMap<>();
-            incoming.forEach((k, configMap) -> {
+            incoming.forEach((metricName, configMap) -> {
                 if (!configMap.containsKey(METRIC_CLASS_KEY)) {
-                    throw new IllegalArgumentException("No class set for metric " + k);
+                    throw new IllegalArgumentException("No class set for metric " + metricName);
                 } else {
-                    classNames.put(k, (String) configMap.get(METRIC_CLASS_KEY));
+                    classNames.put(metricName, (String) configMap.get(METRIC_CLASS_KEY));
                 }
             });
         }
@@ -70,21 +76,21 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
      * @return an equivalent map containing configuration that can be used to
      * construct a Metric without stripping any content.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private Map<String, Map<String, Object>> convertMetricConfiguration(final Map<String, Map> incoming) {
         final Map<String, Map<String, Object>> configurations;
         if (incoming == null) {
             configurations = Collections.emptyMap();
         } else {
             configurations = new HashMap<>();
-            incoming.forEach((n, m) -> {
+            incoming.forEach((metricName, configOptions) -> {
                 Map<String, Object> config = new HashMap<>();
-                m.forEach((k, v) -> {
+                configOptions.forEach((k, v) -> {
                     if (!k.equals(METRIC_CLASS_KEY)) {
                         config.put((String) k, v);
                     }
                 });
-                configurations.put(n, config);
+                configurations.put(metricName, config);
             });
         }
         return configurations;

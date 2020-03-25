@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.Func;
 import io.sease.rre.core.domain.metrics.HitsCollector;
 import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
 
 import java.util.*;
 import java.util.function.Function;
@@ -86,7 +87,8 @@ public class Query extends DomainMember<Query> implements HitsCollector {
 
         judgment(id(hit)).ifPresent(jNode -> {
             hit.put("_isRelevant", true);
-            hit.put("_gain", Func.gainOrRatingNode(jNode).map(JsonNode::asInt).orElse(2));
+            hit.put("_gain", Func.gainOrRatingNode(jNode).map(JsonNode::decimalValue)
+                    .orElse(MetricClassConfigurationManager.getInstance().getDefaultMissingGrade()));
         });
 
         results.computeIfAbsent(version, v -> new MutableQueryOrSearchResponse()).collect(hit, rank, version);
