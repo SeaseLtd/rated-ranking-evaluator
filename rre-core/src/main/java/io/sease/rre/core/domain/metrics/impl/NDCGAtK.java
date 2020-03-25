@@ -19,6 +19,8 @@ package io.sease.rre.core.domain.metrics.impl;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
+import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
@@ -28,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 
@@ -42,15 +45,44 @@ import static java.util.stream.Collectors.groupingBy;
  */
 public class NDCGAtK extends Metric {
     private final static BigDecimal TWO = new BigDecimal(2);
-    final int k;
+
+    private final BigDecimal fairgrade;
+    private final BigDecimal maxgrade;
+    private final int k;
+
+    /**
+     * Builds a new NDCGAtK metric with default maximum and missing judgement
+     * grades.
+     *
+     * @param k the top k reference elements used for building the measure.
+     */
+    public NDCGAtK(final int k) {
+        this(k, null, null, null);
+    }
 
     /**
      * Builds a new NDCGAtK metric.
      *
      * @param k the top k reference elements used for building the measure.
+     * @param maxgrade     the maximum grade available when judging documents. If
+     *                     {@code null}, will default to 3.
+     * @param defaultgrade the default grade to use when judging documents. If
+     *                     {@code null}, will default to either {@code maxgrade / 2}
+     *                     or 2, depending whether or not {@code maxgrade} has been specified.
+     * @param name         the name to use for this metric. If {@code null}, will default to {@code NDCG@k}.
      */
-    public NDCGAtK(@JsonProperty("k") final int k) {
-        super("NDCG@" + k);
+    public NDCGAtK(@JsonProperty("k") final int k,
+                   @JsonProperty(ParameterizedMetricClassManager.MAXIMUM_GRADE_KEY) final Float maxgrade,
+                   @JsonProperty(ParameterizedMetricClassManager.MISSING_GRADE_KEY) final Float defaultgrade,
+                   @JsonProperty(ParameterizedMetricClassManager.NAME_KEY) final String name) {
+        super(Optional.ofNullable(name).orElse("NDCG@" + k));
+        if (maxgrade == null) {
+            this.maxgrade = MetricClassConfigurationManager.getInstance().getDefaultMaximumGrade();
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(MetricClassConfigurationManager.getInstance().getDefaultMissingGrade());
+        } else {
+            this.maxgrade = BigDecimal.valueOf(maxgrade);
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElseGet(() -> this.maxgrade.divide(TWO, 8, RoundingMode.HALF_UP));
+        }
         this.k = k;
     }
 
@@ -69,8 +101,8 @@ public class NDCGAtK extends Metric {
                 if (rank > k) return;
                 judgment(id(hit))
                         .ifPresent(judgment -> {
-                            final BigDecimal value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(TWO);
-                            BigDecimal numerator = TWO.pow(value.intValue()).subtract(BigDecimal.ONE);
+                            final BigDecimal value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(fairgrade);
+                            BigDecimal numerator = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), value.doubleValue())).subtract(BigDecimal.ONE);
                             if (rank == 1) {
                                 dcg = numerator;
                             } else {
@@ -98,28 +130,28 @@ public class NDCGAtK extends Metric {
 
     private BigDecimal idealDcg(final JsonNode relevantDocuments) {
         final int windowSize = Math.min(relevantDocuments.size(), k);
-        final int[] gains = new int[windowSize];
+        final double[] gains = new double[windowSize];
 
-        final Map<Integer, List<JsonNode>> groups =
+        final Map<BigDecimal, List<JsonNode>> groups =
                 StreamSupport.stream(relevantDocuments.spliterator(), false)
-                                .collect(groupingBy(doc -> gainOrRatingNode(doc).map(JsonNode::intValue).orElse(2)));
+                                .collect(groupingBy(doc -> gainOrRatingNode(doc).map(JsonNode::decimalValue).orElse(fairgrade)));
 
-        Set<Integer> ratingValues = groups.keySet();
-        List<Integer> ratingsSorted = new ArrayList<>(ratingValues);
+        Set<BigDecimal> ratingValues = groups.keySet();
+        List<BigDecimal> ratingsSorted = new ArrayList<>(ratingValues);
         ratingsSorted.sort(Collections.reverseOrder());
         int startIndex = 0;
-        for (Integer ratingValue : ratingsSorted) {
+        for (BigDecimal ratingValue : ratingsSorted) {
             if (startIndex < windowSize) {
                 List<JsonNode> docsPerRating = groups.get(ratingValue);
                 int endIndex = startIndex + docsPerRating.size();
-                Arrays.fill(gains, startIndex, Math.min(windowSize, endIndex), ratingValue);
+                Arrays.fill(gains, startIndex, Math.min(windowSize, endIndex), ratingValue.doubleValue());
                 startIndex = endIndex;
             }
         }
         
         BigDecimal result = BigDecimal.ZERO;
         for (int i = 1; i <= gains.length; i++) {
-            BigDecimal num = TWO.pow(gains[i-1]).subtract(BigDecimal.ONE);
+            BigDecimal num = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), gains[i-1])).subtract(BigDecimal.ONE);
             double den = Math.log(i + 1) / Math.log(2);
             result = result.add((num.divide(new BigDecimal(den), 2, RoundingMode.FLOOR)));
         }
