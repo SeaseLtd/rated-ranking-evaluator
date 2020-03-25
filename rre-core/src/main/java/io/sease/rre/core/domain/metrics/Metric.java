@@ -51,9 +51,6 @@ public abstract class Metric implements HitsCollector {
 
     public static final int DEFAULT_REQUIRED_RESULTS = 10;
 
-    public static final BigDecimal DEFAULT_MAX_GRADE = BigDecimal.valueOf(3);
-    public static final BigDecimal DEFAULT_MISSING_GRADE = BigDecimal.valueOf(2);
-
     private final String name;
 
     protected String idFieldName = DEFAULT_ID_FIELD_NAME;
