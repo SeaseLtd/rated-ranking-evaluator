@@ -19,18 +19,17 @@ package io.sease.rre.core.domain.metrics.impl;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
+import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.StreamSupport;
+import java.util.Optional;
 
 import static io.sease.rre.Func.gainOrRatingNode;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.groupingBy;
+import static java.math.BigDecimal.ONE;
 
 /**
  * ERR metric.
@@ -48,11 +47,27 @@ public class ExpectedReciprocalRank extends Metric {
 
     /**
      * Builds a new ExpectedReciprocalRank metric with the default gain unit function and one diversity topic.
+     *
+     * @param k            the top k reference elements used for building the measure.
+     * @param maxgrade     the maximum grade available when judging documents. If
+     *                     {@code null}, will default to 3.
+     * @param defaultgrade the default grade to use when judging documents. If
+     *                     {@code null}, will default to either {@code maxgrade / 2}
+     *                     or 2, depending whether or not {@code maxgrade} has been specified.
+     * @param name         the name to use for this metric. If {@code null}, will default to {@code ERR@k}.
      */
-    public ExpectedReciprocalRank(@JsonProperty("maxgrade") final float maxgrade, @JsonProperty("k") final int k) {
-        super("ERR" + "@" + k);
-        this.fairgrade = BigDecimal.valueOf(Math.round(maxgrade/2));
-        this.maxgrade = BigDecimal.valueOf(maxgrade);
+    public ExpectedReciprocalRank(@JsonProperty(ParameterizedMetricClassManager.MAXIMUM_GRADE_KEY) final Float maxgrade,
+                                  @JsonProperty(ParameterizedMetricClassManager.MISSING_GRADE_KEY) final Float defaultgrade,
+                                  @JsonProperty("k") final int k,
+                                  @JsonProperty(ParameterizedMetricClassManager.NAME_KEY) final String name) {
+        super(Optional.ofNullable(name).orElse("ERR@" + k));
+        if (maxgrade == null) {
+            this.maxgrade = MetricClassConfigurationManager.getInstance().getDefaultMaximumGrade();
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(MetricClassConfigurationManager.getInstance().getDefaultMissingGrade());
+        } else {
+            this.maxgrade = BigDecimal.valueOf(maxgrade);
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElseGet(() -> this.maxgrade.divide(TWO, 8, RoundingMode.HALF_UP));
+        }
         this.k = k;
     }
 
@@ -60,33 +75,31 @@ public class ExpectedReciprocalRank extends Metric {
     public ValueFactory createValueFactory(final String version) {
         return new ValueFactory(this, version) {
             private BigDecimal ERR = BigDecimal.ZERO;
-            private BigDecimal trust = BigDecimal.ONE;
+            private BigDecimal trust = ONE;
             private BigDecimal value = fairgrade;
             private int totalHits = 0;
             private int totalDocs = 0;
 
             @Override
             public void collect(final Map<String, Object> hit, final int rank, final String version) {
-                if (++totalDocs>k) return;
+                if (++totalDocs > k) return;
                 value = fairgrade;
                 judgment(id(hit))
-                    .ifPresent(judgment -> {
-                        value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(fairgrade);
-                        totalHits++;
-                    });
+                        .ifPresent(judgment -> {
+                            value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(fairgrade);
+                            totalHits++;
+                        });
                 BigDecimal r = BigDecimal.valueOf(rank);
-                BigDecimal usefulness = gain(value,maxgrade);
-                BigDecimal discounted = usefulness.divide(r,8,RoundingMode.HALF_UP);
+                BigDecimal usefulness = gain(value, maxgrade);
+                BigDecimal discounted = usefulness.divide(r, 8, RoundingMode.HALF_UP);
                 ERR = ERR.add(trust.multiply(discounted));
-                trust = trust.multiply(BigDecimal.ONE.subtract(usefulness));
-                //System.out.println(String.valueOf(rank) + " -> " + value.toPlainString());
-                //System.out.println(value.toPlainString());
+                trust = trust.multiply(ONE.subtract(usefulness));
             }
 
             @Override
             public BigDecimal value() {
-                if (totalHits==0) {
-                    return (totalDocs == 0) ? BigDecimal.ONE : BigDecimal.ZERO;
+                if (totalHits == 0) {
+                    return (totalDocs == 0) ? ONE : BigDecimal.ZERO;
                 }
                 return ERR;
             }
@@ -94,12 +107,13 @@ public class ExpectedReciprocalRank extends Metric {
     }
 
     private BigDecimal gain(BigDecimal grade, BigDecimal max) {
-        final BigDecimal numer = TWO.pow(grade.intValue()).subtract(BigDecimal.ONE);
-        final BigDecimal denom = TWO.pow(max.intValue());
+        // Need to use Math.pow() here - BigDecimal.pow() is integer-only
+        final BigDecimal numer = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), grade.doubleValue())).subtract(ONE);
+        final BigDecimal denom = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), max.doubleValue()));
         if (denom.equals(BigDecimal.ZERO)) {
             return BigDecimal.ZERO;
         }
-        return numer.divide(denom,8,RoundingMode.HALF_UP);
+        return numer.divide(denom, 8, RoundingMode.HALF_UP);
     }
 
     @Override

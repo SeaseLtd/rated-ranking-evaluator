@@ -17,7 +17,7 @@ public class SimpleMetricClassManager implements MetricClassManager {
     private final Collection<String> metricNames;
     private final Map<String, Class<? extends Metric>> metricClasses = new HashMap<>();
 
-    public SimpleMetricClassManager(Collection<String> metricClasses) {
+    SimpleMetricClassManager(Collection<String> metricClasses) {
         this.metricNames = new ArrayList<>(metricClasses);
     }
 

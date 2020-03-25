@@ -49,7 +49,8 @@ public abstract class MetricUtils {
      * used in a database or search engine field name.
      * <p>
      * Names will be camel-cased, for the most part, with '@' and '.' symbols
-     * converted to words.
+     * converted to words. Any whitespace characters will be substituted with
+     * '_'.
      *
      * @param m the metric.
      * @return the sanitised version of the metric name.
@@ -63,7 +64,8 @@ public abstract class MetricUtils {
             // Do some basic sanitisation ourselves
             ret = m.getName().toLowerCase()
                     .replace("@", "At")
-                    .replace(".", "Point");
+                    .replace(".", "Point")
+                    .replaceAll("\\s+", "_");
         }
 
         return ret;

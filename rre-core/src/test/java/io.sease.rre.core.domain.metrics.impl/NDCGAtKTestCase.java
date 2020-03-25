@@ -256,4 +256,44 @@ public class NDCGAtKTestCase extends BaseTestCase {
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0);
     }
+
+    /**
+     * Scenario: 10 judgments, 15 search results, 5 relevant results in top positions.
+     */
+    @Test
+    public void _10_judgments_15_search_only_results_10th_relevant_result_topscore() {
+        final ObjectNode judgements = mapper.createObjectNode();
+        stream(FIFTEEN_SEARCH_HITS).limit(10).forEach(docid -> judgements.set(docid, createJudgmentNode(4)));
+        cut.setRelevantDocuments(judgements);
+
+        cut.setTotalHits(FIFTEEN_SEARCH_HITS.length, A_VERSION);
+        stream(ANOTHER_FIVE_SEARCH_HITS)
+                .map(this::searchHit)
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
+
+        stream(ANOTHER_FOUR_SEARCH_HITS)
+                .map(this::searchHit)
+                .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
+
+        cut.collect(searchHit(FIFTEEN_SEARCH_HITS[9]), counter.incrementAndGet(), A_VERSION);
+
+        Map<Integer, Double> expectations = new HashMap<Integer, Double>()
+        {{
+            put(1,0.0);
+            put(2,0.0);
+            put(3,0.0);
+            put(4,0.0);
+            put(5,0.0);
+            put(6,0.0);
+            put(7,0.0);
+            put(8, 0.0);
+            put(9,0.0);
+            put(10, 0.06);
+        }};
+
+        assertEquals(
+                expectations.get(currentAppliedK),
+                cut.valueFactory(A_VERSION).value().doubleValue(),
+                0);
+    }
 }
