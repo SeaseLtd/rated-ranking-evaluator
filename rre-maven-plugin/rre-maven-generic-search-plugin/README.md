@@ -1,7 +1,7 @@
-Generic Maven Evaluation plugin
+Generic Maven Search plugin
 ===============================
 
-This evaluation plugin allows the use of alternative search APIs than the
+This search plugin allows the use of alternative search APIs than the
 supplied Solr and Elasticsearch choices.
 
 
@@ -27,7 +27,7 @@ An example pom.xml, excluding most RRE configuration, would look like:
         <plugins>
             <plugin>
                 <groupId>io.sease</groupId>
-                <artifactId>rre-maven-evaluation-plugin</artifactId>
+                <artifactId>rre-maven-generic-search-plugin</artifactId>
                 <version>1.0</version>
                 <!-- Dependency on your SearchPlatform implementation -->
                 <dependency>

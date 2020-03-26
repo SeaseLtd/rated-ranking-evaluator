@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.sease.rre.maven.plugin.evaluation;
+package io.sease.rre.maven.plugin.search;
 
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;

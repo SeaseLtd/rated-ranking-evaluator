@@ -1,4 +1,4 @@
-package io.sease.rre.maven.plugin.evaluation;
+package io.sease.rre.maven.plugin.search;
 
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 
 
 /**
- * Unit tests for the generic evaluation Maven plugin.
+ * Unit tests for the generic search Maven plugin.
  *
  * @author Matt Pearce (mpearce@opensourceconnections.com)
  */
