@@ -1,4 +1,4 @@
-package io.sease.rre.maven.plugin.evaluation;
+package io.sease.rre.maven.plugin.search;
 
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;

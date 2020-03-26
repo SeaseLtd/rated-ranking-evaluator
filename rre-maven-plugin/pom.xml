@@ -34,7 +34,7 @@
         <module>rre-maven-elasticsearch-plugin</module>
         <module>rre-maven-external-elasticsearch-plugin</module>
         <module>rre-maven-external-solr-plugin</module>
-        <module>rre-maven-evaluation-plugin</module>
+        <module>rre-maven-generic-search-plugin</module>
     </modules>
     <packaging>pom</packaging>
     <properties>

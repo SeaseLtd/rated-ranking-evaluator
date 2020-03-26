@@ -34,10 +34,10 @@
         <plugins>
             <plugin>
                 <groupId>io.sease</groupId>
-                <artifactId>rre-maven-evaluation-plugin</artifactId>
+                <artifactId>rre-maven-generic-search-plugin</artifactId>
                 <version>1.0</version>
                 <configuration>
-                    <searchPlatform>io.sease.rre.maven.plugin.evaluation.ArgConstructorSearchPlatform</searchPlatform>
+                    <searchPlatform>no.such.SearchPlatform</searchPlatform>
                 </configuration>
                 <executions>
                     <execution>
