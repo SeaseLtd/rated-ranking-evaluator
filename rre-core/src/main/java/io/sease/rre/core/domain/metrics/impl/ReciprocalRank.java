@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sease.rre.Func;
 import io.sease.rre.core.domain.metrics.Metric;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
+import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
 import io.sease.rre.core.domain.metrics.ValueFactory;
 
 import java.math.BigDecimal;
@@ -43,28 +45,29 @@ public class ReciprocalRank extends Metric {
      * Builds a new ReciprocalRank at 10 metric.
      */
     public ReciprocalRank() {
-        this(10, null, null);
+        this(10, null, null, null);
     }
 
     /**
      * Builds a new Reciprocal Rank at K metric.
      *
-     * @param k the top k reference elements used for building the measure.
-     * @param maxgrade the maximum grade available when judging documents. If
-     *                 {@code null}, will default to {@link Metric#DEFAULT_MAX_GRADE}.
+     * @param k            the top k reference elements used for building the measure.
+     * @param maxgrade     the maximum grade available when judging documents. If
+     *                     {@code null}, will default to 3.
      * @param defaultgrade the default grade to use when judging documents. If
      *                     {@code null}, will default to either {@code maxgrade / 2}
-     *                     or {@link Metric#DEFAULT_MISSING_GRADE}, depending
-     *                     whether or not {@code maxgrade} has been specified.
+     *                     or 2, depending whether or not {@code maxgrade} has been specified.
+     * @param name         the name to use for this metric. If {@code null}, will default to {@code RR@k}.
      */
     public ReciprocalRank(@JsonProperty("k") final int k,
-                          @JsonProperty("maxgrade") final Float maxgrade,
-                          @JsonProperty("defaultgrade") final Float defaultgrade) {
-        super("RR@" + k);
+                          @JsonProperty(ParameterizedMetricClassManager.MAXIMUM_GRADE_KEY) final Float maxgrade,
+                          @JsonProperty(ParameterizedMetricClassManager.MISSING_GRADE_KEY) final Float defaultgrade,
+                          @JsonProperty(ParameterizedMetricClassManager.NAME_KEY) final String name) {
+        super(Optional.ofNullable(name).orElse("RR@" + k));
         this.k = k;
         if (maxgrade == null) {
-            this.maxgrade = DEFAULT_MAX_GRADE;
-            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(DEFAULT_MISSING_GRADE);
+            this.maxgrade = MetricClassConfigurationManager.getInstance().getDefaultMaximumGrade();
+            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(MetricClassConfigurationManager.getInstance().getDefaultMissingGrade());
         } else {
             this.maxgrade = BigDecimal.valueOf(maxgrade);
             this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElseGet(() -> this.maxgrade.divide(BigDecimal.valueOf(2), 8, RoundingMode.HALF_UP));

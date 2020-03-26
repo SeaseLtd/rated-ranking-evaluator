@@ -17,9 +17,8 @@
 package io.sease.rre.maven.plugin.solr;
 
 import io.sease.rre.core.Engine;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
-import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
-import io.sease.rre.core.domain.metrics.SimpleMetricClassManager;
 import io.sease.rre.core.evaluation.EvaluationConfiguration;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
@@ -80,6 +79,12 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "exclude")
     private List<String> exclude;
 
+    @Parameter(name="maximumGrade", defaultValue="3")
+    private float maximumGrade;
+
+    @Parameter(name="missingGrade", defaultValue="2")
+    private float missingGrade;
+
     @Parameter(name = "persistence")
     private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
 
@@ -89,8 +94,10 @@ public class RREvaluateMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         try (final SearchPlatform platform = new ApacheSolr()) {
-            final MetricClassManager metricClassManager =
-                    parameterizedMetrics == null ? new SimpleMetricClassManager(metrics) : new ParameterizedMetricClassManager(metrics, parameterizedMetrics);
+            final MetricClassManager metricClassManager = MetricClassConfigurationManager.getInstance()
+                    .setDefaultMaximumGrade(maximumGrade)
+                    .setDefaultMissingGrade(missingGrade)
+                    .buildMetricClassManager(metrics, parameterizedMetrics);
             final Engine engine = new Engine(
                     platform,
                     configurationsFolder,

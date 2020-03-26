@@ -19,9 +19,8 @@ package io.sease.rre.maven.plugin.external.elasticsearch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Evaluation;
+import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
 import io.sease.rre.core.domain.metrics.MetricClassManager;
-import io.sease.rre.core.domain.metrics.ParameterizedMetricClassManager;
-import io.sease.rre.core.domain.metrics.SimpleMetricClassManager;
 import io.sease.rre.core.evaluation.EvaluationConfiguration;
 import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.search.api.SearchPlatform;
@@ -37,7 +36,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -76,6 +74,12 @@ public class RREvaluateMojo extends AbstractMojo {
     @Parameter(name = "exclude")
     private List<String> exclude;
 
+    @Parameter(name="maximumGrade", defaultValue="3")
+    private float maximumGrade;
+
+    @Parameter(name="missingGrade", defaultValue="2")
+    private float missingGrade;
+
     @Parameter(name = "persistence")
     private PersistenceConfiguration persistence = PersistenceConfiguration.DEFAULT_CONFIG;
 
@@ -100,8 +104,10 @@ public class RREvaluateMojo extends AbstractMojo {
                                 Thread.currentThread().getContextClassLoader()));
 
         try (final SearchPlatform platform = new ExternalElasticsearch()) {
-            final MetricClassManager metricClassManager =
-                    parameterizedMetrics == null ? new SimpleMetricClassManager(metrics) : new ParameterizedMetricClassManager(metrics, parameterizedMetrics);
+            final MetricClassManager metricClassManager = MetricClassConfigurationManager.getInstance()
+                    .setDefaultMaximumGrade(maximumGrade)
+                    .setDefaultMissingGrade(missingGrade)
+                    .buildMetricClassManager(metrics, parameterizedMetrics);
             final Engine engine = new Engine(
                     platform,
                     configurationsFolder,
