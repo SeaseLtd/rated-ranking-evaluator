@@ -1,0 +1,4 @@
+{
+  "q": "$query",
+  "fq": "number_of_strings:$strings"
+}
