@@ -255,7 +255,9 @@ public class Engine {
 
                                                     LOGGER.info("\t\tQUERY: " + queryString);
 
-                                                    final JsonNode relevantDocuments = relevantDocuments(groupNode.get(RELEVANT_DOCUMENTS));
+                                                    final JsonNode relevantDocuments = relevantDocuments(
+                                                            Optional.ofNullable(queryNode.get(RELEVANT_DOCUMENTS))
+                                                                    .orElse(groupNode.get(RELEVANT_DOCUMENTS)));
                                                     final Query queryEvaluation = group.findOrCreate(queryString, Query::new);
                                                     queryEvaluation.setIdFieldName(idFieldName);
                                                     queryEvaluation.setRelevantDocuments(relevantDocuments);
@@ -280,6 +282,7 @@ public class Engine {
                 } catch (InterruptedException ignore) {
                 }
             }
+            LOGGER.info("  ... completed all {} evaluations.", evaluationManager.getTotalQueries());
 
             return evaluation;
         } finally {
