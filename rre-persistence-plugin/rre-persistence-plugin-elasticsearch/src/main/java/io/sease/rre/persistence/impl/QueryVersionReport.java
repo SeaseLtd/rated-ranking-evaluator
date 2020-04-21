@@ -18,6 +18,7 @@ package io.sease.rre.persistence.impl;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.sease.rre.core.domain.*;
 import io.sease.rre.core.domain.metrics.MetricUtils;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -37,6 +38,7 @@ import static java.util.Optional.ofNullable;
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class QueryVersionReport {
 
     private final String id;

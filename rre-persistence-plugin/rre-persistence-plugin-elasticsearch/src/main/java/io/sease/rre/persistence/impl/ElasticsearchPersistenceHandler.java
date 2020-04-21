@@ -19,6 +19,8 @@ package io.sease.rre.persistence.impl;
 import io.sease.rre.core.domain.Query;
 import io.sease.rre.persistence.PersistenceException;
 import io.sease.rre.persistence.PersistenceHandler;
+import io.sease.rre.persistence.impl.connector.ElasticsearchConnector;
+import io.sease.rre.persistence.impl.connector.ElasticsearchConnectorFactory;
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -124,7 +126,9 @@ public class ElasticsearchPersistenceHandler implements PersistenceHandler {
                     .toArray(HttpHost[]::new);
 
             // Initialise the client
-            elasticsearch = new ElasticsearchConnector(new RestHighLevelClient(RestClient.builder(httpHosts)));
+            elasticsearch = new ElasticsearchConnectorFactory(new RestHighLevelClient(RestClient.builder(httpHosts))).buildConnector();
+        } catch (final IOException e) {
+            LOGGER.warn("Could not initialise ElasticsearchConnector :: {}", e.getMessage());
         } catch (final IllegalArgumentException e) {
             throw new PersistenceException(e);
         }

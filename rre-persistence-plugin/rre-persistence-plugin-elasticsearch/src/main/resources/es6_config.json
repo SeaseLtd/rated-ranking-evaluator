@@ -1,7 +1,7 @@
 {
   "settings": {},
   "mappings": {
-    "_doc": {
+    "doc": {
       "dynamic_templates": [
         {
           "metric_values": {
