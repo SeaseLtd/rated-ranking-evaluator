@@ -91,7 +91,7 @@ public class MappingTypeElasticsearchConnector implements ElasticsearchConnector
 
         final String configJson = ConnectorUtils.readConfig(
                 ConnectorUtils.getStreamForMappingsFile(MAPPINGS_FILE)
-                        .orElseThrow(() -> new IOException("Configuration file " + ConnectorUtils.MAPPINGS_FILE + " not available!")));
+                        .orElseThrow(() -> new IOException("Configuration file " + MAPPINGS_FILE + " not available!")));
         try {
             // Use low-level client to avoid ES adding unparseable request
             // parameters that break earlier versions.

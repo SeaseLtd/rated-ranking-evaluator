@@ -71,7 +71,7 @@ public class IndexOnlyElasticsearchConnector implements ElasticsearchConnector {
 
         final String configJson = ConnectorUtils.readConfig(
                 ConnectorUtils.getStreamForMappingsFile(MAPPINGS_FILE)
-                        .orElseThrow(() -> new IOException("Configuration file " + ConnectorUtils.MAPPINGS_FILE + " not available!")));
+                        .orElseThrow(() -> new IOException("Configuration file " + MAPPINGS_FILE + " not available!")));
         // Build the request
         CreateIndexRequest request = new CreateIndexRequest(index)
                 .source(configJson, XContentType.JSON);

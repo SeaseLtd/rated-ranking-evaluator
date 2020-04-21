@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
+import static io.sease.rre.persistence.impl.connector.MappingTypeElasticsearchConnector.MAPPINGS_FILE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -28,7 +29,7 @@ public class ConnectorUtilsTest {
 
     @Test
     public void getStreamReturnsStream_whenFileExists() {
-        Optional<InputStream> fileStream = ConnectorUtils.getStreamForMappingsFile(ConnectorUtils.MAPPINGS_FILE);
+        Optional<InputStream> fileStream = ConnectorUtils.getStreamForMappingsFile(MAPPINGS_FILE);
         assertThat(fileStream).isPresent();
     }
 
