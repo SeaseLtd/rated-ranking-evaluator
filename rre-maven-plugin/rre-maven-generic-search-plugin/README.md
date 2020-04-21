@@ -15,7 +15,7 @@ An example pom.xml, excluding most RRE configuration, would look like:
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mycompany</groupId>
     <artifactId>my-evaluation-project</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -28,7 +28,7 @@ An example pom.xml, excluding most RRE configuration, would look like:
             <plugin>
                 <groupId>io.sease</groupId>
                 <artifactId>rre-maven-generic-search-plugin</artifactId>
-                <version>1.0</version>
+                <version>1.1</version>
                 <!-- Dependency on your SearchPlatform implementation -->
                 <dependency>
                     <groupId>com.mycompany</groupId>
