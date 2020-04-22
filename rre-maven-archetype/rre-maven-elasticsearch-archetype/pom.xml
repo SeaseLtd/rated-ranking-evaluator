@@ -23,7 +23,7 @@
     <parent>
         <artifactId>rre-maven-archetype</artifactId>
         <groupId>io.sease</groupId>
-        <version>1.1</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-maven-elasticsearch-archetype</artifactId>

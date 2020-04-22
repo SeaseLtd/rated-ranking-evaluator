@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.sease</groupId>
     <artifactId>rre</artifactId>
-    <version>1.1</version>
+    <version>1.2-SNAPSHOT</version>
     <name>Relevancy and Ranking Evaluation Framework</name>
     <packaging>pom</packaging>
     <properties>
