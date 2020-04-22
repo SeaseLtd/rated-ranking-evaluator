@@ -5,22 +5,8 @@
   <versioning>
     <release>7.5.0</release>
     <versions>
-      <version>6.7.1</version>
-      <version>5.6.16</version>
-      <version>6.0.1</version>
-      <version>6.1.4</version>
-      <version>6.3.2</version>
-      <version>6.4.3</version>
-      <version>6.5.4</version>
-      <version>6.6.2</version>
-      <version>6.7.2</version>
-      <version>6.8.4</version>
-      <version>7.0.1</version>
-      <version>7.1.1</version>
-      <version>7.2.1</version>
-      <version>7.3.2</version>
       <version>7.5.0</version>
     </versions>
-    <lastUpdated>20200208081948</lastUpdated>
+    <lastUpdated>20200421070929</lastUpdated>
   </versioning>
 </metadata>

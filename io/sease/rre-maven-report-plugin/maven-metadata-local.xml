@@ -3,11 +3,11 @@
   <groupId>io.sease</groupId>
   <artifactId>rre-maven-report-plugin</artifactId>
   <versioning>
-    <latest>1.0</latest>
-    <release>1.0</release>
+    <latest>1.1</latest>
+    <release>1.1</release>
     <versions>
-      <version>1.0</version>
+      <version>1.1</version>
     </versions>
-    <lastUpdated>20200208081948</lastUpdated>
+    <lastUpdated>20200421070928</lastUpdated>
   </versioning>
 </metadata>
