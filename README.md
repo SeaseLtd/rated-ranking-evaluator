@@ -14,6 +14,7 @@ At the moment Apache Solr and Elasticsearch are supported (see the documentation
 The following picture illustrates the RRE ecosystem:
 
 ![RRE Ecosystem](https://user-images.githubusercontent.com/7569632/42134581-e2d50736-7d3e-11e8-8b8e-8b9ab134079b.png)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FSeaseLtd%2Frated-ranking-evaluator.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FSeaseLtd%2Frated-ranking-evaluator?ref=badge_shield)
 
 As you can see, there are a lot modules already in place and planned (those with the dashed border)
 
@@ -60,3 +61,7 @@ In this way, when the system build happens, RRE will compute everything explaine
 In addition, it will provide the delta/trend between subsequent versions, so you can immediately get the overall direction where the system is going, in terms of relevance improvements. 
 
 ![delta](https://user-images.githubusercontent.com/7569632/41497997-5e9d2c4c-7162-11e8-9304-d8f529b6a9eb.png)
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FSeaseLtd%2Frated-ranking-evaluator.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FSeaseLtd%2Frated-ranking-evaluator?ref=badge_large)
