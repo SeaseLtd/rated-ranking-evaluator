@@ -22,7 +22,12 @@ import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.impl.AveragedMetric;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static java.util.Optional.ofNullable;
@@ -117,6 +122,13 @@ public abstract class DomainMember<C extends DomainMember> {
         ofNullable(parent).ifPresent(p -> p.collectLeafMetric(version, value, name));
     }
 
+    private void initialiseVersions(final String name, final List<String> versions) {
+        if (!metrics.containsKey(name)) {
+            metric(name).setVersions(versions);
+        }
+        ofNullable(parent).ifPresent(p -> p.initialiseVersions(name, versions));
+    }
+
     /**
      * Returns the {@link AveragedMetric} instance associated with the given name.
      *
@@ -128,6 +140,9 @@ public abstract class DomainMember<C extends DomainMember> {
     }
 
     public void notifyCollectedMetrics() {
+        // Make sure all of the versions are set at all levels for each metric
+        metrics.values()
+                .forEach(metric -> initialiseVersions(metric.getName(), new ArrayList<>(metric.getVersions().keySet())));
         metrics.values().stream()
                 .flatMap(metric -> metric.getVersions().entrySet().stream())
                 .forEach(entry ->
