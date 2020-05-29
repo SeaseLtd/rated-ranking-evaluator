@@ -93,7 +93,7 @@ public class Engine {
 
     private FileUpdateChecker fileUpdateChecker;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     private final PersistenceManager persistenceManager;
 
@@ -151,6 +151,38 @@ public class Engine {
                 versionManager.getVersionTimestamp());
 
         initialiseFileUpdateChecker(checksumFilepath);
+    }
+
+    /**
+     * Fully parameterised constructor, does no initialisation apart from
+     * setting up the checksum file, if required.
+     *
+     * @param platform           the search platform.
+     * @param corporaFolder      the folder holding the corpora data (optional).
+     * @param ratingsFolder      the folder holding the ratings details.
+     * @param checksumFile       the path to the checksum file (optional).
+     * @param metricClassManager a fully initialised metric class manager.
+     * @param persistenceManager a fully initialised persistence manager.
+     * @param versionManager     a fully initialised version manager.
+     * @param evaluationManager  a fully initialised evaluation manager.
+     */
+    public Engine(
+            final SearchPlatform platform,
+            final File corporaFolder,
+            final File ratingsFolder,
+            final String checksumFile,
+            final MetricClassManager metricClassManager,
+            final PersistenceManager persistenceManager,
+            final VersionManager versionManager,
+            final EvaluationManager evaluationManager) {
+        this.platform = platform;
+        this.corporaFolder = corporaFolder;
+        this.ratingsFolder = ratingsFolder;
+        this.metricClassManager = metricClassManager;
+        this.persistenceManager = persistenceManager;
+        this.versionManager = versionManager;
+        this.evaluationManager = evaluationManager;
+        initialiseFileUpdateChecker(checksumFile);
     }
 
     private void initialiseFileUpdateChecker(String checksumFile) {
