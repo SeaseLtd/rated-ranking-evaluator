@@ -24,7 +24,12 @@ import io.sease.rre.core.domain.metrics.HitsCollector;
 import io.sease.rre.core.domain.metrics.Metric;
 import io.sease.rre.core.domain.metrics.MetricClassConfigurationManager;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collector;
 
@@ -50,7 +55,7 @@ public class Query extends DomainMember<Query> implements HitsCollector {
     }
 
     @JsonProperty("results")
-    private Map<String, MutableQueryOrSearchResponse> results = new LinkedHashMap<>();
+    private final Map<String, MutableQueryOrSearchResponse> results = Collections.synchronizedMap(new LinkedHashMap<>());
 
     @Override
     @JsonProperty("query")
