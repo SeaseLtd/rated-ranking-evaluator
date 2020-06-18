@@ -6,6 +6,6 @@ angular-route@^1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/angular-route/-/angular-route-1.7.0.tgz#37cbe8ddb58a331624d0a33e59c17e7254854e08"
 
-angular@^1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/angular/-/angular-1.7.0.tgz#e45d679fc8d81040a4894c7ccc16a4e1ad0a9ca6"
+angular@^1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/angular/-/angular-1.8.0.tgz#b1ec179887869215cab6dfd0df2e42caa65b1b51"
