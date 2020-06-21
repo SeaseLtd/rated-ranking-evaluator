@@ -89,7 +89,7 @@ public class AveragedMetric extends Metric {
      * @param version         the version associated with the collected (metric) value.
      * @param additionalValue the collected value.
      */
-    public void collect(final String version, final BigDecimal additionalValue) {
+    public synchronized void collect(final String version, final BigDecimal additionalValue) {
         ((MutableValueFactory)
                 values.computeIfAbsent(version, this::createValueFactory))
                 .collect(additionalValue);

@@ -1,0 +1,10 @@
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "$query",
+        "minimum_should_match": "3<-75% 9<-85%"
+      }
+    }
+  }
+}
