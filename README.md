@@ -8,6 +8,7 @@ For a detailed description of the project, please visit
 
 * The project Wiki, located at https://github.com/SeaseLtd/rated-ranking-evaluator/wiki   
 * Our talk about RRE at Fosdem 2019: https://www.slideshare.net/AndreaGazzarini/rated-ranking-evaluator-fosdem-2019
+* RRE-User mailing list: https://groups.google.com/g/rre-user
 
 At the moment Apache Solr and Elasticsearch are supported (see the documentation for supported versions). 
 
