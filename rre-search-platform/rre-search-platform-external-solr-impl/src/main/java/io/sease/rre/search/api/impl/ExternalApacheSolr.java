@@ -155,7 +155,7 @@ public class ExternalApacheSolr implements SearchPlatform {
     }
 
 
-    static class SolrSettings {
+    public static class SolrSettings {
 
         @JsonProperty("baseUrls")
         private final List<String> baseUrls;
