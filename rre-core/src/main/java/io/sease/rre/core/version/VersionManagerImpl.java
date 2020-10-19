@@ -61,7 +61,7 @@ public class VersionManagerImpl implements VersionManager {
 
     private File[] findConfigurationFolders(File configurationSetFolder, Collection<String> include, Collection<String> exclude) {
         File[] emptyArray = new File[0];
-        if (configurationSetFolder.listFiles() == null) {
+        if (configurationSetFolder == null || configurationSetFolder.listFiles() == null) {
             return emptyArray;
         } else {
             return safe(configurationSetFolder.listFiles(
