@@ -31,7 +31,7 @@ public class ParameterizedMetricClassManager extends SimpleMetricClassManager im
     private final Map<String, String> metricClasses;
 
     @SuppressWarnings("rawtypes")
-    ParameterizedMetricClassManager(Collection<String> metricNames, Map<String, Map> metricConfiguration) {
+    public ParameterizedMetricClassManager(Collection<String> metricNames, Map<String, Map> metricConfiguration) {
         super(metricNames);
         this.metricClasses = extractParameterizedClassNames(metricConfiguration);
         this.metricConfiguration = convertMetricConfiguration(metricConfiguration);
