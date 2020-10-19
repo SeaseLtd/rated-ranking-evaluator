@@ -38,7 +38,7 @@
         <dependency>
             <groupId>io.sease</groupId>
             <artifactId>rre-search-platform-api</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
