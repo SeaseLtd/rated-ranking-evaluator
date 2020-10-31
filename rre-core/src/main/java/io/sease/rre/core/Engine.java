@@ -38,6 +38,7 @@ import io.sease.rre.persistence.PersistenceConfiguration;
 import io.sease.rre.persistence.PersistenceHandler;
 import io.sease.rre.persistence.PersistenceManager;
 import io.sease.rre.search.api.SearchPlatform;
+import io.sease.rre.search.api.SearchPlatformException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,9 +48,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
@@ -243,68 +246,10 @@ public class Engine {
 
             final Evaluation evaluation = new Evaluation();
 
-            ratings().forEach(ratingsNode -> {
-                LOGGER.info("RRE: Ratings Set processing starts");
+            // Start the evaluation process for all of the ratings nodes
+            ratings().forEach(ratingsNode -> evaluateRatings(evaluation, ratingsNode));
 
-                final String indexName =
-                        requireNonNull(
-                                ratingsNode.get(INDEX_NAME),
-                                "WARNING!!! \"" + INDEX_NAME + "\" attribute not found!").asText();
-                final String idFieldName =
-                        requireNonNull(
-                                ratingsNode.get(ID_FIELD_NAME),
-                                "WARNING!!! \"" + ID_FIELD_NAME + "\" attribute not found!")
-                                .asText(DEFAULT_ID_FIELD_NAME);
-
-                final Optional<File> data = data(ratingsNode);
-                final String queryPlaceholder = ofNullable(ratingsNode.get("query_placeholder")).map(JsonNode::asText).orElse("$query");
-
-                LOGGER.info("");
-                LOGGER.info("*********************************");
-                LOGGER.info("RRE: Index name => " + indexName);
-                LOGGER.info("RRE: ID Field name => " + idFieldName);
-
-                data.ifPresent(file -> LOGGER.info("RRE: Test Collection => " + file.getAbsolutePath()));
-                prepareData(indexName, data.orElse(null));
-
-                final Corpus corpus = evaluation.findOrCreate(data.map(File::getName).orElse(indexName), Corpus::new);
-                all(ratingsNode, TOPICS)
-                        .forEach(topicNode -> {
-                            final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
-
-                            LOGGER.info("TOPIC: " + topic.getName());
-
-                            all(topicNode, QUERY_GROUPS)
-                                    .forEach(groupNode -> {
-                                        final QueryGroup group = topic.findOrCreate(name(groupNode), QueryGroup::new);
-
-                                        LOGGER.info("\tQUERY GROUP: " + group.getName());
-
-                                        final String sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText).orElse(null);
-                                        all(groupNode, QUERIES)
-                                                .forEach(queryNode -> {
-                                                    final String queryString = queryNode.findValue(queryPlaceholder).asText();
-
-                                                    LOGGER.info("\t\tQUERY: " + queryString);
-
-                                                    final JsonNode relevantDocuments = relevantDocuments(
-                                                            Optional.ofNullable(queryNode.get(RELEVANT_DOCUMENTS))
-                                                                    .orElse(groupNode.get(RELEVANT_DOCUMENTS)));
-                                                    final Query queryEvaluation = group.findOrCreate(queryString, Query::new);
-                                                    queryEvaluation.setIdFieldName(idFieldName);
-                                                    queryEvaluation.setRelevantDocuments(relevantDocuments);
-
-                                                    List<Metric> metrics = availableMetrics(idFieldName, relevantDocuments,
-                                                            new ArrayList<>(versionManager.getConfigurationVersions()));
-                                                    queryEvaluation.prepare(metrics);
-
-                                                    evaluationManager.evaluateQuery(queryEvaluation, indexName, queryNode, sharedTemplate,
-                                                            Math.max(relevantDocuments.size(), minimumRequiredResults(metrics)));
-                                                });
-                                    });
-                        });
-            });
-
+            // Wait for the evaluations to complete
             while (evaluationManager.isRunning()) {
                 LOGGER.info("  ... completed {} / {} evaluations ...",
                         (evaluationManager.getTotalQueries() - evaluationManager.getQueriesRemaining()),
@@ -314,7 +259,12 @@ public class Engine {
                 } catch (InterruptedException ignore) {
                 }
             }
-            LOGGER.info("  ... completed all {} evaluations.", evaluationManager.getTotalQueries());
+
+            if (evaluationManager.getTotalQueries() > 0) {
+                LOGGER.info("  ... completed all {} evaluations.", evaluationManager.getTotalQueries());
+            } else {
+                LOGGER.warn("  ... no queries evaluated!");
+            }
 
             return evaluation;
         } finally {
@@ -324,6 +274,80 @@ public class Engine {
             LOGGER.info("RRE: " + platform.getName() + " Search Platform shutdown procedure executed.");
             LOGGER.info("RRE: Stopping persistence manager");
             persistenceManager.stop();
+        }
+    }
+
+    /**
+     * Evaluate a single ratings set, updating the evaluation with the results.
+     *
+     * @param evaluation  the evaluation holding the query results.
+     * @param ratingsNode the contents of the ratings set.
+     */
+    private void evaluateRatings(Evaluation evaluation, JsonNode ratingsNode) {
+        LOGGER.info("RRE: Ratings Set processing starts");
+
+        final String indexName =
+                requireNonNull(
+                        ratingsNode.get(INDEX_NAME),
+                        "WARNING!!! \"" + INDEX_NAME + "\" attribute not found!").asText();
+        final String idFieldName =
+                requireNonNull(
+                        ratingsNode.get(ID_FIELD_NAME),
+                        "WARNING!!! \"" + ID_FIELD_NAME + "\" attribute not found!")
+                        .asText(DEFAULT_ID_FIELD_NAME);
+
+        final Optional<File> data = data(ratingsNode);
+        final String queryPlaceholder = ofNullable(ratingsNode.get("query_placeholder")).map(JsonNode::asText).orElse("$query");
+
+        LOGGER.info("");
+        LOGGER.info("*********************************");
+        LOGGER.info("RRE: Index name => " + indexName);
+        LOGGER.info("RRE: ID Field name => " + idFieldName);
+        data.ifPresent(file -> LOGGER.info("RRE: Test Collection => " + file.getAbsolutePath()));
+
+        try {
+            // Load the data. If the collection being loaded cannot be reached,
+            // this will fail.
+            prepareData(indexName, data.orElse(null));
+
+            final Corpus corpus = evaluation.findOrCreate(data.map(File::getName).orElse(indexName), Corpus::new);
+            all(ratingsNode, TOPICS)
+                    .forEach(topicNode -> {
+                        final Topic topic = corpus.findOrCreate(name(topicNode), Topic::new);
+
+                        LOGGER.info("TOPIC: " + topic.getName());
+
+                        all(topicNode, QUERY_GROUPS)
+                                .forEach(groupNode -> {
+                                    final QueryGroup group = topic.findOrCreate(name(groupNode), QueryGroup::new);
+
+                                    LOGGER.info("\tQUERY GROUP: " + group.getName());
+
+                                    final String sharedTemplate = ofNullable(groupNode.get("template")).map(JsonNode::asText).orElse(null);
+                                    all(groupNode, QUERIES)
+                                            .forEach(queryNode -> {
+                                                final String queryString = queryNode.findValue(queryPlaceholder).asText();
+
+                                                LOGGER.info("\t\tQUERY: " + queryString);
+
+                                                final JsonNode relevantDocuments = relevantDocuments(
+                                                        Optional.ofNullable(queryNode.get(RELEVANT_DOCUMENTS))
+                                                                .orElse(groupNode.get(RELEVANT_DOCUMENTS)));
+                                                final Query queryEvaluation = group.findOrCreate(queryString, Query::new);
+                                                queryEvaluation.setIdFieldName(idFieldName);
+                                                queryEvaluation.setRelevantDocuments(relevantDocuments);
+
+                                                List<Metric> metrics = availableMetrics(idFieldName, relevantDocuments,
+                                                        new ArrayList<>(versionManager.getConfigurationVersions()));
+                                                queryEvaluation.prepare(metrics);
+
+                                                evaluationManager.evaluateQuery(queryEvaluation, indexName, queryNode, sharedTemplate,
+                                                        Math.max(relevantDocuments.size(), minimumRequiredResults(metrics)));
+                                            });
+                                });
+                    });
+        } catch (SearchPlatformException spe) {
+            LOGGER.error("SearchPlatform error while evaluating ratings: {}", spe.getMessage());
         }
     }
 
@@ -480,28 +504,32 @@ public class Engine {
     /**
      * Prepares the search platform with the given index name and dataset.
      *
-     * @param collection the index name.
-     * @param dataToBeIndexed      the dataset.
+     * @param collection      the index name.
+     * @param dataToBeIndexed the dataset.
+     * @throws SearchPlatformException if problems occur loading data to the
+     *                                 search platform.
      */
-    private void prepareData(final String collection, final File dataToBeIndexed) {
+    private void prepareData(final String collection, final File dataToBeIndexed) throws SearchPlatformException {
         if (dataToBeIndexed != null) {
             LOGGER.info("Preparing dataToBeIndexed for " + collection + " from " + dataToBeIndexed.getAbsolutePath());
         } else {
             LOGGER.info("Preparing platform for " + collection);
         }
 
-        Stream<File> searchCollectionsConfigs = versionManager.getConfigurationVersionFolders().stream()
-                .filter(versionFolder -> isConfigurationReloadNecessary(versionFolder))
-                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))));
-        //each one of searchCollectionsConfigs stream elements is a full configuration for a search collection
-        searchCollectionsConfigs
+        Collection<File> configFiles = versionManager.getConfigurationVersionFolders().stream()
+                .filter(this::isConfigurationReloadNecessary)
+                .flatMap(versionFolder -> stream(safe(versionFolder.listFiles(ONLY_NON_HIDDEN_FILES))))
                 .filter(file -> platform.isSearchPlatformConfiguration(collection, file))
                 .sorted()
-                .peek(searchPlatformConfiguration -> LOGGER.info("RRE: Loading the Search Engine " + platform.getName() + ", configuration version " + searchPlatformConfiguration.getParentFile().getName()))
-                .forEach(searchPlatformConfiguration -> {
-                    String version = searchPlatformConfiguration.getParentFile().getName();
-                    platform.load(dataToBeIndexed, searchPlatformConfiguration, collection, version);
-                });
+                .collect(Collectors.toList());
+        for (File searchPlatformConfiguration : configFiles) {
+            LOGGER.info("RRE: Loading the Search Engine " + platform.getName() + ", configuration version " + searchPlatformConfiguration.getParentFile().getName());
+            String version = searchPlatformConfiguration.getParentFile().getName();
+            platform.load(dataToBeIndexed, searchPlatformConfiguration, collection, version);
+            if (!platform.checkCollection(collection, version)) {
+                throw new SearchPlatformException("Collection check failed for " + collection + " version " + version);
+            }
+        }
 
         LOGGER.info("RRE: " + platform.getName() + " has been correctly loaded.");
 
@@ -510,7 +538,7 @@ public class Engine {
         LOGGER.info("RRE: target versions are " + String.join(",", versionManager.getConfigurationVersions()));
     }
 
-    private boolean isConfigurationReloadNecessary( File versionFolder) {
+    private boolean isConfigurationReloadNecessary(File versionFolder) {
         boolean corporaChanged = folderHasChanged(corporaFolder);
         return folderHasChanged(versionFolder) || corporaChanged || platform.isRefreshRequired();
     }
