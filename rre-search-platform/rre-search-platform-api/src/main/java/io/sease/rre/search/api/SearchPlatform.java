@@ -57,7 +57,7 @@ public interface SearchPlatform extends Closeable {
     default String getFullyQualifiedDomainName(final String indexName, final String version) {
         return (indexName + "_" + version).toLowerCase();
     }
-    
+
     /**
      * Starts this search platform.
      */
@@ -119,4 +119,15 @@ public interface SearchPlatform extends Closeable {
      * loaded in order to run.
      */
     boolean isCorporaRequired();
+
+    /**
+     * Check whether the collection is available on this search platform.
+     * Expects the platform to have been initialised (ie. started, data
+     * loaded, etc.)
+     *
+     * @param collection the name of the collection to check for.
+     * @param version the version of the collection to check for.
+     * @return {@code true} if this collection can be reached.
+     */
+    boolean checkCollection(String collection, String version);
 }
