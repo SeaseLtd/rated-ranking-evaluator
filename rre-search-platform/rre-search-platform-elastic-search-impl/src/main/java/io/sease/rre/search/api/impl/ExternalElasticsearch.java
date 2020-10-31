@@ -34,6 +34,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,9 +79,14 @@ public class ExternalElasticsearch extends Elasticsearch {
             if (indexClients.get(version) == null) {
                 indexClients.put(version, initialiseClient(settings.getHostUrls(), settings.getUser(), settings.getPassword()));
             }
-
         } catch (IOException e) {
             LOGGER.error("Could not read settings from " + settingsFile.getName() + " :: " + e.getMessage());
+        }
+    }
+
+    void setSettings(IndexSettings settings, String version) {
+        if (indexClients.get(version) == null) {
+            indexClients.put(version, initialiseClient(settings.getHostUrls(), settings.getUser(), settings.getPassword()));
         }
     }
 
@@ -155,6 +161,16 @@ public class ExternalElasticsearch extends Elasticsearch {
         }
     }
 
+    @Override
+    public boolean checkCollection(String collection, String version) {
+        try {
+            return indexClients.get(version).indices().exists(new GetIndexRequest(collection), RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            LOGGER.error("Caught IOException checking collection {} version {}: {}", collection, version, e.getMessage());
+            LOGGER.error(e);
+            return false;
+        }
+    }
 
     public static class IndexSettings {
         @JsonProperty("hostUrls")
@@ -174,16 +190,20 @@ public class ExternalElasticsearch extends Elasticsearch {
             this.password = password;
         }
 
-        List<String> getHostUrls() {
+        public List<String> getHostUrls() {
             return hostUrls;
         }
 
-        String getUser() {
+        public String getUser() {
             return user;
         }
 
-        String getPassword() {
+        public String getPassword() {
             return password;
         }
+    }
+
+    void addClient(String version, RestHighLevelClient client) {
+        indexClients.put(version, client);
     }
 }

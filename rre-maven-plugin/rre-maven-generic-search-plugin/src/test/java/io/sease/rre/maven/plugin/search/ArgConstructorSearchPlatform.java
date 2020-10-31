@@ -70,4 +70,9 @@ public class ArgConstructorSearchPlatform implements SearchPlatform {
     @Override
     public void close() {
     }
+
+    @Override
+    public boolean checkCollection(String collection, String version) {
+        return true;
+    }
 }
