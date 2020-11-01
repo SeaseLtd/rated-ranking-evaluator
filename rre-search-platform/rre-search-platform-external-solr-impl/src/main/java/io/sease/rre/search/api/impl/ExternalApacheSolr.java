@@ -26,7 +26,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.common.SolrException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,10 +165,9 @@ public class ExternalApacheSolr implements SearchPlatform {
     @Override
     public boolean checkCollection(String collection, String version) {
         try {
-            SolrQuery query = new SolrQuery("*:*").setRows(0);
             SolrClient client = clientManager.getSolrClient(version);
             if (client != null) {
-                QueryResponse response = client.query(collection, query);
+                SolrPingResponse response = client.ping(collection);
                 return response.getStatus() == 0;
             }
         } catch (SolrException e) {
