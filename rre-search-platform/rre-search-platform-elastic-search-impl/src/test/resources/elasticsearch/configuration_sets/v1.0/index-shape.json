@@ -1,0 +1,29 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "raw_text": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "doc": {
+      "properties": {
+        "name": {
+          "type": "text",
+          "analyzer": "raw_text"
+        },
+        "number_of_strings": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
