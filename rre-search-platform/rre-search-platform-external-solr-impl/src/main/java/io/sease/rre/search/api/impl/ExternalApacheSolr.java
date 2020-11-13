@@ -22,15 +22,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.common.SolrException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Optional.of;
 
@@ -154,6 +162,24 @@ public class ExternalApacheSolr implements SearchPlatform {
         clientManager.close();
     }
 
+    @Override
+    public boolean checkCollection(String collection, String version) {
+        try {
+            SolrClient client = clientManager.getSolrClient(version);
+            if (client != null) {
+                SolrPingResponse response = client.ping(collection);
+                return response.getStatus() == 0;
+            }
+        } catch (SolrException e) {
+            // If index doesn't exist, we'll get a SolrException (a RuntimeException)
+            LOGGER.warn("Caught SolrException checking for collection {} version {}: {}",
+                    collection, version, e.getMessage());
+        } catch (SolrServerException | IOException e) {
+            LOGGER.warn("Caught exception checking platform for collection {} version {}: {}",
+                    collection, version, e.getMessage());
+        }
+        return false;
+    }
 
     public static class SolrSettings {
 

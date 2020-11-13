@@ -24,7 +24,9 @@ import io.sease.rre.search.api.SearchPlatform;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.core.CoreContainer;
@@ -52,219 +54,237 @@ import static java.util.Optional.ofNullable;
  * @since 1.0
  */
 public class ApacheSolr implements SearchPlatform {
-    private final static Logger LOGGER = LogManager.getLogger(ApacheSolr.class);
+	private final static Logger LOGGER = LogManager.getLogger(ApacheSolr.class);
 
-    private EmbeddedSolrServer proxy;
-    private File solrHome;
-    private File coreProperties;
-    private File renamedCoreProperties;
+	private EmbeddedSolrServer proxy;
+	private File solrHome;
+	private File coreProperties;
+	private File renamedCoreProperties;
 
-    private boolean refreshRequired = false;
-    private boolean defaultSolrHome = false;
+	private boolean refreshRequired = false;
+	private boolean defaultSolrHome = false;
 
-    @Override
-    public void beforeStart(final Map<String, Object> configuration) {
-        if (configuration.containsKey("solr.home")) {
-            // Use external, configured Solr home directory
-            solrHome = new File((String) configuration.get("solr.home"));
-        } else {
-            // Use tmp directory (will be deleted after processing)
-            solrHome = new File(System.getProperty("java.io.tmpdir"), String.valueOf(System.currentTimeMillis()));
-            defaultSolrHome = true;
-        }
+	@Override
+	public void beforeStart(final Map<String, Object> configuration) {
+		if (configuration.containsKey("solr.home")) {
+			// Use external, configured Solr home directory
+			solrHome = new File((String) configuration.get("solr.home"));
+		} else {
+			// Use tmp directory (will be deleted after processing)
+			solrHome = new File(System.getProperty("java.io.tmpdir"), String.valueOf(System.currentTimeMillis()));
+			defaultSolrHome = true;
+		}
 
-        if ((Boolean) configuration.get("forceRefresh") && solrHome.exists()) {
-            try {
-                DirectoryUtils.deleteDirectory(solrHome);
-            } catch (IOException e) {
-                LOGGER.error("Could not delete data directory - expect data to be stale!", e);
-            }
-        }
-        if (!solrHome.exists()) {
-            // If no data directory, refresh is required even if nothing else has changed
-            prepareSolrHome(solrHome);
-            refreshRequired = true;
-        }
+		if ((Boolean) configuration.get("forceRefresh") && solrHome.exists()) {
+			try {
+				DirectoryUtils.deleteDirectory(solrHome);
+			} catch (IOException e) {
+				LOGGER.error("Could not delete data directory - expect data to be stale!", e);
+			}
+		}
+		if (!solrHome.exists()) {
+			// If no data directory, refresh is required even if nothing else has changed
+			prepareSolrHome(solrHome);
+			refreshRequired = true;
+		}
 
-        File dataDir = new File(solrHome, "data");
-        dataDir.mkdirs();
+		File dataDir = new File(solrHome, "data");
+		dataDir.mkdirs();
 
-        System.setProperty("solr.data.dir", dataDir.getAbsolutePath());
+		System.setProperty("solr.data.dir", dataDir.getAbsolutePath());
 
-        proxy = new EmbeddedSolrServer(solrHome.toPath(), "dummy");
-    }
+		proxy = new EmbeddedSolrServer(solrHome.toPath(), "dummy");
+	}
 
-    @Override
-    public void load(final File dataToBeIndexed, final File configFolder, final String collection, String version) {
-        coreProperties = new File(configFolder, "core.properties");
-        if (coreProperties.exists()) {
-            renamedCoreProperties = new File(configFolder, "core.properties.ignore");
-            coreProperties.renameTo(renamedCoreProperties);
-        }
+	@Override
+	public void load(final File dataToBeIndexed, final File configFolder, final String collection, String version) {
+		coreProperties = new File(configFolder, "core.properties");
+		if (coreProperties.exists()) {
+			renamedCoreProperties = new File(configFolder, "core.properties.ignore");
+			coreProperties.renameTo(renamedCoreProperties);
+		}
 
-        // Copy files from configFolder into solrHome/targetIndexName
-        String coreName = getFullyQualifiedDomainName(collection, version);
-        File targetIndexDir = new File(solrHome, coreName);
-        try {
-            // Make sure the directory is deleted before copying to it
-            DirectoryUtils.deleteDirectory(targetIndexDir);
-            DirectoryUtils.copyDirectory(configFolder, targetIndexDir);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+		// Copy files from configFolder into solrHome/targetIndexName
+		String coreName = getFullyQualifiedDomainName(collection, version);
+		File targetIndexDir = new File(solrHome, coreName);
+		try {
+			// Make sure the directory is deleted before copying to it
+			DirectoryUtils.deleteDirectory(targetIndexDir);
+			DirectoryUtils.copyDirectory(configFolder, targetIndexDir);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
-        try {
-            // Using absolute path for the targetIndexDir, otherwise Solr can put the core.properties in the wrong place.
-            proxy.getCoreContainer().create(coreName, targetIndexDir.toPath().toAbsolutePath(), emptyMap(), true);
-        } catch (SolrException e) {
-            if (e.code() == SolrException.ErrorCode.SERVER_ERROR.code) {
-                // Core already exists - ignore
-                LOGGER.debug("Core " + coreName + " already exists - skipping index creation");
-            } else {
-                LOGGER.error("Caught Solr exception creating core :: " + e.getMessage());
-            }
-        }
+		try {
+			// Using absolute path for the targetIndexDir, otherwise Solr can put the core.properties in the wrong place.
+			proxy.getCoreContainer().create(coreName, targetIndexDir.toPath().toAbsolutePath(), emptyMap(), true);
+		} catch (SolrException e) {
+			if (e.code() == SolrException.ErrorCode.SERVER_ERROR.code) {
+				// Core already exists - ignore
+				LOGGER.debug("Core " + coreName + " already exists - skipping index creation");
+			} else {
+				LOGGER.error("Caught Solr exception creating core :: " + e.getMessage());
+			}
+		}
 
-        try {
-            UpdateResponse response = new JsonUpdateRequest(new FileInputStream(dataToBeIndexed)).process(proxy, coreName);
-            if (response.getStatus() != 0) {
-                throw new IllegalArgumentException("Received an error status from Solr: " + response.getStatus());
-            }
-        } catch (final Exception exception) {
-            throw new RuntimeException(exception);
-        }
-    }
+		try {
+			UpdateResponse response = new JsonUpdateRequest(new FileInputStream(dataToBeIndexed)).process(proxy, coreName);
+			if (response.getStatus() != 0) {
+				throw new IllegalArgumentException("Received an error status from Solr: " + response.getStatus());
+			}
+		} catch (final Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
 
-    @Override
-    public void start() {
-        // Nothing to be done here, the embedded server doesn't need an explicit start command.
-    }
+	@Override
+	public void start() {
+		// Nothing to be done here, the embedded server doesn't need an explicit start command.
+	}
 
-    @Override
-    public void afterStart() {
-        // Nothing to be done here.
-    }
+	@Override
+	public void afterStart() {
+		// Nothing to be done here.
+	}
 
-    @Override
-    public void beforeStop() {
-        // If using the default Solr home (eg. /tmp), clear the index in
-        // preparation for deleting the tmp directory later.
-        if (defaultSolrHome) {
-            ofNullable(proxy).ifPresent(solr -> {
-                try {
-                    solr.deleteByQuery("*:*");
-                    solr.commit();
-                } catch (final Exception exception) {
-                    exception.printStackTrace();
-                }
-            });
-        }
-    }
+	@Override
+	public void beforeStop() {
+		// If using the default Solr home (eg. /tmp), clear the index in
+		// preparation for deleting the tmp directory later.
+		if (defaultSolrHome) {
+			ofNullable(proxy).ifPresent(solr -> {
+				try {
+					solr.deleteByQuery("*:*");
+					solr.commit();
+				} catch (final Exception exception) {
+					exception.printStackTrace();
+				}
+			});
+		}
+	}
 
-    @Override
-    public void close() {
-        ofNullable(proxy).ifPresent(solr -> {
-            try {
-                solr.close();
-            } catch (final Exception exception) {
-                exception.printStackTrace();
-            }
-        });
+	@Override
+	public void close() {
+		ofNullable(proxy).ifPresent(solr -> {
+			try {
+				solr.close();
+			} catch (final Exception exception) {
+				exception.printStackTrace();
+			}
+		});
 
-        if (defaultSolrHome) {
-            // If using the default Solr home (eg. /tmp), unload and set
-            // directory for deletion.
-            ofNullable(proxy)
-                    .map(EmbeddedSolrServer::getCoreContainer)
-                    .map(CoreContainer::getAllCoreNames)
-                    .orElse(Collections.emptyList())
-                    .forEach(coreName ->
-                            proxy.getCoreContainer().unload(coreName, true, true, false));
-            solrHome.deleteOnExit();
-        }
+		if (defaultSolrHome) {
+			// If using the default Solr home (eg. /tmp), unload and set
+			// directory for deletion.
+			ofNullable(proxy)
+					.map(EmbeddedSolrServer::getCoreContainer)
+					.map(CoreContainer::getAllCoreNames)
+					.orElse(Collections.emptyList())
+					.forEach(coreName ->
+							proxy.getCoreContainer().unload(coreName, true, true, false));
+			solrHome.deleteOnExit();
+		}
 
-        ofNullable(renamedCoreProperties).ifPresent(file -> file.renameTo(coreProperties));
-    }
+		ofNullable(renamedCoreProperties).ifPresent(file -> file.renameTo(coreProperties));
+	}
 
-    @Override
-    public QueryOrSearchResponse executeQuery(final String collection, final String version, final String queryString, final String[] fields, final int maxRows) {
-        String coreName = getFullyQualifiedDomainName(collection, version);
-        try {
-            final SolrQuery query =
-                    new SolrQuery()
-                            .setRows(maxRows)
-                            .setFields(fields);
-            final ObjectMapper mapper = new ObjectMapper();
-            final JsonNode queryDef = mapper.readTree(queryString);
+	@Override
+	public QueryOrSearchResponse executeQuery(final String collection, final String version, final String queryString, final String[] fields, final int maxRows) {
+		String coreName = getFullyQualifiedDomainName(collection, version);
+		try {
+			final SolrQuery query =
+					new SolrQuery()
+							.setRows(maxRows)
+							.setFields(fields);
+			final ObjectMapper mapper = new ObjectMapper();
+			final JsonNode queryDef = mapper.readTree(queryString);
 
-            for (final Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext(); ) {
-                final Map.Entry<String, JsonNode> field = iterator.next();
-                final String value;
-                if (field.getValue().isValueNode()) {
-                    value = field.getValue().asText();
-                } else {
-                    // Either an array or an object - use writeValueAsString() instead
-                    // to convert to a string. Useful for writing JSON queries without escaping them.
-                    value = mapper.writeValueAsString(field.getValue());
-                }
-                query.add(field.getKey(), value);
-            }
+			for (final Iterator<Map.Entry<String, JsonNode>> iterator = queryDef.fields(); iterator.hasNext(); ) {
+				final Map.Entry<String, JsonNode> field = iterator.next();
+				final String value;
+				if (field.getValue().isValueNode()) {
+					value = field.getValue().asText();
+				} else {
+					// Either an array or an object - use writeValueAsString() instead
+					// to convert to a string. Useful for writing JSON queries without escaping them.
+					value = mapper.writeValueAsString(field.getValue());
+				}
+				query.add(field.getKey(), value);
+			}
 
-            return of(proxy.query(coreName, query))
-                    .map(response ->
-                            new QueryOrSearchResponse(
-                                    response.getResults().getNumFound(),
-                                    new ArrayList<Map<String, Object>>(response.getResults())))
-                    .get();
-        } catch (SolrException e) {
-            LOGGER.error("Caught Solr exception :: " + e.getMessage());
-            return new QueryOrSearchResponse(0, Collections.emptyList());
-        } catch (final Exception exception) {
-            throw new RuntimeException(exception);
-        }
-    }
+			return of(proxy.query(coreName, query))
+					.map(response ->
+							new QueryOrSearchResponse(
+									response.getResults().getNumFound(),
+									new ArrayList<Map<String, Object>>(response.getResults())))
+					.get();
+		} catch (SolrException e) {
+			LOGGER.error("Caught Solr exception :: " + e.getMessage());
+			return new QueryOrSearchResponse(0, Collections.emptyList());
+		} catch (final Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
 
-    @Override
-    public String getName() {
-        return "Apache Solr";
-    }
+	@Override
+	public String getName() {
+		return "Apache Solr";
+	}
 
-    @Override
-    public boolean isRefreshRequired() {
-        return refreshRequired;
-    }
+	@Override
+	public boolean isRefreshRequired() {
+		return refreshRequired;
+	}
 
-    /**
-     * Setup the Solr instance by preparing a minimal solr.home directory.
-     *
-     * @param folder the folder where the temporary solr.home will be created.
-     */
-    private void prepareSolrHome(final File folder) {
-        folder.mkdirs();
-        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(new File(folder, "solr.xml")))) {
-            writer.write("<solr/>");
+	/**
+	 * Setup the Solr instance by preparing a minimal solr.home directory.
+	 *
+	 * @param folder the folder where the temporary solr.home will be created.
+	 */
+	private void prepareSolrHome(final File folder) {
+		folder.mkdirs();
+		try (final BufferedWriter writer = new BufferedWriter(new FileWriter(new File(folder, "solr.xml")))) {
+			writer.write("<solr/>");
 
-            final File dummyCoreHome = new File(folder, "dummy");
-            final File dummyCoreConf = new File(dummyCoreHome, "conf");
-            dummyCoreConf.mkdirs();
+			final File dummyCoreHome = new File(folder, "dummy");
+			final File dummyCoreConf = new File(dummyCoreHome, "conf");
+			dummyCoreConf.mkdirs();
 
-            Files.copy(getClass().getResourceAsStream("/schema.xml"), new File(dummyCoreConf, "schema.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-            Files.copy(getClass().getResourceAsStream("/solrconfig.xml"), new File(dummyCoreConf, "solrconfig.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-            Files.copy(getClass().getResourceAsStream("/core.properties"), new File(dummyCoreHome, "core.properties").toPath(), StandardCopyOption.REPLACE_EXISTING);
+			Files.copy(getClass().getResourceAsStream("/schema.xml"), new File(dummyCoreConf, "schema.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+			Files.copy(getClass().getResourceAsStream("/solrconfig.xml"), new File(dummyCoreConf, "solrconfig.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+			Files.copy(getClass().getResourceAsStream("/core.properties"), new File(dummyCoreHome, "core.properties").toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-        } catch (final Exception exception) {
-            folder.deleteOnExit();
-            throw new RuntimeException(exception);
-        }
-    }
+		} catch (final Exception exception) {
+			folder.deleteOnExit();
+			throw new RuntimeException(exception);
+		}
+	}
 
-    @Override
-    public boolean isSearchPlatformConfiguration(String indexName, File file) {
-        return file.isDirectory() && file.getName().equals(indexName);
-    }
+	@Override
+	public boolean isSearchPlatformConfiguration(String indexName, File file) {
+		return file.isDirectory() && file.getName().equals(indexName);
+	}
 
-    @Override
-    public boolean isCorporaRequired() {
-        return true;
-    }
+	@Override
+	public boolean isCorporaRequired() {
+		return true;
+	}
+
+	@Override
+	public boolean checkCollection(String collection, String version) {
+		String coreName = getFullyQualifiedDomainName(collection, version);
+		try {
+			SolrQuery query = new SolrQuery("*:*").setRows(0);
+			QueryResponse response = proxy.query(coreName, query);
+			return response.getStatus() == 0;
+		} catch (SolrException e) {
+			// If index doesn't exist, we'll get a SolrException (a RuntimeException)
+			LOGGER.warn("Caught SolrException checking for collection {} version {}: {}",
+					collection, version, e.getMessage());
+		} catch (SolrServerException | IOException e) {
+			LOGGER.warn("Caught exception checking platform for collection {} version {}: {}",
+					collection, version, e.getMessage());
+		}
+		return false;
+	}
 }

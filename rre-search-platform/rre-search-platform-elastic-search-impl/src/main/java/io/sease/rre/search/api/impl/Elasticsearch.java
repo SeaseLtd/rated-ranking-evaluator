@@ -110,7 +110,7 @@ public class Elasticsearch implements SearchPlatform {
         }
 
         nodeConfigFolder = new File((String) configuration.get("path.home"), "config");
-        nodeConfigFolder.mkdir();
+        nodeConfigFolder.mkdirs();
 
         final Settings.Builder settings = Settings.builder()
                 .put("path.home", (String) configuration.get("path.home"))
@@ -332,5 +332,10 @@ public class Elasticsearch implements SearchPlatform {
     @Override
     public boolean isCorporaRequired() {
         return true;
+    }
+
+    @Override
+    public boolean checkCollection(String collection, String version) {
+        return proxy.admin().indices().exists(indicesExistsRequest(getFullyQualifiedDomainName(collection, version))).actionGet().isExists();
     }
 }

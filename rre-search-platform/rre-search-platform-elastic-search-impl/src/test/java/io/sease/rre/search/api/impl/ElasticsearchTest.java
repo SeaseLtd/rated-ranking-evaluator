@@ -17,12 +17,17 @@
 package io.sease.rre.search.api.impl;
 
 import io.sease.rre.search.api.SearchPlatform;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -30,15 +35,28 @@ import static org.junit.Assert.assertTrue;
 public class ElasticsearchTest {
 
     private static final String INDEX_NAME = "test";
+    private static final String VERSION = "1.0";
 
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
-    private SearchPlatform platform;
+    private static SearchPlatform platform;
+
+    @BeforeClass
+    public static void configureEsNettySettings() {
+        // This is a set-once property - when running the tests through Maven,
+        // it gets set multiple times unless we disable that behaviour here
+        System.setProperty("es.set.netty.runtime.available.processors", "false");
+    }
 
     @Before
     public void setupPlatform() {
         platform = new Elasticsearch();
+    }
+
+    @After
+    public void tearDownPlatform() {
+        platform = null;
     }
 
     @Test
@@ -57,5 +75,38 @@ public class ElasticsearchTest {
     public void isSearchPlatformFile_returnsTrueWhenDirectoryContainsConfig() throws Exception {
         File configFile = tempFolder.newFile("index-shape.json");
         assertTrue(platform.isSearchPlatformConfiguration(INDEX_NAME, configFile));
+    }
+
+
+    @Test
+    public void checkCollection_returnsFalseWhenNotLoaded() throws Exception {
+        Map<String, Object> configuration = buildConfiguration();
+        platform.beforeStart(configuration);
+        platform.start();
+        assertFalse(platform.checkCollection(INDEX_NAME, VERSION));
+        platform.close();
+    }
+
+    @Test
+    public void checkCollection_returnsTrueWhenInitialised() throws Exception {
+        Map<String, Object> configuration = buildConfiguration();
+        platform.beforeStart(configuration);
+        platform.start();
+        platform.load(
+                new File(this.getClass().getResource("/elasticsearch/corpora/electric_basses.bulk").getPath()),
+                new File(this.getClass().getResource("/elasticsearch/configuration_sets/v1.0/index-shape.json").getPath()),
+                INDEX_NAME, VERSION);
+        assertTrue(platform.checkCollection(INDEX_NAME, VERSION));
+        platform.close();
+    }
+
+    private Map<String, Object> buildConfiguration() throws IOException {
+        Map<String, Object> configuration = new HashMap<>();
+        File homeFolder = tempFolder.newFolder();
+        File dataFolder = tempFolder.newFolder();
+        configuration.put("path.home", homeFolder.getAbsolutePath());
+        configuration.put("path.data", dataFolder.getAbsolutePath());
+        configuration.put("forceRefresh", Boolean.FALSE);
+        return configuration;
     }
 }
