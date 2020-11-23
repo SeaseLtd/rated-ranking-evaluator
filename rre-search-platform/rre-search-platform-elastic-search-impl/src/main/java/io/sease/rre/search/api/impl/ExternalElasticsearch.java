@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * SearchPlatform implementation for connecting to and reading from an external
@@ -55,6 +56,7 @@ public class ExternalElasticsearch extends Elasticsearch {
     private static final String NAME = "External Elasticsearch";
     static final String SETTINGS_FILE = "index-settings.json";
 
+    private final Map<String, IndexSettings> indexSettings = new HashMap<>();
     private final Map<String, RestHighLevelClient> indexClients = new HashMap<>();
 
     @Override
@@ -76,6 +78,7 @@ public class ExternalElasticsearch extends Elasticsearch {
         try {
             // Load the index settings for this version of the search platform
             IndexSettings settings = mapper.readValue(settingsFile, IndexSettings.class);
+            indexSettings.put(getFullyQualifiedDomainName(collection, version), settings);
             if (indexClients.get(version) == null) {
                 indexClients.put(version, initialiseClient(settings.getHostUrls(), settings.getUser(), settings.getPassword()));
             }
@@ -111,10 +114,10 @@ public class ExternalElasticsearch extends Elasticsearch {
     }
 
     @Override
-    public QueryOrSearchResponse executeQuery(final String collection, String version, final String query, final String[] fields, final int maxRows) {
+    public QueryOrSearchResponse executeQuery(final String collection, final String version, final String query, final String[] fields, final int maxRows) {
 
         try {
-            final SearchRequest request = buildSearchRequest(collection, query, fields, maxRows);
+            final SearchRequest request = buildSearchRequest(resolveIndexName(collection, version), query, fields, maxRows);
             final SearchResponse response = runQuery(version, request);
             return convertResponse(response);
         } catch (final ElasticsearchException e) {
@@ -164,7 +167,7 @@ public class ExternalElasticsearch extends Elasticsearch {
     @Override
     public boolean checkCollection(String collection, String version) {
         try {
-            return indexClients.get(version).indices().exists(new GetIndexRequest(collection), RequestOptions.DEFAULT);
+            return indexClients.get(version).indices().exists(new GetIndexRequest(resolveIndexName(collection, version)), RequestOptions.DEFAULT);
         } catch (IOException e) {
             LOGGER.error("Caught IOException checking collection {} version {}: {}", collection, version, e.getMessage());
             LOGGER.error(e);
@@ -172,9 +175,25 @@ public class ExternalElasticsearch extends Elasticsearch {
         }
     }
 
+    /**
+     * Resolve the correct index name for the version, allowing the name to be
+     * overridden in config if required.
+     *
+     * @param defaultIndex the default index name.
+     * @param version      the configuration version.
+     * @return the correct index name.
+     */
+    private String resolveIndexName(String defaultIndex, String version) {
+        return Optional.ofNullable(indexSettings.get(getFullyQualifiedDomainName(defaultIndex, version)).getIndex())
+                .orElse(defaultIndex);
+    }
+
     public static class IndexSettings {
         @JsonProperty("hostUrls")
         private final List<String> hostUrls;
+
+        @JsonProperty("index")
+        private final String index;
 
         @JsonProperty("user")
         private final String user;
@@ -183,15 +202,21 @@ public class ExternalElasticsearch extends Elasticsearch {
         private final String password;
 
         public IndexSettings(@JsonProperty("hostUrls") List<String> hostUrls,
+                             @JsonProperty("index") String index,
                              @JsonProperty("user") String user,
                              @JsonProperty("password") String password) {
             this.hostUrls = hostUrls;
+            this.index = index;
             this.user = user;
             this.password = password;
         }
 
         public List<String> getHostUrls() {
             return hostUrls;
+        }
+
+        public String getIndex() {
+            return index;
         }
 
         public String getUser() {
