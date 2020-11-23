@@ -22,7 +22,9 @@ import org.junit.Test;
 import java.io.InputStream;
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for the Solr settings.
@@ -69,12 +71,12 @@ public class SolrSettingsTest {
 
     @Test(expected=java.lang.IllegalArgumentException.class)
     public void constructorThrowsException_whenNoURLsSet() {
-        new ExternalApacheSolr.SolrSettings(null, null, null, null, null);
+        new ExternalApacheSolr.SolrSettings(null, null, null, null, null, null);
     }
 
     @Test
     public void canConstructWithZkHostsOnly() {
-        ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(null, Collections.singletonList("localhost:2181"), null, null, null);
+        ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(null, null, Collections.singletonList("localhost:2181"), null, null, null);
         assertNotNull(settings);
         assertTrue(settings.hasZookeeperSettings());
     }
