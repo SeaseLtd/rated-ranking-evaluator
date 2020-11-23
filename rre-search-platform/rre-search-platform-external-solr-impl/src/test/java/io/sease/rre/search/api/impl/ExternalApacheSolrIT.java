@@ -16,7 +16,11 @@
  */
 package io.sease.rre.search.api.impl;
 
+import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.common.SolrInputDocument;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,7 +30,11 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -43,8 +51,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class ExternalApacheSolrIT {
 
-	private static String SOLR_CONTAINER_BASE = "solr";
-	private static String DEFAULT_SOLR_VERSION = "8.6";
+	private static final String SOLR_CONTAINER_BASE = "solr";
+	private static final String DEFAULT_SOLR_VERSION = "8.6";
 
 	private static final String INDEX_NAME = "test";
 	private static final String INDEX_VERSION = "v1.0";
@@ -92,4 +100,84 @@ public class ExternalApacheSolrIT {
 		assertTrue(platform.checkCollection(INDEX_NAME, INDEX_VERSION));
 		solrContainer.close();
 	}
+
+	@Test
+	public void checkCollection_allowsCollectionOverride() throws Exception {
+		final String overrideCollection = "override";
+
+		final SolrContainer solrContainer = new SolrContainer(DOCKER_IMAGE).withCollection(overrideCollection);
+		solrContainer.start();
+
+		final File settingsFile = tempFolder.newFile("ccaco_settings.json");
+		FileWriter fw = new FileWriter(settingsFile);
+		fw.write("{ \"baseUrls\": [ \"http://" + solrContainer.getHost() + ":" + solrContainer.getSolrPort() + "/solr\" ], \"collectionName\": \"" + overrideCollection + "\" }");
+		fw.close();
+
+		platform.load(null, settingsFile, INDEX_NAME, INDEX_VERSION);
+
+		assertTrue(platform.checkCollection(INDEX_NAME, INDEX_VERSION));
+		solrContainer.close();
+	}
+
+
+	@Test
+    public void executeQuery_returnsResults() throws Exception {
+	    final int numDocs = new Random().nextInt(10);
+
+        final SolrContainer solrContainer = new SolrContainer(DOCKER_IMAGE).withCollection(INDEX_NAME);
+        solrContainer.start();
+
+        // Index some documents
+        createDocuments(solrContainer.getHost(), solrContainer.getSolrPort(), INDEX_NAME, numDocs);
+
+        final File settingsFile = tempFolder.newFile("eq_settings.json");
+        FileWriter fw = new FileWriter(settingsFile);
+        fw.write("{ \"baseUrls\": [ \"http://" + solrContainer.getHost() + ":" + solrContainer.getSolrPort() + "/solr\" ]}");
+        fw.close();
+
+        platform.load(null, settingsFile, INDEX_NAME, INDEX_VERSION);
+
+        QueryOrSearchResponse response = platform.executeQuery(INDEX_NAME, INDEX_VERSION, "{ \"q\": \"*:*\" }", new String[]{ "id", "title_s" }, 10);
+
+        assertEquals(numDocs, response.totalHits());
+        solrContainer.close();
+    }
+
+    @Test
+    public void executeQuery_allowsOverride() throws Exception {
+        final int numDocs = new Random().nextInt(10);
+        final String overrideCollection = "override";
+
+        final SolrContainer solrContainer = new SolrContainer(DOCKER_IMAGE).withCollection(overrideCollection);
+        solrContainer.start();
+
+        // Index some documents
+        createDocuments(solrContainer.getHost(), solrContainer.getSolrPort(), overrideCollection, numDocs);
+
+        final File settingsFile = tempFolder.newFile("eqao_settings.json");
+        FileWriter fw = new FileWriter(settingsFile);
+        fw.write("{ \"baseUrls\": [ \"http://" + solrContainer.getHost() + ":" + solrContainer.getSolrPort() + "/solr\" ], \"collectionName\": \"" + overrideCollection + "\" }");
+        fw.close();
+
+        platform.load(null, settingsFile, INDEX_NAME, INDEX_VERSION);
+
+        QueryOrSearchResponse response = platform.executeQuery(INDEX_NAME, INDEX_VERSION, "{ \"q\": \"*:*\" }", new String[]{ "id", "title_s" }, 10);
+
+        assertEquals(numDocs, response.totalHits());
+        solrContainer.close();
+    }
+
+    private void createDocuments(String solrHost, int solrPort, String collection, int numDocs) throws Exception {
+        List<SolrInputDocument> docs = new ArrayList<>(numDocs);
+	    for (int i = 0; i < numDocs; i ++) {
+	        SolrInputDocument doc = new SolrInputDocument();
+	        doc.addField("id", "" + i);
+	        doc.addField("title_s", "Test");
+	        docs.add(doc);
+        }
+
+	    final SolrClient client = new HttpSolrClient.Builder("http://" + solrHost + ":" + solrPort + "/solr").build();
+	    client.add(collection, docs);
+	    client.commit(collection);
+    }
 }
