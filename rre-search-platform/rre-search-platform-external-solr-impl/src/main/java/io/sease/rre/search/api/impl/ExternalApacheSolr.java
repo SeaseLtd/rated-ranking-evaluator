@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,7 @@ public class ExternalApacheSolr implements SearchPlatform {
     static final String SETTINGS_FILE = "solr-settings.json";
 
     private final SolrClientManager clientManager = new SolrClientManager();
+    private final Map<String, SolrSettings> settingsMap = new HashMap<>();
 
     @Override
     public void beforeStart(Map<String, Object> configuration) {
@@ -85,6 +87,7 @@ public class ExternalApacheSolr implements SearchPlatform {
         try {
             // Load the index settings for this version of the search platform
             SolrSettings settings = mapper.readValue(settingsFile, SolrSettings.class);
+            settingsMap.put(getFullyQualifiedDomainName(collection, version), settings);
 
             if (clientManager.getSolrClient(version) == null) {
                 clientManager.buildSolrClient(version, settings);
@@ -123,11 +126,11 @@ public class ExternalApacheSolr implements SearchPlatform {
             }
 
             return of(clientManager.getSolrClient(version)
-                    .query(collection, query, SolrRequest.METHOD.POST))
+                    .query(resolveCollectionName(collection, version), query, SolrRequest.METHOD.POST))
                     .map(response ->
                             new QueryOrSearchResponse(
                                     response.getResults().getNumFound(),
-                                    new ArrayList<Map<String, Object>>(response.getResults())))
+                                    new ArrayList<>(response.getResults())))
                     .get();
         } catch (SolrException e) {
             LOGGER.error("Caught Solr exception :: " + e.getMessage());
@@ -167,7 +170,7 @@ public class ExternalApacheSolr implements SearchPlatform {
         try {
             SolrClient client = clientManager.getSolrClient(version);
             if (client != null) {
-                SolrPingResponse response = client.ping(collection);
+                SolrPingResponse response = client.ping(resolveCollectionName(collection, version));
                 return response.getStatus() == 0;
             }
         } catch (SolrException e) {
@@ -181,10 +184,17 @@ public class ExternalApacheSolr implements SearchPlatform {
         return false;
     }
 
+    private String resolveCollectionName(String defaultCollection, String version) {
+        return Optional.ofNullable(settingsMap.get(getFullyQualifiedDomainName(defaultCollection, version)).getCollectionName())
+                .orElse(defaultCollection);
+    }
+
     public static class SolrSettings {
 
         @JsonProperty("baseUrls")
         private final List<String> baseUrls;
+        @JsonProperty("collectionName")
+        private final String collectionName;
         @JsonProperty("zkHosts")
         private final List<String> zkHosts;
         @JsonProperty("zkChroot")
@@ -195,11 +205,13 @@ public class ExternalApacheSolr implements SearchPlatform {
         private final Integer socketTimeout;
 
         public SolrSettings(@JsonProperty("baseUrls") List<String> baseUrls,
+                            @JsonProperty("collectionName") String collectionName,
                             @JsonProperty("zkHosts") List<String> zkHosts,
                             @JsonProperty("zkChroot") String zkChroot,
                             @JsonProperty("connectionTimeoutMillis") Integer connectionTimeout,
                             @JsonProperty("socketTimeoutMillis") Integer socketTimeout) throws IllegalArgumentException {
             this.baseUrls = baseUrls;
+            this.collectionName = collectionName;
             this.zkHosts = zkHosts;
             this.zkChroot = (zkChroot != null && zkChroot.length() > 0 ? zkChroot : null);
             this.connectionTimeout = connectionTimeout;
@@ -217,6 +229,10 @@ public class ExternalApacheSolr implements SearchPlatform {
 
         public List<String> getBaseUrls() {
             return baseUrls;
+        }
+
+        public String getCollectionName() {
+            return collectionName;
         }
 
         public List<String> getZkHosts() {
