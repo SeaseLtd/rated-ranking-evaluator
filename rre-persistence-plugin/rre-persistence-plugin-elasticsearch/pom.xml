@@ -30,7 +30,7 @@
     <artifactId>rre-persistence-plugin-elasticsearch</artifactId>
 
     <properties>
-        <elasticsearch.version>7.2.0</elasticsearch.version>
+        <elasticsearch.version>7.11.2</elasticsearch.version>
     </properties>
 
     <name>RRE - Persistence Plugin - Elasticsearch</name>
