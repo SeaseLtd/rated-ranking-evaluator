@@ -45,6 +45,7 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
     private final static Logger LOGGER = LogManager.getLogger(AsynchronousEvaluationManager.class);
 
     private final ThreadPoolExecutor executor;
+    private AtomicInteger failedQueries;
 
     /**
      * Construct an asynchronous {@link EvaluationManager} instance to run
@@ -67,6 +68,7 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
                                          int threadpoolSize) {
         super(platform, templateManager, persistenceManager, fields, versions, versionTimestamp);
         this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadpoolSize);
+        this.failedQueries = new AtomicInteger();
     }
 
     @Override
@@ -93,9 +95,15 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
                 final AtomicInteger rank = new AtomicInteger(1);
 
                 final QueryOrSearchResponse response = executeQuery(indexName, version, queryNode, defaultTemplate, relevantDocCount);
-                query.setTotalHits(response.totalHits(), persistVersion(version));
-                response.hits().forEach(hit -> query.collect(hit, rank.getAndIncrement(), persistVersion(version)));
+
+                if (response.isFailed()){
+                    failedQueries.incrementAndGet();
+                } else {
+                    query.setTotalHits(response.totalHits(), persistVersion(version));
+                    response.hits().forEach(hit -> query.collect(hit, rank.getAndIncrement(), persistVersion(version)));
+                }
                 doneSignal.countDown();
+
             });
             try {
                 doneSignal.await();
@@ -113,11 +121,26 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
 
     @Override
     public int getQueriesRemaining() {
-        return (int) (executor.getTaskCount() - executor.getCompletedTaskCount());
+        return (int) (executor.getTaskCount() - executor.getCompletedTaskCount()) * getVersions().size();
     }
 
     @Override
     public int getTotalQueries() {
         return (int) executor.getTaskCount();
+    }
+
+    @Override
+    public int getTotalQueryExecutions() {
+        return (int) executor.getTaskCount() * getVersions().size();
+    }
+
+    @Override
+    public int getRemainingQueryExecutions() {
+        return (int) (executor.getTaskCount() - executor.getCompletedTaskCount()) * getVersions().size();
+    }
+
+    @Override
+    public int getFailedQueries() {
+        return failedQueries.get();
     }
 }

@@ -57,4 +57,19 @@ public interface EvaluationManager {
      * @return the total number of queries that have been set for evaluation.
      */
     int getTotalQueries();
+
+    /**
+     * @return the total number of query executions that have been set for evaluation.
+     */
+    int getTotalQueryExecutions();
+
+    /**
+     * @return the total number of query executions that have been set for evaluation.
+     */
+    int getRemainingQueryExecutions();
+
+    /**
+     * @return the total number of query execution failures.
+     */
+    int getFailedQueries();
 }

@@ -36,6 +36,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SynchronousEvaluationManager extends BaseEvaluationManager implements EvaluationManager {
 
     private int queryCount;
+    private int failedQueries;
+    private int queryExecutionCount;
 
     /**
      * Construct a synchronous (single-threaded) {@link EvaluationManager} instance to run
@@ -57,11 +59,16 @@ public class SynchronousEvaluationManager extends BaseEvaluationManager implemen
         queryCount++;
 
         getVersions().forEach(version -> {
+            queryExecutionCount++;
             final AtomicInteger rank = new AtomicInteger(1);
             final QueryOrSearchResponse response = executeQuery(indexName, version, queryNode, defaultTemplate, relevantDocCount);
 
-            query.setTotalHits(response.totalHits(), persistVersion(version));
-            response.hits().forEach(hit -> query.collect(hit, rank.getAndIncrement(), persistVersion(version)));
+            if (response.isFailed()) {
+                failedQueries++;
+            } else {
+                query.setTotalHits(response.totalHits(), persistVersion(version));
+                response.hits().forEach(hit -> query.collect(hit, rank.getAndIncrement(), persistVersion(version)));
+            }
         });
 
         completeQuery(query);
@@ -80,5 +87,20 @@ public class SynchronousEvaluationManager extends BaseEvaluationManager implemen
     @Override
     public int getTotalQueries() {
         return queryCount;
+    }
+
+    @Override
+    public int getTotalQueryExecutions() {
+        return queryExecutionCount;
+    }
+
+    @Override
+    public int getRemainingQueryExecutions() {
+        return 0;
+    }
+
+    @Override
+    public int getFailedQueries() {
+        return failedQueries;
     }
 }

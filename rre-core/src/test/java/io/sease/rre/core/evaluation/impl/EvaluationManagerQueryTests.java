@@ -24,6 +24,7 @@ import io.sease.rre.core.template.QueryTemplateManager;
 import io.sease.rre.persistence.PersistenceManager;
 import io.sease.rre.search.api.QueryOrSearchResponse;
 import io.sease.rre.search.api.SearchPlatform;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,6 +57,7 @@ public class EvaluationManagerQueryTests {
     private static final String QUERY_TEXT = "fred";
     private static final String INDEX_NAME = "index";
     private static final String QUERY_TEMPLATE = "q=$query";
+    private static final String WRONG_QUERY_TEMPLATE = "invalidQuery";
     private static final String QUERY_VALUE = "q=" + QUERY_TEXT;
     private static final int THREADPOOL_SIZE = 4;
 
@@ -67,17 +69,27 @@ public class EvaluationManagerQueryTests {
 
     private Query query;
     private JsonNode queryNode;
+    private JsonNode queryNodeWithWrongTemplate;
+
+
+    private static final String WRONG_TEMPLATE = "wrong_query.json";
 
     @Before
     public void setup() throws Exception {
         query = buildQuery();
-        queryNode = buildQueryNode();
+        queryNode = buildQueryNode(TEMPLATE);
+        queryNodeWithWrongTemplate = buildQueryNode(WRONG_TEMPLATE);
 
         // Set up template manager
         when(templateManager.getTemplate(isNull(), eq(TEMPLATE), isA(String.class))).thenReturn(QUERY_TEMPLATE);
+        when(templateManager.getTemplate(isNull(), eq(WRONG_TEMPLATE), isA(String.class))).thenReturn(WRONG_QUERY_TEMPLATE);
+
         // Set up platform for each version query
         versions.forEach(v -> when(platform.executeQuery(eq(INDEX_NAME), eq(v), eq(QUERY_VALUE), any(String[].class), anyInt()))
                 .thenReturn(new QueryOrSearchResponse(0, Collections.emptyList())));
+
+        versions.forEach(v -> when(platform.executeQuery(eq(INDEX_NAME), eq(v), eq(WRONG_QUERY_TEMPLATE), any(String[].class), anyInt()))
+                .thenReturn(new QueryOrSearchResponse("Error")));
     }
 
 
@@ -101,14 +113,56 @@ public class EvaluationManagerQueryTests {
         verifySearchPlatform();
     }
 
+
     @Test
-    public void evaluateQuery_asynchronousQueries() {
-        final EvaluationManager evaluationManager = new AsynchronousQueryEvaluationManager(platform, templateManager, persistenceManager, fields, versions, null, THREADPOOL_SIZE);
+    public void evaluateQueryWithErrors_synchronous(){
 
-        evaluateAndWaitUntilDone(evaluationManager);
+        EvaluationManager evaluationManager = new SynchronousEvaluationManager(platform, templateManager, persistenceManager, fields, versions, null);
+        evaluateAndWaitQueriesWithErrorUntilDone(evaluationManager);
 
-        verifyPersistence();
-        verifySearchPlatform();
+        Assert.assertEquals(2, evaluationManager.getTotalQueries());
+        Assert.assertEquals(0, evaluationManager.getQueriesRemaining());
+        Assert.assertEquals(4, evaluationManager.getTotalQueryExecutions());
+        Assert.assertEquals(0, evaluationManager.getRemainingQueryExecutions());
+        Assert.assertEquals(2, evaluationManager.getFailedQueries());
+    }
+
+    @Test
+    public void evaluateQueryWithErrors_aynchronousVersions(){
+
+        EvaluationManager evaluationManager = new AsynchronousEvaluationManager(platform, templateManager, persistenceManager, fields, versions, null, THREADPOOL_SIZE);
+        evaluateAndWaitQueriesWithErrorUntilDone(evaluationManager);
+
+        Assert.assertEquals(2, evaluationManager.getTotalQueries());
+        Assert.assertEquals(0, evaluationManager.getQueriesRemaining());
+        Assert.assertEquals(4, evaluationManager.getTotalQueryExecutions());
+        Assert.assertEquals(0, evaluationManager.getRemainingQueryExecutions());
+        Assert.assertEquals(2, evaluationManager.getFailedQueries());
+    }
+
+
+    @Test
+    public void evaluateQueryWithErrors_asynchronousQueries(){
+
+        EvaluationManager evaluationManager = new AsynchronousQueryEvaluationManager(platform, templateManager, persistenceManager, fields, versions, null, THREADPOOL_SIZE);
+        evaluateAndWaitQueriesWithErrorUntilDone(evaluationManager);
+
+        Assert.assertEquals(2, evaluationManager.getTotalQueries());
+        Assert.assertEquals(0, evaluationManager.getQueriesRemaining());
+        Assert.assertEquals(4, evaluationManager.getTotalQueryExecutions());
+        Assert.assertEquals(0, evaluationManager.getRemainingQueryExecutions());
+        Assert.assertEquals(2, evaluationManager.getFailedQueries());
+    }
+
+
+
+    private void evaluateAndWaitQueriesWithErrorUntilDone(EvaluationManager evaluationManager) {
+        evaluationManager.evaluateQuery(query, INDEX_NAME, queryNodeWithWrongTemplate, null, DOC_IDS.size());
+        evaluationManager.evaluateQuery(query, INDEX_NAME, queryNode, null, DOC_IDS.size());
+
+        while (evaluationManager.isRunning()) {
+            try { Thread.sleep(100); } catch (InterruptedException ignored) { }
+        }
     }
 
     private void evaluateAndWaitUntilDone(EvaluationManager evaluationManager) {
@@ -148,8 +202,10 @@ public class EvaluationManagerQueryTests {
         return mapper.readTree(mapper.writeValueAsString(ratedDocs));
     }
 
-    private static JsonNode buildQueryNode() throws IOException {
-        final String qNode = "{ \"template\": \"" + TEMPLATE + "\", \"placeholders\": { \"$query\": \"" + QUERY_TEXT + "\" }}";
+    private static JsonNode buildQueryNode(String template) throws IOException {
+        final String qNode = "{ \"template\": \"" + template + "\", \"placeholders\": { \"$query\": \"" + QUERY_TEXT + "\" }}";
         return new ObjectMapper().readTree(qNode);
     }
+
+
 }
