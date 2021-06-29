@@ -25,7 +25,7 @@ public class RecallAtK extends Metric {
      * @param k the recallbound
      */
     public RecallAtK(@JsonProperty("k") final int k) {
-        super("R@" + k);
+        super("Recall@" + k);
         this.k = k;
     }
 

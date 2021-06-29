@@ -64,24 +64,24 @@ public class NDCGAtK extends Metric {
      * Builds a new NDCGAtK metric.
      *
      * @param k the top k reference elements used for building the measure.
-     * @param maxgrade     the maximum grade available when judging documents. If
+     * @param maximumGrade     the maximum grade available when judging documents. If
      *                     {@code null}, will default to 3.
-     * @param defaultgrade the default grade to use when judging documents. If
-     *                     {@code null}, will default to either {@code maxgrade / 2}
-     *                     or 2, depending whether or not {@code maxgrade} has been specified.
+     * @param missingGrade the default grade to use when judging documents. If
+     *                     {@code null}, will default to either {@code maximumGrade / 2}
+     *                     or 2, depending whether or not {@code maximumGrade} has been specified.
      * @param name         the name to use for this metric. If {@code null}, will default to {@code NDCG@k}.
      */
     public NDCGAtK(@JsonProperty("k") final int k,
-                   @JsonProperty(ParameterizedMetricClassManager.MAXIMUM_GRADE_KEY) final Float maxgrade,
-                   @JsonProperty(ParameterizedMetricClassManager.MISSING_GRADE_KEY) final Float defaultgrade,
+                   @JsonProperty(ParameterizedMetricClassManager.MAXIMUM_GRADE_KEY) final Float maximumGrade,
+                   @JsonProperty(ParameterizedMetricClassManager.MISSING_GRADE_KEY) final Float missingGrade,
                    @JsonProperty(ParameterizedMetricClassManager.NAME_KEY) final String name) {
         super(Optional.ofNullable(name).orElse("NDCG@" + k));
-        if (maxgrade == null) {
+        if (maximumGrade == null) {
             this.maxgrade = MetricClassConfigurationManager.getInstance().getDefaultMaximumGrade();
-            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElse(MetricClassConfigurationManager.getInstance().getDefaultMissingGrade());
+            this.fairgrade = Optional.ofNullable(missingGrade).map(BigDecimal::valueOf).orElse(MetricClassConfigurationManager.getInstance().getDefaultMissingGrade());
         } else {
-            this.maxgrade = BigDecimal.valueOf(maxgrade);
-            this.fairgrade = Optional.ofNullable(defaultgrade).map(BigDecimal::valueOf).orElseGet(() -> this.maxgrade.divide(TWO, 8, RoundingMode.HALF_UP));
+            this.maxgrade = BigDecimal.valueOf(maximumGrade);
+            this.fairgrade = Optional.ofNullable(missingGrade).map(BigDecimal::valueOf).orElseGet(() -> this.maxgrade.divide(TWO, 8, RoundingMode.HALF_UP));
         }
         this.k = k;
     }

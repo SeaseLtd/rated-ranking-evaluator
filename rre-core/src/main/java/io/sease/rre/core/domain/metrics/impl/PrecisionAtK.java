@@ -41,7 +41,7 @@ public class PrecisionAtK extends Metric {
      * @param k the precision bound.
      */
     PrecisionAtK(@JsonProperty("k") final int k) {
-        super("P@" + k);
+        super("Precision@" + k);
         this.k = k;
     }
 
