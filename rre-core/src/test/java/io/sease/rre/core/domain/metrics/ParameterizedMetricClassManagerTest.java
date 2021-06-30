@@ -78,6 +78,6 @@ public class ParameterizedMetricClassManagerTest {
 
         assertNotNull(m);
         assertTrue(m instanceof io.sease.rre.core.domain.metrics.impl.PrecisionAtK);
-        assertEquals("P@5", m.getName());
+        assertEquals("Precision@5", m.getName());
     }
 }
