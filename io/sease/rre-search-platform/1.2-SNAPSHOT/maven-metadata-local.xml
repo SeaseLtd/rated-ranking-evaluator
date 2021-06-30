@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>io.sease</groupId>
+  <artifactId>rre-search-platform</artifactId>
+  <version>1.2-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <localCopy>true</localCopy>
+    </snapshot>
+    <lastUpdated>20210630152034</lastUpdated>
+    <snapshotVersions>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>1.2-SNAPSHOT</value>
+        <updated>20210630152034</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+</metadata>
