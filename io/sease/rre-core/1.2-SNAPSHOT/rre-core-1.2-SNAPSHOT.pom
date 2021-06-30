@@ -23,12 +23,11 @@
     <parent>
         <artifactId>rre</artifactId>
         <groupId>io.sease</groupId>
-        <version>1.1</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rre-core</artifactId>
     <name>RRE - Core libraries</name>
-    <version>1.2-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -38,7 +37,7 @@
         <dependency>
             <groupId>io.sease</groupId>
             <artifactId>rre-search-platform-api</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
