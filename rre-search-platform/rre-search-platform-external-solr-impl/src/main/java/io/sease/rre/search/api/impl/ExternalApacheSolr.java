@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -134,7 +133,7 @@ public class ExternalApacheSolr implements SearchPlatform {
                     .get();
         } catch (SolrException e) {
             LOGGER.error("Caught Solr exception :: " + e.getMessage());
-            return new QueryOrSearchResponse(0, Collections.emptyList());
+            return new QueryOrSearchResponse(e.getMessage());
         } catch (final Exception exception) {
             throw new RuntimeException(exception);
         }

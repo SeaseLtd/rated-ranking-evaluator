@@ -28,6 +28,7 @@ import static java.util.Collections.unmodifiableList;
  * @since 1.0
  */
 public class QueryOrSearchResponse {
+    private final String failureMessage;
     private final long totalHits;
     private final List<Map<String, Object>> hits;
 
@@ -40,6 +41,21 @@ public class QueryOrSearchResponse {
     public QueryOrSearchResponse(final long totalHits, final List<Map<String, Object>> hits) {
         this.totalHits = totalHits;
         this.hits = unmodifiableList(hits);
+        this.failureMessage = null;
+    }
+
+    public QueryOrSearchResponse(final String failureMessage) {
+        this.totalHits = 0;
+        this.hits = null;
+        this.failureMessage = failureMessage;
+    }
+
+    public boolean isFailed(){
+        return failureMessage != null;
+    }
+
+    public String getFailureMessage(){
+        return failureMessage;
     }
 
     /**
