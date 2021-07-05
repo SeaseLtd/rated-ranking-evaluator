@@ -64,7 +64,7 @@ public interface EvaluationManager {
     int getTotalQueryExecutions();
 
     /**
-     * @return the number of query executions left to be evaluated.
+     * @return the number of query executions left.
      */
     int getRemainingQueryExecutions();
 
