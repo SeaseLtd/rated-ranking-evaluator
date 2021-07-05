@@ -122,7 +122,7 @@ public class ExternalElasticsearch extends Elasticsearch {
             return convertResponse(response);
         } catch (final ElasticsearchException e) {
             LOGGER.error("Caught ElasticsearchException :: " + e.getMessage());
-            return new QueryOrSearchResponse(0, Collections.emptyList());
+            return new QueryOrSearchResponse(e.getMessage());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

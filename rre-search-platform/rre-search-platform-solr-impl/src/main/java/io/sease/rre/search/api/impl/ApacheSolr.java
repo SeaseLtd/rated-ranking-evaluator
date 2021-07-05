@@ -220,7 +220,7 @@ public class ApacheSolr implements SearchPlatform {
 					.get();
 		} catch (SolrException e) {
 			LOGGER.error("Caught Solr exception :: " + e.getMessage());
-			return new QueryOrSearchResponse(0, Collections.emptyList());
+			return new QueryOrSearchResponse(e.getMessage());
 		} catch (final Exception exception) {
 			throw new RuntimeException(exception);
 		}
