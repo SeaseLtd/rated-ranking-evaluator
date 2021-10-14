@@ -1,4 +1,4 @@
-<img src="https://user-images.githubusercontent.com/7569632/42744038-a10351c8-88c9-11e8-858b-3a1e832dba4d.jpeg" alt="RRE" width="150px"/>
+<img src="https://user-images.githubusercontent.com/7569632/137300153-f47aeb05-25cc-4410-944d-7d7291caaf27.png" alt="RRE" width="150px"/>
 
 # Rated Ranking Evaluator
 
