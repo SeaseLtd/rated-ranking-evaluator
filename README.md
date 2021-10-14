@@ -8,7 +8,11 @@ Links
 
 * The project Wiki, located at https://github.com/SeaseLtd/rated-ranking-evaluator/wiki   
 * [Search Quality Evaluation: a developer perspective](https://www.slideshare.net/SeaseLtd/search-quality-evaluation-a-developer-perspective-250065329)
-* RRE at Fosdem 2019: https://www.slideshare.net/AndreaGazzarini/rated-ranking-evaluator-fosdem-2019
+* [RRE at Haystack EU, London, 2018](https://www.slideshare.net/SeaseLtd/rated-ranking-evaluator-an-open-source-approach-for-search-quality-evaluation-250056974)
+* [RRE at Fosdem 2019](https://www.slideshare.net/AndreaGazzarini/rated-ranking-evaluator-fosdem-2019)
+* [Rated Ranking Evaluator (RRE) Hands-on Relevance Testing @Chorus, 2021](https://www.slideshare.net/SeaseLtd/rated-ranking-evaluator-enterprise-the-next-generation-of-free-search-quality-evaluation-tools)
+* [Rated Ranking Evaluator Enterprise: the next generation of free Search Quality Evaluation Tools, Padova, 2021](https://www.slideshare.net/SeaseLtd/rated-ranking-evaluator-enterprise-the-next-generation-of-free-search-quality-evaluation-tools)
+* 
 * RRE-User mailing list: https://groups.google.com/g/rre-user
 
 At the moment Apache Solr and Elasticsearch are supported (see the documentation for supported versions). 
