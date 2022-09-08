@@ -392,6 +392,10 @@ public class Engine {
                     LOGGER.info("RRE: found a corpora candidate within the archive: " + entry.getName());
 
                     final File outputFile = new File(outputFolder, entry.getName());
+
+                    if (!outputFile.toPath().normalize().startsWith(outputFolder.toPath().normalize())) {
+                        throw new IOException("Bad zip entry");
+                    }
                     try (final BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outputFile))) {
                         final byte[] buffer = new byte[1024];
                         int read;
