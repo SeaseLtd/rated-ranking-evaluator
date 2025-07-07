@@ -1,0 +1,16 @@
+[project]
+name = "Dataset-Generator"
+version = "0.1.0"
+description = "Dataset Generator project"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+    "pytest>=8.4.1",
+    "pyyaml>=6.0.2",
+    "typer>=0.16.0",
+    "pytest>=7.4",
+]
+
+[project.scripts]
+dataset-generator = "main:app"
