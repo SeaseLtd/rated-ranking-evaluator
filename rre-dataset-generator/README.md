@@ -1,6 +1,7 @@
 # Dataset Generator
 
-This project provides a flexible command-line tool to generate relevance datasets for search evaluation. It can retrieve documents from a search engine, generate synthetic queries, and score the relevance of document-query pairs using LLMs.
+This project provides a flexible command-line tool to generate relevance datasets for search evaluation. It can retrieve
+documents from a search engine, generate synthetic queries, and score the relevance of document-query pairs using LLMs.
 
 
 ## Project Structure
@@ -9,11 +10,11 @@ This project provides a flexible command-line tool to generate relevance dataset
 .
 ├── README.md                           # This file
 ├── config.yaml                         # Main configuration file for the dataset generation pipeline
-├── main.py                             # CLI entry point for the application
+├── dataset_generator.py                # CLI entry point for the application
 ├── Makefile                            # Contains useful commands for development (e.g., make clean, make test)
 ├── pyproject.toml                      # Project metadata and dependencies
 ├── queries.txt                         # Optional file with user-provided queries
-├── dataset_generator/                  # Core application package
+├── src/                                # Core application package
 │   ├── __init__.py                     # Exposes the main DatasetGenerator service
 │   ├── cache.py                        # Caching utilities 
 │   ├── config.py                       # Pydantic model for parsing and validating config.yaml
@@ -26,9 +27,10 @@ This project provides a flexible command-line tool to generate relevance dataset
 │   │   └── local_llm.py                # Implementation for local LLMs 
 │   └── search_engine/                  # Sub-package for search engine clients
 │       ├── __init__.py                 # Defines the SearchEngineInterface
-│       ├── open_search.py              # Client for OpenSearch
+│       ├── opensearch.py               # Client for OpenSearch
 │       ├── solr.py                     # Client for Solr
-│       └── vespa.py                    # Client for Vespa
+│       ├── vespa.py                    # Client for Vespa
+│       └── elasticsearch.py            # Client for Elasticsearch
 └── tests/                              # Test suite
     ├── e2e/                            # End-to-end tests
     ├── integration/                    # Integration tests
@@ -39,62 +41,65 @@ This project provides a flexible command-line tool to generate relevance dataset
 
 ### 1. Installation
 
-- [uv](https://github.com/astral-sh/uv): A fast Python package installer and resolver.
+- [uv](https://github.com/astral-sh/uv): A fast Python package installer and resolver. To installation follow instruction 
+  [here](https://docs.astral.sh/uv/getting-started/installation/)
 - Python >=3.10
 
-First, create and activate a virtual environment using `uv`:
-
+First, create a virtual environment using `uv` following the file `pyproject.toml`. To do so, just execute:
 ```bash
-# Create the virtual environment in .venv
-uv init
-
-# Venv generation
-uv venv
-
-# Install all dependencies from pyproject.toml
-uv pip install -e '.[dev,test]'
-
-# Activate the venv (Linux/macOS)
-source .venv/bin/activate
+uv sync
 ```
 
 
 ### 2. Configuration
 
 Create a `config.yaml` file in the root directory. This file controls the entire generation process. E.g:
-
 ```yaml
-# config.yaml
-
-# Template for search engine queries
-queryTemplate: "{query_text}"
-
-# Search engine configuration
-searchEngineType: "Solr" # or Elastic, Opensearch, Vespa
-searchEngineCollectionEndpoint: "http://localhost:8983/solr/my_core"
-documentsFilter: "*:*" # Filter to apply when fetching documents
-docNumber: 100 # Number of documents to retrieve
-docFields: ["title", "content"] # Fields to concatenate for the LLM
-
-# Query generation
-queries: "queries.txt" # Optional: path to a file with one query per line
-generateQueriesFromDocuments: true # Whether to generate queries from retrieved docs
-totalNumQueriesToGenerate: 50 # Number of queries to generate via LLM
-
-# LLM and Output
-relevanceScale: "binary" # or "graded"
-llmConfigurationFile: "llm_config.json" # Placeholder for LLM settings
-outputFormat: "Quepid" # or RRE, MTEB Leaderboard
-outputDestination: "./output/" # Directory to save results
-outputExplanation: false # Whether the LLM should provide explanations
+QueryTemplate: "q=#$query##&fq=genre:horror&wt=json"
+SearchEngineType: "Solr"
+SearchEngineCollectionEndpoint: "http://localhost:8983/solr/mycore"
+documentsFilter:
+  - genre:
+      - "horror"
+      - "fantasy"
+  - type:
+      - "book"
+docNumber: 100
+docFields:
+  - "title"
+  - "body"
+queries: "queries.txt"
+generateQueriesFromDocuments: true
+totalNumQueriesToGenerate: 10
+RelevanceScale: "Graded"
+LLMConfigurationFile: "llm_config.yaml"
+OutputFormat: "Quepid"
+OutputDestination: "output/generated_dataset.json"
+OutputExplanation: true
 ```
 
-### 4. Running the Generator
+### 3. Running the Generator
 
-Execute the main script via the `typer` CLI, pointing to your configuration file:
-
+Execute the main script via the `argparse` CLI, pointing to your configuration file:
 ```bash
-python main.py run --arg1 --arg2 # example --config ./config.yaml --reasoning --save_reasoning
+uv run dataset_generator.py --config_file config.yaml
+```
+To know more about all the possible CLI parameters, execute:
+```bash
+uv run dataset_generator.py --help
+```
+
+### 4. Running tests
+
+First thing to do is to check if the environment is active. If not, execute (in Unix based machines) the following 
+command to activate it:
+```bash
+source .venv/bin/activate
+```
+
+Now that the environment is active, execute `pytest` command as follows:
+```bash
+pytest tests/
 ```
 
 The script will then:
