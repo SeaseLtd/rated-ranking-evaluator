@@ -3,40 +3,6 @@
 This project provides a flexible command-line tool to generate relevance datasets for search evaluation. It can retrieve
 documents from a search engine, generate synthetic queries, and score the relevance of document-query pairs using LLMs.
 
-
-## Project Structure
-
-```bash
-.
-├── README.md                           # This file
-├── config.yaml                         # Main configuration file for the dataset generation pipeline
-├── dataset_generator.py                # CLI entry point for the application
-├── Makefile                            # Contains useful commands for development (e.g., make clean, make test)
-├── pyproject.toml                      # Project metadata and dependencies
-├── queries.txt                         # Optional file with user-provided queries
-├── src/                                # Core application package
-│   ├── __init__.py                     # Exposes the main DatasetGenerator service
-│   ├── cache.py                        # Caching utilities 
-│   ├── config.py                       # Pydantic model for parsing and validating config.yaml
-│   ├── logger.py                       # Structured logging configuration
-│   ├── models.py                       # Pydantic models for internal data structures
-│   ├── prompts.py                      # Prompts for the LLM 
-│   ├── llm/                            # Sub-package for Large Language Model services
-│   │   ├── __init__.py                 # Defines the LLMServiceInterface
-│   │   ├── api_llm.py                  # Implementation for API-based LLMs 
-│   │   └── local_llm.py                # Implementation for local LLMs 
-│   └── search_engine/                  # Sub-package for search engine clients
-│       ├── __init__.py                 # Defines the SearchEngineInterface
-│       ├── opensearch.py               # Client for OpenSearch
-│       ├── solr.py                     # Client for Solr
-│       ├── vespa.py                    # Client for Vespa
-│       └── elasticsearch.py            # Client for Elasticsearch
-└── tests/                              # Test suite
-    ├── e2e/                            # End-to-end tests
-    ├── integration/                    # Integration tests
-    └── unit/                           # Unit tests
-```
-
 ## Quickstart
 
 ### 1. Installation
@@ -99,7 +65,7 @@ source .venv/bin/activate
 
 Now that the environment is active, execute `pytest` command as follows:
 ```bash
-pytest tests/
+pytest
 ```
 
 The script will then:
