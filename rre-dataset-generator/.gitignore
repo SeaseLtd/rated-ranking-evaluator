@@ -13,3 +13,6 @@ uv.lock
 # Local Files and Directories
 .output_dataset
 output/
+
+# macOS metadata files
+.DS_Store
