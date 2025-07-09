@@ -61,6 +61,11 @@ def load_config(config_path: str) -> Config:
 
 # Example usage in pipeline
 if __name__ == "__main__":
-    config = load_config("config.yaml")
-    print("Configuration loaded successfully.")
+    from src.logger import configure_logging
+    import logging
 
+    configure_logging(level=logging.DEBUG)
+    log = logging.getLogger(__name__)
+
+    config = load_config("config.yaml")
+    log.debug("Configuration loaded successfully.")
