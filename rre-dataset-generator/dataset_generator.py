@@ -11,11 +11,17 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == "__main__":
+    from src.logger import configure_logging
+    import logging
+
     args = parse_args()
+
+    configure_logging(level=logging.DEBUG)
+    log = logging.getLogger(__name__)
 
     try:
         config = load_config(args.config_file)
-        print("Configuration loaded successfully.")
+        log.debug("Configuration loaded successfully.")
         # print(config.model_dump_json(indent=2))
     except Exception as e:
-        print(f"Error loading configuration: {e}")
+        log.debug(f"Error loading configuration: {e}")
