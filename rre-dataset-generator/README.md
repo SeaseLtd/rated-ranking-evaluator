@@ -67,3 +67,20 @@ The script will then:
 2.  Generate or load queries.
 3.  Score the relevance for each (document, query) pair.
 4.  (Future) Save the output to the specified destination.
+
+
+### 4. Test Environment: Running Solr (Standalone)
+
+To run a local Solr test environment using docker-compose:
+```bash
+cd src/test_env 
+docker-compose up --build
+```
+This will start 2 services:
+ - `solr`, available at http://localhost:8983/solr
+ - `dataset-loader`, loads data from solr/data/dataset.json
+
+Solr data is persisted in the `./volumes/solr` directory. This ensures your indexed data is retained across container restarts.
+
+
+
