@@ -1,0 +1,64 @@
+# (Optional) Template string for generated/given queries used to search documents and build relevance
+# judgemenets, with a placeholder for inserting keywords
+# Example (Solr):
+QueryTemplate: "q=#$query##&fq=genre:horror&wt=json"
+
+# The type of search engine to use
+# Accepted values: Solr, Elasticsearch, Opensearch, Vespa
+SearchEngineType: "Solr"
+
+# Endpoint URL of the search engine collection or index
+SearchEngineCollectionEndpoint: "http://localhost:8983/solr/mycore"
+
+# (Optional) Filter query to restrict the set of documents used to generate queries. Top k retrieved documents
+# are used, with k computed accordingly looking at the params: docNumber, totalNumQueriesToGenerate
+# If a field has more than one value, the documents retrieved have at least one of the values in the field (OR-
+# -like). If there are more than one fields, the documents are filtered for both fields (AND-like)
+# Default: all documents are considered and no filter is applied
+documentsFilter:
+  - genre:
+      - "horror"
+      - "fantasy"
+  - type:
+      - "book"
+
+# Maximum number of documents to retrieve from the search engine to generate queries
+docNumber: 100
+
+# List of fields from documents used to generate context and relevance scoring
+# These should match fields available in the search engine schema
+# Must be at least one field
+docFields:
+  - "title"
+  - "body"
+
+# (Optional) File containing predefined queries to use instead of or alongside generated ones
+# If available, must be in a JSON format.
+queries: "queries.txt"
+
+# (Optional) Whether to generate queries from documents
+# Default: true; set to false to disable query generation from documents
+generateQueriesFromDocuments: true
+
+# Total number of queries to generate (includes predefined queries, if any)
+totalNumQueriesToGenerate: 10
+
+# Relevance scale used for scoring document relevance
+# Accepted values:
+#   - Binary: 0 (not relevant), 1 (relevant)
+#   - Graded: 0 (not relevant), 1 (may be ok), 2 (that’s my result)
+RelevanceScale: "Graded"
+
+# Path to the LLM configuration file (e.g., LangChain setup)
+LLMConfigurationFile: "llm_config.yaml"
+
+# Output format for the generated dataset
+# Accepted values: Quepid, RRE
+OutputFormat: "Quepid"
+
+# Path where the output dataset will be saved
+OutputDestination: "output/generated_dataset.json"
+
+# Whether to generate an additional file with query, document, score, and explanation
+# Accepted values: true, false
+OutputExplanation: true

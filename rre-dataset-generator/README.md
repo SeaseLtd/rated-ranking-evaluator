@@ -57,15 +57,9 @@ uv run dataset_generator.py --help
 
 ### 4. Running tests
 
-First thing to do is to check if the environment is active. If not, execute (in Unix based machines) the following 
-command to activate it:
+Execute `pytest` command as follows:
 ```bash
-source .venv/bin/activate
-```
-
-Now that the environment is active, execute `pytest` command as follows:
-```bash
-pytest
+uv run pytest
 ```
 
 The script will then:

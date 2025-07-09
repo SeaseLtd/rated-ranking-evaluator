@@ -1,0 +1,11 @@
+# Missing: QueryTemplate (optional)
+SearchEngineType: "Solr"
+SearchEngineCollectionEndpoint: "http://localhost"
+docNumber: 10
+docFields: ["title"]
+totalNumQueriesToGenerate: 5
+RelevanceScale: "Binary"
+LLMConfigurationFile: "llm_config.yaml"
+OutputFormat: "RRE"
+OutputDestination: "out.json"
+# Missing: OutputExplanation (optional)
