@@ -1,0 +1,10 @@
+# Missing: QueryTemplate
+SearchEngineType: "Solr"
+docNumber: 100
+docFields: ["title"]
+totalNumQueriesToGenerate: 5
+RelevanceScale: "Binary"
+LLMConfigurationFile: "llm_config.yaml"
+OutputFormat: "RRE"
+OutputDestination: "output.json"
+# Missing: SearchEngineCollectionEndpoint

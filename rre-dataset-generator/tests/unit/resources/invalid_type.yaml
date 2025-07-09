@@ -1,0 +1,9 @@
+SearchEngineType: "Solr"
+SearchEngineCollectionEndpoint: "http://localhost"
+docNumber: "one hundred"  # Invalid type
+docFields: ["title"]
+totalNumQueriesToGenerate: 5
+RelevanceScale: "Binary"
+LLMConfigurationFile: "llm_config.yaml"
+OutputFormat: "RRE"
+OutputDestination: "out.json"

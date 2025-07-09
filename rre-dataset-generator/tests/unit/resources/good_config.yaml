@@ -1,0 +1,21 @@
+QueryTemplate: "q=#$query##&fq=genre:horror&wt=json"
+SearchEngineType: "Solr"
+SearchEngineCollectionEndpoint: "http://localhost:8983/solr/mycore"
+documentsFilter:
+  - genre:
+      - "horror"
+      - "fantasy"
+  - type:
+      - "book"
+docNumber: 100
+docFields:
+  - "title"
+  - "body"
+queries: "queries.txt"
+generateQueriesFromDocuments: true
+totalNumQueriesToGenerate: 10
+RelevanceScale: "Graded"
+LLMConfigurationFile: "llm_config.yaml"
+OutputFormat: "Quepid"
+OutputDestination: "output/generated_dataset.json"
+OutputExplanation: true

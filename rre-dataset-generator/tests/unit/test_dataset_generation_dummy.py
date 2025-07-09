@@ -1,5 +1,3 @@
-import sys
-import os
 from src.logger import configure_logging
 import pytest
 from dataset_generator import parse_args
@@ -13,4 +11,4 @@ def args():
     return parse_args()
 
 def test_argparse_with_defaults(args):
-    assert args.dummy == "default"
+    assert args.config_file == "config.yaml"
