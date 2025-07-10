@@ -16,12 +16,11 @@ class Config(BaseModel):
     doc_fields: List[str] = Field(..., min_length=1, description="Fields used for context and scoring.")
     queries: Optional[FilePath] = Field(None, description="Optional file containing predefined queries.")
     generate_queries_from_documents: Optional[bool] = True
-    total_num_queries_to_generate: int = Field(..., gt=0, description="Total number of queries to generate.")
+    num_queries_needed: int = Field(..., gt=0, description="Total number of queries to generate.")
     relevance_scale: Literal['binary', 'graded']
     llm_configuration_file: FilePath = Field(..., description="Path to the LLM configuration file.")
     output_format: Literal['quepid', 'rre']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
-    output_explanation: Optional[bool] = Field(False, description="Whether to generate an explanation file.")
 
     @field_validator('doc_fields')
     def check_no_empty_fields(cls, v):
@@ -51,21 +50,6 @@ def load_config(config_path: str) -> Config:
     :param config_path: Path to the YAML config file
     :return: Parsed and validated Config object
     """
-    # try:
     with open(config_path, 'r') as f:
         raw_config = yaml.safe_load(f)
     return Config(**raw_config)
-    # except Exception as e:
-    #     raise RuntimeError(f"Error loading config: {e}")
-
-
-# Example usage in pipeline
-if __name__ == "__main__":
-    from src.logger import configure_logging
-    import logging
-
-    configure_logging(level=logging.DEBUG)
-    log = logging.getLogger(__name__)
-
-    config = load_config("config.yaml")
-    log.debug("Configuration loaded successfully.")
