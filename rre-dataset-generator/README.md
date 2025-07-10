@@ -81,3 +81,4 @@ This will start 2 services:
  - `dataset-loader`, loads data from solr/data/dataset.json
 
 Solr data is persisted in the `./volumes/solr` directory. This ensures your indexed data is retained across container restarts.
+
