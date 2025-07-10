@@ -17,10 +17,11 @@ def main():
     # 4. Wrap it in LLM service
     llm = LLMService(chat_model=chat_model)
 
-    # 5. Call your test method
-    answer = llm.test_connection("Say hello in 5 different languages")
+    # 5. Call LLM service method
+    answer = llm.test_connection()
     print("LLM answer:", answer)
 
 
 if __name__ == "__main__":
     main()
+

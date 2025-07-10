@@ -29,3 +29,4 @@ class LLMConfig(BaseModel):
         with open(path, "r") as f:
             raw = yaml.safe_load(f)
         return LLMConfig(**raw)
+
