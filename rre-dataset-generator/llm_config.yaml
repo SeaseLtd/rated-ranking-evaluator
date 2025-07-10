@@ -1,0 +1,16 @@
+# llm model configuration
+
+default_provider: openai
+
+providers:
+  openai:
+    model: gpt-4o
+    temperature: 0.3
+    max_tokens: 512
+    api_key_env: OPENAI_API_KEY
+
+  gemini:
+    model: gemini-1.5-pro-latest
+    temperature: 0.3
+    max_tokens: 512
+    api_key_env: GOOGLE_API_KEY
