@@ -23,3 +23,5 @@ services:
         echo "[INFO] Indexing dataset…";
         curl -X POST -H "Content-Type: application/json" --data-binary @/data/dataset.json http://solr:8983/solr/testcore/update?commit=true;
         echo "[INFO] Done indexing.";
+        
+        
