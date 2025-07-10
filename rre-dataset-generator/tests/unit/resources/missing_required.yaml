@@ -6,5 +6,5 @@ doc_fields: ["title"]
 total_num_queries_to_generate: 5
 relevance_scale: "binary"
 llm_configuration_file: "llm_config.yaml"
-output_format: "RRE"
+output_format: "rre"
 output_destination: "output.json"

@@ -48,7 +48,7 @@ def test_llm_configuration_file(config):
     assert config.llm_configuration_file == FilePath("llm_config.yaml")
 
 def test_output_format(config):
-    assert config.output_format == "Quepid"
+    assert config.output_format == "quepid"
 
 def test_output_destination(config):
     assert config.output_destination == Path("output/generated_dataset.json")

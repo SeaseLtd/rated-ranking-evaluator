@@ -19,7 +19,7 @@ class Config(BaseModel):
     total_num_queries_to_generate: int = Field(..., gt=0, description="Total number of queries to generate.")
     relevance_scale: Literal['binary', 'graded']
     llm_configuration_file: FilePath = Field(..., description="Path to the LLM configuration file.")
-    output_format: Literal['Quepid', 'RRE']
+    output_format: Literal['quepid', 'rre']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
     output_explanation: Optional[bool] = Field(False, description="Whether to generate an explanation file.")
 

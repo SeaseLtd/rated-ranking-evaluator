@@ -16,6 +16,6 @@ generate_queries_from_documents: true
 total_num_queries_to_generate: 10
 relevance_scale: "graded"
 llm_configuration_file: "llm_config.yaml"
-output_format: "Quepid"
+output_format: "quepid"
 output_destination: "output/generated_dataset.json"
 output_explanation: true
