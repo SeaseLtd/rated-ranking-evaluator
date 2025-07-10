@@ -22,6 +22,5 @@ if __name__ == "__main__":
     try:
         config = load_config(args.config_file)
         log.debug("Configuration loaded successfully.")
-        # print(config.model_dump_json(indent=2))
     except Exception as e:
         log.debug(f"Error loading configuration: {e}")

@@ -5,25 +5,25 @@ from pathlib import Path
 
 
 class Config(BaseModel):
-    QueryTemplate: Optional[str] = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
-    SearchEngineType: Literal['Solr', 'Elasticsearch', 'Opensearch', 'Vespa']
-    SearchEngineCollectionEndpoint: HttpUrl
-    documentsFilter: Optional[List[Dict[str, List[str]]]] = Field(
+    query_template: Optional[str] = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
+    search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
+    search_engine_collection_endpoint: HttpUrl
+    documents_filter: Optional[List[Dict[str, List[str]]]] = Field(
         None,
         description="Optional list of filter conditions for documents"
     )
-    docNumber: int = Field(..., gt=0, description="Number of documents to retrieve from the search engine.")
-    docFields: List[str] = Field(..., min_length=1, description="Fields used for context and scoring.")
+    doc_number: int = Field(..., gt=0, description="Number of documents to retrieve from the search engine.")
+    doc_fields: List[str] = Field(..., min_length=1, description="Fields used for context and scoring.")
     queries: Optional[FilePath] = Field(None, description="Optional file containing predefined queries.")
-    generateQueriesFromDocuments: Optional[bool] = True
-    totalNumQueriesToGenerate: int = Field(..., gt=0, description="Total number of queries to generate.")
-    RelevanceScale: Literal['Binary', 'Graded']
-    LLMConfigurationFile: FilePath = Field(..., description="Path to the LLM configuration file.")
-    OutputFormat: Literal['Quepid', 'RRE']
-    OutputDestination: Path = Field(..., description="Path to save the output dataset.")
-    OutputExplanation: Optional[bool] = Field(False, description="Whether to generate an explanation file.")
+    generate_queries_from_documents: Optional[bool] = True
+    total_num_queries_to_generate: int = Field(..., gt=0, description="Total number of queries to generate.")
+    relevance_scale: Literal['binary', 'graded']
+    llm_configuration_file: FilePath = Field(..., description="Path to the LLM configuration file.")
+    output_format: Literal['Quepid', 'RRE']
+    output_destination: Path = Field(..., description="Path to save the output dataset.")
+    output_explanation: Optional[bool] = Field(False, description="Whether to generate an explanation file.")
 
-    @field_validator('docFields')
+    @field_validator('doc_fields')
     def check_no_empty_fields(cls, v):
         if any(not f.strip() for f in v):
             raise ValueError("docFields cannot contain empty strings.")
@@ -36,10 +36,10 @@ class Config(BaseModel):
                 raise ValueError("queries' file must have TXT extension")
         return v
 
-    @field_validator('LLMConfigurationFile')
+    @field_validator('llm_configuration_file')
     def check_config_type(cls, v):
         if v is not None:
-            if v.suffix[1:] != "yaml" and v.suffix[1:] != "yml":
+            if v.suffix[1:] not in {"yaml", "yml"}:
                 raise ValueError("queries' file must have YAML extension")
         return v
 

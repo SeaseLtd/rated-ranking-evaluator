@@ -1,11 +1,11 @@
-# Missing: QueryTemplate (optional)
-SearchEngineType: "Solr"
-SearchEngineCollectionEndpoint: "http://localhost"
-docNumber: 10
-docFields: ["title"]
-totalNumQueriesToGenerate: 5
-RelevanceScale: "Binary"
-LLMConfigurationFile: "llm_config.yaml"
-OutputFormat: "RRE"
-OutputDestination: "out.json"
-# Missing: OutputExplanation (optional)
+# Missing: query_template (optional)
+search_engine_type: "solr"
+search_engine_collection_endpoint: "http://localhost"
+doc_number: 10
+doc_fields: ["title"]
+total_num_queries_to_generate: 5
+relevance_scale: "binary"
+llm_configuration_file: "llm_config.yaml"
+output_format: "RRE"
+output_destination: "out.json"
+# Missing: output_explanation (optional)
