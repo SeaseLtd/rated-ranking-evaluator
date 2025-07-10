@@ -3,8 +3,8 @@ search_engine_type: "solr"
 # Missing: search_engine_collection_endpoint
 doc_number: 100
 doc_fields: ["title"]
-total_num_queries_to_generate: 5
+num_queries_needed: 5
 relevance_scale: "binary"
-llm_configuration_file: "llm_config.yaml"
+llm_configuration_file: "tests/unit/resources/llm_config.yaml"
 output_format: "rre"
 output_destination: "output.json"
