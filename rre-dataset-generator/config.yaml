@@ -54,7 +54,7 @@ llm_configuration_file: "llm_config.yaml"
 
 # Output format for the generated dataset
 # Accepted values: Quepid, RRE
-output_format: "Quepid"
+output_format: "quepid"
 
 # Path where the output dataset will be saved
 output_destination: "output/generated_dataset.json"
