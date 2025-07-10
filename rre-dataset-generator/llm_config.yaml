@@ -1,16 +1,28 @@
 # llm model configuration
 
+# Provider to use when none is specified at runtime
 default_provider: openai
 
 providers:
   openai:
+    # OpenAI chat model name
     model: gpt-4o
+
+    # Controls randomness of the model output:
+    #  0.0 = completely deterministic
+    #  1.0 = maximal diversity
     temperature: 0.3
+
+    # Maximum number of tokens the model may return
     max_tokens: 512
+
+    # Environment variable where LLM API key is stored
     api_key_env: OPENAI_API_KEY
 
   gemini:
+    # Google Gemini chat model name
     model: gemini-1.5-pro-latest
     temperature: 0.3
     max_tokens: 512
     api_key_env: GOOGLE_API_KEY
+
