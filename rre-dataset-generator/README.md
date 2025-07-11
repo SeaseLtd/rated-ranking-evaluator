@@ -73,7 +73,7 @@ The script will then:
 
 To run a local Solr test environment using docker-compose:
 ```bash
-cd src/test_env 
+cd tests/integration/test_env
 docker-compose up --build
 ```
 This will start 2 services:
