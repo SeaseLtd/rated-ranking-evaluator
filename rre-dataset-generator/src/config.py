@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List, Optional, Literal, Dict
 from pydantic import BaseModel, HttpUrl, Field, field_validator, FilePath
 import yaml
@@ -42,14 +44,14 @@ class Config(BaseModel):
                 raise ValueError("queries' file must have YAML extension")
         return v
 
+    @staticmethod
+    def load(config_path: str) -> Config:
+        """
+        Load and validate configuration from a YAML file.
 
-def load_config(config_path: str) -> Config:
-    """
-    Load and validate configuration from a YAML file.
-
-    :param config_path: Path to the YAML config file
-    :return: Parsed and validated Config object
-    """
-    with open(config_path, 'r') as f:
-        raw_config = yaml.safe_load(f)
-    return Config(**raw_config)
+        :param config_path: Path to the YAML config file
+        :return: Parsed and validated Config object
+        """
+        with open(config_path, 'r') as f:
+            raw_config = yaml.safe_load(f)
+        return Config(**raw_config)

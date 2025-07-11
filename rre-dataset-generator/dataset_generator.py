@@ -1,5 +1,5 @@
 import argparse
-from src.config import load_config
+from src.config import Config
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
 
     try:
-        config = load_config(args.config_file)
+        config = Config.load(args.config_file)
         log.debug("Configuration loaded successfully.")
     except Exception as e:
         log.debug(f"Error loading configuration: {e}")
