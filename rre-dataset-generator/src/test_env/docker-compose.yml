@@ -5,23 +5,52 @@ services:
     ports:
       - "8983:8983"
     volumes:
-      - ./volumes/solr:/var/solr
-      - ./solr/data:/opt/solr/data
+      - solr_data:/var/solr
     command: ["solr-precreate", "testcore"]
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8983/solr/admin/info/system"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+      start_period: 30s
 
   dataset-loader:
     image: curlimages/curl:8.14.1
     depends_on:
-      - solr
+      solr:
+        condition: service_healthy
     volumes:
-      - ./solr/data:/data
-    entrypoint: ["sh","-c"]
-    command:
-      - |
-        echo "[INFO] Waiting for Solr…";
-        until curl -s http://solr:8983/solr/testcore/admin/ping | grep -q OK; do sleep 2; done;
+      - ./solr/data/dataset.json:/data/dataset.json:ro
+    command: >
+      sh -euxc '
+        echo "[INFO] Waiting for Solr core '\''testcore'\'' to be ready…";
+        max=30;
+        for i in $(seq 1 $max); do
+          if curl -sf http://solr:8983/solr/testcore/admin/ping?wt=json > /dev/null; then
+            echo "[INFO] Core is ready";
+            break;
+          fi;
+          echo "  …still waiting ($i/$max)";
+          sleep 2;
+        done
+      
+        # if still not up, exit
+        if ! curl -sf http://solr:8983/solr/testcore/admin/ping?wt=json > /dev/null; then
+          echo "[ERROR] core did not come up in time after $max attempts" >&2;
+          exit 1;
+        fi
+      
         echo "[INFO] Indexing dataset…";
-        curl -X POST -H "Content-Type: application/json" --data-binary @/data/dataset.json http://solr:8983/solr/testcore/update?commit=true;
+        curl -f -X POST \
+             -H "Content-Type: application/json" \
+             --data-binary @/data/dataset.json \
+             http://solr:8983/solr/testcore/update?commit=true;
         echo "[INFO] Done indexing.";
-        
+      '
+
+volumes:
+  # volume for solr index
+  solr_data:
+
+
         
