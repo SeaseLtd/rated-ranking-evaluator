@@ -8,5 +8,5 @@ def test_llm_service_test_connection():
 
     response = service.test_connection()
     assert isinstance(response, str)
-    assert "world" in response
+    assert "Hello, world!" in response
 
