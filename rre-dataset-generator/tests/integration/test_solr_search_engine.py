@@ -60,13 +60,13 @@ def test_solr_search_engine_negative_post(monkeypatch):
 
     search_engine = SolrSearchEngine("https://fakeurl")
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         search_engine.extract_documents_to_generate_queries(
             documents_filter=config.documents_filter,
             doc_number=config.doc_number
         )
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         search_engine.extract_documents_to_evaluate_system(
             keyword="and",
             query_template=config.query_template
