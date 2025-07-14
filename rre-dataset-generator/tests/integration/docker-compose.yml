@@ -1,0 +1,15 @@
+services:
+  solr:
+    image: solr:9.8.1
+    container_name: solr_test
+    ports:
+      - "8983:8983"
+    command: ["solr-precreate", "testcore"]
+
+  solr-init:
+    build:
+      context: solr-init
+    depends_on:
+      - solr
+    command: ["sh", "-c", "/opt/rre-dataset-generator/solr-init.sh"]
+

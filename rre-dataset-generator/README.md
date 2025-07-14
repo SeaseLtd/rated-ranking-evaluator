@@ -55,17 +55,13 @@ To know more about all the possible CLI parameters, execute:
 uv run dataset_generator.py --help
 ```
 
-### 4. Running tests
+## Running tests
 
-First thing to do is to check if the environment is active. If not, execute (in Unix based machines) the following 
-command to activate it:
-```bash
-source .venv/bin/activate
-```
+### 1. Unit Tests
 
-Now that the environment is active, execute `pytest` command as follows:
+Execute `pytest` command as follows:
 ```bash
-pytest
+uv run pytest
 ```
 
 The script will then:
@@ -73,3 +69,34 @@ The script will then:
 2.  Generate or load queries.
 3.  Score the relevance for each (document, query) pair.
 4.  (Future) Save the output to the specified destination.
+
+
+### 2. Integration Test
+
+#### Creating the environment
+
+##### Prerequisites (Docker Compose)
+Follow the instructions to install Docker Compose on your system: https://docs.docker.com/compose/install/
+
+##### Running Solr (Standalone)
+
+
+To run a local Solr test environment using docker-compose:
+```bash
+cd tests/integration/
+```
+
+Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
+If you have Docker Compose v1 installed, use:
+
+```bash
+docker-compose up --build
+```
+If you have Docker Compose v2 installed, use:
+```bash
+docker compose up --build
+```
+
+This will start 2 services:
+ - `solr`, available at http://localhost:8983/solr
+ - `solr-init`, loads documents from solr/data/dataset.json only if Solr doesn't index any documents.

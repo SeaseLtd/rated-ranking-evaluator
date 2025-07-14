@@ -5,6 +5,7 @@ description = "Dataset Generator project"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "argparse>=1.4.0",
     "pydantic>=2.0",
     "pytest>=8.4.1",
     "pyyaml>=6.0.2",
