@@ -17,3 +17,6 @@ output/
 # macOS metadata files
 .DS_Store
 
+# Environment variables
+.env
+
