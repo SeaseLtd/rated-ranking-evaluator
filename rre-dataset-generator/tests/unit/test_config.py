@@ -1,9 +1,9 @@
-import pytest
-from src.config import Config
 from pydantic import HttpUrl, FilePath
 from pathlib import Path
 from pydantic_core import ValidationError
+import pytest
 
+from src.config import Config
 
 @pytest.fixture
 def config():

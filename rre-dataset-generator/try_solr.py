@@ -1,9 +1,10 @@
+import logging
+import json
+
 from src.search_engine.solr_search_engine import SolrSearchEngine
 from src.config import Config
 from src.utils import parse_args
 from src.logger import configure_logging
-import logging
-import json
 
 configure_logging(level=logging.DEBUG)
 

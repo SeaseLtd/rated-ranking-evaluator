@@ -1,8 +1,9 @@
-from src.search_engine.interface import BaseSearchEngine
-from typing import List, Dict, Any, Union
-import requests
 import os
+import requests
+from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
+
+from src.search_engine.interface import BaseSearchEngine
 
 class SolrSearchEngine(BaseSearchEngine):
     """
@@ -26,7 +27,6 @@ class SolrSearchEngine(BaseSearchEngine):
         # Parse the query string into a dictionary
         json_body = parse_qs(template_payload)
 
-        print(json_body)
         defaults = {
             'q': '*:*',
             'wt': 'json'
@@ -72,7 +72,6 @@ class SolrSearchEngine(BaseSearchEngine):
         """Search for documents using a query."""
         template = query_template.replace(self.PLACEHOLDER, keyword)
         payload = self.template_to_json_body(template)
-        print(payload)
         return self.search(payload)
 
     def search(self, payload: Dict[str, Any]) -> List[Dict[str, Any]]:
