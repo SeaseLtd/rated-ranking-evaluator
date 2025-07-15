@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Dict, Tuple, List
+
+from src.logger import configure_logging
+
+configure_logging(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 class DataStore:
@@ -15,12 +21,14 @@ class DataStore:
 
     def _get_query_object(self, query_id: str) -> QueryObject:
         if query_id not in self.queries:
-            raise KeyError(f"Query id '{query_id}' not found in DataStore.")
+            log.error("Query id %s not found in DataStore", query_id)
+            raise KeyError(f"Query id '{query_id}' not found in DataStore")
         return self.queries[query_id]
 
     def _get_document(self, doc_id: str) -> str:
         if doc_id not in self.documents:
-            raise KeyError(f"Document id '{doc_id}' not found in DataStore.")
+            log.error("Document id %s not found in DataStore", doc_id)
+            raise KeyError(f"Document id '{doc_id}' not found in DataStore")
         return self.documents[doc_id]
 
     def add_document(self, doc_id: str, document: str) -> None:
@@ -101,6 +109,7 @@ class QueryObject:
         if the doc_id is not linked to this query.
         """
         if doc_id not in self.doc_id_to_score:
-            raise KeyError(f"Document id '{doc_id}' is not associated with this query.")
+            log.error("Document id %s is not associated with this query", doc_id)
+            raise KeyError(f"Document id '{doc_id}' is not associated with this query")
         return self.doc_id_to_score[doc_id] != -1.0
 
