@@ -1,0 +1,23 @@
+{
+  "index": "my_index_name",
+  "id_field": "id",
+  "query_placeholder": "query",
+  "query_groups": [
+    {
+      "name": "Sample Queries",
+      "queries": [
+        {
+          "template": "match_query.json",
+          "placeholders": {
+            "query": "sample"
+          }
+        }
+      ],
+      "relevant_documents": {
+        "doc1": {
+          "gain": 1
+        }
+      }
+    }
+  ]
+}
