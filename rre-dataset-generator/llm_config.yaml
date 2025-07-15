@@ -6,11 +6,6 @@ name: openai
 # Chat model name
 model: gpt-4o
 
-# Controls randomness of the model output:
-#  0.0 = completely deterministic
-#  1.0 = maximal diversity
-temperature: 0.3
-
 # Maximum number of tokens the model may return
 max_tokens: 512
 
