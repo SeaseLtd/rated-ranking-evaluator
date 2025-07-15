@@ -1,7 +1,14 @@
-import os
+from urllib.parse import urljoin
 import requests
+from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
+
+from src.logger import configure_logging
+import logging
+
+configure_logging(level=logging.DEBUG)
+log = logging.getLogger(__name__)
 
 from src.search_engine.interface import BaseSearchEngine
 
@@ -14,7 +21,7 @@ class SolrSearchEngine(BaseSearchEngine):
         self.HEADERS = {'Content-Type': 'application/json'}
 
     @staticmethod
-    def template_to_json_body(template_payload: str) -> dict:
+    def template_to_json_body(template_payload: str) -> Dict[str, Any]:
         """
         Converts a Solr query string into a structured JSON body.
 
@@ -42,9 +49,9 @@ class SolrSearchEngine(BaseSearchEngine):
             'params': {k: v[0] for k, v in json_body.items() if k != 'q'}
         }
 
-    def extract_documents_to_generate_queries(self,
-                                             documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                             doc_number: int) \
+    def fetch_for_query_generation(self,
+                                   documents_filter: Union[None, List[Dict[str, List[str]]]],
+                                   doc_number: int) \
             -> List[Dict[str, Any]]:
         payload = {
             'query': '*:*',
@@ -68,7 +75,7 @@ class SolrSearchEngine(BaseSearchEngine):
 
         return self.search(payload)
 
-    def extract_documents_to_evaluate_system(self, query_template: str, keyword: str="*:*") -> List[Dict[str, Any]]:
+    def fetch_for_evaluation(self, query_template: str, keyword: str="*:*") -> List[Dict[str, Any]]:
         """Search for documents using a query."""
         template = query_template.replace(self.PLACEHOLDER, keyword)
         payload = self.template_to_json_body(template)
@@ -76,10 +83,38 @@ class SolrSearchEngine(BaseSearchEngine):
 
     def search(self, payload: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Search for documents using a query."""
-        search_url = os.path.join(str(self.endpoint), "select")
+        search_url = urljoin(str(self.endpoint), 'select')
 
-        response = requests.post(search_url, headers=self.HEADERS, json=payload)
-        if response.status_code == 200:
-            return response.json()['response']['docs']
-        else:
-            raise ValueError()
+        try:
+            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+        except ConnectionError as e:
+            log.error(f"Connection failed while accessing {search_url}\nError: {e}")
+            raise ConnectionError(f"Connection failed while accessing {search_url}\nError: {e}")
+        except Timeout as e:
+            log.error(f"Request to {search_url} timed out\nError: {e}")
+            raise Timeout(f"Request to {search_url} timed out\nError: {e}")
+        except RequestException as e:
+            log.error(f"Unexpected error during request to {search_url}\nError: {e}")
+            raise RequestException(f"Unexpected error during request to {search_url}\nError: {e}")
+
+        match response.status_code:
+            case 200:
+                log.debug("Solr query successful.")
+                log.debug(f"URL: {search_url}\n")
+                log.debug(f"Payload: {payload}\n")
+                # log.debug(f"Response: {response.json()}")
+                return response.json()['response']['docs']
+            case 400:
+                error_msg = f"400 Bad Request: The request was invalid.\nURL: {search_url}\nPayload: {payload}"
+            case 401:
+                error_msg = f"401 Unauthorized: Authentication is required.\nURL: {search_url}"
+            case 403:
+                error_msg = f"403 Forbidden: Access is denied.\nURL: {search_url}"
+            case 404:
+                error_msg = f"404 Not Found: The Solr endpoint was not found.\nURL: {search_url}"
+            case 500:
+                error_msg = f"500 Internal Server Error: Solr encountered a problem.\nURL: {search_url}"
+            case _:
+                error_msg = f"Unexpected status code {response.status_code}.\nURL: {search_url}\nPayload: {payload}"
+        log.error(error_msg)
+        raise HTTPError(error_msg)

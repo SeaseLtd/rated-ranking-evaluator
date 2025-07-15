@@ -12,15 +12,15 @@ class BaseSearchEngine(ABC):
         self.PLACEHOLDER = "#$query##"
 
     @abstractmethod
-    def extract_documents_to_generate_queries(self,
-                                             documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                             doc_number: int) \
+    def fetch_for_query_generation(self,
+                                   documents_filter: Union[None, List[Dict[str, List[str]]]],
+                                   doc_number: int) \
             -> List[Dict[str, Any]]:
         """Extract documents for evaluating the search system."""
         pass
 
     @abstractmethod
-    def extract_documents_to_evaluate_system(self, query_template: str, keyword: str="*:*") -> List[Dict[str, Any]]:
+    def fetch_for_evaluation(self, query_template: str, keyword: str="*:*") -> List[Dict[str, Any]]:
         """Search for documents based on a keyword and a query template."""
         pass
 

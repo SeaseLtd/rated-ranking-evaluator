@@ -3,7 +3,13 @@ from __future__ import annotations
 from typing import List, Optional, Literal, Dict
 from pydantic import BaseModel, HttpUrl, Field, field_validator, FilePath
 import yaml
+import logging
 from pathlib import Path
+
+from src.logger import configure_logging
+
+configure_logging(level=logging.DEBUG)
+log = logging.getLogger(__name__)
 
 
 class Config(BaseModel):
@@ -27,6 +33,7 @@ class Config(BaseModel):
     @field_validator('doc_fields')
     def check_no_empty_fields(cls, v):
         if any(not f.strip() for f in v):
+            log.error("docFields cannot contain empty strings.")
             raise ValueError("docFields cannot contain empty strings.")
         return v
 
@@ -34,6 +41,7 @@ class Config(BaseModel):
     def check_doc_type(cls, v):
         if v is not None:
             if v.suffix[1:] != "txt":
+                log.error("queries' file must have TXT extension")
                 raise ValueError("queries' file must have TXT extension")
         return v
 
@@ -41,11 +49,12 @@ class Config(BaseModel):
     def check_config_type(cls, v):
         if v is not None:
             if v.suffix[1:] not in {"yaml", "yml"}:
-                raise ValueError("queries' file must have YAML extension")
+                log.error("LLM_config file must have YAML extension")
+                raise ValueError("LLM_config file must have YAML extension")
         return v
 
-    @staticmethod
-    def load(config_path: str) -> Config:
+    @classmethod
+    def load(cls, config_path: str) -> Config:
         """
         Load and validate configuration from a YAML file.
 
@@ -54,4 +63,6 @@ class Config(BaseModel):
         """
         with open(config_path, 'r') as f:
             raw_config = yaml.safe_load(f)
-        return Config(**raw_config)
+
+        log.debug("Configuration file loaded successfully.")
+        return cls(**raw_config)

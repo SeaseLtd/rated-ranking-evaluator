@@ -1,12 +1,13 @@
 import pytest
 import requests
-import logging
+from requests.exceptions import HTTPError
 
 from src.logger import configure_logging
 from src.config import Config
 from src.utils import parse_args
 
 from src.search_engine.solr_search_engine import SolrSearchEngine
+import logging
 
 configure_logging(level=logging.DEBUG)
 
@@ -42,32 +43,73 @@ def test_solr_search_engine(monkeypatch):
     monkeypatch.setattr(requests, "post", mock_post)
 
     # search_engine.extract_documents_to_generate_queries, which contains requests.post, uses the monkeypatch
-    result = search_engine.extract_documents_to_generate_queries(documents_filter=config.documents_filter,
-                                                        doc_number=config.doc_number)
+    result = search_engine.fetch_for_query_generation(documents_filter=config.documents_filter,
+                                                      doc_number=config.doc_number)
     assert result[0] == mock_dict
     # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
-    result = search_engine.extract_documents_to_evaluate_system(keyword="and",
-                                                                query_template=config.query_template)
+    result = search_engine.fetch_for_evaluation(keyword="and",
+                                                query_template=config.query_template)
     assert result[0] == mock_dict
 
 def test_solr_search_engine_negative_post(monkeypatch):
     config = Config.load("tests/integration/resources/good_config.yaml")
+    for status_code in [400, 401, 402, 403, 500]:
+        def mock_post(*args, **kwargs):
+            return MockResponse({}, status_code=status_code)
 
-    def mock_post(*args, **kwargs):
-        return MockResponse({}, status_code=500)
+        monkeypatch.setattr(requests, "post", mock_post)
 
-    monkeypatch.setattr(requests, "post", mock_post)
+        search_engine = SolrSearchEngine("https://fakeurl")
 
-    search_engine = SolrSearchEngine("https://fakeurl")
+        with pytest.raises(HTTPError):
+            search_engine.fetch_for_query_generation(
+                documents_filter=config.documents_filter,
+                doc_number=config.doc_number
+            )
 
-    with pytest.raises(ValueError):
-        search_engine.extract_documents_to_generate_queries(
-            documents_filter=config.documents_filter,
-            doc_number=config.doc_number
-        )
+        with pytest.raises(HTTPError):
+            search_engine.fetch_for_evaluation(
+                keyword="and",
+                query_template=config.query_template
+            )
 
-    with pytest.raises(ValueError):
-        search_engine.extract_documents_to_evaluate_system(
-            keyword="and",
-            query_template=config.query_template
-        )
+def test_template_to_json_body():
+    template = 'q=ghosts&fq=genre:horror&wt=json'
+    expected_payload = {
+        'query': 'ghosts',
+        'params': {
+            'fq' : 'genre:horror',
+            'wt': 'json'
+        }
+    }
+    assert SolrSearchEngine.template_to_json_body(template) == expected_payload
+
+    template = 'q=do we have ghosts&fq=genre:horror&wt=json'
+    expected_payload = {
+        'query': 'do we have ghosts',
+        'params': {
+            'fq': 'genre:horror',
+            'wt': 'json'
+        }
+    }
+    assert SolrSearchEngine.template_to_json_body(template) == expected_payload
+
+    template = 'q="ghosts"&fq=genre:horror&wt=json'
+    expected_payload = {
+        'query': '"ghosts"',
+        'params': {
+            'fq': 'genre:horror',
+            'wt': 'json'
+        }
+    }
+    assert SolrSearchEngine.template_to_json_body(template) == expected_payload
+
+    template = 'q=ghosts?&fq=genre:horror&wt=json'
+    expected_payload = {
+        'query': 'ghosts?',
+        'params': {
+            'fq': 'genre:horror',
+            'wt': 'json'
+        }
+    }
+    assert SolrSearchEngine.template_to_json_body(template) == expected_payload
