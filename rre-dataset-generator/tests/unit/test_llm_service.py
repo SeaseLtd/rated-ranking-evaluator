@@ -6,7 +6,7 @@ def test_llm_service_test_connection():
     fake_llm = FakeListChatModel(responses=["Hello, world!"])
     service = LLMService(chat_model=fake_llm)
 
-    response = service.test_connection()
+    response = service.test_connection("Say hello world!")
     assert isinstance(response, str)
     assert "Hello, world!" in response
 
