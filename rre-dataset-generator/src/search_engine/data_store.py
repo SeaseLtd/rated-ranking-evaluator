@@ -55,8 +55,8 @@ class DataStore:
 
     def add_score(self, query_id: str, doc_id: str, score: float) -> None:
         """
-        Adds relevance score associated with the given doc_id and query_id or
-        raises KeyError if the query_id or doc_id is not found.
+        Adds relevance score associated with the given doc_id and query_id or raises KeyError
+        if the query_id or doc_id is not found.
         """
         query_obj = self._get_query_object(query_id)
 
@@ -67,16 +67,15 @@ class DataStore:
 
     def get_score(self, query_id: str, doc_id: str) -> float:
         """
-        Returns the score for the given (query_id, doc_id) pair.
-        Raises KeyError if the query_id is not found.
+        Returns the score for the given (query_id, doc_id) pair or raises KeyError if the query_id is not found.
         """
         query_obj = self._get_query_object(query_id)
         return query_obj.doc_id_to_score[doc_id]
 
     def has_score(self, query_id: str, doc_id: str) -> bool:
         """
-        Returns True if the (query_id, doc_id) pair has a real score (i.e. != -1).
-        Raises KeyError if query_id or doc_id isn’t found/linked.
+        Returns True if the (query_id, doc_id) pair has a real score (i.e. != -1) or raises KeyError
+        if query_id or doc_id isn’t found/linked.
         """
         query_obj = self._get_query_object(query_id)
         return query_obj.has_score_for_query(doc_id)
@@ -98,8 +97,8 @@ class QueryObject:
 
     def has_score_for_query(self, doc_id: str) -> bool:
         """
-        Returns True if this query has been scored for doc_id (i.e. score != -1).
-        Raises KeyError if the doc_id is not linked to this query.
+        Returns True if this query has been scored for doc_id (i.e. score != -1) or raises KeyError
+        if the doc_id is not linked to this query.
         """
         if doc_id not in self.doc_id_to_score:
             raise KeyError(f"Document id '{doc_id}' is not associated with this query.")
