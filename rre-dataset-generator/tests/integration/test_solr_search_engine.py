@@ -117,4 +117,4 @@ def test_template_to_json_body():
 
 def test_solr_search_engine_bad_url():
     with pytest.raises(ValidationError):
-        _ = SolrSearchEngine("fakeurl")
+        _ = SolrSearchEngine("fake-NONurl")
