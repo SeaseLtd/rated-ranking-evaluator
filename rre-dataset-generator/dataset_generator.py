@@ -1,3 +1,5 @@
+import logging
+
 from src.config import Config
 from src.utils import parse_args
 
