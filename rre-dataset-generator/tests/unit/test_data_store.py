@@ -44,8 +44,12 @@ def test_add_and_get_query(ds: DataStore, doc1: Document):
 
 
 def test_get_all_queries(ds, doc1):
+    # First add the document
+    ds.add_document(doc1.id, doc1)
+    # Then create queries that reference it
     q1_id = ds.add_query(query_text="query 1", doc_id=doc1.id)
     q2_id = ds.add_query(query_text="query 2", doc_id=doc1.id)
+    # Verify we get both queries back
     queries = ds.get_queries()
     assert len(queries) == 2
     assert {q.id for q in queries} == {q1_id, q2_id}
