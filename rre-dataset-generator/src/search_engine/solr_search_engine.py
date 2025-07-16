@@ -10,7 +10,7 @@ import logging
 configure_logging(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
-from src.search_engine.interface import BaseSearchEngine
+from src.search_engine.search_engine_base import BaseSearchEngine
 
 class SolrSearchEngine(BaseSearchEngine):
     """
