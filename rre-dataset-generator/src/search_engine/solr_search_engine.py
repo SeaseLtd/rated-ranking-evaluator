@@ -5,12 +5,14 @@ from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
 
 from src.logger import configure_logging
+from src.utils import clean_text
 import logging
 
 configure_logging(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 from src.search_engine.search_engine_base import BaseSearchEngine
+from src.model.document import Document
 
 class SolrSearchEngine(BaseSearchEngine):
     """
@@ -51,12 +53,13 @@ class SolrSearchEngine(BaseSearchEngine):
 
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   doc_number: int) \
-            -> List[Dict[str, Any]]:
+                                   doc_number: int, doc_fields: List[str]) \
+            -> List[Document]:
         payload = {
             'query': '*:*',
             'params': {
-                'rows': doc_number
+                'rows': doc_number,
+                'fl' : doc_fields if 'id' in doc_fields else doc_fields + ['id']
             }
         }
 
@@ -75,13 +78,15 @@ class SolrSearchEngine(BaseSearchEngine):
 
         return self.search(payload)
 
-    def fetch_for_evaluation(self, query_template: str, keyword: str="*:*") -> List[Dict[str, Any]]:
+    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
         """Search for documents using a query."""
         template = query_template.replace(self.PLACEHOLDER, keyword)
         payload = self.template_to_json_body(template)
+        # here fl is overwritten, even if in the template there are other fields in the 'fl' key
+        payload['params']['fl'] = doc_fields if 'id' in doc_fields else doc_fields + ['id']
         return self.search(payload)
 
-    def search(self, payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
         search_url = urljoin(str(self.endpoint), 'select')
 
@@ -103,7 +108,21 @@ class SolrSearchEngine(BaseSearchEngine):
                 log.debug(f"URL: {search_url}\n")
                 log.debug(f"Payload: {payload}\n")
                 # log.debug(f"Response: {response.json()}")
-                return response.json()['response']['docs']
+                raw_docs = response.json()['response']['docs']
+                reformat_raw_doc = []
+                for doc in raw_docs:
+                     clean_doc = dict()
+                     clean_doc['id'] = doc['id']
+                     clean_doc['fields'] = dict()
+                     for k, v in doc.items():
+                        if k != 'id':
+                            if isinstance(v, list):
+                                if isinstance(v[0], str):
+                                    clean_doc['fields'][k] = [clean_text(text) for text in v]
+                            else:
+                                clean_doc['fields'][k] = v
+                     reformat_raw_doc.append(Document(**clean_doc))
+                return reformat_raw_doc
             case 400:
                 error_msg = f"400 Bad Request: The request was invalid.\nURL: {search_url}\nPayload: {payload}"
             case 401:

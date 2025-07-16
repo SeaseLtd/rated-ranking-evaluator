@@ -10,7 +10,10 @@ if __name__ == "__main__":
 
     search_engine = SolrSearchEngine('http://localhost:8983/solr/testcore/')
 
-    # docs = search_engine.fetch_for_query_generation(documents_filter=config.documents_filter,
-    #                                                            doc_number=config.doc_number)
+    docs = search_engine.fetch_for_query_generation(documents_filter=config.documents_filter,
+                                                               doc_number=config.doc_number,
+                                                               doc_fields=config.doc_fields)
 
-    docs = search_engine.fetch_for_evaluation(keyword="and", query_template=config.query_template)
+    # docs = search_engine.fetch_for_evaluation(keyword="and",
+    #                                           query_template=config.query_template,
+    #                                           doc_fields=config.doc_fields)

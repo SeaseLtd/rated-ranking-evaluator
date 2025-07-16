@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Union
 from pydantic import HttpUrl, BaseModel
+from src.model.document import Document
 
 class EndpointValidator(BaseModel):
     endpoint: HttpUrl
@@ -14,17 +15,22 @@ class BaseSearchEngine(ABC):
     @abstractmethod
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   doc_number: int) \
-            -> List[Dict[str, Any]]:
+                                   doc_number: int,
+                                   doc_fields: List[str]) \
+            -> List[Document]:
         """Extract documents for generating queries."""
         pass
 
     @abstractmethod
-    def fetch_for_evaluation(self, query_template: str, keyword: str="*:*") -> List[Dict[str, Any]]:
+    def fetch_for_evaluation(self,
+                             query_template: str,
+                             doc_fields: List[str],
+                             keyword: str="*:*") \
+            -> List[Document]:
         """Search for documents based on a keyword and a query template to evaluate the system."""
         pass
 
     @abstractmethod
-    def search(self, payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def search(self, payload: Dict[str, Any], doc_fields: List[str]) -> List[Document]:
         """Search for documents using a query."""
         pass
