@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import logging
-import uuid
-from typing import Dict, Tuple, List
-
+from typing import Dict, List
+from src.model import Document, Query, Score
 from src.logger import configure_logging
 
 configure_logging(level=logging.INFO)
@@ -16,100 +15,114 @@ class DataStore:
     """
 
     def __init__(self):
-        self.documents: Dict[str, str] = {}  # doc_id → document text
-        self.queries: Dict[str, QueryObject] = {}  # query_id → QueryObject
+        self.documents_dict: Dict[str, Document] = {}  # doc_id → document
+        self.queries_dict: Dict[str, Query] = {}  # query_id → query
 
-    def _get_query_object(self, query_id: str) -> QueryObject:
-        if query_id not in self.queries:
-            log.error("Query id %s not found in DataStore", query_id)
-            raise KeyError(f"Query id '{query_id}' not found in DataStore")
-        return self.queries[query_id]
+    def _get_query_object(self, query_id: str) -> Query:
+        if query_id not in self.queries_dict:
+            error_msg = f"Query id '{query_id}' not found in DataStore"
+            log.error(error_msg)
+            raise KeyError(error_msg)
+        return self.queries_dict[query_id]
 
-    def _get_document(self, doc_id: str) -> str:
-        if doc_id not in self.documents:
-            log.error("Document id %s not found in DataStore", doc_id)
-            raise KeyError(f"Document id '{doc_id}' not found in DataStore")
-        return self.documents[doc_id]
+    def _get_document(self, doc_id: str) -> Document:
+        if doc_id not in self.documents_dict:
+            error_msg = f"Document id '{doc_id}' not found in DataStore"
+            log.error(error_msg)
+            raise KeyError(error_msg)
+        return self.documents_dict[doc_id]
 
-    def add_document(self, doc_id: str, document: str) -> None:
-        self.documents[doc_id] = document
+    def add_document(self, doc_id: str, document: Document) -> None:
+        self.documents_dict[doc_id] = document
 
-    def get_document(self, doc_id: str) -> str:
+    def get_document(self, doc_id: str) -> Document:
         """
         Returns a document text or raises KeyError if the doc_id is not found.
         """
         return self._get_document(doc_id)
 
-    def add_query(self, query: str, doc_id: str) -> str:
+    def add_query(self, query_text: str, doc_id: str) -> str:
         """
-        Returns generated query id
+        Returns the generated query id
         """
-        query_obj = QueryObject(query, doc_id)
-        self.queries[query_obj.id] = query_obj
-        return query_obj.id
+        score = Score(doc_id=doc_id)
+        query_ = Query(text=query_text, scores=[score])
+        self.queries_dict[query_.id] = query_
+        return query_
 
-    def get_queries(self) -> List[Tuple[str, List[str]]]:
+    def get_queries(self) -> List[Query]:
         """
-        Returns a list of all (query, doc_ids)
+        Returns a list of all Query objects.
         """
-        return [(query_obj.query, list(query_obj.doc_id_to_score.keys())) for query_obj in self.queries.values()]
+        return list(self.queries_dict.values())
 
-    def get_query(self, query_id: str) -> Tuple[str, List[str]]:
+    def get_query(self, query_id: str) -> Query:
         """
-        Returns a tuple of (query, doc_ids) or raises KeyError if the query_id is not found.
+        Returns a Query object or raises KeyError if the query_id is not found.
         """
-        query_obj = self._get_query_object(query_id)
-        return query_obj.query, list(query_obj.doc_id_to_score.keys())
+        return self._get_query_object(query_id)
 
-    def add_score(self, query_id: str, doc_id: str, score: float) -> None:
+    def add_score(self, query_id: str, doc_id: str, score_value: int) -> None:
         """
         Adds relevance score associated with the given doc_id and query_id or raises KeyError
         if the query_id or doc_id is not found.
         """
-        query_obj = self._get_query_object(query_id)
+        if query_id not in self.queries_dict:
+            error_msg = f"Query '{query_id}' not found in DataStore"
+            log.error(error_msg)
+            raise KeyError(error_msg)
 
-        self._get_document(doc_id)
+        if doc_id not in self.documents_dict:
+            error_msg = f"Document '{doc_id}' not found in DataStore"
+            log.error(error_msg)
+            raise KeyError(error_msg)
 
-        query_obj.add_score_for_query(doc_id, score)
-        self.queries[query_id] = query_obj
+        query_ = self.queries_dict[query_id]
 
-    def get_score(self, query_id: str, doc_id: str) -> float:
+        # Check if a score for this doc_id already exists and update it
+        for score in query_.scores:
+            if score.doc_id == doc_id:
+                score.value = score_value
+                return
+
+        # If no score exists for this doc_id, create a new one
+        query_.scores.append(Score(doc_id=doc_id, value=score_value))
+
+    def get_score(self, query_id: str, doc_id: str) -> int:
         """
-        Returns the score for the given (query_id, doc_id) pair or raises KeyError if the query_id is not found.
+        Returns the score for the given (query_id, doc_id) pair or raises KeyError if the query_id is not found
+        or the doc_id is not associated with the query.
         """
-        query_obj = self._get_query_object(query_id)
-        return query_obj.doc_id_to_score[doc_id]
+        if query_id not in self.queries_dict:
+            error_msg = f"Query '{query_id}' not found in DataStore"
+            log.error(error_msg)
+            raise KeyError(error_msg)
+
+        if doc_id not in self.documents_dict:
+            error_msg = f"Document '{doc_id}' not found in DataStore"
+            log.error(error_msg)
+            raise KeyError(error_msg)
+
+        query_ = self.queries_dict[query_id]
+        for score in query_.scores:
+            if score.doc_id == doc_id:
+                return score.value
+        raise KeyError(f"Document id '{doc_id}' not found for query id '{query_id}'")
 
     def has_score(self, query_id: str, doc_id: str) -> bool:
         """
         Returns True if the (query_id, doc_id) pair has a real score (i.e. != -1) or raises KeyError
         if query_id or doc_id isn’t found/linked.
         """
-        query_obj = self._get_query_object(query_id)
-        return query_obj.has_score_for_query(doc_id)
+        if query_id not in self.queries_dict:
+            error_msg = f"Query '{query_id}' not found in DataStore"
+            log.error(error_msg)
+            raise KeyError(error_msg)
 
+        if doc_id not in self.documents_dict:
+            error_msg = f"Document '{doc_id}' not found in DataStore"
+            log.error(error_msg)
+            raise KeyError(error_msg)
 
-class QueryObject:
-    """
-    QueryObject: holds the query text, its doc id → score mapping, and a generated unique id.
-    """
-
-    def __init__(self, query: str, doc_id: str):
-        self.id: str = str(uuid.uuid4())
-        self.query: str = query
-        # mapping doc_id → score; score=-1 means doc is “not scored yet”
-        self.doc_id_to_score: Dict[str, float] = {doc_id: -1.0}
-
-    def add_score_for_query(self, doc_id: str, score: float) -> None:
-        self.doc_id_to_score[doc_id] = score
-
-    def has_score_for_query(self, doc_id: str) -> bool:
-        """
-        Returns True if this query has been scored for doc_id (i.e. score != -1) or raises KeyError
-        if the doc_id is not linked to this query.
-        """
-        if doc_id not in self.doc_id_to_score:
-            log.error("Document id %s is not associated with this query", doc_id)
-            raise KeyError(f"Document id '{doc_id}' is not associated with this query")
-        return self.doc_id_to_score[doc_id] != -1.0
-
+        score_value = self.get_score(query_id, doc_id)
+        return score_value != -1
