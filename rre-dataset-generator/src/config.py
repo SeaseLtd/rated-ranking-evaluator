@@ -41,16 +41,16 @@ class Config(BaseModel):
     def check_doc_type(cls, v):
         if v is not None:
             if v.suffix[1:] != "txt":
-                log.error("queries' file must have TXT extension")
-                raise ValueError("queries' file must have TXT extension")
+                log.error("queries' file must have .txt extension")
+                raise ValueError("queries' file must have .txt extension")
         return v
 
     @field_validator('llm_configuration_file')
     def check_config_type(cls, v):
         if v is not None:
             if v.suffix[1:] not in {"yaml", "yml"}:
-                log.error("LLM_config file must have YAML extension")
-                raise ValueError("LLM_config file must have YAML extension")
+                log.error("LLM_config file must have .yaml extension")
+                raise ValueError("LLM_config file must have .yaml extension")
         return v
 
     @classmethod
