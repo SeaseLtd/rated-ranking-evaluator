@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import Dict, List
-from src.model import Document, Query, Score
+from src.schemas import Document, Query, Score
 from src.logger import configure_logging
 
 configure_logging(level=logging.INFO)
@@ -46,9 +46,9 @@ class DataStore:
         Returns the generated query id
         """
         score = Score(doc_id=doc_id)
-        query_ = Query(text=query_text, scores=[score])
+        query_ = Query(text=query_text, scores={doc_id: score})
         self.queries_dict[query_.id] = query_
-        return query_
+        return query_.id
 
     def get_queries(self) -> List[Query]:
         """
@@ -78,15 +78,10 @@ class DataStore:
             raise KeyError(error_msg)
 
         query_ = self.queries_dict[query_id]
-
-        # Check if a score for this doc_id already exists and update it
-        for score in query_.scores:
-            if score.doc_id == doc_id:
-                score.value = score_value
-                return
-
-        # If no score exists for this doc_id, create a new one
-        query_.scores.append(Score(doc_id=doc_id, value=score_value))
+        if doc_id in query_.scores:
+            query_.scores[doc_id].value = score_value
+        else:
+            query_.scores[doc_id] = Score(doc_id=doc_id, value=score_value)
 
     def get_score(self, query_id: str, doc_id: str) -> int:
         """
@@ -104,9 +99,8 @@ class DataStore:
             raise KeyError(error_msg)
 
         query_ = self.queries_dict[query_id]
-        for score in query_.scores:
-            if score.doc_id == doc_id:
-                return score.value
+        if doc_id in query_.scores:
+            return query_.scores[doc_id].value
         raise KeyError(f"Document id '{doc_id}' not found for query id '{query_id}'")
 
     def has_score(self, query_id: str, doc_id: str) -> bool:

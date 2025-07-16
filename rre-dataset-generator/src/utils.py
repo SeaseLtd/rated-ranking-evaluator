@@ -33,6 +33,6 @@ class QuepidWriter(AbstractWriter):
             writer.writerow(['query', 'docid', 'rating'])
             
             for query in queries:
-                for score in query.scores:
+                for score in query.scores.values():
                     if score.value != -1:  # Only write rated documents
                         writer.writerow([query.text, score.doc_id, score.value])

@@ -40,7 +40,7 @@ class Query(BaseModel):
     """
     id: str = Field(default_factory=lambda: f"q-{uuid.uuid4()}", description="Unique identifier for the query.")
     text: str = Field(..., description="The query text.")
-    scores: List[Score] = Field(..., min_length=1, description="A list of scores for documents related to this query.")
+    scores: Dict[str, Score] = Field(..., description="A dictionary of scores for documents, indexed by doc_id.")
 
 
 from .llm_response import LLMRequest, LLMResponse

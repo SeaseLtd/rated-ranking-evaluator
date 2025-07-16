@@ -3,7 +3,7 @@ from typing import Any
 from unittest.mock import MagicMock, mock_open, patch
 from src.utils import QuepidWriter
 from src.search_engine.data_store import DataStore
-from src.model import Query, Score
+from src.schemas import Query, Score
 
 @pytest.fixture
 def mock_ds():
@@ -17,13 +17,13 @@ def writer(mock_ds):
 
 def test_write_to_quepid_format(writer, mock_ds):
     # Arrange
-    query1 = Query(id="q-1", text="query one", scores=[
-        Score(doc_id="doc-1", value=1),
-        Score(doc_id="doc-2", value=0)
-    ])
-    query2 = Query(id="q-2", text="query two", scores=[
-        Score(doc_id="doc-3", value=2)
-    ])
+    query1 = Query(id="q-1", text="query one", scores={
+        "doc-1": Score(doc_id="doc-1", value=1),
+        "doc-2": Score(doc_id="doc-2", value=0)
+    })
+    query2 = Query(id="q-2", text="query two", scores={
+        "doc-3": Score(doc_id="doc-3", value=2)
+    })
     mock_ds.get_queries.return_value = [query1, query2]
 
     m = mock_open()
@@ -45,10 +45,10 @@ def test_write_to_quepid_format(writer, mock_ds):
 
 def test_write_skips_unscored_documents(writer, mock_ds):
     # Arrange
-    query1 = Query(id="q-1", text="query one", scores=[
-        Score(doc_id="doc-1", value=1),
-        Score(doc_id="doc-2", value=-1)  # Unscored
-    ])
+    query1 = Query(id="q-1", text="query one", scores={
+        "doc-1": Score(doc_id="doc-1", value=1),
+        "doc-2": Score(doc_id="doc-2", value=-1)  # Unscored
+    })
     mock_ds.get_queries.return_value = [query1]
 
     m = mock_open()
