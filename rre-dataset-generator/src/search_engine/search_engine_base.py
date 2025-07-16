@@ -16,12 +16,12 @@ class BaseSearchEngine(ABC):
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int) \
             -> List[Dict[str, Any]]:
-        """Extract documents for evaluating the search system."""
+        """Extract documents for generating queries."""
         pass
 
     @abstractmethod
     def fetch_for_evaluation(self, query_template: str, keyword: str="*:*") -> List[Dict[str, Any]]:
-        """Search for documents based on a keyword and a query template."""
+        """Search for documents based on a keyword and a query template to evaluate the system."""
         pass
 
     @abstractmethod
