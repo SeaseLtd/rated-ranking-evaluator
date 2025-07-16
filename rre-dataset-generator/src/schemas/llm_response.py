@@ -25,7 +25,7 @@ class LLMRequest(BaseModel):
     """Input model for LLM service requests."""
     messages: List[Message] = Field(
         ...,
-        min_items=1,
+        min_length=1,
         description="List of messages in the conversation"
     )
     # temperature: Optional[float] = Field(
@@ -65,29 +65,29 @@ class LLMResponse(BaseModel):
 
 """
 USAGE:
-# E.g: In the main orchestrator (e.g., dataset_generator.py ??)
-from src.model.llm_response import LLMRequest, Message, MessageRole
-from src.llm.llm_service import LLMService
+    # E.g: In the main orchestrator (e.g., dataset_generator.py ??)
+    from src.model.llm_response import LLMRequest, Message, MessageRole
+    from src.llm.llm_service import LLMService
 
-# 1. Define the instructions (System Message)
-system_prompt = "Hey!"
-# 2. Create the Message objects
-messages = [
-    Message(role=MessageRole.SYSTEM, content=system_prompt),
-    Message(role=MessageRole.USER, content=doc_content)
-]
+    # 1. Define the instructions (System Message)
+    system_prompt = "Hey!"
+    # 2. Create the Message objects
+    messages = [
+        Message(role=MessageRole.SYSTEM, content=system_prompt),
+        Message(role=MessageRole.USER, content=doc_content)
+    ]
 
-# 3. Create the LLMRequest object
-request_payload = LLMRequest(messages=messages)
+    # 3. Create the LLMRequest object
+    request_payload = LLMRequest(messages=messages)
 
-# 4. Call the LLM service (the method doesn't exist yet, but we can imagine it)
-llm_response = llm_service.generate_queries(request=request_payload) 
-# This internal method will call self.chat_model.invoke(...)
+    # 4. Call the LLM service (the method doesn't exist yet, but we can imagine it)
+    llm_response = llm_service.generate_queries(request=request_payload) 
+    # This internal method will call self.chat_model.invoke(...)
 
-# 5. Process the LLMResponse
-generated_queries_text = llm_response.content
-list_of_queries = generated_queries_text.strip().split('\n')
+    # 5. Process the LLMResponse
+    generated_queries_text = llm_response.content
+    list_of_queries = generated_queries_text.strip().split('\n')
 
-# Optional: Log token usage for cost control
-print(f"Token usage for query generation: {llm_response.usage}")
+    # Optional: Log token usage for cost control
+    print(f"Token usage for query generation: {llm_response.usage}")
 """
