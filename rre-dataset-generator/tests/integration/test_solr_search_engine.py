@@ -1,6 +1,7 @@
 import pytest
 import requests
 from requests.exceptions import HTTPError
+from pydantic_core import ValidationError
 
 from src.logger import configure_logging
 from src.config import Config
@@ -113,3 +114,7 @@ def test_template_to_json_body():
         }
     }
     assert SolrSearchEngine.template_to_json_body(template) == expected_payload
+
+def test_solr_search_engine_bad_url():
+    with pytest.raises(ValidationError):
+        _ = SolrSearchEngine("fakeurl")
