@@ -6,9 +6,6 @@ import yaml
 import logging
 from pathlib import Path
 
-from src.logger import configure_logging
-
-configure_logging(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 

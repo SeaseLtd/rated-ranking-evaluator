@@ -7,9 +7,6 @@ from typing import Optional
 import yaml
 from pydantic import BaseModel, Field
 
-from src.logger import configure_logging
-
-configure_logging(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 

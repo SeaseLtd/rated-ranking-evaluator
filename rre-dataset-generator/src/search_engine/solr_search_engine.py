@@ -4,11 +4,9 @@ from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestExce
 from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
 
-from src.logger import configure_logging
 from src.utils import clean_text
 import logging
 
-configure_logging(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 from src.search_engine.search_engine_base import BaseSearchEngine
