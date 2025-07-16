@@ -1,13 +1,13 @@
-import pytest
-from src.config import load_config
 from pydantic import HttpUrl, FilePath
 from pathlib import Path
 from pydantic_core import ValidationError
+import pytest
 
+from src.config import Config
 
 @pytest.fixture
 def config():
-    return load_config("tests/unit/resources/good_config.yaml")
+    return Config.load("tests/unit/resources/good_config.yaml")
 
 
 def test_good_config_expect_all_parameters_read(config):
@@ -29,7 +29,7 @@ def test_good_config_expect_all_parameters_read(config):
 
 def test_missing_optional_field_values():
     path = "tests/unit/resources/missing_optional.yaml"
-    cfg = load_config(path)
+    cfg = Config.load(path)
 
     assert hasattr(cfg, "queries")
     assert cfg.queries is None
@@ -41,14 +41,14 @@ def test_missing_optional_field_values():
 def test_missing_required_field_raises_error():
     path = "tests/unit/resources/missing_required.yaml"
     with pytest.raises(ValidationError):
-        _ = load_config(path)
+        _ = Config.load(path)
 
 def test_invalid_doc_number_type_raises_error():
     path = "tests/unit/resources/invalid_type.yaml"
     with pytest.raises(ValidationError):
-        _ = load_config(path)
+        _ = Config.load(path)
 
 def test_file_not_found_raises_exception():
     path = "tests/unit/resources/file_does_not_exist.yaml"
     with pytest.raises(FileNotFoundError):
-        _ = load_config(path)
+        _ = Config.load(path)

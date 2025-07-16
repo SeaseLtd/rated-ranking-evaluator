@@ -25,7 +25,7 @@ documents_filter:
 # Maximum number of documents to retrieve from the search engine to generate queries
 doc_number: 100
 
-# List of fields from documents used to generate context and relevance scoring
+# List of fields from documents used to generate queries and relevance scoring
 # These should match fields available in the search engine schema
 # Must be at least one field
 doc_fields:
