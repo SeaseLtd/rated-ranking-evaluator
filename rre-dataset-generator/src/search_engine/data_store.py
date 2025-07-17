@@ -59,10 +59,10 @@ class DataStore:
 
         # new query rating context
         context = QueryRatingContext(query, doc_id)
-        context_id = context.get_id()
-        self._queries_by_id[context_id] = context
-        self._query_text_to_query_id[query] = context_id
-        return context_id
+        query_id = context.get_query_id()
+        self._queries_by_id[query_id] = context
+        self._query_text_to_query_id[query] = query_id
+        return query_id
 
     def get_queries(self) -> List[QueryRatingContext]:
         """

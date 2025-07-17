@@ -17,7 +17,7 @@ class QueryRatingContext:
         self._query: str = query
         self._doc_id_to_rating_score: Dict[str, int] = {doc_id: self.DOC_NOT_RATED}
 
-    def get_id(self) -> str:
+    def get_query_id(self) -> str:
         """Return the unique identifier for this query context."""
         return self._id
 
