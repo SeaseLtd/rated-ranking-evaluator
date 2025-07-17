@@ -54,7 +54,7 @@ class DataStore:
         if query in self._query_text_to_query_id:
             query_id = self._query_text_to_query_id[query]
             context = self._queries_by_id[query_id]
-            context.add_doc(doc_id)
+            context.add_doc_id(doc_id)
             return query_id
 
         # new query rating context

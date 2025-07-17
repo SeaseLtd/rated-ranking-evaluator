@@ -29,7 +29,7 @@ class QueryRatingContext:
         """Return all doc ids currently tracked for this query context"""
         return list(self._doc_id_to_rating_score.keys())
 
-    def add_doc(self, doc_id: str) -> None:
+    def add_doc_id(self, doc_id: str) -> None:
         if doc_id not in self._doc_id_to_rating_score:
             self._doc_id_to_rating_score[doc_id] = self.DOC_NOT_RATED
 
