@@ -1,6 +1,6 @@
-import argparse
 import re
 import html
+import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
@@ -15,3 +15,4 @@ def clean_text(text):
     tag_regex = re.compile('<.*?>')
     text_without_html = re.sub(tag_regex, '', text)
     return html.unescape(re.sub("\s\s+", " ", text_without_html))
+
