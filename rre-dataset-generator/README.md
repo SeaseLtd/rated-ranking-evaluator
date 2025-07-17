@@ -21,27 +21,26 @@ uv sync
 
 Create a `config.yaml` file in the root directory. This file controls the entire generation process. E.g:
 ```yaml
-QueryTemplate: "q=#$query##&fq=genre:horror&wt=json"
-SearchEngineType: "Solr"
-SearchEngineCollectionEndpoint: "http://localhost:8983/solr/mycore"
-documentsFilter:
+query_template: "q=#$query##&fq=genre:horror&wt=json"
+search_engine_type: "solr"
+search_engine_collection_endpoint: "http://localhost:8983/solr/mycore"
+documents_filter:
   - genre:
       - "horror"
       - "fantasy"
   - type:
       - "book"
-docNumber: 100
-docFields:
+doc_number: 100
+doc_fields:
   - "title"
-  - "body"
+  - "description"
 queries: "queries.txt"
-generateQueriesFromDocuments: true
-totalNumQueriesToGenerate: 10
-RelevanceScale: "Graded"
-LLMConfigurationFile: "llm_config.yaml"
-OutputFormat: "Quepid"
-OutputDestination: "output/generated_dataset.json"
-OutputExplanation: true
+generate_queries_from_documents: true
+num_queries_needed: 10
+relevance_scale: "graded"
+llm_configuration_file: "llm_config.yaml"
+output_format: "quepid"
+output_destination: "output/generated_dataset.json"
 ```
 
 ### 3. Running the Generator

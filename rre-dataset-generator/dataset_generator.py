@@ -1,26 +1,19 @@
-import argparse
-from src.config import load_config
+from src.config import Config
+from src.utils import parse_args
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
-
-    parser.add_argument('-c', '--config_file', type=str,
-                        help='Config file path to use for the application [default: \"config.yaml\"]',
-                        required=False, default="config.yaml")
-
-    return parser.parse_args()
+from src.search_engine.solr_search_engine import SolrSearchEngine
 
 if __name__ == "__main__":
-    from src.logger import configure_logging
-    import logging
-
     args = parse_args()
 
-    configure_logging(level=logging.DEBUG)
-    log = logging.getLogger(__name__)
+    config = Config.load(args.config_file)
 
-    try:
-        config = load_config(args.config_file)
-        log.debug("Configuration loaded successfully.")
-    except Exception as e:
-        log.debug(f"Error loading configuration: {e}")
+    search_engine = SolrSearchEngine('http://localhost:8983/solr/testcore/')
+
+    docs = search_engine.fetch_for_query_generation(documents_filter=config.documents_filter,
+                                                               doc_number=config.doc_number,
+                                                               doc_fields=config.doc_fields)
+
+    # docs = search_engine.fetch_for_evaluation(keyword="and",
+    #                                           query_template=config.query_template,
+    #                                           doc_fields=config.doc_fields)
