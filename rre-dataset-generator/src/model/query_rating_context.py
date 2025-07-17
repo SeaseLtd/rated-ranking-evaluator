@@ -1,5 +1,5 @@
 import uuid
-from typing import Dict
+from typing import Dict, List
 
 
 class QueryRatingContext:
@@ -13,16 +13,32 @@ class QueryRatingContext:
     DOC_NOT_RATED: int = -1  # doc is not yet rated
 
     def __init__(self, query: str, doc_id: str):
-        self.id: str = str(uuid.uuid4())
-        self.query: str = query
-        self.doc_id_to_rating: Dict[str, int] = {doc_id: self.DOC_NOT_RATED}
+        self._id: str = str(uuid.uuid4())
+        self._query: str = query
+        self._doc_id_to_rating: Dict[str, int] = {doc_id: self.DOC_NOT_RATED}
+
+    def get_id(self) -> str:
+        """Return the unique identifier for this query context."""
+        return self._id
+
+    def get_query(self) -> str:
+        """Return the original query string."""
+        return self._query
+
+    def get_doc_ids(self) -> List[str]:
+        """Return all doc ids currently tracked for this query context"""
+        return list(self._doc_id_to_rating.keys())
 
     def add_doc(self, doc_id: str) -> None:
-        if doc_id not in self.doc_id_to_rating:
-            self.doc_id_to_rating[doc_id] = self.DOC_NOT_RATED
+        if doc_id not in self._doc_id_to_rating:
+            self._doc_id_to_rating[doc_id] = self.DOC_NOT_RATED
 
     def add_rating_for_query(self, doc_id: str, rating: int) -> None:
-        self.doc_id_to_rating[doc_id] = rating
+        self._doc_id_to_rating[doc_id] = rating
 
     def has_rating_for_query(self, doc_id: str) -> bool:
-        return self.doc_id_to_rating[doc_id] != self.DOC_NOT_RATED
+        return self._doc_id_to_rating[doc_id] != self.DOC_NOT_RATED
+
+    def get_rating_score(self, doc_id: str) -> int:
+        return self._doc_id_to_rating[doc_id]
+

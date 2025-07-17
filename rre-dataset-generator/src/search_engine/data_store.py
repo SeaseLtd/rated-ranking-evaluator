@@ -59,9 +59,10 @@ class DataStore:
 
         # new query rating context
         context = QueryRatingContext(query, doc_id)
-        self._queries_by_id[context.id] = context
-        self._query_text_to_query_id[query] = context.id
-        return context.id
+        context_id = context.get_id()
+        self._queries_by_id[context_id] = context
+        self._query_text_to_query_id[query] = context_id
+        return context_id
 
     def get_queries(self) -> List[QueryRatingContext]:
         """
@@ -90,7 +91,7 @@ class DataStore:
         Returns the rating score for the given (query_id, doc_id) pair or raises KeyError if the query_id is not found.
         """
         context = self._get_query_rating_context_by_id(query_id)
-        return context.doc_id_to_rating[doc_id]
+        return context.get_rating_score(doc_id)
 
     def has_rating_score(self, query_id: str, doc_id: str) -> bool:
         """
