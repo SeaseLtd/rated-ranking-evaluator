@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 
 from src.search_engine.data_store import DataStore
-from src.writters import QuepidWriter, AbstractWriter
+from src.writers import QuepidWriter
 
 
 @pytest.fixture
@@ -42,24 +42,6 @@ def unrated_datastore() -> DataStore:
     datastore.add_query("query 1", "doc1")
     datastore.add_query("query 2", "doc2")
     return datastore
-
-
-class TestAbstractWriter:
-    def test_get_queries_with_ratings(self, populated_datastore):
-        """Tests that the helper method correctly extracts rated documents."""
-        # We can test the "protected" method through a concrete implementation
-        writer = QuepidWriter(populated_datastore)
-        
-        rated_items = writer._get_queries_with_ratings()
-
-        # Convert to set of tuples for order-independent comparison
-        expected_items = {
-            ("test query 1", "doc1", 1),
-            ("test query 1", "doc2", 2),
-            ("test query 2", "doc4", 3),
-        }
-
-        assert set(rated_items) == expected_items
 
 
 class TestQuepidWriter:
