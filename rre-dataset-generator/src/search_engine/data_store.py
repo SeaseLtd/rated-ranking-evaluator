@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, List, Optional
 
 from src.logger import configure_logging
 from src.model.document import Document
@@ -63,19 +63,17 @@ class DataStore:
         self._query_text_to_query_id[query] = context.id
         return context.id
 
-    def get_queries(self) -> List[Tuple[str, List[str]]]:
+    def get_queries(self) -> List[QueryRatingContext]:
         """
-        Returns a list of all (query, [doc_ids])
+        Returns a list of all QueryRatingContext objects.
         """
-        return [(context.query, list(context.doc_id_to_rating.keys()))
-                for context in self._queries_by_id.values()]
+        return list(self._queries_by_id.values())
 
-    def get_query(self, query_id: str) -> Tuple[str, List[str]]:
+    def get_query(self, query_id: str) -> QueryRatingContext:
         """
-        Returns a tuple of (query, [doc_ids]) or raises KeyError if the query_id is not found.
+        Returns QueryRatingContext object or raises KeyError if the query_id is not found.
         """
-        context = self._get_query_rating_context_by_id(query_id)
-        return context.query, list(context.doc_id_to_rating.keys())
+        return self._get_query_rating_context_by_id(query_id)
 
     def add_rating_score(self, query_id: str, doc_id: str, rating_score: int) -> None:
         """
