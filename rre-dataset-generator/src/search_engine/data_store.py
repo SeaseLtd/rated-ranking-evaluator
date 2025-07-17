@@ -83,7 +83,7 @@ class DataStore:
         """
         context = self._get_query_rating_context_by_id(query_id)
 
-        context.add_rating_for_query(doc_id, rating_score)
+        context.add_rating_score(doc_id, rating_score)
         self._queries_by_id[query_id] = context
 
     def get_rating_score(self, query_id: str, doc_id: str) -> int:
@@ -99,5 +99,5 @@ class DataStore:
         if query_id is not found.
         """
         context = self._get_query_rating_context_by_id(query_id)
-        return context.has_rating_for_query(doc_id)
+        return context.has_rating_score(doc_id)
 
