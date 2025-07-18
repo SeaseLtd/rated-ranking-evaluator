@@ -5,7 +5,8 @@ from pydantic_core import ValidationError
 
 from src.logger import configure_logging
 from src.config import Config
-from src.utils import parse_args
+from tests.mocks.solr import MockResponseSolrEngine, MockResponseUniqueKey
+
 
 from src.search_engine.solr_search_engine import SolrSearchEngine
 from src.model.document import Document
@@ -14,39 +15,25 @@ import logging
 configure_logging(level=logging.DEBUG)
 
 
-class MockResponse:
-    def __init__(self, json_data, status_code=200):
-        self._json_data = json_data
-        self.status_code = status_code
-
-    def json(self):
-        return {
-            "response": {
-                "docs": [
-                    self._json_data
-                ]
-            }
-        }
-
 def test_solr_search_engine(monkeypatch):
     config = Config.load("tests/unit/resources/good_config.yaml")
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="mock_id"))
     search_engine = SolrSearchEngine("https://fakeurl")
 
+    assert search_engine.UNIQUE_KEY == "mock_id"
+
     mock_doc = {
-        "id": "1",
+        "mock_id": "1",
         "mock_title": "A first mocked title",
         "mock_description": "A first mocked description"
     }
     mock_dict = {
-        'id': mock_doc['id'],
-        'fields': {k:v for k, v in mock_doc.items() if k !='id'}
+        'id': mock_doc['mock_id'],
+        'fields': {k:v for k, v in mock_doc.items() if k !='mock_id'}
     }
 
-    def mock_post(*args, **kwargs):
-        return MockResponse(mock_doc, 200)
-
     # apply the monkeypatch for requests.post to mock_post
-    monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine(mock_doc, status_code=200))
 
     # search_engine.extract_documents_to_generate_queries, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_query_generation(documents_filter=config.documents_filter,
@@ -62,10 +49,8 @@ def test_solr_search_engine(monkeypatch):
 def test_solr_search_engine_negative_post(monkeypatch):
     config = Config.load("tests/unit/resources/good_config.yaml")
     for status_code in [400, 401, 402, 403, 500]:
-        def mock_post(*args, **kwargs):
-            return MockResponse({}, status_code=status_code)
-
-        monkeypatch.setattr(requests, "post", mock_post)
+        monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="identifier"))
+        monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine({}, status_code=status_code))
 
         search_engine = SolrSearchEngine("https://fakeurl")
 
