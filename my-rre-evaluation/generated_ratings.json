@@ -1,0 +1,53 @@
+{
+  "index": "my_index_name",
+  "id_field": "id",
+  "query_placeholder": "query",
+  "query_groups": [
+    {
+      "name": "what is rre",
+      "queries": [
+        {
+          "template": "match_query.json",
+          "placeholders": {
+            "query": "what is rre"
+          }
+        }
+      ],
+      "relevant_documents": [
+        {
+          "document_id": "doc1",
+          "gain": 2
+        },
+        {
+          "document_id": "doc2",
+          "gain": 1
+        },
+        {
+          "document_id": "doc5",
+          "gain": 0
+        }
+      ]
+    },
+    {
+      "name": "how to configure elasticsearch",
+      "queries": [
+        {
+          "template": "match_query.json",
+          "placeholders": {
+            "query": "how to configure elasticsearch"
+          }
+        }
+      ],
+      "relevant_documents": [
+        {
+          "document_id": "doc3",
+          "gain": 2
+        },
+        {
+          "document_id": "doc4",
+          "gain": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,15 +1,17 @@
-import csv
-from typing import List, Tuple
 from abc import ABC, abstractmethod
-from src.search_engine.data_store import DataStore
+from typing import List, Tuple
+
 from src.model.query_rating_context import QueryRatingContext
+from src.search_engine.data_store import DataStore
+
 
 class AbstractWriter(ABC):
     """
     Abstract base class for writers.
-    
+
     The writer has to read the data structure and export it to a format (e.g., quepid, rre..)
     """
+
     def __init__(self, datastore: DataStore):
         self.datastore = datastore
 
@@ -31,22 +33,3 @@ class AbstractWriter(ABC):
                 if rating != QueryRatingContext.DOC_NOT_RATED:
                     result.append((query_text, doc_id, rating))
         return result
-
-
-class QuepidWriter(AbstractWriter):
-    """
-    QuepidWriter: Write the data structure to a Quepid format (CSV).
-    The format is: query,docid,rating
-    """
-    def write(self, output_path: str) -> None:
-        """
-        Writes queries and their scored documents to a CSV file in Quepid format.
-        """
-        with open(output_path, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(['query', 'docid', 'rating'])
-            
-            # Use the helper method to get all rated query-document pairs
-            for query_text, doc_id, rating in self._get_queries_with_ratings():
-                writer.writerow([query_text, doc_id, rating])
-

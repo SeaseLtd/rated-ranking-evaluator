@@ -1,0 +1,43 @@
+{
+  "index": "my_index_name",
+  "id_field": "_id",
+  "corpora_file": "corpus.bulk",
+  "query_placeholder": "query",
+  "topics": [
+    {
+      "description": "Simple test topic",
+      "query_groups": [
+        {
+          "name": "what is rre",
+          "queries": [
+            {
+              "template": "match_query.json",
+              "placeholders": {
+                "query": "what is rre"
+              }
+            }
+          ],
+          "relevant_documents": {
+            "doc1": { "gain": 3 },
+            "doc3": { "gain": 0 }
+          }
+        },
+        {
+          "name": "elasticsearch config",
+          "queries": [
+            {
+              "template": "match_query.json",
+              "placeholders": {
+                "query": "configure elasticsearch"
+              }
+            }
+          ],
+          "relevant_documents": {
+            "doc2": { "gain": 3 },
+            "doc3": { "gain": 0 }
+          }
+        }
+      ]
+    }
+  ]
+}

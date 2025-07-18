@@ -1,0 +1,6 @@
+query,doc_id,gain
+what is rre,doc1,2
+what is rre,doc2,1
+what is rre,doc5,0
+how to configure elasticsearch,doc3,2
+how to configure elasticsearch,doc4,1

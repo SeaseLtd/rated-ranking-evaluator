@@ -1,0 +1,6 @@
+{ "index": { "_index": "my_index_name", "_type": "_doc", "_id": "doc1" } }
+{ "id": "doc1", "title": "RRE Guide", "body": "what is rre" }
+{ "index": { "_index": "my_index_name", "_type": "_doc", "_id": "doc2" } }
+{ "id": "doc2", "title": "Elasticsearch Configuration", "body": "configure elasticsearch setup" }
+{ "index": { "_index": "my_index_name", "_type": "_doc", "_id": "doc3" } }
+{ "id": "doc3", "title": "Other Content", "body": "irrelevant content" }

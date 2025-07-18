@@ -65,9 +65,14 @@ public class SynchronousEvaluationManager extends BaseEvaluationManager implemen
 
             if (response.isFailed()) {
                 failedQueries++;
+                System.out.println("DEBUG: Query failed for version: " + version);
             } else {
+                System.out.println("DEBUG: Query succeeded for version: " + version + ", totalHits: " + response.totalHits());
                 query.setTotalHits(response.totalHits(), persistVersion(version));
-                response.hits().forEach(hit -> query.collect(hit, rank.getAndIncrement(), persistVersion(version)));
+                response.hits().forEach(hit -> {
+                    System.out.println("DEBUG: Processing hit: " + hit);
+                    query.collect(hit, rank.getAndIncrement(), persistVersion(version));
+                });
             }
         });
 

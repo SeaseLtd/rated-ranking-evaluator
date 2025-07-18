@@ -57,7 +57,7 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'docid', 'rating']
+            assert header == ['query', 'doc_id', 'gain']
 
             rows = set(tuple(row) for row in reader)
             expected_rows = {
@@ -76,7 +76,7 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'docid', 'rating']
+            assert header == ['query', 'doc_id', 'gain']
             # Check that there are no more rows
             with pytest.raises(StopIteration):
                 next(reader)
@@ -90,7 +90,7 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'docid', 'rating']
+            assert header == ['query', 'doc_id', 'gain']
             # Check that there are no more rows
             rows = list(reader)
             assert len(rows) == 0
@@ -110,7 +110,7 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'docid', 'rating']
+            assert header == ['query', 'doc_id', 'gain']
             rows = list(reader)
             assert len(rows) == 1
             assert rows[0] == [query_text, doc_id, '1']
@@ -128,7 +128,7 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'docid', 'rating']
+            assert header == ['query', 'doc_id', 'gain']
             rows = list(reader)
             assert len(rows) == 1
             assert rows[0] == ["query", "doc1", "0"]
