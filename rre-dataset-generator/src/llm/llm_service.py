@@ -42,7 +42,7 @@ class LLMService:
         model_name = response.response_metadata.get("model_name", "unknown")
         finish_reason = response.response_metadata.get("finish_reason", "unknown")
 
-        return LLMResponse(
+        return LLMQueryResponse(
             content=response.content,
             model=model_name,
             usage={
