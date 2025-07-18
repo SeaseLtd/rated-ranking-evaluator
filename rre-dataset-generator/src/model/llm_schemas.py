@@ -3,17 +3,14 @@ Pydantic models for the LLM service.
 """
 
 import json
-from typing import Dict, List, Optional
-from pydantic import BaseModel, Field, field_validator
-
-def raw_json_str_to_list(x: str) -> List[str]:
-    return 
+from typing import List
+from pydantic import BaseModel, Field, model_validator
 
 # Typing the LLM query service output 
 class LLMQueryResponse(BaseModel):
     """Output model for LLM service responses."""
-    content: str = Field(..., description="The generated response content")
-    content_list: List[str] = Field(default_factory=lambda raw_json: json.loads(raw_json))
+    content: str = Field(..., description="The generated response content as JSON string")
+    content_list: List[str] = Field(default_factory=list, description="Parsed content as a list of strings")
 
     # model: str = Field(..., description="The name of the model used for the response")
     # usage: Dict[str, int] = Field(..., description="Token usage for the request")
@@ -23,20 +20,25 @@ class LLMQueryResponse(BaseModel):
     # )
     # content_json: Optional[str] = Field(None, description="The generated response content as a JSON string")
 
-    @field_validator('content')
-    def validate_content_is_json_array_of_strings(cls, v: str) -> str:
-        """Validate that the content is a JSON array of strings."""
+    # FIELD VALIDATOR doesn't allow to modify values, only make checks, so we use model_validator
+    @model_validator(mode="after")
+    def validate_and_parse_content(self) -> 'LLMQueryResponse':
         try:
-            parsed_content = json.loads(v)
-            if not isinstance(parsed_content, list):
-                raise ValueError("Content is not a JSON list")
-            if not all(isinstance(item, str) for item in parsed_content):
-                raise ValueError("All items in the list must be strings")
-        except json.JSONDecodeError:
-            raise ValueError("Content is not a valid JSON string")
-        except ValueError as e:
-            raise e
-        return v
+            parsed = json.loads(self.content)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"`content` is not valid JSON: {e}")
+
+        if not isinstance(parsed, list):
+            raise ValueError("`content` must be a JSON list")
+
+        if not all(isinstance(item, str) for item in parsed):
+            raise ValueError("All items in `content` must be strings")
+
+        if any(item.strip() == "" for item in parsed):
+            raise ValueError("Empty or whitespace-only strings are not allowed in `content`")
+
+        self.content_list = parsed
+        return self
 
 
 ## NOT NEEDED YET - WOULD BE USEFUL TO ADD PYDANTIC VALIDATION TO THE LLM Service 

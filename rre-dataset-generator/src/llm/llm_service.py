@@ -43,7 +43,7 @@ class LLMService:
         # finish_reason = response.response_metadata.get("finish_reason", "unknown")
 
         output = LLMQueryResponse(
-            content_str=response.content,
+            content=response.content,
             # model=model_name,
             # usage={
             #     "prompt_tokens": usage.get("prompt_tokens", 0),
