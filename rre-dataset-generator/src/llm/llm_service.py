@@ -38,17 +38,18 @@ class LLMService:
         response = self.chat_model.invoke(messages)
 
         # Extract token usage and model name from response metadata
-        usage = response.response_metadata.get("token_usage", {})
-        model_name = response.response_metadata.get("model_name", "unknown")
-        finish_reason = response.response_metadata.get("finish_reason", "unknown")
+        # usage = response.response_metadata.get("token_usage", {})
+        # model_name = response.response_metadata.get("model_name", "unknown")
+        # finish_reason = response.response_metadata.get("finish_reason", "unknown")
 
-        return LLMQueryResponse(
-            content=response.content,
-            model=model_name,
-            usage={
-                "prompt_tokens": usage.get("prompt_tokens", 0),
-                "completion_tokens": usage.get("completion_tokens", 0),
-                "total_tokens": usage.get("total_tokens", 0),
-            },
-            finish_reason=finish_reason,
+        output = LLMQueryResponse(
+            content_str=response.content,
+            # model=model_name,
+            # usage={
+            #     "prompt_tokens": usage.get("prompt_tokens", 0),
+            #     "completion_tokens": usage.get("completion_tokens", 0),
+            #     "total_tokens": usage.get("total_tokens", 0),
+            # },
+            # finish_reason=finish_reason,
         )
+        return output

@@ -3,19 +3,25 @@ Pydantic models for the LLM service.
 """
 
 import json
-from typing import Dict
+from typing import Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
+
+def raw_json_str_to_list(x: str) -> List[str]:
+    return 
 
 # Typing the LLM query service output 
 class LLMQueryResponse(BaseModel):
     """Output model for LLM service responses."""
     content: str = Field(..., description="The generated response content")
-    model: str = Field(..., description="The name of the model used for the response")
-    usage: Dict[str, int] = Field(..., description="Token usage for the request")
-    finish_reason: str = Field(
-        ...,
-        description="Reason why the generation stopped (e.g., 'stop', 'length', 'content_filter')"
-    )
+    content_list: List[str] = Field(default_factory=lambda raw_json: json.loads(raw_json))
+
+    # model: str = Field(..., description="The name of the model used for the response")
+    # usage: Dict[str, int] = Field(..., description="Token usage for the request")
+    # finish_reason: str = Field(
+    #     ...,
+    #     description="Reason why the generation stopped (e.g., 'stop', 'length', 'content_filter')"
+    # )
+    # content_json: Optional[str] = Field(None, description="The generated response content as a JSON string")
 
     @field_validator('content')
     def validate_content_is_json_array_of_strings(cls, v: str) -> str:
