@@ -14,7 +14,7 @@ class QuepidWriter(AbstractWriter):
         """
         with open(output_path, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['query', 'doc_id', 'gain'])
+            writer.writerow(['query', 'docid', 'rating'])
 
             # Use the helper method to get all rated query-document pairs
             for query_text, doc_id, rating in self._get_queries_with_ratings():

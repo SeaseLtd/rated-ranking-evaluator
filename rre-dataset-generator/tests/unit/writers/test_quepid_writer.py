@@ -28,7 +28,6 @@ def populated_datastore() -> DataStore:
     return datastore
 
 
-
 @pytest.fixture
 def empty_datastore() -> DataStore:
     """Returns an empty DataStore instance."""
@@ -57,7 +56,7 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'doc_id', 'gain']
+            assert header == ['query', 'docid', 'rating']
 
             rows = set(tuple(row) for row in reader)
             expected_rows = {
@@ -67,7 +66,7 @@ class TestQuepidWriter:
             }
             assert rows == expected_rows
 
-    def test_write_with_empty_datastore_expect_outpufile_written_with_only_header(self, empty_datastore, tmp_path: Path):
+    def test_write_with_empty_datastore_expect_output_file_written_with_only_header(self, empty_datastore, tmp_path: Path):
         """Tests writing from an empty datastore."""
         output_file = tmp_path / "output.csv"
         writer = QuepidWriter(empty_datastore)
@@ -76,12 +75,12 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'doc_id', 'gain']
+            assert header == ['query', 'docid', 'rating']
             # Check that there are no more rows
             with pytest.raises(StopIteration):
                 next(reader)
 
-    def test_write_with_no_rated_documents(self, unrated_datastore, tmp_path: Path):
+    def test_write_with_no_rated_documents_expect_empty_file(self, unrated_datastore, tmp_path: Path):
         """Tests writing when no documents have been rated."""
         output_file = tmp_path / "output.csv"
         writer = QuepidWriter(unrated_datastore)
@@ -90,12 +89,12 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'doc_id', 'gain']
+            assert header == ['query', 'docid', 'rating']
             # Check that there are no more rows
             rows = list(reader)
             assert len(rows) == 0
 
-    def test_write_with_special_characters(self, tmp_path: Path):
+    def test_write_with_special_characters_expect_file_successfully_written(self, tmp_path: Path):
         """Tests writing with special characters in query and doc_id."""
         datastore = DataStore()
         query_text = 'query with "quotes" and a comma,'
@@ -110,16 +109,18 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'doc_id', 'gain']
+            assert header == ['query', 'docid', 'rating']
             rows = list(reader)
             assert len(rows) == 1
             assert rows[0] == [query_text, doc_id, '1']
 
-    def test_write_with_zero_rating(self, tmp_path: Path):
+    def test_write_with_zero_rating_expect_zero_rating_written(self, tmp_path: Path):
         """Tests that a rating of 0 is correctly written."""
         datastore = DataStore()
-        query_id = datastore.add_query("query", "doc1")
-        datastore.add_rating_score(query_id, "doc1", 0)
+        query_text = 'query 1'
+        doc_id = 'doc1'
+        query_id = datastore.add_query(query_text, doc_id)
+        datastore.add_rating_score(query_id, doc_id, 0)
 
         output_file = tmp_path / "output.csv"
         writer = QuepidWriter(datastore)
@@ -128,7 +129,7 @@ class TestQuepidWriter:
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             header = next(reader)
-            assert header == ['query', 'doc_id', 'gain']
+            assert header == ['query', 'docid', 'rating']
             rows = list(reader)
             assert len(rows) == 1
-            assert rows[0] == ["query", "doc1", "0"]
+            assert rows[0] == [query_text, doc_id, '0']
