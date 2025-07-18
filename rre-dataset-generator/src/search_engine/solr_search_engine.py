@@ -19,6 +19,7 @@ class SolrSearchEngine(BaseSearchEngine):
     def __init__(self, endpoint: str):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
+        self.UNIQUE_KEY = requests.get(urljoin(endpoint, 'schema/uniquekey')).json()['uniqueKey']
 
     @staticmethod
     def template_to_json_body(template_payload: str) -> Dict[str, Any]:
@@ -110,10 +111,10 @@ class SolrSearchEngine(BaseSearchEngine):
                 reformat_raw_doc = []
                 for doc in raw_docs:
                      clean_doc = dict()
-                     clean_doc['id'] = doc['id']
+                     clean_doc['id'] = doc[self.UNIQUE_KEY]
                      clean_doc['fields'] = dict()
                      for k, v in doc.items():
-                        if k != 'id':
+                        if k != self.UNIQUE_KEY:
                             if isinstance(v, list):
                                 if isinstance(v[0], str):
                                     clean_doc['fields'][k] = [clean_text(text) for text in v]
