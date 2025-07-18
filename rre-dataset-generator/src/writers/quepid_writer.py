@@ -1,5 +1,4 @@
 import csv
-
 from src.writers.abstract_writer import AbstractWriter
 
 
@@ -20,3 +19,4 @@ class QuepidWriter(AbstractWriter):
             # Use the helper method to get all rated query-document pairs
             for query_text, doc_id, rating in self._get_queries_with_ratings():
                 writer.writerow([query_text, doc_id, rating])
+
