@@ -114,3 +114,21 @@ class TestQuepidWriter:
             rows = list(reader)
             assert len(rows) == 1
             assert rows[0] == [query_text, doc_id, '1']
+
+    def test_write_with_zero_rating(self, tmp_path: Path):
+        """Tests that a rating of 0 is correctly written."""
+        datastore = DataStore()
+        query_id = datastore.add_query("query", "doc1")
+        datastore.add_rating_score(query_id, "doc1", 0)
+
+        output_file = tmp_path / "output.csv"
+        writer = QuepidWriter(datastore)
+        writer.write(str(output_file))
+
+        with open(output_file, 'r', newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            header = next(reader)
+            assert header == ['query', 'docid', 'rating']
+            rows = list(reader)
+            assert len(rows) == 1
+            assert rows[0] == ["query", "doc1", "0"]
