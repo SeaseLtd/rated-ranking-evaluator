@@ -6,10 +6,8 @@ from typing import List, Union
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from src.logger import configure_logging
 from src.model.document import Document
 
-configure_logging(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
