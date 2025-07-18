@@ -13,12 +13,14 @@ class LLMService:
         self.chat_model = chat_model
 
     def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> LLMQueryResponse:
-        """
-        Generate queries based on the given document, returning a structured response.
+        """Generates queries based on the given document.
 
-        :param document: The document to generate queries from.
-        :param num_queries_generate_per_doc: The number of queries to generate.
-        :return: An LLMResponse object with the generated content and metadata.
+        Args:
+            document: The document to generate queries from.
+            num_queries_generate_per_doc: The number of queries to generate.
+
+        Returns:
+            An LLMQueryResponse object containing the generated queries and metadata.
         """
         system_prompt = (
             f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
