@@ -44,16 +44,16 @@ class LLMService:
 
     def generate_scores(self, document: Document, query: str, relevance_scale: str) -> int:
         """
-        Send a test prompt to verify the model returns a response.
+        Generates a relevance score for a given document-query pair using a specified relevance scale.
         """
         if relevance_scale == "binary":
             scale = {0, 1}
-            description = (" - 0: the query is NOT relevant looking at the document"
-                           " - 1: the query is relevant looking at the document")
+            description = (" - 0: the query is NOT relevant to the given document"
+                           " - 1: the query is relevant to the given document")
         elif relevance_scale == "graded":
             scale = {0, 1, 2}
-            description = (" - 0: the query is NOT relevant looking at the document"
-                           " - 1: the query may be relevant looking at the document"
+            description = (" - 0: the query is NOT relevant to the given document"
+                           " - 1: the query may be relevant to the given document"
                            " - 2: the document proposed is the answer to the query")
         else:
             error_msg = "The relevance scale must be either 'binary' or 'graded'"
