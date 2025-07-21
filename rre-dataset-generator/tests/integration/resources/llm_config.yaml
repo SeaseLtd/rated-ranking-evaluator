@@ -1,0 +1,3 @@
+  # tests/integration/resources/llm_config.yaml
+  model: dummy
+  api_key: dummy
