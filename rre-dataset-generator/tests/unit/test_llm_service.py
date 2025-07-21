@@ -33,7 +33,7 @@ def test_llm_service_generate_score():
     )
     query = "Is a Toyota the car of the year?"
 
-    response = service.generate_scores(doc1, query, relevance_scale='binary')
+    response = service.generate_score(doc1, query, relevance_scale='binary')
 
     assert isinstance(response, int)
     assert response == 1
@@ -51,7 +51,7 @@ def test_llm_service_generate_score_expected_return_str():
     )
     query = "Is a Toyota the car of the year?"
     with pytest.raises(ValueError):
-        _ = service.generate_scores(doc1, query, relevance_scale='binary')
+        _ = service.generate_score(doc1, query, relevance_scale='binary')
 
 
 def test_llm_service_generate_score_expected_return_not_valid_int():
@@ -67,4 +67,4 @@ def test_llm_service_generate_score_expected_return_not_valid_int():
     )
     query = "Is a Toyota the car of the year?"
     with pytest.raises(ValueError):
-        _ = service.generate_scores(doc1, query, relevance_scale='binary')
+        _ = service.generate_score(doc1, query, relevance_scale='binary')
