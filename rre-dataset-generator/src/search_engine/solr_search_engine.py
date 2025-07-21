@@ -4,11 +4,9 @@ from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestExce
 from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
 
-from src.logger import configure_logging
 from src.utils import clean_text
 import logging
 
-configure_logging(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 from src.search_engine.search_engine_base import BaseSearchEngine
@@ -21,7 +19,6 @@ class SolrSearchEngine(BaseSearchEngine):
     def __init__(self, endpoint: str):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
-        self.UNIQUE_KEY = requests.get(urljoin(endpoint, 'schema/uniquekey')).json()['uniqueKey']
 
     @staticmethod
     def template_to_json_body(template_payload: str) -> Dict[str, Any]:
@@ -113,10 +110,10 @@ class SolrSearchEngine(BaseSearchEngine):
                 reformat_raw_doc = []
                 for doc in raw_docs:
                      clean_doc = dict()
-                     clean_doc['id'] = doc[self.UNIQUE_KEY]
+                     clean_doc['id'] = doc['id']
                      clean_doc['fields'] = dict()
                      for k, v in doc.items():
-                        if k != self.UNIQUE_KEY:
+                        if k != 'id':
                             if isinstance(v, list):
                                 if isinstance(v[0], str):
                                     clean_doc['fields'][k] = [clean_text(text) for text in v]

@@ -1,5 +1,8 @@
 from typing import Dict, Any
-from pydantic import BaseModel, Field, field_validator, ValidationError
+from pydantic import BaseModel, Field, field_validator
+import logging
+
+log = logging.getLogger(__name__)
 
 class Document(BaseModel):
     """
@@ -14,13 +17,14 @@ class Document(BaseModel):
         ...,
         description="Fields of the document."
     )
-
     @field_validator('fields')
     @classmethod
     def check_no_empty_fields(cls, v: Dict[str, Any]) -> Dict[str, Any]:
         """Validate that the fields dictionary is not empty and its keys are not empty."""
         if not v:
+            log.error('The fields dictionary cannot be empty.')
             raise ValueError('The fields dictionary cannot be empty.')
         if any(not key for key in v.keys()):
+            log.error('Field keys cannot be empty strings.')
             raise ValueError('Field keys cannot be empty strings.')
         return v
