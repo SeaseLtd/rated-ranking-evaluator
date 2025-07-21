@@ -4,7 +4,7 @@ search_engine_collection_endpoint: "http://localhost:8983/solr/testcore"
 documents_filter:
   - title:
       - "and"
-doc_number: 2
+doc_number: 100
 doc_fields:
   - "title"
   - "description"
