@@ -8,3 +8,4 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8983/solr/testcore/admin/ping"]
       interval: 5s
       retries: 10
+
