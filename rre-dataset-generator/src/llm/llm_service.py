@@ -42,7 +42,7 @@ class LLMService:
             log.warning("LLM hallucinated and its response: %s", raw)
             return raw
 
-    def generate_scores(self, document: Document, query: str, relevance_scale: str) -> int:
+    def generate_score(self, document: Document, query: str, relevance_scale: str) -> int:
         """
         Generates a relevance score for a given document-query pair using a specified relevance scale.
         """
@@ -66,7 +66,7 @@ class LLMService:
                         f"text, you need to return the relevance score in a scale called {relevance_scale.upper()}. The "
                         f"scores of this scale are built as follows:\n{description}\n"
                         f"Knowing this, return a JSON object with key 'score' and the related score as an integer value."
-                        f"I'm expecting a response like the following: {{\"score\": `integer`}}"
+                        f"I'm expecting a JSON response like the following: {{\"score\": `integer`}}"
             ),
             HumanMessage(
                 content=f"Document: {document.model_dump_json()}\n"

@@ -29,7 +29,7 @@ class MockResponse:
         }
 
 def test_solr_search_engine(monkeypatch):
-    config = Config.load("tests/unit/resources/solr_config.yaml")
+    config = Config.load("tests/unit/resources/good_config.yaml")
     search_engine = SolrSearchEngine("https://fakeurl")
 
     mock_doc = {
