@@ -9,6 +9,7 @@ class BaseSearchEngine(ABC):
         validated = EndpointValidator(endpoint=endpoint)
         self.endpoint = validated.endpoint
         self.PLACEHOLDER = "#$query##"
+        self.UNIQUE_KEY = 'id'
 
     @abstractmethod
     def fetch_for_query_generation(self,
@@ -29,6 +30,6 @@ class BaseSearchEngine(ABC):
         pass
 
     @abstractmethod
-    def search(self, payload: Dict[str, Any], doc_fields: List[str]) -> List[Document]:
+    def search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
         pass
