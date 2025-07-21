@@ -31,6 +31,6 @@ class BaseSearchEngine(ABC):
         pass
 
     @abstractmethod
-    def search(self, payload: Dict[str, Any], doc_fields: List[str]) -> List[Document]:
+    def search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
         pass

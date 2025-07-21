@@ -7,6 +7,7 @@ import json
 import logging
 
 from src.model.document import Document
+from typing import Union, List
 
 log = logging.getLogger(__name__)
 
