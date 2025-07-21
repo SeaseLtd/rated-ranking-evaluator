@@ -1,10 +1,9 @@
-import json
-import logging
 from json import JSONDecodeError
-from typing import List, Union
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
+import json
+import logging
 
 from src.model.document import Document
 
@@ -42,3 +41,48 @@ class LLMService:
         except JSONDecodeError:
             log.warning("LLM hallucinated and its response: %s", raw)
             return raw
+
+    def generate_scores(self, document: Document, query: str, relevance_scale: str) -> int:
+        """
+        Send a test prompt to verify the model returns a response.
+        """
+        if relevance_scale == "binary":
+            scale = {0, 1}
+            description = (" - 0: the query is NOT relevant looking at the document"
+                           " - 1: the query is relevant looking at the document")
+        elif relevance_scale == "graded":
+            scale = {0, 1, 2}
+            description = (" - 0: the query is NOT relevant looking at the document"
+                           " - 1: the query may be relevant looking at the document"
+                           " - 2: the document proposed is the answer to the query")
+        else:
+            error_msg = "The relevance scale must be either 'binary' or 'graded'"
+            log.error(error_msg)
+            raise ValueError(error_msg)
+
+        messages = [
+            SystemMessage(
+                content=f"You are a professional data labeler and, given a documents with a set of fields and a query "
+                        f"text, you need to return the relevance score in a scale called {relevance_scale.upper()}. The "
+                        f"scores of this scale are built as follows:\n{description}\n"
+                        f"Knowing this, return a JSON object with key 'score' and the related score as an integer value."
+            ),
+            HumanMessage(
+                content=f"Document: {document.model_dump_json()}\n"
+                        f"Query:{query}\n"
+            )
+        ]
+
+        #response = self.chat_model.with_structured_output(method="json_mode").invoke(messages)
+        raw = self.chat_model.invoke(messages).content.strip()
+        try:
+            response =  int(json.loads(raw)['score'])
+            if response not in scale:
+                error_msg = f"LLM hallucinated the value of the scale. Returned: {response}"
+                log.warning(error_msg)
+                raise ValueError(error_msg)
+            return response
+        except JSONDecodeError:
+            error_msg = f"LLM hallucinated and its response: {raw}"
+            log.warning(error_msg)
+            raise ValueError(error_msg)
