@@ -7,7 +7,7 @@ class EndpointValidator(BaseModel):
     endpoint: HttpUrl
 
 class BaseSearchEngine(ABC):
-    def __init__(self, endpoint: str):
+    def __init__(self, endpoint: HttpUrl):
         validated = EndpointValidator(endpoint=endpoint)
         self.endpoint = validated.endpoint
         self.PLACEHOLDER = "#$query##"

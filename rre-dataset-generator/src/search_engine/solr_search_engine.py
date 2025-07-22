@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
 import requests
+from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
@@ -16,7 +17,7 @@ class SolrSearchEngine(BaseSearchEngine):
     """
     Solr implementation to search into a given collection
     """
-    def __init__(self, endpoint: str):
+    def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
 
