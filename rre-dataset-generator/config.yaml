@@ -2,25 +2,25 @@
 # dataset-generator module
 # Default: "q=#$query##"
 # Example (solr):
-query_template: "q=#$query##&fq=genre:horror&wt=json"
+query_template: "q=#$query##&df=description&rows=3&q.op=OR&wt=json"
 
 # The type of search engine to use
 # Accepted values: solr, elasticsearch, opensearch, vespa
 search_engine_type: "solr"
 
 # Endpoint URL of the search engine collection or index
-search_engine_collection_endpoint: "http://localhost:8983/solr/mycore"
+search_engine_collection_endpoint: "http://localhost:8983/solr/testcore"
 
 # (Optional) Filter query to restrict the set of documents used to generate queries.
 # If a field has more than one value, the documents retrieved have at least one of the values in the field (OR-
 # -like). If there are more than one fields, the documents are filtered for both fields (AND-like)
 # Default: all documents are considered and no filter is applied
-documents_filter:
-  - genre:
-      - "horror"
-      - "fantasy"
-  - type:
-      - "book"
+#documents_filter:
+#  - genre:
+#      - "horror"
+#      - "fantasy"
+#  - type:
+#      - "book"
 
 # Maximum number of documents to retrieve from the search engine to generate queries
 doc_number: 5
@@ -34,14 +34,14 @@ doc_fields:
 
 # (Optional) File containing predefined queries to use instead of or alongside generated ones
 # If available, must be in a txt format.
-queries: "queries.txt"
+#queries: "queries.txt"
 
 # (Optional) Whether to generate queries from documents
 # Default: true; set to false to disable query generation from documents
 generate_queries_from_documents: true
 
 # Total number of queries to generate (includes predefined queries, if any)
-num_queries_needed: 10
+num_queries_needed: 4
 
 # Relevance scale used for scoring document relevance
 # Accepted values:
@@ -57,4 +57,4 @@ llm_configuration_file: "llm_config.yaml"
 output_format: "quepid"
 
 # Path where the output dataset will be saved
-output_destination: "output/generated_dataset.json"
+output_destination: "generated_dataset.csv"

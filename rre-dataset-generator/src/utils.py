@@ -21,11 +21,3 @@ def parse_args():
 def clean_text(text: str) -> str:
     text_without_html = re.sub(_TAG_REGEX, '', text).strip()
     return html.unescape(re.sub(r"\s{2,}", " ", text_without_html))
-
-def count_non_empty_lines(file_path: Path) -> int:
-    count = 0
-    with open(file_path, 'r', encoding='utf-8') as file:
-        for line in file:
-            if line.strip():  # Strip removes whitespace; if anything remains, it's a non-empty line
-                count += 1
-    return count
