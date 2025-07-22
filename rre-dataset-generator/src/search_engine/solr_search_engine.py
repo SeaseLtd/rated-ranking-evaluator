@@ -86,7 +86,7 @@ class SolrSearchEngine(BaseSearchEngine):
 
     def search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
-        search_url = urljoin(str(self.endpoint), 'select')
+        search_url = urljoin(str(self.endpoint)+'/', 'select')
 
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
