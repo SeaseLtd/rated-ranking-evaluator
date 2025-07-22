@@ -23,7 +23,7 @@ documents_filter:
       - "book"
 
 # Maximum number of documents to retrieve from the search engine to generate queries
-doc_number: 100
+doc_number: 5
 
 # List of fields from documents used to generate queries and relevance scoring
 # These should match fields available in the search engine schema
