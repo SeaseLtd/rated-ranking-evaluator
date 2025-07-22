@@ -67,7 +67,7 @@ if __name__ == "__main__":
                                                        query_template=config.query_template,
                                                        doc_fields=config.doc_fields)
         for doc in docs_eval:
-            if data_store.has_document(doc.id):
+            if not data_store.has_document(doc.id):
                 data_store.add_document(doc.id, doc)
             data_store.add_query(query_text, doc.id)
 
@@ -77,13 +77,13 @@ if __name__ == "__main__":
                                                        query_template=config.query_template,
                                                        doc_fields=config.doc_fields)
         for doc in docs_eval:
-            if data_store.has_document(doc.id):
+            if not data_store.has_document(doc.id):
                 data_store.add_document(doc.id, doc)
             data_store.add_query(query_rating_context.get_query(), doc.id)
 
     log.debug(f"Number of documents evaluated: {len(docs_to_generate_queries)}")
-    for query_rating_context in data_store.get_queries(): #query: 1
-        for doc in data_store.get_documents(): #doc: 1, 2
+    for query_rating_context in data_store.get_queries():
+        for doc in data_store.get_documents():
             data_store.add_query(query_rating_context.get_query(), doc.id)
 
     # loop looking at all docs not rated in the data_store for that query
