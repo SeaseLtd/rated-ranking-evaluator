@@ -23,7 +23,7 @@ class LLMService:
         """
         system_prompt = (
             f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
-            "keyword-phrase-based queries based on the given document below. "
+            "queries based on the given document below. " #keyword-phrase-based
             "**Output only** a JSON array of strings—nothing else. "
             "Example format: [\"first query\", \"second query\"]"
         )

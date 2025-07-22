@@ -3,11 +3,9 @@ from __future__ import annotations
 import logging
 from typing import Dict, List, Optional
 
-from src.logger import configure_logging
 from src.model.document import Document
 from src.model.query_rating_context import QueryRatingContext
 
-configure_logging(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
