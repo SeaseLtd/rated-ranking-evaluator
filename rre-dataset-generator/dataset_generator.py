@@ -1,13 +1,18 @@
-from src.config import Config
+# configuration params
 from src.utils import parse_args
-
-from src.search_engine.solr_search_engine import SolrSearchEngine
+from src.config import Config
 from src.llm.llm_service import LLMService
-from src.llm.llm_provider_factory import build_openai
 from src.llm.llm_config import LLMConfig
-from src.search_engine.data_store import DataStore
-from src.writers import QuepidWriter
 
+# data structures
+from src.search_engine.data_store import DataStore
+
+# build factories
+from src.search_engine import build_search_engine
+from src.llm.llm_provider_factory import build_chat_model
+from src.writers import build_writer
+
+# logging
 from src.logger import configure_logging
 import logging
 
@@ -16,10 +21,6 @@ if __name__ == "__main__":
     args = parse_args()
 
     config = Config.load(args.config_file)
-    if args.verbose:
-        configure_logging(logging.DEBUG)
-    else:
-        configure_logging(logging.INFO)
 
     if args.verbose:
         configure_logging(logging.DEBUG)
@@ -27,7 +28,7 @@ if __name__ == "__main__":
         configure_logging(logging.INFO)
     log = logging.getLogger(__name__)
 
-    search_engine = SolrSearchEngine(str(config.search_engine_collection_endpoint))
+    search_engine = build_search_engine(config.search_engine_type, config.search_engine_collection_endpoint)
     data_store = DataStore()
 
     user_queries = []
@@ -42,7 +43,7 @@ if __name__ == "__main__":
                                                                         doc_number=config.doc_number,
                                                                         doc_fields=config.doc_fields)
     log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
-    llm = build_openai(LLMConfig.load(config.llm_configuration_file))
+    llm = build_chat_model(LLMConfig.load(config.llm_configuration_file))
     service = LLMService(chat_model=llm)
 
     num_queries_per_doc = int(( (config.num_queries_needed - len(user_queries)) // config.doc_number) * 1.5)
@@ -61,26 +62,6 @@ if __name__ == "__main__":
         if flag:
             break
 
-    # retrieval of the document we need to store for user queries
-    for query_text in user_queries:
-        docs_eval = search_engine.fetch_for_evaluation(keyword=query_text,
-                                                       query_template=config.query_template,
-                                                       doc_fields=config.doc_fields)
-        for doc in docs_eval:
-            if not data_store.has_document(doc.id):
-                data_store.add_document(doc.id, doc)
-            data_store.add_query(query_text, doc.id)
-
-    # retrieval of the document we need to store for generated queries
-    for query_rating_context in data_store.get_queries():
-        docs_eval = search_engine.fetch_for_evaluation(keyword=query_rating_context.get_query(),
-                                                       query_template=config.query_template,
-                                                       doc_fields=config.doc_fields)
-        for doc in docs_eval:
-            if not data_store.has_document(doc.id):
-                data_store.add_document(doc.id, doc)
-            data_store.add_query(query_rating_context.get_query(), doc.id)
-
     log.debug(f"Number of documents evaluated: {len(docs_to_generate_queries)}")
     for query_rating_context in data_store.get_queries():
         for doc in data_store.get_documents():
@@ -97,12 +78,7 @@ if __name__ == "__main__":
                                             doc_id,
                                             score)
 
-    if config.output_format == 'quepid':
-        writer = QuepidWriter(data_store)
-        writer.write(config.output_destination)
-    else:
-        error_msg = "Other format than 'quepid' are not yet supported"
-        log.error(error_msg)
-        raise NotImplementedError(error_msg)
+    writer = build_writer(config.output_format, data_store)
+    writer.write(config.output_destination)
 
     log.info(f"Synthetic Dataset has been generated in: {config.output_destination}")
