@@ -61,15 +61,14 @@ if __name__ == "__main__":
         if flag:
             break
 
-    all_docs = docs_to_generate_queries
     # retrieval of the document we need to store for user queries
     for query_text in user_queries:
         docs_eval = search_engine.fetch_for_evaluation(keyword=query_text,
                                                        query_template=config.query_template,
                                                        doc_fields=config.doc_fields)
-        all_docs.extend(docs_eval)
         for doc in docs_eval:
-            data_store.add_document(doc.id, doc)
+            if data_store.has_document(doc.id):
+                data_store.add_document(doc.id, doc)
             data_store.add_query(query_text, doc.id)
 
     # retrieval of the document we need to store for generated queries
@@ -77,14 +76,14 @@ if __name__ == "__main__":
         docs_eval = search_engine.fetch_for_evaluation(keyword=query_rating_context.get_query(),
                                                        query_template=config.query_template,
                                                        doc_fields=config.doc_fields)
-        all_docs.extend(docs_eval)
         for doc in docs_eval:
-            data_store.add_document(doc.id, doc)
+            if data_store.has_document(doc.id):
+                data_store.add_document(doc.id, doc)
             data_store.add_query(query_rating_context.get_query(), doc.id)
 
     log.debug(f"Number of documents evaluated: {len(docs_to_generate_queries)}")
     for query_rating_context in data_store.get_queries(): #query: 1
-        for doc in all_docs: #doc: 1, 2
+        for doc in data_store.get_documents(): #doc: 1, 2
             data_store.add_query(query_rating_context.get_query(), doc.id)
 
     # loop looking at all docs not rated in the data_store for that query
@@ -100,7 +99,7 @@ if __name__ == "__main__":
 
     if config.output_format == 'quepid':
         writer = QuepidWriter(data_store)
-        writer.write(str(config.output_destination))
+        writer.write(config.output_destination)
     else:
         error_msg = "Other format than 'quepid' are not yet supported"
         log.error(error_msg)
