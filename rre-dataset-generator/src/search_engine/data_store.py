@@ -39,11 +39,23 @@ class DataStore:
             raise KeyError(f"Document id '{doc_id}' found in DataStore")
         self._documents[doc_id] = document
 
+    def has_document(self, doc_id: str) -> bool:
+        """
+        Returns True if Document with the given id exists, False otherwise.
+        """
+        return doc_id in self._documents
+
     def get_document(self, doc_id: str) -> Optional[Document]:
         """
         Returns Document or None.
         """
         return self._get_document(doc_id)
+
+    def get_documents(self) -> List[Document]:
+        """
+        Returns a list of Document.
+        """
+        return list(self._documents.values())
 
     def add_query(self, query: str, doc_id: str) -> str:
         """
