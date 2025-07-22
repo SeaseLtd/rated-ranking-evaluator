@@ -23,7 +23,7 @@ search_engine_collection_endpoint: "http://localhost:8983/solr/testcore"
 #      - "book"
 
 # Maximum number of documents to retrieve from the search engine to generate queries
-doc_number: 5
+doc_number: 2
 
 # List of fields from documents used to generate queries and relevance scoring
 # These should match fields available in the search engine schema
