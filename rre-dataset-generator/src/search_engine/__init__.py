@@ -15,4 +15,4 @@ def build_search_engine(search_engine_type: str, endpoint: HttpUrl) -> BaseSearc
         log.error("Unsupported search engine requested: %s", search_engine_type)
         raise ValueError(f"Unsupported search engine: {search_engine_type}")
     log.info("Searching in %s at endpoint : %s", search_engine_type.upper(), endpoint)
-    return SEARCH_ENGINE_REGISTRY[search_engine_type](str(endpoint))
+    return SEARCH_ENGINE_REGISTRY[search_engine_type](endpoint)
