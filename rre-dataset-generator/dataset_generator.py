@@ -9,7 +9,7 @@ from src.search_engine.data_store import DataStore
 
 # build factories
 from src.search_engine import build_search_engine
-from src.llm.llm_provider_factory import build_chat_model
+from src.llm import build_chat_model
 from src.writers import build_writer
 
 # logging
@@ -28,7 +28,8 @@ if __name__ == "__main__":
         configure_logging(logging.INFO)
     log = logging.getLogger(__name__)
 
-    search_engine = build_search_engine(config.search_engine_type, config.search_engine_collection_endpoint)
+    search_engine = build_search_engine(search_engine_type=config.search_engine_type,
+                                        endpoint=config.search_engine_collection_endpoint)
     data_store = DataStore()
 
     user_queries = []
