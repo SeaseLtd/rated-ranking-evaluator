@@ -1,5 +1,5 @@
 from json import JSONDecodeError
-from typing import Union, List
+from typing import List, Union
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
