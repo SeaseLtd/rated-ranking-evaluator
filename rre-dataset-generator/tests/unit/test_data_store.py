@@ -4,7 +4,10 @@ from src.search_engine.data_store import DataStore
 
 
 def test_add_and_get_document_expect_documents_stored_in_data_store():
-    data_store = DataStore()  # ← nuevo store para aislamiento
+    # CHANGED - now the DataStore get's refreshed for each fn and it's not shared
+    ## NOTE: this can be generalized with pytest fixtures, but since there only 3 test fns, we can keep it simple for now
+    data_store = DataStore()  
+    
 
     doc1 = Document(
         id="doc1",
