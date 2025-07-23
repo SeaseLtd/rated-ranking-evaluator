@@ -24,8 +24,7 @@ class SolrSearchEngine(BaseSearchEngine):
         self.UNIQUE_KEY = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/uniquekey')).json()['uniqueKey']
         log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
 
-    @staticmethod
-    def template_to_json_body(template_payload: str) -> Dict[str, Any]:
+    def _template_to_json_payload(self, template_payload: str) -> Dict[str, Any]:
         """
         Converts a Solr query string into a structured JSON body.
 
@@ -78,17 +77,17 @@ class SolrSearchEngine(BaseSearchEngine):
                         clause = f'{field}:({or_values})'
                     payload['params']['fq'].append(clause)
 
-        return self.search(payload)
+        return self._search(payload)
 
     def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
         """Search for documents using a query."""
         template = query_template.replace(self.PLACEHOLDER, keyword)
-        payload = self.template_to_json_body(template)
+        payload = self._template_to_json_payload(template)
         # here fl is overwritten, even if in the template there are other fields in the 'fl' key
         payload['params']['fl'] = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
-        return self.search(payload)
+        return self._search(payload)
 
-    def search(self, payload: Dict[str, Any]) -> List[Document]:
+    def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
         search_url = urljoin(self.endpoint.encoded_string(), 'select')
 

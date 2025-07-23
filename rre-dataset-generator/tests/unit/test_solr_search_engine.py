@@ -68,7 +68,9 @@ def test_solr_search_engine_negative_post(monkeypatch):
                 doc_fields=config.doc_fields
             )
 
-def test_template_to_json_body():
+def test_template_to_json_payload(monkeypatch):
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="id"))
+    solr_engine = SolrSearchEngine("https://fakeurl")
     template = 'q=ghosts&fq=genre:horror&wt=json'
     expected_payload = {
         'query': 'ghosts',
@@ -77,7 +79,7 @@ def test_template_to_json_body():
             'wt': 'json'
         }
     }
-    assert SolrSearchEngine.template_to_json_body(template) == expected_payload
+    assert solr_engine._template_to_json_payload(template) == expected_payload
 
     template = 'q=do we have ghosts&fq=genre:horror&wt=json'
     expected_payload = {
@@ -87,7 +89,7 @@ def test_template_to_json_body():
             'wt': 'json'
         }
     }
-    assert SolrSearchEngine.template_to_json_body(template) == expected_payload
+    assert solr_engine._template_to_json_payload(template) == expected_payload
 
     template = 'q="ghosts"&fq=genre:horror&wt=json'
     expected_payload = {
@@ -97,7 +99,7 @@ def test_template_to_json_body():
             'wt': 'json'
         }
     }
-    assert SolrSearchEngine.template_to_json_body(template) == expected_payload
+    assert solr_engine._template_to_json_payload(template) == expected_payload
 
     template = 'q=ghosts?&fq=genre:horror&wt=json'
     expected_payload = {
@@ -107,7 +109,7 @@ def test_template_to_json_body():
             'wt': 'json'
         }
     }
-    assert SolrSearchEngine.template_to_json_body(template) == expected_payload
+    assert solr_engine._template_to_json_payload(template) == expected_payload
 
 def test_solr_search_engine_bad_url():
     with pytest.raises(ValidationError):

@@ -28,6 +28,6 @@ class BaseSearchEngine(ABC):
         pass
 
     @abstractmethod
-    def search(self, payload: Dict[str, Any]) -> List[Document]:
+    def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
         pass
