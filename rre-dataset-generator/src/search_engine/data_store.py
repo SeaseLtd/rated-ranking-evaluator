@@ -139,9 +139,8 @@ class DataStore:
             data = json.load(f)
 
         for item in data:
-            # Creamos el contexto sin pasar doc_id inicial (lo añadimos luego)
             context = QueryRatingContext(item["query_text"], doc_id=None)
-            context._id = item["query_id"]  # PELIGRO: depende del diseño, puedes usar un setter mejor
+            context._id = item["query_id"] 
             for doc_id in item["doc_ids"]:
                 context.add_doc_id(doc_id)
             self._queries_by_id[context.get_query_id()] = context
@@ -164,7 +163,7 @@ class DataStore:
                         "score": score
                     })
                 except KeyError:
-                    continue  # No rating score available
+                    continue
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(triples, f, indent=2)
 
