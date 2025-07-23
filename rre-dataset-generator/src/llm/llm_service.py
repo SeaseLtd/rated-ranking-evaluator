@@ -42,7 +42,12 @@ class LLMService:
         # The response from invoke is an AIMessage object which contains all the needed info
         response = self.chat_model.invoke(messages)
 
-        output = LLMQueryResponse(content=response.content)
+        try:
+           output = LLMQueryResponse(content=response.content)
+        except (KeyError, JSONDecodeError, ValueError) as e:
+            log.warning(f"LLM unexpected response. Raw output: {response.content}")
+            raise ValueError(f"Invalid LLM response: {e}")
+
         return output
     
 
@@ -78,7 +83,7 @@ class LLMService:
         try:
             parsed = LLMScoreResponse(score=json.loads(raw)['score'])
         except (KeyError, JSONDecodeError, ValueError) as e:
-            log.warning(f"LLM hallucinated. Raw output: {raw}")
+            log.warning(f"LLM unexpected response. Raw output: {raw}")
             raise ValueError(f"Invalid LLM response: {e}")
 
         if parsed.score not in allowed:
