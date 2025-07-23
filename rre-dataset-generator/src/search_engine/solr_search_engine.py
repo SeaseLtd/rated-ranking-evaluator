@@ -119,8 +119,13 @@ class SolrSearchEngine(BaseSearchEngine):
                      for k, v in doc.items():
                         if k != self.UNIQUE_KEY:
                             if isinstance(v, list):
-                                if isinstance(v[0], str):
-                                    clean_doc['fields'][k] = [clean_text(text) for text in v]
+                                if v:
+                                    if isinstance(v[0], str):
+                                        clean_doc['fields'][k] = [clean_text(text) for text in v]
+                                    else:
+                                        clean_doc['fields'][k] = v
+                                else:
+                                    log.warning(f"The field {k} is empty, skipped.")
                             else:
                                 clean_doc['fields'][k] = v
                      reformat_raw_doc.append(Document(**clean_doc))
