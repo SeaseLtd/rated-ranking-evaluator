@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import logging
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from src.model.document import Document
@@ -8,16 +10,15 @@ from src.model.query_rating_context import QueryRatingContext
 
 log = logging.getLogger(__name__)
 
-
 class DataStore:
     """
     Stores/retrieves documents, queries, and rating scores.
     """
 
     def __init__(self):
-        self._documents: Dict[str, Document] = {}  # doc_id -> Document
+        self._documents: Dict[str, Document] = {}                # doc_id -> Document
         self._queries_by_id: Dict[str, QueryRatingContext] = {}  # query_id → QueryRatingContext
-        self._query_text_to_query_id: Dict[str, str] = {}  # query_text -> query_id
+        self._query_text_to_query_id: Dict[str, str] = {}        # query_text -> query_id
 
     def _get_query_rating_context_by_id(self, query_id: str) -> QueryRatingContext:
         if query_id not in self._queries_by_id:
@@ -33,7 +34,7 @@ class DataStore:
 
     def add_document(self, doc_id: str, document: Document) -> None:
         if doc_id in self._documents:
-            log.error("Document  id %s found in DataStore", doc_id)
+            log.error("Document id %s already exists in DataStore", doc_id)
             raise KeyError(f"Document id '{doc_id}' found in DataStore")
         self._documents[doc_id] = document
 
@@ -45,13 +46,13 @@ class DataStore:
 
     def get_document(self, doc_id: str) -> Optional[Document]:
         """
-        Returns Document or None.
+        Returns the Document with the given ID, or None if not found.
         """
         return self._get_document(doc_id)
 
     def get_documents(self) -> List[Document]:
         """
-        Returns a list of Document.
+        Returns a list of Document objects."
         """
         return list(self._documents.values())
 
@@ -111,4 +112,136 @@ class DataStore:
         """
         context = self._get_query_rating_context_by_id(query_id)
         return context.has_rating_score(doc_id)
+
+    def save_queries_and_docs(self, filepath: str | Path) -> None:
+        """
+        Saves all query contexts to a JSON file.
+        """
+        data = [
+            {
+                "query_id": ctx.get_query_id(),
+                "query_text": ctx._query,
+                "doc_ids": ctx.get_doc_ids()
+            }
+            for ctx in self._queries_by_id.values()
+        ]
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+
+    def load_queries_and_docs(self, filepath: str | Path) -> None:
+        """
+        Loads query contexts from a JSON file.
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for item in data:
+            context = QueryRatingContext(item["query_text"])
+            context.query_id = item["query_id"]  # Assumes this attribute is settable
+            context.doc_ids = item["doc_ids"]
+            self._queries_by_id[context.get_query_id()] = context
+            self._query_text_to_query_id[context.query] = context.get_query_id()
+
+
+    def save_rating_triples(self, filepath: str | Path) -> None:
+        """
+        Saves all rating triples to a JSON file.
+        """
+        triples = []
+        for ctx in self._queries_by_id.values():
+            qid = ctx.get_query_id()
+            for doc_id, score in ctx.rating_scores.items():
+                triples.append({
+                    "query_id": qid,
+                    "doc_id": doc_id,
+                    "score": score
+                })
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(triples, f, indent=2)
+
+
+    def load_rating_triples(self, filepath: str | Path) -> None:
+        """
+        Loads rating triples from a JSON file and updates existing query contexts.
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            triples = json.load(f)
+        for triple in triples:
+            query_id = triple["query_id"]
+            doc_id = triple["doc_id"]
+            score = triple["score"]
+            if query_id not in self._queries_by_id:
+                raise ValueError(f"Query ID {query_id} not found when loading triples.")
+            self._queries_by_id[query_id].add_rating_score(doc_id, score)
+
+    def save_queries_and_docs(self, filepath: str | Path) -> None:
+        """
+        Saves all query contexts (query_id, text, doc_ids) to a JSON file.
+        """
+        data = [
+            {
+                "query_id": ctx.get_query_id(),
+                "query_text": ctx.get_query(),
+                "doc_ids": ctx.get_doc_ids()
+            }
+            for ctx in self._queries_by_id.values()
+        ]
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+
+    def load_queries_and_docs(self, filepath: str | Path) -> None:
+        """
+        Loads query contexts from a JSON file. Reconstructs query_id, query text, and associated doc_ids.
+        NOTE: This assumes QueryRatingContext has a way to inject existing query_id and doc_ids.
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        for item in data:
+            # Creamos el contexto sin pasar doc_id inicial (lo añadimos luego)
+            context = QueryRatingContext(item["query_text"], doc_id=None)
+            context._id = item["query_id"]  # PELIGRO: depende del diseño, puedes usar un setter mejor
+            for doc_id in item["doc_ids"]:
+                context.add_doc_id(doc_id)
+            self._queries_by_id[context.get_query_id()] = context
+            self._query_text_to_query_id[context.get_query()] = context.get_query_id()
+
+
+    def save_rating_triples(self, filepath: str | Path) -> None:
+        """
+        Saves all (query_id, doc_id, score) triples to a JSON file.
+        """
+        triples = []
+        for ctx in self._queries_by_id.values():
+            qid = ctx.get_query_id()
+            for doc_id in ctx.get_doc_ids():
+                try:
+                    score = ctx.get_rating_score(doc_id)
+                    triples.append({
+                        "query_id": qid,
+                        "doc_id": doc_id,
+                        "score": score
+                    })
+                except KeyError:
+                    continue  # No rating score available
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(triples, f, indent=2)
+
+
+    def load_rating_triples(self, filepath: str | Path) -> None:
+        """
+        Loads rating triples from a JSON file and updates existing QueryRatingContext entries.
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            triples = json.load(f)
+
+        for triple in triples:
+            query_id = triple["query_id"]
+            doc_id = triple["doc_id"]
+            score = triple["score"]
+            if query_id not in self._queries_by_id:
+                raise ValueError(f"Query ID {query_id} not found when loading triples.")
+            self._queries_by_id[query_id].add_rating_score(doc_id, score)
+
 
