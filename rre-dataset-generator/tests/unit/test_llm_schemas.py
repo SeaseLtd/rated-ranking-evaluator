@@ -1,5 +1,6 @@
 import pytest
 from src.model.llm_schemas import LLMQueryResponse
+from pydantic import ValidationError
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Test cases: valid inputs
@@ -34,11 +35,11 @@ def test_list_with_non_string_elements():
         LLMQueryResponse(content='["valid", 123, true]')
 
 def test_list_with_empty_string():
-    with pytest.raises(ValueError, match="Empty or whitespace-only"):
+    with pytest.raises(ValidationError, match="must not be empty or only whitespace"):
         LLMQueryResponse(content='["valid", ""]')
 
 def test_list_with_whitespace_only_string():
-    with pytest.raises(ValueError, match="Empty or whitespace-only"):
+    with pytest.raises(ValidationError, match="must not be empty or only whitespace"):
         LLMQueryResponse(content='["okay", "    "]')
 
 # ─────────────────────────────────────────────────────────────────────────────
