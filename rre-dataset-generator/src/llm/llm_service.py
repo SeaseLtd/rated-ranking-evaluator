@@ -1,9 +1,12 @@
-import logging
+from json import JSONDecodeError
+
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
+from src.model.llm_schemas import LLMQueryResponse
+import json
+import logging
 
 from src.model.document import Document
-from src.model.llm_schemas import LLMQueryResponse
 
 log = logging.getLogger(__name__)
 
@@ -39,19 +42,52 @@ class LLMService:
         # The response from invoke is an AIMessage object which contains all the needed info
         response = self.chat_model.invoke(messages)
 
-        # Extract token usage and model name from response metadata
-        # usage = response.response_metadata.get("token_usage", {})
-        # model_name = response.response_metadata.get("model_name", "unknown")
-        # finish_reason = response.response_metadata.get("finish_reason", "unknown")
-
-        output = LLMQueryResponse(
-            content=response.content,
-            # model=model_name,
-            # usage={
-            #     "prompt_tokens": usage.get("prompt_tokens", 0),
-            #     "completion_tokens": usage.get("completion_tokens", 0),
-            #     "total_tokens": usage.get("total_tokens", 0),
-            # },
-            # finish_reason=finish_reason,
-        )
+        output = LLMQueryResponse(content=response.content)
         return output
+    
+
+    def generate_score(self, document: Document, query: str, relevance_scale: str) -> int:
+        """
+        Generates a relevance score for a given document-query pair using a specified relevance scale.
+        """
+        if relevance_scale == "binary":
+            scale = {0, 1}
+            description = (" - 0: the query is NOT relevant to the given document"
+                           " - 1: the query is relevant to the given document")
+        elif relevance_scale == "graded":
+            scale = {0, 1, 2}
+            description = (" - 0: the query is NOT relevant to the given document"
+                           " - 1: the query may be relevant to the given document"
+                           " - 2: the document proposed is the answer to the query")
+        else:
+            error_msg = "The relevance scale must be either 'binary' or 'graded'"
+            log.error(error_msg)
+            raise ValueError(error_msg)
+
+        messages = [
+            SystemMessage(
+                content=f"You are a professional data labeler and, given a documents with a set of fields and a query "
+                        f"text, you need to return the relevance score in a scale called {relevance_scale.upper()}. The "
+                        f"scores of this scale are built as follows:\n{description}\n"
+                        f"Knowing this, return a JSON object with key 'score' and the related score as an integer value."
+                        f"I'm expecting a JSON response like the following: {{\"score\": `integer`}}"
+            ),
+            HumanMessage(
+                content=f"Document: {document.model_dump_json()}\n"
+                        f"Query:{query}\n"
+            )
+        ]
+
+        #response = self.chat_model.with_structured_output(method="json_mode").invoke(messages)
+        raw = self.chat_model.invoke(messages).content.strip()
+        try:
+            response =  int(json.loads(raw)['score'])
+            if response not in scale:
+                error_msg = f"LLM hallucinated the value of the scale. Returned: {response}"
+                log.warning(error_msg)
+                raise ValueError(error_msg)
+            return response
+        except JSONDecodeError:
+            error_msg = f"LLM hallucinated and its response: {raw}"
+            log.warning(error_msg)
+            raise ValueError(error_msg)
