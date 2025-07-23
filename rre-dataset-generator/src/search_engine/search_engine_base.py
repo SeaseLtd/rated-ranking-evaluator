@@ -1,13 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Union
-from pydantic import HttpUrl, BaseModel
+from pydantic import HttpUrl
 from src.model.document import Document
-class EndpointValidator(BaseModel):
-    endpoint: HttpUrl
+
 class BaseSearchEngine(ABC):
-    def __init__(self, endpoint: str):
-        validated = EndpointValidator(endpoint=endpoint)
-        self.endpoint = validated.endpoint
+    def __init__(self, endpoint: HttpUrl | str):
+        self.endpoint = HttpUrl(endpoint)
         self.PLACEHOLDER = "#$query##"
         self.UNIQUE_KEY = 'id'
 

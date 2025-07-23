@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
 import requests
+from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
@@ -16,10 +17,12 @@ class SolrSearchEngine(BaseSearchEngine):
     """
     Solr implementation to search into a given collection
     """
-    def __init__(self, endpoint: str):
+    def __init__(self, endpoint: HttpUrl | str):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
-        self.UNIQUE_KEY = requests.get(urljoin(endpoint, 'schema/uniquekey')).json()['uniqueKey']
+        log.debug(f"Working on endpoint: {self.endpoint}")
+        self.UNIQUE_KEY = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/uniquekey')).json()['uniqueKey']
+        log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
 
     @staticmethod
     def template_to_json_body(template_payload: str) -> Dict[str, Any]:
@@ -58,7 +61,7 @@ class SolrSearchEngine(BaseSearchEngine):
             'query': '*:*',
             'params': {
                 'rows': doc_number,
-                'fl' : doc_fields if 'id' in doc_fields else doc_fields + ['id']
+                'fl' : doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
             }
         }
 
@@ -82,12 +85,12 @@ class SolrSearchEngine(BaseSearchEngine):
         template = query_template.replace(self.PLACEHOLDER, keyword)
         payload = self.template_to_json_body(template)
         # here fl is overwritten, even if in the template there are other fields in the 'fl' key
-        payload['params']['fl'] = doc_fields if 'id' in doc_fields else doc_fields + ['id']
+        payload['params']['fl'] = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
         return self.search(payload)
 
     def search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
-        search_url = urljoin(str(self.endpoint), 'select')
+        search_url = urljoin(self.endpoint.encoded_string(), 'select')
 
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
@@ -104,8 +107,8 @@ class SolrSearchEngine(BaseSearchEngine):
         match response.status_code:
             case 200:
                 log.debug("Solr query successful.")
-                log.debug(f"URL: {search_url}\n")
-                log.debug(f"Payload: {payload}\n")
+                log.debug(f"URL: {search_url}")
+                log.debug(f"Payload: {payload}")
                 # log.debug(f"Response: {response.json()}")
                 raw_docs = response.json()['response']['docs']
                 reformat_raw_doc = []
