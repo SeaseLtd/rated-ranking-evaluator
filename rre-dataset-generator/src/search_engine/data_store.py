@@ -2,35 +2,23 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 
 from src.model.document import Document
 from src.model.query_rating_context import QueryRatingContext
 
 log = logging.getLogger(__name__)
 
-TMP_FILE = "./tmp/datastore.json"
-
-
 class DataStore:
     """
     Stores/retrieves documents, queries, and rating scores.
     """
 
-    def __init__(self, ignore_saved_data: bool = False):
-        self._documents: Dict[str, Document] = {}
-        self._queries_by_id: Dict[str, QueryRatingContext] = {}
-        self._query_text_to_query_id: Dict[str, str] = {}
-
-        # Load from default file if present
-        if not ignore_saved_data and os.path.exists(TMP_FILE):
-            try:
-                self.load_tmp_file_content()
-                log.debug(f"Loaded DataStore from default file: {TMP_FILE}")
-            except Exception as e:
-                log.error(f"Could not load default datastore file '{TMP_FILE}': {e}")
+    def __init__(self):
+        self._documents: Dict[str, Document] = {}                # doc_id -> Document
+        self._queries_by_id: Dict[str, QueryRatingContext] = {}  # query_id → QueryRatingContext
+        self._query_text_to_query_id: Dict[str, str] = {}        # query_text -> query_id
 
     def _get_query_rating_context_by_id(self, query_id: str) -> QueryRatingContext:
         if query_id not in self._queries_by_id:
@@ -49,9 +37,8 @@ class DataStore:
 
     def add_document(self, doc_id: str, document: Document) -> None:
         if doc_id in self._documents:
-            _error_msg = f"Detected an error when adding document to the data store. Document {doc_id} already present."
-            log.error(_error_msg)
-            raise KeyError(_error_msg)
+            log.error("Document id %s already exists in DataStore", doc_id)
+            raise KeyError(f"Document id '{doc_id}' found in DataStore")
         self._documents[doc_id] = document
 
     def has_document(self, doc_id: str) -> bool:
@@ -128,100 +115,135 @@ class DataStore:
         context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
         return context.has_rating_score(doc_id)
 
-    @staticmethod
-    def ensure_tmp_file_exists() -> Path:
-        """Checks if a file exists on disk and returns its path or create the parent folder.
-        Resolves a given path and logs a warning if the file does not exist.
-
-        Returns:
-            The resolved path as a Path object.
+    def save_queries_and_docs(self, filepath: str | Path) -> None:
         """
-        path = Path(TMP_FILE)
-        if not path.exists():
-            path.parent.mkdir(parents=True, exist_ok=True)
-            log.debug(f'Previous file not found in DataStore: {path}')
-        return path
-
-    def save_tmp_file_content(self) -> None:
-        """Saves the current state to a file on disk serializing queries, ratings, and optionally documents.
-
-        Args:
-            filepath: The path to the file where the data will be saved.
-                      If None, a default path is used.
+        Saves all query contexts to a JSON file.
         """
-        path = self.ensure_tmp_file_exists()
+        data = [
+            {
+                "query_id": ctx.get_query_id(),
+                "query_text": ctx._query,
+                "doc_ids": ctx.get_doc_ids()
+            }
+            for ctx in self._queries_by_id.values()
+        ]
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
 
-        def default_serializer(obj):
-            """Default function to handle non-serializable objects"""
-            if isinstance(obj, QueryRatingContext):
-                return obj.to_dict()
-            elif isinstance(obj, Document):  # more general: from pydantic import BaseModel
-                return obj.model_dump()
-            else:
-                # Convert to string as fallback
-                return str(obj)
 
-        data = {
-            "queries": self._queries_by_id,
-            "documents": self._documents,
-        }
-
-        # save the content to a file
-        with path.open("w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False, default=default_serializer)
-
-    def load_tmp_file_content(self) -> None:
-        """Loads state from a file on disk loading queries, ratings, and documents from a unified
-        JSON file on disk.
-
-        Args:
-            filepath: The path to the file to load data from. If None, a
-                      default path is used.
-            clear: If True, clears existing data before loading.
-                   Defaults to None.
+    def load_queries_and_docs(self, filepath: str | Path) -> None:
         """
-
-        self._documents.clear()
-        self._queries_by_id.clear()
-        self._query_text_to_query_id.clear()
-
-        filepath = self.ensure_tmp_file_exists()
-
-        if not filepath.exists():
-            log.info(f"No datastore file yet at {filepath}, starting fresh.")
-            return
-
-        with filepath.open("r", encoding="utf-8") as f:
-            file_content = json.load(f)
-
-        queries: Dict[str, Dict[str, Any]] = file_content.get("queries", {})
-        for query_id, context_dict in queries.items():
-            context: QueryRatingContext = QueryRatingContext.from_dict(context_dict)
-            self._queries_by_id[query_id] = context
-            self._query_text_to_query_id[context.get_query_text()] = query_id
-
-        documents = file_content.get("documents", {})
-        for doc_id, doc_data in documents.items():
-            self.add_document(doc_id, Document.model_validate(doc_data))
-
-    def export_all_records_with_explanation(self, output_path: str | Path) -> None:
+        Loads query contexts from a JSON file.
         """
-        Exports query-doc-rating-explanation tuples to a JSON file.
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for item in data:
+            context = QueryRatingContext(item["query_text"])
+            context.query_id = item["query_id"]  # Assumes this attribute is settable
+            context.doc_ids = item["doc_ids"]
+            self._queries_by_id[context.get_query_id()] = context
+            self._query_text_to_query_id[context.query] = context.get_query_id()
+
+
+    def save_rating_triples(self, filepath: str | Path) -> None:
         """
-        records = []
-        for query_context in self._queries_by_id.values():
-            query_text = query_context.get_query_text()
-            for doc_id in query_context.get_doc_ids():
-                if query_context.has_rating_score(doc_id) and query_context.has_rating_explanation(doc_id):
-                    rating = query_context.get_rating(doc_id)
-                    records.append({
-                        "query": query_text,
+        Saves all rating triples to a JSON file.
+        """
+        triples = []
+        for ctx in self._queries_by_id.values():
+            qid = ctx.get_query_id()
+            for doc_id, score in ctx.rating_scores.items():
+                triples.append({
+                    "query_id": qid,
+                    "doc_id": doc_id,
+                    "score": score
+                })
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(triples, f, indent=2)
+
+
+    def load_rating_triples(self, filepath: str | Path) -> None:
+        """
+        Loads rating triples from a JSON file and updates existing query contexts.
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            triples = json.load(f)
+        for triple in triples:
+            query_id = triple["query_id"]
+            doc_id = triple["doc_id"]
+            score = triple["score"]
+            if query_id not in self._queries_by_id:
+                raise ValueError(f"Query ID {query_id} not found when loading triples.")
+            self._queries_by_id[query_id].add_rating_score(doc_id, score)
+
+    def save_queries_and_docs(self, filepath: str | Path) -> None:
+        """
+        Saves all query contexts (query_id, text, doc_ids) to a JSON file.
+        """
+        data = [
+            {
+                "query_id": ctx.get_query_id(),
+                "query_text": ctx.get_query(),
+                "doc_ids": ctx.get_doc_ids()
+            }
+            for ctx in self._queries_by_id.values()
+        ]
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+
+    def load_queries_and_docs(self, filepath: str | Path) -> None:
+        """
+        Loads query contexts from a JSON file. Reconstructs query_id, query text, and associated doc_ids.
+        NOTE: This assumes QueryRatingContext has a way to inject existing query_id and doc_ids.
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        for item in data:
+            # Creamos el contexto sin pasar doc_id inicial (lo añadimos luego)
+            context = QueryRatingContext(item["query_text"], doc_id=None)
+            context._id = item["query_id"]  # PELIGRO: depende del diseño, puedes usar un setter mejor
+            for doc_id in item["doc_ids"]:
+                context.add_doc_id(doc_id)
+            self._queries_by_id[context.get_query_id()] = context
+            self._query_text_to_query_id[context.get_query()] = context.get_query_id()
+
+
+    def save_rating_triples(self, filepath: str | Path) -> None:
+        """
+        Saves all (query_id, doc_id, score) triples to a JSON file.
+        """
+        triples = []
+        for ctx in self._queries_by_id.values():
+            qid = ctx.get_query_id()
+            for doc_id in ctx.get_doc_ids():
+                try:
+                    score = ctx.get_rating_score(doc_id)
+                    triples.append({
+                        "query_id": qid,
                         "doc_id": doc_id,
-                        "rating": rating.score,
-                        "explanation": rating.explanation
+                        "score": score
                     })
+                except KeyError:
+                    continue  # No rating score available
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(triples, f, indent=2)
 
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(records, f, indent=2, ensure_ascii=False)
+
+    def load_rating_triples(self, filepath: str | Path) -> None:
+        """
+        Loads rating triples from a JSON file and updates existing QueryRatingContext entries.
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            triples = json.load(f)
+
+        for triple in triples:
+            query_id = triple["query_id"]
+            doc_id = triple["doc_id"]
+            score = triple["score"]
+            if query_id not in self._queries_by_id:
+                raise ValueError(f"Query ID {query_id} not found when loading triples.")
+            self._queries_by_id[query_id].add_rating_score(doc_id, score)
+
+

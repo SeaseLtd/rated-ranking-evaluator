@@ -14,13 +14,13 @@ class QueryRatingContext:
 
     DOC_NOT_RATED: int = -1  # doc is not yet rated
 
-    def __init__(self, query: str, doc_id: str | None = None, query_id: str | None = None):
-        self._id: str = str(uuid.uuid4()) if query_id is None else str(query_id)
+    def __init__(self, query: str, doc_id: str | None = None):
+        self._id: str = str(uuid.uuid4())
         self._query: str = query
-        self._doc_id_to_rating_score: Dict[str, Rating] = {}
-        # HANDLING NONEs - thrown error in some tests
+        self._doc_id_to_rating_score: Dict[str, int] = {}
+        # HANDLING NONEs - thowed error in some tests
         if doc_id is not None:
-            self._doc_id_to_rating_score[doc_id] = Rating(score=self.DOC_NOT_RATED)
+            self._doc_id_to_rating_score[doc_id] = self.DOC_NOT_RATED
 
     def get_query_id(self) -> str:
         """Return the unique identifier for this query context."""
