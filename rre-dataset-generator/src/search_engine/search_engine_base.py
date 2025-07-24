@@ -13,7 +13,7 @@ from src.model.document import Document
 log = logging.getLogger(__name__)
 
 class BaseSearchEngine(ABC):
-    def __init__(self, endpoint: HttpUrl | str):
+    def __init__(self, endpoint: HttpUrl):
         self.endpoint = HttpUrl(endpoint)
         self.PLACEHOLDER = "#$query##"
         self.UNIQUE_KEY = '_id'
