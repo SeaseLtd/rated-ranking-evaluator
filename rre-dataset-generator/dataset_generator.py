@@ -1,4 +1,7 @@
 # configuration params
+from langchain_core.language_models import BaseChatModel
+from src.writers.abstract_writer import AbstractWriter
+from src.search_engine.search_engine_base import BaseSearchEngine
 from src.utils import parse_args
 from src.config import Config
 from src.llm.llm_service import LLMService
@@ -8,9 +11,9 @@ from src.llm.llm_config import LLMConfig
 from src.search_engine.data_store import DataStore
 
 # build factories
-from src.search_engine import build_search_engine
-from src.llm import build_chat_model
-from src.writers import build_writer
+from src.llm.llm_provider_factory import LLMFactory
+from src.writers.writer_factory import WriterFactory
+from src.search_engine.search_engine_factory import SearchEngineFactory
 
 # logging
 from src.logger import configure_logging
@@ -28,8 +31,8 @@ if __name__ == "__main__":
         configure_logging(logging.INFO)
     log = logging.getLogger(__name__)
 
-    search_engine = build_search_engine(search_engine_type=config.search_engine_type,
-                                        endpoint=config.search_engine_collection_endpoint)
+    search_engine: BaseSearchEngine = SearchEngineFactory.build(search_engine_type=config.search_engine_type,
+                                              endpoint=config.search_engine_collection_endpoint)
     data_store = DataStore()
 
     user_queries = []
@@ -44,23 +47,23 @@ if __name__ == "__main__":
                                                                         doc_number=config.doc_number,
                                                                         doc_fields=config.doc_fields)
     log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
-    llm = build_chat_model(LLMConfig.load(config.llm_configuration_file))
+    llm: BaseChatModel = LLMFactory.build(LLMConfig.load(config.llm_configuration_file))
     service = LLMService(chat_model=llm)
 
     num_queries_per_doc = int(( (config.num_queries_needed - len(user_queries)) // config.doc_number) * 1.5)
 
     # query generation step
-    flag = False
+    all_queries_generated = False
     for doc in docs_to_generate_queries:
         data_store.add_document(doc.id, doc)
-        query_texts = service.generate_queries(doc, num_queries_per_doc)
-        for query_text in query_texts:
+        queries = service.generate_queries(doc, num_queries_per_doc)
+        for query_text in queries:
             if len(data_store.get_queries()) >= config.num_queries_needed:
-                flag = True
+                all_queries_generated = True
                 break
             query_id = data_store.add_query(query_text, doc.id)
             data_store.add_rating_score(query_id, doc.id, max(config.relevance_label_set))
-        if flag:
+        if all_queries_generated:
             break
 
     log.debug(f"Number of documents evaluated: {len(docs_to_generate_queries)}")
@@ -80,7 +83,7 @@ if __name__ == "__main__":
                                             doc_id,
                                             score)
 
-    writer = build_writer(config.output_format, data_store)
+    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store)
     writer.write(config.output_destination)
 
     log.info(f"Synthetic Dataset has been generated in: {config.output_destination}")
