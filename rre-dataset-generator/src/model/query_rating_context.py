@@ -18,7 +18,7 @@ class QueryRatingContext:
         self._id: str = str(uuid.uuid4())
         self._query: str = query
         self._doc_id_to_rating_score: Dict[str, int] = {}
-        # HANDLING NONEs - thowed error in some tests
+        # HANDLING NONEs - throwed error in some tests
         if doc_id is not None:
             self._doc_id_to_rating_score[doc_id] = self.DOC_NOT_RATED
 
