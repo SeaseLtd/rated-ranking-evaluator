@@ -1,7 +1,7 @@
+import json
 from urllib.parse import urljoin
 from pydantic import HttpUrl
 from typing import List, Dict, Any, Union
-from urllib.parse import parse_qs
 
 from requests import Response
 
@@ -22,67 +22,53 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         self.HEADERS = {'Content-Type': 'application/json'}
         log.debug(f"Working on endpoint: {self.endpoint}")
 
-    def _template_to_json_payload(self, template_payload: str) -> Dict[str, Any]:
-        """
-        Converts a Solr query string into a structured JSON body.
-
-        Args:
-            template_payload (str): The Solr query string, e.g., 'q=ghosts&fq=genre:horror&wt=json'.
-
-        Returns:
-            dict: A dictionary representing the query parameters.
-        """
-        # Parse the query string into a dictionary
-        json_body = parse_qs(template_payload)
-
-        defaults = {
-            'q': '*:*',
-            'wt': 'json'
-        }
-
-        # Substitute missing parameters with default values
-        for key, default_value in defaults.items():
-            if key not in json_body or not json_body[key]:
-                json_body[key] = [default_value]
-
-        return {
-            'query': json_body.get('q')[0],
-            'params': {k: v[0] for k, v in json_body.items() if k != 'q'}
-        }
-
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   doc_number: int, doc_fields: List[str]) \
-            -> List[Document]:
-        payload = {
-            'query': '*:*',
-            'params': {
-                'rows': doc_number,
-                'fl' : doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
-            }
-        }
+                                   doc_number: int,
+                                   doc_fields: List[str]) -> List[Document]:
 
+        # Build base query
+        query = {"match_all": {}}
+
+        # Add filters, if provided
+        filter_clauses = []
         if documents_filter is not None:
-            payload['params']['fq'] = []
             for dict_field in documents_filter:
                 for field, values in dict_field.items():
                     if not values:
-                        continue  # skip empty lists
+                        continue
                     if len(values) == 1:
-                        clause = f'{field}:{values[0]}'
+                        filter_clauses.append({"term": {field: values[0]}})
                     else:
-                        or_values = ' OR '.join(f'{v}' for v in values)
-                        clause = f'{field}:({or_values})'
-                    payload['params']['fq'].append(clause)
+                        filter_clauses.append({"terms": {field: values}})
+
+        # Wrap in a bool query if there are any filters
+        if filter_clauses:
+            query = {
+                "bool": {
+                    "must": {"match_all": {}},
+                    "filter": filter_clauses
+                }
+            }
+
+        # Construct the payload (Elasticsearch query body)
+        payload = {
+            "size": doc_number,
+            "_source": doc_fields,
+            "query": query
+        }
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
+    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str=None) -> List[Document]:
         """Search for documents using a query."""
-        template = query_template.replace(self.PLACEHOLDER, keyword)
-        payload = self._template_to_json_payload(template)
-        # here fl is overwritten, even if in the template there are other fields in the 'fl' key
-        payload['params']['fl'] = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
+        if keyword:
+             payload = json.dumps(query_template.replace(self.PLACEHOLDER, keyword))
+        else:
+            payload = {
+            "query": {"match_all": {}}
+            }
+        payload["_source"] = doc_fields
         return self._search(payload)
 
     def _extract_docs(self, response: Response) -> List[Document]:

@@ -2,14 +2,15 @@
 set -euo pipefail
 
 CLUSTER="http://elasticsearch:9200"
-INDEX="testcore"
+INDEX="testindex"
 ENDPOINT="$CLUSTER/$INDEX"
 
 echo "[INFO] Waiting for Elasticsearch..."
 # Wait until Elasticsearch responds (up to 30s)
-for i in $(seq 1 30); do
+max=30;
+for i in $(seq 1 $max); do
   if curl -sf "$CLUSTER"; then break; fi
-  echo "  ...still waiting ($i/30)"
+  echo "  ...still waiting ($i/$max)"
   sleep 1
 done
 if ! curl -sf "$CLUSTER"; then
@@ -22,7 +23,6 @@ if ! curl -sf -XGET "$ENDPOINT"; then
   curl -sf -XPUT "$ENDPOINT" -H 'Content-Type: application/json' -d '{
     "mappings": {
       "properties": {
-        "id": {"type": "keyword"},
         "title": {"type": "text"},
         "description": {"type": "text"}
       }

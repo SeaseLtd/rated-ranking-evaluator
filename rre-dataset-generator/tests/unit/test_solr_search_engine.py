@@ -55,7 +55,7 @@ def test_solr_search_engine(monkeypatch):
 def test_solr_search_engine_negative_post(monkeypatch):
     config = Config.load("tests/unit/resources/good_config.yaml")
     for status_code in [400, 401, 402, 403, 500]:
-        monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="identifier"))
+        monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="id"))
         monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine({},
                                                                                                     status_code))
 
