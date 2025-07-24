@@ -22,20 +22,23 @@ class DataStore:
 
     def _get_query_rating_context_by_id(self, query_id: str) -> QueryRatingContext:
         if query_id not in self._queries_by_id:
-            log.error("Query id %s not found in DataStore", query_id)
-            raise KeyError(f"Query id '{query_id}' not found in DataStore")
+            _error_msg = f"Query id {query_id} not found in DataStore"
+            log.error(_error_msg)
+            raise KeyError(_error_msg)
         return self._queries_by_id[query_id]
 
     def _get_document(self, doc_id: str) -> Optional[Document]:
         if doc_id not in self._documents:
-            log.warning("Document id %s not found in DataStore", doc_id)
+            _warning_msg = f"Detected an error when retrieving a document from the data store. Document {doc_id} not found in DataStore"
+            log.warning(_warning_msg)
             return None
         return self._documents[doc_id]
 
     def add_document(self, doc_id: str, document: Document) -> None:
         if doc_id in self._documents:
-            log.error("Document id %s already exists in DataStore", doc_id)
-            raise KeyError(f"Document id '{doc_id}' found in DataStore")
+            _error_msg = f"Detected an error when adding document to the data store. Document {doc_id} already present."
+            log.error(_error_msg)
+            raise KeyError(_error_msg)
         self._documents[doc_id] = document
 
     def has_document(self, doc_id: str) -> bool:
@@ -94,7 +97,6 @@ class DataStore:
         if the query_id is not found.
         """
         context = self._get_query_rating_context_by_id(query_id)
-
         context.add_rating_score(doc_id, rating_score)
         self._queries_by_id[query_id] = context
 
@@ -133,7 +135,6 @@ class DataStore:
     def load_queries_and_docs(self, filepath: str | Path) -> None:
         """
         Loads query contexts from a JSON file. Reconstructs query_id, query text, and associated doc_ids.
-        NOTE: This assumes QueryRatingContext has a way to inject existing query_id and doc_ids.
         """
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -152,13 +153,13 @@ class DataStore:
         Saves all (query_id, doc_id, score) triples to a JSON file.
         """
         triples = []
-        for ctx in self._queries_by_id.values():
-            qid = ctx.get_query_id()
-            for doc_id in ctx.get_doc_ids():
+        for _context in self._queries_by_id.values():
+            query_id = _context.get_query_id()
+            for doc_id in _context.get_doc_ids():
                 try:
-                    score = ctx.get_rating_score(doc_id)
+                    score = _context.get_rating_score(doc_id)
                     triples.append({
-                        "query_id": qid,
+                        "query_id": query_id,
                         "doc_id": doc_id,
                         "score": score
                     })
