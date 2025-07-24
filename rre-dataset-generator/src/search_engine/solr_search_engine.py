@@ -17,7 +17,7 @@ class SolrSearchEngine(BaseSearchEngine):
     """
     Solr implementation to search into a given collection
     """
-    def __init__(self, endpoint: HttpUrl | str):
+    def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
         log.debug(f"Working on endpoint: {self.endpoint}")

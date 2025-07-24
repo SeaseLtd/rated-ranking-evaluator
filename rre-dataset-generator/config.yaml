@@ -9,7 +9,7 @@ query_template: "q=#$query##&df=description&rows=3&q.op=OR&wt=json"
 search_engine_type: "solr"
 
 # Endpoint URL of the search engine collection or index
-search_engine_collection_endpoint: "http://localhost:8983/solr/testcore"
+search_engine_collection_endpoint: "http://localhost:8983/solr/testcore/"
 
 # (Optional) Filter query to restrict the set of documents used to generate queries.
 # If a field has more than one value, the documents retrieved have at least one of the values in the field (OR-
