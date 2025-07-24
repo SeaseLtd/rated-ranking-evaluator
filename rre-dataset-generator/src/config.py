@@ -50,6 +50,20 @@ class Config(BaseModel):
                 raise ValueError("LLM_config file must have .yaml extension")
         return v
 
+    @property
+    def relevance_label_set(self) -> set[int]:
+        """
+        Returns the set of valid labels based on the relevance scale.
+        """
+        if self.relevance_scale == "binary":
+            return {0, 1}
+        elif self.relevance_scale == "graded":
+            return {0, 1, 2}
+        else:
+            error_msg = f"Unknown relevance scale: {self.relevance_scale}"
+            log.error(error_msg)
+            raise ValueError(error_msg)
+
     @classmethod
     def load(cls, config_path: str) -> Config:
         """

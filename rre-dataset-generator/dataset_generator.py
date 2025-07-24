@@ -59,12 +59,13 @@ if __name__ == "__main__":
                 flag = True
                 break
             query_id = data_store.add_query(query_text, doc.id)
-            data_store.add_rating_score(query_id, doc.id, 2)
+            data_store.add_rating_score(query_id, doc.id, max(config.relevance_label_set))
         if flag:
             break
 
     log.debug(f"Number of documents evaluated: {len(docs_to_generate_queries)}")
-    for query_rating_context in data_store.get_queries():
+    queries_to_add = data_store.get_queries()
+    for query_rating_context in queries_to_add:
         for doc in data_store.get_documents():
             data_store.add_query(query_rating_context.get_query(), doc.id)
 
