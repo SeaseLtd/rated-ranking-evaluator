@@ -55,7 +55,7 @@ class DataStore:
         """
         return list(self._documents.values())
 
-    def add_query(self, query: str, doc_id: str = None) -> str:
+    def add_query(self, query: str, doc_id: str | None = None) -> str:
         """
         If `query` already exists, just adds `doc_id` to it.
         Otherwise, creates a new QueryRatingContext.
