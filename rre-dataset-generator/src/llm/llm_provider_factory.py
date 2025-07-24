@@ -47,7 +47,7 @@ def build_gemini(config: LLMConfig) -> BaseChatModel:
         google_api_key=key,
     )
 
-class LLMFactory:
+class LLMServiceFactory:
     PROVIDER_REGISTRY = {
         "openai": build_openai,
         "gemini": build_gemini,

@@ -4,7 +4,7 @@ from pydantic import HttpUrl
 from src.model.document import Document
 
 class BaseSearchEngine(ABC):
-    def __init__(self, endpoint: HttpUrl | str):
+    def __init__(self, endpoint: HttpUrl):
         self.endpoint = HttpUrl(endpoint)
         self.PLACEHOLDER = "#$query##"
         self.UNIQUE_KEY = 'id'

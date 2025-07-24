@@ -11,7 +11,7 @@ from src.llm.llm_config import LLMConfig
 from src.search_engine.data_store import DataStore
 
 # build factories
-from src.llm.llm_provider_factory import LLMFactory
+from src.llm.llm_provider_factory import LLMServiceFactory
 from src.writers.writer_factory import WriterFactory
 from src.search_engine.search_engine_factory import SearchEngineFactory
 
@@ -35,22 +35,23 @@ if __name__ == "__main__":
                                               endpoint=config.search_engine_collection_endpoint)
     data_store = DataStore()
 
-    user_queries = []
+    num_queries = 0
     if config.queries is not None:
         with open(config.queries, 'r', encoding='utf-8') as file:
             for line in file:
                 if line.strip():
-                    user_queries.append(line.strip())
+                    data_store.add_query(line)
+                    num_queries += 1
 
     # retrieval of the documents needed to generate the queries
     docs_to_generate_queries = search_engine.fetch_for_query_generation(documents_filter=config.documents_filter,
                                                                         doc_number=config.doc_number,
                                                                         doc_fields=config.doc_fields)
     log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
-    llm: BaseChatModel = LLMFactory.build(LLMConfig.load(config.llm_configuration_file))
+    llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service = LLMService(chat_model=llm)
 
-    num_queries_per_doc = int(( (config.num_queries_needed - len(user_queries)) // config.doc_number) * 1.5)
+    num_queries_per_doc = int(( (config.num_queries_needed - num_queries) // config.doc_number) * 1.5)
 
     # query generation step
     all_queries_generated = False
@@ -67,20 +68,16 @@ if __name__ == "__main__":
             break
 
     log.debug(f"Number of documents evaluated: {len(docs_to_generate_queries)}")
-    queries_to_add = data_store.get_queries()
-    for query_rating_context in queries_to_add:
-        for doc in data_store.get_documents():
-            data_store.add_query(query_rating_context.get_query(), doc.id)
 
     # loop looking at all docs not rated in the data_store for that query
     for query_rating_context in data_store.get_queries():
-        for doc_id in query_rating_context.get_doc_ids():
-            if not data_store.has_rating_score(query_rating_context.get_query_id(), doc_id):
-                score = service.generate_score(data_store.get_document(doc_id),
+        for doc in data_store.get_documents():
+            if not data_store.has_rating_score(query_rating_context.get_query_id(), doc.id):
+                score = service.generate_score(data_store.get_document(doc.id),
                                                query_rating_context.get_query(),
                                                config.relevance_scale)
                 data_store.add_rating_score(query_rating_context.get_query_id(),
-                                            doc_id,
+                                            doc.id,
                                             score)
 
     writer: AbstractWriter = WriterFactory.build(config.output_format, data_store)
