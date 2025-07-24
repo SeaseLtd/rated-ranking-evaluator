@@ -1,7 +1,13 @@
+class MockRequest:
+    def __init__(self, body="{}"):
+        self.body = body
+
 class MockResponseSolrEngine:
-    def __init__(self, json_data, status_code=200):
+    def __init__(self, json_data, url="", body="{}", status_code=200):
         self._json_data = json_data
+        self.url = url
         self.status_code = status_code
+        self.request = MockRequest(body)
 
     def json(self):
         return {

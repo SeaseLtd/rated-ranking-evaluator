@@ -1,10 +1,9 @@
 from urllib.parse import urljoin
-import requests
 from pydantic import HttpUrl
-from requests import Response
-from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
+
+from requests import Response
 
 from src.utils import clean_text
 import logging
@@ -14,16 +13,14 @@ log = logging.getLogger(__name__)
 from src.search_engine.search_engine_base import BaseSearchEngine
 from src.model.document import Document
 
-class SolrSearchEngine(BaseSearchEngine):
+class ElasticsearchSearchEngine(BaseSearchEngine):
     """
-    Solr implementation to search into a given collection
+    Elasticsearch implementation to search into a given collection
     """
     def __init__(self, endpoint: HttpUrl | str):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
         log.debug(f"Working on endpoint: {self.endpoint}")
-        self.UNIQUE_KEY = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/uniquekey')).json()['uniqueKey']
-        log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
 
     def _template_to_json_payload(self, template_payload: str) -> Dict[str, Any]:
         """
@@ -89,32 +86,22 @@ class SolrSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def _extract_docs(self, response: Response) -> List[Document]:
-        raw_docs = response.json()['response']['docs']
+        raw_docs = response.json()['hits']['hits']
         reformat_raw_doc = []
         for doc in raw_docs:
             clean_doc = dict()
             clean_doc['id'] = doc[self.UNIQUE_KEY]
-            clean_doc['fields'] = dict()
-            for k, v in doc.items():
-                if k != self.UNIQUE_KEY:
-                    if isinstance(v, list):
-                        if v:
-                            if isinstance(v[0], str):
-                                clean_doc['fields'][k] = [clean_text(text) for text in v]
-                            else:
-                                clean_doc['fields'][k] = v
-                        else:
-                            log.warning(f"The field {k} is empty, skipped.")
-                    else:
-                        clean_doc['fields'][k] = v
+            clean_doc['fields'] = doc['_source']
             reformat_raw_doc.append(Document(**clean_doc))
         return reformat_raw_doc
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
-        search_url = urljoin(self.endpoint.encoded_string(), 'select')
+        search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
-        response = self._deal_with_request_post_exception(search_url, headers=self.HEADERS, json=payload)
+        response = self._deal_with_request_post_exception(search_url=search_url,
+                                                          headers=self.HEADERS,
+                                                          json=payload)
 
         reformat_raw_docs = self._deal_with_response_status_code(response=response,
                                                                  extract_docs=self._extract_docs)
