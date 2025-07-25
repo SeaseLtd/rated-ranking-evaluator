@@ -61,48 +61,69 @@ def test_add_and_get_query_expect_query_stored_in_data_store_and_check_same_quer
 
 
 # tmp_path: pytest fixture with a temporal dir
-def test_save_and_load_queries_and_ratings_roundtrip(tmp_path):
+def test_save_tmp_file_content_expect_json_created(tmp_path):
+    ds = DataStore()
 
-    # Step 1: build the intial instance
-    ds1 = DataStore()
-
-    # Step 2: add Documents
+    # Add Documents
     doc1 = Document(id="d1", fields={"title": "AI", "text": "Deep learning"})
     doc2 = Document(id="d2", fields={"title": "LLMs", "text": "Transformers"})
-    ds1.add_document(doc1.id, doc1)
-    ds1.add_document(doc2.id, doc2)
+    ds.add_document(doc1.id, doc1)
+    ds.add_document(doc2.id, doc2)
 
-    # Step 3: add queries and ratings
-    qid1 = ds1.add_query("artificial intelligence", doc1.id)
-    ds1.add_rating_score(qid1, doc1.id, 1)
-    ds1.add_rating_score(qid1, doc2.id, 0)
+    # Add Queries and Ratings
+    qid1 = ds.add_query("artificial intelligence", doc1.id)
+    ds.add_rating_score(qid1, "d1", 1)
+    ds.add_rating_score(qid1, "d2", 0)
 
-    qid2 = ds1.add_query("transformer models", doc2.id)
-    ds1.add_rating_score(qid2, doc2.id, 1)
+    qid2 = ds.add_query("transformer models", doc2.id)
+    ds.add_rating_score(qid2, "d2", 1)
 
-    # Step 4: save into disk
-    queries_path = tmp_path / "queries.json"
-    triples_path = tmp_path / "triples.json"
+    # Save to disk
+    path = tmp_path / "datastore.json"
+    ds.save_tmp_file_content(path)
 
-    ds1.save_queries_and_docs(queries_path)
-    ds1.save_rating_triples(triples_path)
+    # Assertions
+    assert path.exists()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert isinstance(data, list)
+    assert len(data) == 2
+    for entry in data:
+        assert "query_id" in entry
+        assert "query_text" in entry
+        assert "doc_ids" in entry
+        assert "doc_ratings" in entry
+        assert "documents" in entry
 
-    # Step 5: Verify saving
-    assert queries_path.exists()
-    assert triples_path.exists()
-    assert json.loads(queries_path.read_text(encoding="utf-8"))  # assert not empty 
-    assert json.loads(triples_path.read_text(encoding="utf-8"))  # assert not empty 
 
-    # Step 6: load a new datastore - avoid caching artifacts
-    ds2 = DataStore()
-    ds2.load_queries_and_docs(queries_path)
-    ds2.load_rating_triples(triples_path)
+def test_load_tmp_file_content_expect_data_restored_correctly(tmp_path):
+    # Create known content
+    content = [
+        {
+            "query_id": "q1",
+            "query_text": "ai",
+            "doc_ids": ["d1", "d2"],
+            "doc_ratings": {"d1": 1, "d2": 0},
+            "documents": [
+                {"id": "d1", "fields": {"title": "AI", "text": "Deep learning"}},
+                {"id": "d2", "fields": {"title": "LLMs", "text": "Transformers"}},
+            ]
+        }
+    ]
 
-    # Step 7: verify integrity after loading
-    assert ds2.get_query(qid1).get_query() == "artificial intelligence"
-    assert set(ds2.get_query(qid1).get_doc_ids()) == {"d1", "d2"}
-    assert ds2.get_rating_score(qid1, "d1") == 1
-    assert ds2.get_rating_score(qid1, "d2") == 0
+    # Write file manually
+    path = tmp_path / "datastore.json"
+    path.write_text(json.dumps(content, indent=2), encoding="utf-8")
 
-    assert ds2.get_query(qid2).get_query() == "transformer models"
-    assert ds2.get_rating_score(qid2, "d2") == 1
+    # Load from disk
+    ds = DataStore()
+    ds.load_tmp_file_content(path)
+
+    # Assertions
+    assert ds.get_query("q1").get_query() == "ai"
+    assert ds.get_rating_score("q1", "d1") == 1
+    assert ds.get_rating_score("q1", "d2") == 0
+
+    doc1 = ds.get_document("d1")
+    doc2 = ds.get_document("d2")
+    assert doc1.fields["title"] == "AI"
+    assert doc2.fields["text"] == "Transformers"
