@@ -95,7 +95,6 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
                 log.debug("Elasticsearch query successful.")
                 log.debug(f"URL: {search_url}")
                 log.debug(f"Payload: {payload}")
-                # log.debug(f"Response: {response.json()}")
                 raw_docs = response.json()['hits']['hits']
                 reformat_raw_doc = []
                 for doc in raw_docs:

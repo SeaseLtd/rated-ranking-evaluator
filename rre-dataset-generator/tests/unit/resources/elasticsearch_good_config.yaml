@@ -1,6 +1,6 @@
 query_template: '{ "query": { "match": { "message": "#$query##" } } }'
 search_engine_type: "elasticsearch"
-search_engine_collection_endpoint: 'http://localhost:9200/testindex/'
+search_engine_collection_endpoint: 'http://localhost:9200/testcore/'
 doc_number: 100
 doc_fields:
   - "title"
