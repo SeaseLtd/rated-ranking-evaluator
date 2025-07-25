@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import json
 import logging
 from pathlib import Path
@@ -10,8 +9,8 @@ from src.model.query_rating_context import QueryRatingContext
 
 log = logging.getLogger(__name__)
 
-
-TMP_FILE = "./test_file.json"
+# FILE TO ROOT RRE-DATASET-GENERATOR/TMP DIRECTORY
+TMP_FILE = "./tmp/datastore.json"
 
 class DataStore:
     """
@@ -126,7 +125,7 @@ class DataStore:
             "query_text": query.get_query(),
             "doc_ids": query.get_doc_ids(),
             "doc_ratings": query._doc_id_to_rating_score.copy(),  # copy to avoid mutation
-            "documents": [doc.model_dump_json() for doc in documents if doc is not None]
+            "documents": [doc.model_dump() for doc in documents if doc is not None]
         }
 
     @staticmethod
@@ -141,7 +140,7 @@ class DataStore:
 
     def save_tmp_file_content(self, filepath: str | Path = None) -> None:
         """
-        Save _queries_by_id, _query_text_to_query_id, and self._documents from a unified JSON file in disk
+        Save _queries_by_id, _query_text_to_query_id, and _documents from a unified JSON file in disk
         """
         global TMP_FILE
         if filepath is None:
@@ -160,7 +159,7 @@ class DataStore:
 
     def load_tmp_file_content(self, filepath: str | Path = None) -> None:
         """
-        Reconstruct _queries_by_id, _query_text_to_query_id, and self._documents from disk file
+        Reconstruct _queries_by_id, _query_text_to_query_id, and _documents from disk file
         """
         global TMP_FILE
 
@@ -191,3 +190,4 @@ class DataStore:
 
             self._queries_by_id[query_id] = context
             self._query_text_to_query_id[query_text] = query_id
+
