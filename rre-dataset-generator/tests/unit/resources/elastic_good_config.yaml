@@ -1,5 +1,5 @@
 query_template: '{ "query": { "match": { "message": "#$query##" } } }'
-search_engine_type: "solr"
+search_engine_type: "elasticsearch"
 search_engine_collection_endpoint: 'http://localhost:9200/testindex/'
 documents_filter:
   - genre:

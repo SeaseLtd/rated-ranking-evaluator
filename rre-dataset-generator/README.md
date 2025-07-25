@@ -89,13 +89,37 @@ Depending on your Docker version, you may need to use `docker compose` instead o
 If you have Docker Compose v1 installed, use:
 
 ```bash
-docker-compose up --build
+docker-compose up --file docker-compose-solr.yml --build
 ```
 If you have Docker Compose v2 installed, use:
 ```bash
-docker compose up --build
+docker compose up --file docker-compose-solr.yml --build
 ```
 
 This will start 2 services:
  - `solr`, available at http://localhost:8983/solr
- - `solr-init`, loads documents from solr/data/dataset.json only if Solr doesn't index any documents.
+ - `solr-init`, loads documents from solr-init/data/dataset.json only if Solr doesn't index any documents.
+
+##### Running Elasticsearch (Standalone)
+
+
+Similarly to Solr, to run a local Elasticsearch test environment using docker-compose:
+```bash
+cd tests/integration/
+```
+
+Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
+If you have Docker Compose v1 installed, use:
+
+```bash
+docker-compose --file docker-compose-elasticsearch.yml up --build 
+```
+If you have Docker Compose v2 installed, use:
+```bash
+docker compose up --file docker-compose-elasticsearch.yml --build
+```
+
+This will start 2 services:
+ - `elasticsearch`, available at http://localhost:9200
+ - `elasticsearch-init`, loads documents from elasticsearch-init/data/dataset.jsonl only if Elasticsearch doesn't have 
+any documents in the index.
