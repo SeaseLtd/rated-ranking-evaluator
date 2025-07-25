@@ -1,0 +1,14 @@
+query_template: '{ "query": { "match": { "message": "#$query##" } } }'
+search_engine_type: "elasticsearch"
+search_engine_collection_endpoint: 'http://localhost:9200/testindex/'
+doc_number: 100
+doc_fields:
+  - "title"
+  - "description"
+queries: "tests/unit/resources/queries.txt"
+generate_queries_from_documents: true
+num_queries_needed: 10
+relevance_scale: "graded"
+llm_configuration_file: "tests/unit/resources/llm_config.yaml"
+output_format: "quepid"
+output_destination: "output/generated_dataset.json"
