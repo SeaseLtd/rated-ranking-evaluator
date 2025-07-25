@@ -1,0 +1,31 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    branches: [ main, dataset-generator ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: Install dependencies
+      run: uv sync
+      working-directory: rre-dataset-generator
+
+    - name: Run unit tests
+      run: uv run pytest
+      working-directory: rre-dataset-generator
