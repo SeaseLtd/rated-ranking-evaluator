@@ -26,9 +26,9 @@ class DataStore:
         if os.path.exists(TMP_FILE):
             try:
                 self.load_tmp_file_content(TMP_FILE)
-                log.info(f"✅ Loaded DataStore from default file: {TMP_FILE}")
+                log.debug(f"Loaded DataStore from default file: {TMP_FILE}")
             except Exception as e:
-                log.warning(f"⚠️ Could not load default datastore file '{TMP_FILE}': {e}")
+                log.error(f"Could not load default datastore file '{TMP_FILE}': {e}")
 
     def _get_query_rating_context_by_id(self, query_id: str) -> QueryRatingContext:
         if query_id not in self._queries_by_id:
