@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os 
 import json
 import logging
 from pathlib import Path
@@ -16,11 +17,18 @@ class DataStore:
     """
     Stores/retrieves documents, queries, and rating scores.
     """
-
     def __init__(self):
-        self._documents: Dict[str, Document] = {}                # doc_id -> Document
-        self._queries_by_id: Dict[str, QueryRatingContext] = {}  # query_id → QueryRatingContext
-        self._query_text_to_query_id: Dict[str, str] = {}        # query_text -> query_id
+        self._documents: Dict[str, Document] = {}
+        self._queries_by_id: Dict[str, QueryRatingContext] = {}
+        self._query_text_to_query_id: Dict[str, str] = {}
+
+        # Load from default file if present
+        if os.path.exists(TMP_FILE):
+            try:
+                self.load_tmp_file_content(TMP_FILE)
+                log.info(f"✅ Loaded DataStore from default file: {TMP_FILE}")
+            except Exception as e:
+                log.warning(f"⚠️ Could not load default datastore file '{TMP_FILE}': {e}")
 
     def _get_query_rating_context_by_id(self, query_id: str) -> QueryRatingContext:
         if query_id not in self._queries_by_id:
