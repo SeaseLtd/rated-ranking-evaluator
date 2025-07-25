@@ -108,7 +108,6 @@ class SolrSearchEngine(BaseSearchEngine):
                 log.debug("Solr query successful.")
                 log.debug(f"URL: {search_url}")
                 log.debug(f"Payload: {payload}")
-                # log.debug(f"Response: {response.json()}")
                 raw_docs = response.json()['response']['docs']
                 reformat_raw_doc = []
                 for doc in raw_docs:

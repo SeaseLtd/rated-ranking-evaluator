@@ -2,7 +2,7 @@
 set -euo pipefail
 
 CLUSTER="http://elasticsearch:9200"
-INDEX="testindex"
+INDEX="testcore"
 ENDPOINT="$CLUSTER/$INDEX"
 
 echo "[INFO] Waiting for Elasticsearch..."
