@@ -2,6 +2,7 @@ from pydantic import HttpUrl
 
 from .search_engine_base import BaseSearchEngine
 from .solr_search_engine import SolrSearchEngine
+from .elasticsearch_search_engine import ElasticsearchSearchEngine
 import logging
 
 log = logging.getLogger(__name__)
@@ -9,6 +10,7 @@ log = logging.getLogger(__name__)
 class SearchEngineFactory:
     SEARCH_ENGINE_REGISTRY = {
         "solr": SolrSearchEngine,
+        "elasticsearch": ElasticsearchSearchEngine
     }
     @classmethod
     def build(cls, search_engine_type: str, endpoint: HttpUrl) -> BaseSearchEngine:
