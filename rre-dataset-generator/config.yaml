@@ -9,6 +9,7 @@ query_template: "q=#$query##&df=description&rows=2&q.op=OR&wt=json"
 search_engine_type: "solr"
 
 # Endpoint URL of the search engine collection or index
+# opensearch: http://localhost:9200/testcore/
 search_engine_collection_endpoint: "http://localhost:8983/solr/testcore/"
 
 # (Optional) Filter query to restrict the set of documents used to generate queries.
