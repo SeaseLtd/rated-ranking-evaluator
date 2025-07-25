@@ -17,7 +17,7 @@ configure_logging(level=logging.DEBUG)
 
 
 def test_elasticsearch_search_engine(monkeypatch):
-    config = Config.load("tests/unit/resources/good_config.yaml")
+    config = Config.load("tests/unit/resources/elastic_good_config.yaml")
     url = "https://fakeurl"
     search_engine = ElasticsearchSearchEngine(url)
 
@@ -25,12 +25,14 @@ def test_elasticsearch_search_engine(monkeypatch):
 
     mock_doc = {
         "_id": "1",
-        "mock_title": "A first mocked title",
-        "mock_description": "A first mocked description"
+        '_source': {
+            "mock_title": "A first mocked title",
+            "mock_description": "A first mocked description"
+        }
     }
     mock_dict = {
         'id': mock_doc['_id'],
-        '_source': {k:v for k, v in mock_doc.items() if k !='_id'}
+        'fields': mock_doc["_source"]
     }
 
     # apply the monkeypatch for requests.post to mock_post
@@ -52,10 +54,10 @@ def test_elasticsearch_search_engine(monkeypatch):
     assert result[0] == Document(**mock_dict)
 
 def test_elasticsearch_search_engine_negative_post(monkeypatch):
-    config = Config.load("tests/unit/resources/good_config.yaml")
+    config = Config.load("tests/unit/resources/elastic_good_config.yaml")
     for status_code in [400, 401, 402, 403, 500]:
-        monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseElasticsearchEngine({},
-                                                                                                    status_code))
+        monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseElasticsearchEngine([],
+                                                                                                    status_code=status_code))
 
         search_engine = ElasticsearchSearchEngine("https://fakeurl")
 

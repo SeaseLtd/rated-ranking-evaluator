@@ -63,7 +63,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
     def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str=None) -> List[Document]:
         """Search for documents using a query."""
         if keyword:
-             payload = json.dumps(query_template.replace(self.PLACEHOLDER, keyword))
+             payload = json.loads(query_template.replace(self.PLACEHOLDER, keyword))
         else:
             payload = {
             "query": {"match_all": {}}

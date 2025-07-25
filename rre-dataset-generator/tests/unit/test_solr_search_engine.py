@@ -17,7 +17,7 @@ configure_logging(level=logging.DEBUG)
 
 
 def test_solr_search_engine(monkeypatch):
-    config = Config.load("tests/unit/resources/good_config.yaml")
+    config = Config.load("tests/unit/resources/solr_good_config.yaml")
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="mock_id"))
     url = "https://fakeurl"
     search_engine = SolrSearchEngine(url)
@@ -53,11 +53,11 @@ def test_solr_search_engine(monkeypatch):
     assert result[0] == Document(**mock_dict)
 
 def test_solr_search_engine_negative_post(monkeypatch):
-    config = Config.load("tests/unit/resources/good_config.yaml")
+    config = Config.load("tests/unit/resources/solr_good_config.yaml")
     for status_code in [400, 401, 402, 403, 500]:
         monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="id"))
-        monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine({},
-                                                                                                    status_code))
+        monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([],
+                                                                                                    status_code=status_code))
 
         search_engine = SolrSearchEngine("https://fakeurl")
 
