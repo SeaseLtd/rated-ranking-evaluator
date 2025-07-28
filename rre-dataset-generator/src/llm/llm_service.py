@@ -1,10 +1,12 @@
+import json
 from json import JSONDecodeError
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
-from src.model.llm_schemas import LLMQueryResponse, LLMScoreResponse
-import json
+from src.model.query_response import LLMQueryResponse
+from src.model.score_response import LLMScoreResponse
 import logging
+from typing import List
 
 from src.model.document import Document
 
@@ -15,7 +17,7 @@ class LLMService:
     def __init__(self, chat_model: BaseChatModel):
         self.chat_model = chat_model
 
-    def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> LLMQueryResponse:
+    def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> List[str]:
         """Generates queries based on the given document.
 
         Args:
@@ -23,7 +25,7 @@ class LLMService:
             num_queries_generate_per_doc: The number of queries to generate.
 
         Returns:
-            An LLMQueryResponse object containing the generated queries and metadata.
+            A list of generated queries.
         """
         system_prompt = (
             f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
@@ -43,12 +45,12 @@ class LLMService:
         response = self.chat_model.invoke(messages)
 
         try:
-           output = LLMQueryResponse(content=response.content)
+           output = LLMQueryResponse(response_content=response.content)
         except (KeyError, JSONDecodeError, ValueError) as e:
             log.warning(f"LLM unexpected response. Raw output: {response.content}")
             raise ValueError(f"Invalid LLM response: {e}")
 
-        return output
+        return output.get_queries()
     
 
     def generate_score(self, document: Document, query: str, relevance_scale: str) -> int:
@@ -81,14 +83,16 @@ class LLMService:
         raw = self.chat_model.invoke(messages).content.strip()
 
         try:
-            parsed = LLMScoreResponse(score=json.loads(raw)['score'])
-        except (KeyError, JSONDecodeError, ValueError) as e:
-            log.warning(f"LLM unexpected response. Raw output: {raw}")
+            score = json.loads(raw)['score']
+        except (JSONDecodeError, KeyError) as e:
+            log.debug(f"LLM unexpected response. Raw output: {raw}")
             raise ValueError(f"Invalid LLM response: {e}")
 
-        if parsed.score not in allowed:
-            msg = f"Score '{parsed.score}' is not valid in {relevance_scale} scale"
-            log.warning(msg)
-            raise ValueError(msg)
+        try:
+            parsed = LLMScoreResponse(score=score, scale=relevance_scale)
+            return parsed.get_score()
+        except ValueError as e:
+            log.warning(f"Validation error for score '{score}' on scale '{relevance_scale}': {e}")
+            raise e
 
-        return parsed.score
+        
