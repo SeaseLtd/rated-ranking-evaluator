@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 class VespaSearchEngine(BaseSearchEngine):
     """
     Thin HTTP wrapper around the Vespa Query API.
-    Assumes you already deployed a schema called `doc`.
+    Assumes an already deployed a schema called `doc`.
     """
     def __init__(self, endpoint: str, schema: str = "doc"):
         super().__init__(endpoint)
@@ -29,8 +29,24 @@ class VespaSearchEngine(BaseSearchEngine):
     @staticmethod
     def _filter_to_where(filters: Union[None, List[Dict[str, List[str]]]]) -> str:
         """
-        Convert your [{'genre': ['horror','fantasy']}] format to
-        YQL predicates like:   (genre contains \"horror\" OR genre contains \"fantasy\")
+        Convert a list of filter dictionaries into a Vespa YQL predicate string.
+
+        Each filter dictionary should map field names to a list of values to match.
+        - For a single value: 'field contains "value"'
+        - For multiple values: '(field contains "value1" OR field contains "value2" OR ...)'
+
+        Different fields are combined with AND.
+
+        Example:
+            Input:
+                [
+                    {"title": ["Helicopter"]},
+                    {"description": ["BOGOTA", "Colombia"]}
+                ]
+            Output:
+                'title contains "Helicopter" AND (description contains "BOGOTA" OR description contains "Colombia")'
+
+        If filters is None or empty, returns "true".
         """
         if not filters:
             return "true"
