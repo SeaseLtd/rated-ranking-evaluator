@@ -12,6 +12,8 @@ All commands must be executed from the `tests/integration/vespa-init/` directory
 # Run the full CI cycle: install, start, initialize, test, and clean up.
 make ci
 ```
+
+What does this command do in the background? In detail:
 ```bash
 # ---------------- CI / ONE-SHOT IN DETAIL: ----------------
 ci: install up init test down

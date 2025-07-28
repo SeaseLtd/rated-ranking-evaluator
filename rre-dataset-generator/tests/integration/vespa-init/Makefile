@@ -7,15 +7,15 @@ PYTEST       = python -m pytest -k vespa
 ci: install up init test down
 
 # ---------------- STEPS ----------------
+install:
+	# CAUTION: hard-coded path
+	pip install -e ../../../
+
 up:
 	$(VESPA_COMPOSE) up -d --remove-orphans
 
 init:
 	./vespa-init.sh
-
-install:
-	# CAUTION: hard-coded path
-	pip install -e ../../../
 
 test:
 	$(PYTEST)
