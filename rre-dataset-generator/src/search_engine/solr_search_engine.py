@@ -23,6 +23,9 @@ class SolrSearchEngine(BaseSearchEngine):
         log.debug(f"Working on endpoint: {self.endpoint}")
         self.UNIQUE_KEY = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/uniquekey')).json()['uniqueKey']
         log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
+        # Solr default behavior, passing nonexistent fields results in a silent failure with no logging -- added logging
+        self.schema_fields = {field['name'] for field in requests.get(urljoin(self.endpoint.encoded_string(), 'schema/fields')).json()['fields']}
+        log.debug(f"Schema fields loaded: {len(self.schema_fields)} fields found.")
 
     def _template_to_json_payload(self, template_payload: str) -> Dict[str, Any]:
         """
