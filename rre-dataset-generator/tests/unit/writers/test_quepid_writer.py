@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 
 from src.search_engine.data_store import DataStore
-from src.writers import QuepidWriter
+from src.writers.quepid_writer import QuepidWriter
 
 
 @pytest.fixture

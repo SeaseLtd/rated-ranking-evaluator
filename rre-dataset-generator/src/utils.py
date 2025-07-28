@@ -1,6 +1,8 @@
 import argparse
 import re
 import html
+from pathlib import Path
+
 
 _TAG_REGEX = re.compile('<.*?>')
 

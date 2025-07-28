@@ -6,7 +6,6 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from src.model.query_response import LLMQueryResponse
 from src.model.score_response import LLMScoreResponse
 import logging
-from typing import List
 
 from src.model.document import Document
 
@@ -24,7 +23,7 @@ class LLMService:
         """
         system_prompt = (
             f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
-            "keyword-phrase-based queries based on the given document below. "
+            "queries based on the given document below. "
             "**Output only** a JSON array of strings—nothing else. "
             "Example format: [\"first query\", \"second query\"]"
         )

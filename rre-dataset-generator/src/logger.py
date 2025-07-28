@@ -20,7 +20,7 @@ def configure_logging(level: Union[str, int] = logging.INFO) -> None:
     logging.basicConfig(
         # filename='logs/log_file_name.log',
         level=level,
-        format='[%(asctime)s] %(filename)-15s:%(lineno)-4d %(levelname)-7s - %(message)s',
+        format='[%(asctime)s] %(filename)-28s:%(lineno)-4d %(levelname)-7s - %(message)s',
         datefmt='%H:%M:%S'
     )
 

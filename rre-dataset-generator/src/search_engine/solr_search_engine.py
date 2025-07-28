@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
 import requests
+from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 from typing import List, Dict, Any, Union
 from urllib.parse import parse_qs
@@ -16,12 +17,14 @@ class SolrSearchEngine(BaseSearchEngine):
     """
     Solr implementation to search into a given collection
     """
-    def __init__(self, endpoint: str):
+    def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
+        log.debug(f"Working on endpoint: {self.endpoint}")
+        self.UNIQUE_KEY = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/uniquekey')).json()['uniqueKey']
+        log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
 
-    @staticmethod
-    def template_to_json_body(template_payload: str) -> Dict[str, Any]:
+    def _template_to_json_payload(self, template_payload: str) -> Dict[str, Any]:
         """
         Converts a Solr query string into a structured JSON body.
 
@@ -57,7 +60,7 @@ class SolrSearchEngine(BaseSearchEngine):
             'query': '*:*',
             'params': {
                 'rows': doc_number,
-                'fl' : doc_fields if 'id' in doc_fields else doc_fields + ['id']
+                'fl' : doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
             }
         }
 
@@ -74,19 +77,19 @@ class SolrSearchEngine(BaseSearchEngine):
                         clause = f'{field}:({or_values})'
                     payload['params']['fq'].append(clause)
 
-        return self.search(payload)
+        return self._search(payload)
 
     def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
         """Search for documents using a query."""
         template = query_template.replace(self.PLACEHOLDER, keyword)
-        payload = self.template_to_json_body(template)
+        payload = self._template_to_json_payload(template)
         # here fl is overwritten, even if in the template there are other fields in the 'fl' key
-        payload['params']['fl'] = doc_fields if 'id' in doc_fields else doc_fields + ['id']
-        return self.search(payload)
+        payload['params']['fl'] = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
+        return self._search(payload)
 
-    def search(self, payload: Dict[str, Any]) -> List[Document]:
+    def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
-        search_url = urljoin(str(self.endpoint), 'select')
+        search_url = urljoin(self.endpoint.encoded_string(), 'select')
 
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
@@ -103,20 +106,25 @@ class SolrSearchEngine(BaseSearchEngine):
         match response.status_code:
             case 200:
                 log.debug("Solr query successful.")
-                log.debug(f"URL: {search_url}\n")
-                log.debug(f"Payload: {payload}\n")
+                log.debug(f"URL: {search_url}")
+                log.debug(f"Payload: {payload}")
                 # log.debug(f"Response: {response.json()}")
                 raw_docs = response.json()['response']['docs']
                 reformat_raw_doc = []
                 for doc in raw_docs:
                      clean_doc = dict()
-                     clean_doc['id'] = doc['id']
+                     clean_doc['id'] = doc[self.UNIQUE_KEY]
                      clean_doc['fields'] = dict()
                      for k, v in doc.items():
-                        if k != 'id':
+                        if k != self.UNIQUE_KEY:
                             if isinstance(v, list):
-                                if isinstance(v[0], str):
-                                    clean_doc['fields'][k] = [clean_text(text) for text in v]
+                                if v:
+                                    if isinstance(v[0], str):
+                                        clean_doc['fields'][k] = [clean_text(text) for text in v]
+                                    else:
+                                        clean_doc['fields'][k] = v
+                                else:
+                                    log.warning(f"The field {k} is empty, skipped.")
                             else:
                                 clean_doc['fields'][k] = v
                      reformat_raw_doc.append(Document(**clean_doc))

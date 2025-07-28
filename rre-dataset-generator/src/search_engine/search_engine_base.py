@@ -1,16 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Union
-from pydantic import HttpUrl, BaseModel
+from pydantic import HttpUrl
 from src.model.document import Document
 
-class EndpointValidator(BaseModel):
-    endpoint: HttpUrl
-
 class BaseSearchEngine(ABC):
-    def __init__(self, endpoint: str):
-        validated = EndpointValidator(endpoint=endpoint)
-        self.endpoint = validated.endpoint
+    def __init__(self, endpoint: HttpUrl):
+        self.endpoint = HttpUrl(endpoint)
         self.PLACEHOLDER = "#$query##"
+        self.UNIQUE_KEY = 'id'
 
     @abstractmethod
     def fetch_for_query_generation(self,
@@ -31,6 +28,6 @@ class BaseSearchEngine(ABC):
         pass
 
     @abstractmethod
-    def search(self, payload: Dict[str, Any], doc_fields: List[str]) -> List[Document]:
+    def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
         pass
