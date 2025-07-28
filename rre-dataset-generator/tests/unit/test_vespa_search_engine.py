@@ -17,18 +17,34 @@ def _monkeypatch_health(monkeypatch):
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseHealth())
 
 
-def test_vespa_search_engine_EXPECTED_document_retrieval(monkeypatch):
+@pytest.mark.parametrize(
+    "mock_doc",
+    [
+        {
+            "id": "id:news:news::1",
+            "fields": {
+                "sddocname": "news",
+                "documentid": "id:news:news::1",
+                "id": "1",
+                "title": "Helicopter Crashes in Colombian Drug War, Kills 20",
+                "description": "BOGOTA, Colombia  - A U.S.-made helicopter on an anti-drugs mission crashed in the Colombian jungle on Thursday, killing all 20 Colombian soldiers aboard, the army said."
+            },
+        },
+        {
+            "id": "id:news:news::2",
+            "fields": {
+                "sddocname": "news",
+                "documentid": "id:news:news::2",
+                "id": "2",
+                "title": "Mocked Title 2",
+                "description": "Mocked Description 2",
+            },
+        },
+    ],
+)
+def test_vespa_search_engine_EXPECTED_document_retrieval(monkeypatch, mock_doc):
     _monkeypatch_health(monkeypatch)
     config = Config.load("tests/unit/resources/good_config_vespa.yaml")
-
-    # build a fake document returned by Vespa
-    mock_doc = {
-        "id": "doc::1",
-        "fields": {
-            "title": "A first mocked title",
-            "description": "A first mocked description"
-        }
-    }
 
     # Mock POST /search
     monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseVespaSearch(mock_doc, status_code=200))
@@ -41,7 +57,7 @@ def test_vespa_search_engine_EXPECTED_document_retrieval(monkeypatch):
         doc_fields=config.doc_fields,
     )
 
-    expected = Document(id="doc::1", fields=mock_doc["fields"])
+    expected = Document(id=mock_doc["id"], fields=mock_doc["fields"])
     assert result[0] == expected
 
     # Evaluation path
