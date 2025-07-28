@@ -15,3 +15,6 @@ dependencies = [
     "langchain-google-genai>=2.1.7",
     "python-dotenv>=1.1.1",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
