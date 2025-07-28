@@ -1,13 +1,13 @@
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from src.llm.llm_service import LLMService
 from src.model.document import Document
-from src.model.llm_schemas import LLMQueryResponse
+from src.model.query_response import LLMQueryResponse
+from src.model.score_response import LLMScoreResponse
 import pytest
 
 
-def test_llm_service_test_connection():
-    # UPDATED TESTS TO ADOPT THE NEW RESPONSE FORMAT - LLMQueryResponse
-    # WARNING: now the responses should be JSON strings!
+def test_llm_service_generate_queries_expected_response():
+    # Test that the service can generate queries from a document
     fake_llm = FakeListChatModel(responses=['["Car"]'])
     service = LLMService(chat_model=fake_llm)
 
@@ -22,5 +22,55 @@ def test_llm_service_test_connection():
     response = service.generate_queries(doc1, 5)
 
     assert isinstance(response, LLMQueryResponse)
-    assert response.content_list == ["Car"]
-    assert response.content == '["Car"]'
+    assert response.get_queries() == ["Car"]
+
+
+def test_llm_service_generate_score_expected_response():
+    fake_llm = FakeListChatModel(responses=["{\"score\": 1}"])
+    service = LLMService(chat_model=fake_llm)
+
+    doc1 = Document(
+        id="doc1",
+        fields={
+            "title": "Car of the Year",
+            "description": "The Toyota Camry, the nation's most popular car has now been rated as its best new model."
+        }
+    )
+    query = "Is a Toyota the car of the year?"
+
+    response = service.generate_score(doc1, query, relevance_scale='binary')
+
+    assert isinstance(response, LLMScoreResponse)
+    assert response.get_score() == 1
+
+
+def test_llm_service_generate_score_with_str_response_expected_error():
+    fake_llm = FakeListChatModel(responses=["{\"score\": \"one\"}"])
+    service = LLMService(chat_model=fake_llm)
+
+    doc1 = Document(
+        id="doc1",
+        fields={
+            "title": "Car of the Year",
+            "description": "The Toyota Camry, the nation's most popular car has now been rated as its best new model."
+        }
+    )
+    query = "Is a Toyota the car of the year?"
+    with pytest.raises(ValueError):
+        _ = service.generate_score(doc1, query, relevance_scale='binary')
+
+
+def test_llm_service_generate_score_with_invalid_int_expected_error():
+    fake_llm = FakeListChatModel(responses=["{\"score\": 3}"])
+    service = LLMService(chat_model=fake_llm)
+
+    doc1 = Document(
+        id="doc1",
+        fields={
+            "title": "Car of the Year",
+            "description": "The Toyota Camry, the nation's most popular car has now been rated as its best new model."
+        }
+    )
+    query = "Is a Toyota the car of the year?"
+    with pytest.raises(ValueError):
+        _ = service.generate_score(doc1, query, relevance_scale='binary')

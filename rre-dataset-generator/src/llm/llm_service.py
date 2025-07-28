@@ -17,7 +17,7 @@ class LLMService:
     def __init__(self, chat_model: BaseChatModel):
         self.chat_model = chat_model
 
-    def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> List[str]:
+    def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> LLMQueryResponse:
         """Generates queries based on the given document.
 
         Args:
@@ -25,7 +25,7 @@ class LLMService:
             num_queries_generate_per_doc: The number of queries to generate.
 
         Returns:
-            A list of generated queries.
+            An LLMQueryResponse object.
         """
         system_prompt = (
             f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
@@ -50,10 +50,10 @@ class LLMService:
             log.warning(f"LLM unexpected response. Raw output: {response.content}")
             raise ValueError(f"Invalid LLM response: {e}")
 
-        return output.get_queries()
+        return output
     
 
-    def generate_score(self, document: Document, query: str, relevance_scale: str) -> int:
+    def generate_score(self, document: Document, query: str, relevance_scale: str) -> LLMScoreResponse:
         if relevance_scale == "binary":
             allowed = {0, 1}
             description = (" - 0: the query is NOT relevant to the given document\n"
@@ -90,9 +90,7 @@ class LLMService:
 
         try:
             parsed = LLMScoreResponse(score=score, scale=relevance_scale)
-            return parsed.get_score()
+            return parsed
         except ValueError as e:
             log.warning(f"Validation error for score '{score}' on scale '{relevance_scale}': {e}")
             raise e
-
-        

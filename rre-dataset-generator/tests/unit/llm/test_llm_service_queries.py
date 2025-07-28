@@ -21,15 +21,15 @@ def test_llm_service_generate_queries_EXPECTED_valid(example_doc):
     service = LLMService(chat_model=fake_llm)
     response = service.generate_queries(example_doc, 2)
 
-    assert isinstance(response, list)
-    assert response == ["Toyota", "Best Car"]
+    assert isinstance(response, LLMQueryResponse)
+    assert response.get_queries() == ["Toyota", "Best Car"]
 
 
 def test_llm_service_generate_queries_EXPECTED_empty_list(example_doc):
     fake_llm = FakeListChatModel(responses=['[]'])
     service = LLMService(chat_model=fake_llm)
     response = service.generate_queries(example_doc, 0)
-    assert response == []
+    assert response.get_queries() == []
 
 
 def test_llm_service_generate_queries_EXPECTED_invalid_json(example_doc):
@@ -58,7 +58,7 @@ def test_generate_queries_with_unicode_strings_EXPECTED_list_of_unicode_strings(
     fake_llm = FakeListChatModel(responses=[unicode_list])
     service = LLMService(chat_model=fake_llm)
     response = service.generate_queries(example_doc, 3)
-    assert response == ["こんにちは", "你好", "¡Hola!"]
+    assert response.get_queries() == ["こんにちは", "你好", "¡Hola!"]
 
 
 def test_generate_queries_with_leading_trailing_whitespace_EXPECTED_strings_preserved(example_doc):
@@ -66,4 +66,4 @@ def test_generate_queries_with_leading_trailing_whitespace_EXPECTED_strings_pres
     fake_llm = FakeListChatModel(responses=[list_with_whitespace])
     service = LLMService(chat_model=fake_llm)
     response = service.generate_queries(example_doc, 2)
-    assert response == ["  hello  ", " world "]
+    assert response.get_queries() == ["  hello  ", " world "]
