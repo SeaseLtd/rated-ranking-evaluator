@@ -11,18 +11,27 @@ All commands must be executed from the `tests/integration/vespa-init/` directory
 ```bash
 # Run the full CI cycle: install, start, initialize, test, and clean up.
 make ci
+```
+```bash
+# ---------------- CI / ONE-SHOT IN DETAIL: ----------------
+ci: install up init test down
 
-# Start Vespa services in the background.
-make up
+# ---------------- STEPS ----------------
+install:
+	# CAUTION: hard-coded path
+	pip install -e ../../../
 
-# Initialize Vespa: deploy the app and load test data.
-make init
+up:
+	$(VESPA_COMPOSE) up -d --remove-orphans
 
-# Run Pytest tests for Vespa.
-make test
+init:
+	./vespa-init.sh
 
-# Stop and remove Vespa containers and volumes.
-make down
+test:
+	$(PYTEST)
+
+down:
+	$(VESPA_COMPOSE) down -v
 ```
 
 ---
