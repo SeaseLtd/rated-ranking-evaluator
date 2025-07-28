@@ -32,24 +32,15 @@ def test_llm_service_generate_queries_EXPECTED_empty_list(example_doc):
     assert response.get_queries() == []
 
 
-def test_llm_service_generate_queries_EXPECTED_invalid_json(example_doc):
-    fake_llm = FakeListChatModel(responses=['not a json'])
+@pytest.mark.parametrize("invalid_response, expected_error", [
+    ('not a json', "Invalid JSON in `response_content`"),
+    ('["", " ", "Valid"]', "must not be empty or only whitespace"),
+    ('["Good", 123, null]', "must be strings"),
+])
+def test_llm_service_generate_queries_with_invalid_responses_EXPECTED_error(invalid_response, expected_error, example_doc):
+    fake_llm = FakeListChatModel(responses=[invalid_response])
     service = LLMService(chat_model=fake_llm)
-    with pytest.raises(ValueError, match="Invalid JSON in `response_content`"):
-        service.generate_queries(example_doc, 2)
-
-
-def test_llm_service_generate_queries_with_empty_string_EXPECTED_must_not_be_empty_or_whitespace(example_doc):
-    fake_llm = FakeListChatModel(responses=['["", " ", "Valid"]'])
-    service = LLMService(chat_model=fake_llm)
-    with pytest.raises(ValueError, match="must not be empty or only whitespace"):
-        service.generate_queries(example_doc, 3)
-
-
-def test_llm_service_generate_queries_non_string_items_EXPECTED_must_be_strings(example_doc):
-    fake_llm = FakeListChatModel(responses=['["Good", 123, null]'])
-    service = LLMService(chat_model=fake_llm)
-    with pytest.raises(ValueError, match="must be strings"):
+    with pytest.raises(ValueError, match=expected_error):
         service.generate_queries(example_doc, 3)
 
 

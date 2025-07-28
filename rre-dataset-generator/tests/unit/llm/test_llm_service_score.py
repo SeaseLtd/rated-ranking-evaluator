@@ -34,31 +34,23 @@ def test_generate_score_with_valid_scale_EXPECTED_integer_score(scale, valid_sco
     assert response.get_score() == valid_score
 
 
-@pytest.mark.parametrize("response_json, expected_error", [
-    ('not a json', 'Invalid LLM response'),
-    ('{"not_score": 1}', 'Invalid LLM response'),
-    ('{"score": "one"}', 'Score must be 0 or 1 for binary scale, got one'),
-    ('{"score": 3}', 'Score must be 0 or 1 for binary scale, got 3')
+@pytest.mark.parametrize("scale, response_json, expected_error", [
+    # Binary scale errors
+    ('binary', 'not a json', 'Invalid LLM response'),
+    ('binary', '{"not_score": 1}', 'Invalid LLM response'),
+    ('binary', '{"score": "one"}', 'Score must be 0 or 1 for binary scale, got one'),
+    ('binary', '{"score": 3}', 'Score must be 0 or 1 for binary scale, got 3'),
+    # Graded scale errors
+    ('graded', '{"score": -1}', 'Score must be 0, 1, or 2 for graded scale, got -1'),
+    ('graded', '{"score": 1.5}', 'Score must be 0, 1, or 2 for graded scale, got 1.5'),
+    ('graded', '{"score": null}', 'Score must be 0, 1, or 2 for graded scale, got None'),
 ])
-def test_generate_score_with_invalid_llm_responses_EXPECTED_value_error(response_json, expected_error, example_doc):
+def test_generate_score_with_invalid_llm_responses_EXPECTED_value_error(scale, response_json, expected_error, example_doc):
     fake_llm = FakeListChatModel(responses=[response_json])
     service = LLMService(chat_model=fake_llm)
     query = "Is a Toyota the car of the year?"
     with pytest.raises(ValueError, match=expected_error):
-        service.generate_score(example_doc, query, relevance_scale='binary')
-
-
-@pytest.mark.parametrize("response_json, expected_error", [
-    ('{"score": -1}', 'Score must be 0, 1, or 2 for graded scale, got -1'),
-    ('{"score": 1.5}', 'Score must be 0, 1, or 2 for graded scale, got 1.5'),
-    ('{"score": null}', 'Score must be 0, 1, or 2 for graded scale, got None'),
-])
-def test_generate_score_with_invalid_score_types_EXPECTED_value_error(response_json, expected_error, example_doc):
-    fake_llm = FakeListChatModel(responses=[response_json])
-    service = LLMService(chat_model=fake_llm)
-    query = "Is a Toyota the car of the year?"
-    with pytest.raises(ValueError, match=expected_error):
-        service.generate_score(example_doc, query, relevance_scale='graded')
+        service.generate_score(example_doc, query, relevance_scale=scale)
 
 
 def test_generate_score_with_invalid_relevance_scale_EXPECTED_value_error(example_doc):
