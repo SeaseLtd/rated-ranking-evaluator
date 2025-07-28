@@ -10,6 +10,8 @@ from src.llm.llm_service import LLMService
 from src.model.document import Document
 from src.writers.abstract_writer import AbstractWriter
 from src.search_engine.search_engine_base import BaseSearchEngine
+from src.model.query_response import LLMQueryResponse
+from src.model.score_response import LLMScoreResponse
 
 # data structure
 from src.search_engine.data_store import DataStore
@@ -44,8 +46,8 @@ def generate_and_add_queries(llm_service: LLMService, config: Config, data_store
 
     for doc in docs_to_generate_queries:
         data_store.add_document(doc.id, doc)
-        queries: List[str] = llm_service.generate_queries(doc, num_queries_per_doc)
-        for query_text in queries:
+        query_response: LLMQueryResponse = llm_service.generate_queries(doc, num_queries_per_doc)
+        for query_text in query_response.get_queries():
             if len(data_store.get_queries()) >= config.num_queries_needed:
                 return
             query_id: str = data_store.add_query(query_text, doc.id)
@@ -65,12 +67,12 @@ def add_cartesian_product_scores(llm_service: LLMService, config: Config, data_s
     for query_rating_context in data_store.get_queries():
         for doc in data_store.get_documents():
             if not data_store.has_rating_score(query_rating_context.get_query_id(), doc.id):
-                score: int = llm_service.generate_score(data_store.get_document(doc.id),
+                score_response: LLMScoreResponse = llm_service.generate_score(data_store.get_document(doc.id),
                                                         query_rating_context.get_query(),
                                                         config.relevance_scale)
                 data_store.add_rating_score(query_rating_context.get_query_id(),
                                             doc.id,
-                                            score)
+                                            score_response.get_score())
 
 
 if __name__ == "__main__":
