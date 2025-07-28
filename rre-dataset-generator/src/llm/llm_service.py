@@ -31,7 +31,7 @@ class LLMService:
             f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
             "keyword-phrase-based queries based on the given document below. "
             "**Output only** a JSON array of strings—nothing else. "
-            'Example format: ["first query", "second query"]'
+            "Example format: [\"first query\", \"second query\"]"
         )
 
         doc_json = document.model_dump_json()
