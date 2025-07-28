@@ -1,0 +1,32 @@
+services:
+  # solr:
+  #   image: solr:9.8.1
+  #   container_name: solr_test
+  #   ports:
+  #     - "8983:8983"
+  #   command: ["solr-precreate", "testcore"]
+
+  # solr-init:
+  #   build:
+  #     context: solr-init
+  #   depends_on:
+  #     - solr
+  #   command: ["sh", "-c", "/opt/rre-dataset-generator/solr-init.sh"]
+
+
+  vespa:
+    image: vespaengine/vespa
+    container_name: vespa
+    hostname: vespa-container
+    ports:
+      - "8080:8080"
+      - "19071:19071"
+    volumes:
+      - ./app:/app
+      - ./dataset:/dataset
+      # Logging volume removed to avoid permission issues when host user ≠ container user
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/state/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 30

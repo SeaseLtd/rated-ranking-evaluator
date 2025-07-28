@@ -1,0 +1,8 @@
+{
+    "put": "id:news:news::1",
+    "fields": {
+        "id": "1",
+        "title": "Helicopter Crashes in Colombian Drug War, Kills 20",
+        "description": "BOGOTA, Colombia  - A U.S.-made helicopter on an anti-drugs mission crashed in the Colombian jungle on Thursday, killing all 20 Colombian soldiers aboard, the army said."
+    }
+}
