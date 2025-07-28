@@ -18,14 +18,9 @@ class LLMService:
         self.chat_model = chat_model
 
     def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> LLMQueryResponse:
-        """Generates queries based on the given document.
-
-        Args:
-            document: The document to generate queries from.
-            num_queries_generate_per_doc: The number of queries to generate.
-
-        Returns:
-            An LLMQueryResponse object.
+        """
+        Generate queries based on the given document and num_queries_generate_per_doc and
+        Returns a list of generated queries or just a generated string in case of LLM hallucination
         """
         system_prompt = (
             f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
@@ -54,6 +49,9 @@ class LLMService:
     
 
     def generate_score(self, document: Document, query: str, relevance_scale: str) -> LLMScoreResponse:
+        """
+        Generates a relevance score for a given document-query pair using a specified relevance scale.
+        """
         if relevance_scale == "binary":
             allowed = {0, 1}
             description = (" - 0: the query is NOT relevant to the given document\n"
@@ -68,16 +66,18 @@ class LLMService:
             log.error(msg)
             raise ValueError(msg)
 
-        system_prompt = (
-            f"You are a professional data labeler.\n"
-            f"Given a document and a query, return the relevance score using the {relevance_scale.upper()} scale:\n"
-            f"{description}\n"
-            f"Expected JSON format: {{\"score\": integer}}"
-        )
-
         messages = [
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=f"Document:\n{document.model_dump_json()}\n\nQuery:\n{query}")
+            SystemMessage(
+                content=f"You are a professional data labeler and, given a documents with a set of fields and a query "
+                        f"text, you need to return the relevance score in a scale called {relevance_scale.upper()}. The "
+                        f"scores of this scale are built as follows:\n{description}\n"
+                        f"Knowing this, return a JSON object with key 'score' and the related score as an integer value."
+                        f"I'm expecting a JSON response like the following: {{\"score\": `integer`}}"
+            ),
+            HumanMessage(
+                content=f"Document: {document.model_dump_json()}\n"
+                        f"Query:{query}\n"
+            )
         ]
 
         raw = self.chat_model.invoke(messages).content.strip()
@@ -94,3 +94,5 @@ class LLMService:
         except ValueError as e:
             log.warning(f"Validation error for score '{score}' on scale '{relevance_scale}': {e}")
             raise e
+
+
