@@ -69,6 +69,15 @@ if __name__ == "__main__":
 
     log.debug(f"Number of documents evaluated: {len(docs_to_generate_queries)}")
 
+    # retrieval of the document we need to store for generated queries
+    for query_rating_context in data_store.get_queries():
+        docs_eval = search_engine.fetch_for_evaluation(keyword=query_rating_context.get_query(),
+                                                       query_template=config.query_template,
+                                                       doc_fields=config.doc_fields)
+        for doc in docs_eval:
+            if not data_store.has_document(doc.id):
+                data_store.add_document(doc.id, doc)
+
     # loop looking at all docs not rated in the data_store for that query
     for query_rating_context in data_store.get_queries():
         for doc in data_store.get_documents():

@@ -1,13 +1,13 @@
+import json
 from json import JSONDecodeError
-from typing import List, Union
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
-import json
+from src.model.query_response import LLMQueryResponse
+from src.model.score_response import LLMScoreResponse
 import logging
 
 from src.model.document import Document
-from typing import Union, List
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class LLMService:
     def __init__(self, chat_model: BaseChatModel):
         self.chat_model = chat_model
 
-    def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> Union[List[str], str]:
+    def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> LLMQueryResponse:
         """
         Generate queries based on the given document and num_queries_generate_per_doc and
         Returns a list of generated queries or just a generated string in case of LLM hallucination
@@ -35,32 +35,35 @@ class LLMService:
             HumanMessage(content=f"Document:\n{doc_json}")
         ]
 
-        raw = self.chat_model.invoke(messages).content.strip()
+        # The response from invoke is an AIMessage object which contains all the needed info
+        response = self.chat_model.invoke(messages)
 
-        # in case LLM hallucinates
         try:
-            return json.loads(raw)
-        except JSONDecodeError:
-            log.warning("LLM hallucinated and its response: %s", raw)
-            return raw
+           output = LLMQueryResponse(response_content=response.content)
+        except (KeyError, JSONDecodeError, ValueError) as e:
+            log.warning(f"LLM unexpected response. Raw output: {response.content}")
+            raise ValueError(f"Invalid LLM response: {e}")
 
-    def generate_score(self, document: Document, query: str, relevance_scale: str) -> int:
+        return output
+    
+
+    def generate_score(self, document: Document, query: str, relevance_scale: str) -> LLMScoreResponse:
         """
         Generates a relevance score for a given document-query pair using a specified relevance scale.
         """
         if relevance_scale == "binary":
-            scale = {0, 1}
-            description = (" - 0: the query is NOT relevant to the given document"
-                           " - 1: the query is relevant to the given document")
+            allowed = {0, 1}
+            description = (" - 0: the query is NOT relevant to the given document\n"
+                        " - 1: the query is relevant to the given document")
         elif relevance_scale == "graded":
-            scale = {0, 1, 2}
-            description = (" - 0: the query is NOT relevant to the given document"
-                           " - 1: the query may be relevant to the given document"
-                           " - 2: the document proposed is the answer to the query")
+            allowed = {0, 1, 2}
+            description = (" - 0: the query is NOT relevant to the given document\n"
+                        " - 1: the query may be relevant to the given document\n"
+                        " - 2: the document proposed is the answer to the query")
         else:
-            error_msg = "The relevance scale must be either 'binary' or 'graded'"
-            log.error(error_msg)
-            raise ValueError(error_msg)
+            msg = f"Invalid relevance scale: {relevance_scale}"
+            log.error(msg)
+            raise ValueError(msg)
 
         messages = [
             SystemMessage(
@@ -76,16 +79,19 @@ class LLMService:
             )
         ]
 
-        #response = self.chat_model.with_structured_output(method="json_mode").invoke(messages)
         raw = self.chat_model.invoke(messages).content.strip()
+
         try:
-            response =  int(json.loads(raw)['score'])
-            if response not in scale:
-                error_msg = f"LLM hallucinated the value of the scale. Returned: {response}"
-                log.warning(error_msg)
-                raise ValueError(error_msg)
-            return response
-        except JSONDecodeError:
-            error_msg = f"LLM hallucinated and its response: {raw}"
-            log.warning(error_msg)
-            raise ValueError(error_msg)
+            score = json.loads(raw)['score']
+        except (JSONDecodeError, KeyError) as e:
+            log.debug(f"LLM unexpected response. Raw output: {raw}")
+            raise ValueError(f"Invalid LLM response: {e}")
+
+        try:
+            parsed = LLMScoreResponse(score=score, scale=relevance_scale)
+            return parsed
+        except ValueError as e:
+            log.warning(f"Validation error for score '{score}' on scale '{relevance_scale}': {e}")
+            raise e
+
+

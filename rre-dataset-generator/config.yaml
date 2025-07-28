@@ -2,7 +2,7 @@
 # dataset-generator module
 # Default: "q=#$query##"
 # Example (solr):
-query_template: "q=#$query##&df=description&rows=3&q.op=OR&wt=json"
+query_template: "q=#$query##&df=description&rows=2&q.op=OR&wt=json"
 
 # The type of search engine to use
 # Accepted values: solr, elasticsearch, opensearch, vespa
