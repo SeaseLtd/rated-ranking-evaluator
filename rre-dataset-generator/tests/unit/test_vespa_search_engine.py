@@ -130,16 +130,19 @@ def test_fetch_for_query_generation_EXPECTS_builds_valid_yql_caps_hits_and_parse
     payload = calls["json"]
     assert payload["hits"] == MAX_HITS
     yql = payload["yql"]
+
     # Should contain field selection
     assert re.search(r"select (title,\s*description|description,\s*title) from doc where ", yql)
+
     # Should contain valid filters
     assert 'title contains "Helicopter"' in yql
     assert ('(description contains "BOGOTA" OR description contains "Colombia")' in yql or
             '(description contains "Colombia" OR description contains "BOGOTA")' in yql)
+    
     # Should not contain the invalid field
     assert "bad-field" not in yql
 
-    # Field parsing and normalization
+    # Field parsing and normalization - this is added in last place to avoid error propagation if previous test_ failures
     assert len(docs) == 1
     expected_fields = {
         k: VespaSearchEngine._normalize_field_value(v)
