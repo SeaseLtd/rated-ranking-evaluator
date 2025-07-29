@@ -1,12 +1,14 @@
+from typing import Dict, List
+
 class MockResponseSolrEngine:
-    def __init__(self, json_data, status_code=200):
+    def __init__(self, json_data: List, status_code: int =200):
         self._json_data = json_data
         self.status_code = status_code
 
     def json(self):
         return {
             "response": {
-                "docs": self._json_data if isinstance(self._json_data, list) else [self._json_data]
+                "docs": self._json_data
             }
         }
 

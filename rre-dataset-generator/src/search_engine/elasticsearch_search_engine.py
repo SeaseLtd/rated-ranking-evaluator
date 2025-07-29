@@ -79,7 +79,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
         try:
-            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response = requests.post(search_url, headers=self.HEADERS, json=payload, allow_redirects=False)
         except ConnectionError as e:
             log.error(f"Connection failed while accessing {search_url}\nError: {e}")
             raise ConnectionError(f"Connection failed while accessing {search_url}\nError: {e}")
@@ -95,7 +95,8 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
                 log.debug("Elasticsearch query successful.")
                 log.debug(f"URL: {search_url}")
                 log.debug(f"Payload: {payload}")
-                raw_docs = response.json()['hits']['hits']
+                data = response.json()
+                raw_docs = (data.get('hits') or {}).get('hits') or []
                 reformat_raw_doc = []
                 for doc in raw_docs:
                     clean_doc = dict()

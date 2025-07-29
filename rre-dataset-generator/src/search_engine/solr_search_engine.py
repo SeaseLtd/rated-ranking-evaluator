@@ -92,7 +92,7 @@ class SolrSearchEngine(BaseSearchEngine):
         search_url = urljoin(self.endpoint.encoded_string(), 'select')
 
         try:
-            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response = requests.post(search_url, headers=self.HEADERS, json=payload, allow_redirects=False)
         except ConnectionError as e:
             log.error(f"Connection failed while accessing {search_url}\nError: {e}")
             raise ConnectionError(f"Connection failed while accessing {search_url}\nError: {e}")
@@ -108,7 +108,8 @@ class SolrSearchEngine(BaseSearchEngine):
                 log.debug("Solr query successful.")
                 log.debug(f"URL: {search_url}")
                 log.debug(f"Payload: {payload}")
-                raw_docs = response.json()['response']['docs']
+                data = response.json()
+                raw_docs = (data.get('response') or {}).get('docs') or []
                 reformat_raw_doc = []
                 for doc in raw_docs:
                      clean_doc = dict()
