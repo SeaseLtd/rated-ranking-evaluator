@@ -131,8 +131,9 @@ class DataStore:
         return {
             "query_id": query.get_query_id(),
             "query_text": query.get_query(),
-            "doc_ids": query.get_doc_ids(),
             "doc_ratings": query._doc_id_to_rating_score.copy(),  # copy to avoid mutation
+            # this is not correct: _doc_id_to_rating_score -> [str,int]. We only need the string
+            "doc_ids": query.get_doc_ids(),
             "documents": [doc.model_dump() for doc in documents if doc is not None]
         }
 
