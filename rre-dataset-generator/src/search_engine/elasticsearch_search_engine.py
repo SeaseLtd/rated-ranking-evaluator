@@ -29,7 +29,18 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
                                    doc_fields: List[str]) -> List[Document]:
+        """
+        Fetches a set of documents from Elasticsearch for query generation purposes.
 
+        Args:
+            documents_filter (Union[None, List[Dict[str, List[str]]]]): Optional list of field filters to apply.
+                Each filter is a dictionary mapping field names to allowed values.
+            doc_number (int): Number of documents to retrieve.
+            doc_fields (List[str]): List of field names to include in the output.
+
+        Returns:
+            List[Document]: A list of documents formatted as `Document` instances.
+        """
         # Build base query
         query = {"match_all": {}}
 
@@ -64,7 +75,19 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str=None) -> List[Document]:
-        """Search for documents using a query."""
+        """
+        Executes a search for evaluation using a query template with an optional keyword substitution.
+
+        Args:
+            query_template (str): A JSON-formatted string representing the Elasticsearch query,
+                possibly containing a placeholder for a keyword.
+            doc_fields (List[str]): List of field names to include in the response.
+            keyword (str, optional): A keyword to replace the placeholder in the query.
+                If not provided, a default match_all query is used.
+
+        Returns:
+            List[Document]: A list of documents matching the query.
+        """
         if keyword:
              payload = json.loads(query_template.replace(self.PLACEHOLDER, keyword))
         else:
@@ -75,7 +98,21 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
-        """Search for documents using a query."""
+        """
+        Executes the search request to the Elasticsearch `_search` endpoint and parses the response.
+
+        Args:
+            payload (Dict[str, Any]): JSON payload representing the Elasticsearch query.
+
+        Returns:
+            List[Document]: A list of retrieved documents as `Document` instances.
+
+        Raises:
+            ConnectionError: If the connection to the Elasticsearch endpoint fails.
+            Timeout: If the request times out.
+            RequestException: If an unexpected error occurs during the request.
+            HTTPError: If Elasticsearch returns a non-200 HTTP status code.
+        """
         search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
         try:
