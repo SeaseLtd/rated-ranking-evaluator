@@ -56,6 +56,17 @@ class SolrSearchEngine(BaseSearchEngine):
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int, doc_fields: List[str]) \
             -> List[Document]:
+        """
+        Fetches a set of documents from Solr for the purpose of query generation.
+
+        Args:
+            documents_filter (Union[None, List[Dict[str, List[str]]]]): Optional filter constraints for fields and their allowed values.
+            doc_number (int): Number of documents to retrieve.
+            doc_fields (List[str]): List of field names to include in the output.
+
+        Returns:
+            List[Document]: A list of retrieved documents as `Document` objects.
+        """
         payload = {
             'query': '*:*',
             'params': {
@@ -80,7 +91,17 @@ class SolrSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
-        """Search for documents using a query."""
+        """
+        Executes a search using a query template for evaluation purposes.
+
+        Args:
+            query_template (str): A Solr query template string with a placeholder for the keyword.
+            doc_fields (List[str]): List of fields to include in the response.
+            keyword (str, optional): Keyword to inject into the query template. Defaults to "*:*".
+
+        Returns:
+            List[Document]: A list of documents matching the query.
+        """
         template = query_template.replace(self.PLACEHOLDER, keyword)
         payload = self._template_to_json_payload(template)
         # here fl is overwritten, even if in the template there are other fields in the 'fl' key
@@ -88,7 +109,21 @@ class SolrSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
-        """Search for documents using a query."""
+        """
+        Executes a Solr search using a JSON payload and parses the results.
+
+        Args:
+            payload (Dict[str, Any]): The JSON payload to send in the POST request to Solr.
+
+        Returns:
+            List[Document]: A list of documents formatted as `Document` instances.
+
+        Raises:
+            ConnectionError: If the connection to the Solr endpoint fails.
+            Timeout: If the request times out.
+            RequestException: If an unexpected request error occurs.
+            HTTPError: If Solr returns an HTTP error status code.
+        """
         search_url = urljoin(self.endpoint.encoded_string(), 'select')
 
         try:
