@@ -102,16 +102,6 @@ class VespaSearchEngine(BaseSearchEngine):
         """Returns a quoted and escaped YQL literal."""
         return f'"{VespaSearchEngine._yql_escape(s)}"'
 
-    @staticmethod
-    def _sanitize_value(value: str) -> str:
-        """
-        Sanitize a string value before embedding it in a YQL query.
-
-        Instead of fragile blacklists, we apply escaping and treat it as a literal.
-        (The method name is kept for compatibility with the original structure.)
-        """
-        return VespaSearchEngine._yql_escape(value)
-
     def _validate_filters(self, filters: Union[None, List[Dict[str, List[str]]]]) -> None:
         """
         Warn if any filter references an unknown field from the schema.
