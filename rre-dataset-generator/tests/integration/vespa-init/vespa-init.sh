@@ -1,70 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-docker exec -it vespa bash -c "vespa deploy --wait 300 ./app"
-# EXPECTED:
-# Waiting up to 5m0s for deployment to converge...
-docker exec -it vespa bash -c "sleep 5"
+# The target is the vespa container, accessible on port 8080.
+CONFIG_URL="http://localhost:19071"
+HTTP_URL="http://localhost:8080"
 
+# Deploy the application package
+echo "Deploying Vespa application (config server $CONFIG_URL)…"
+vespa deploy --wait 300 --target $CONFIG_URL /app
+sleep 5
 
-docker exec -it vespa bash -c "vespa feed dataset/*.json"
-# EXPECTED:
-# {
-#   "feeder.operation.count": 1,
-#   "feeder.seconds": 0.332,
-#   "feeder.ok.count": 1,
-#   "feeder.ok.rate": 1.000,
-#   "feeder.error.count": 0,
-#   "feeder.inflight.count": 0,
-#   "http.request.count": 1,
-#   "http.request.bytes": 303,
-#   "http.request.MBps": 0.000,
-#   "http.exception.count": 0,
-#   "http.response.count": 1,
-#   "http.response.bytes": 66,
-#   "http.response.MBps": 0.000,
-#   "http.response.error.count": 0,
-#   "http.response.latency.millis.min": 330,
-#   "http.response.latency.millis.avg": 330,
-#   "http.response.latency.millis.max": 330,
-#   "http.response.code.counts": {
-#     "200": 1
-#   }
-# }
+# Wait until the HTTP (query) endpoint is ready before feeding/querying
+echo "Waiting for Vespa HTTP endpoint on $HTTP_URL to be ready…"
+for i in {1..300}; do
+  if curl -s --head "$HTTP_URL/status.html" | grep "200 OK" >/dev/null; then
+    echo "HTTP port 8080 is up."
+    break
+  fi
+  sleep 1
+  if [ "$i" -eq 300 ]; then
+    echo "Timeout waiting for HTTP endpoint" >&2
+    exit 1
+  fi
+done
 
-docker exec -it vespa bash -c "sleep 5"
+# Feed the sample data
+echo "Feeding data …"
+vespa feed --target $HTTP_URL /data/*.json
+sleep 5
 
+# Verify a simple query works
+echo "Running test query …"
+vespa query --target $HTTP_URL "select * from news where true" language=en-US
 
-docker exec -it vespa bash -c "vespa query \"select * from news where true\" language=en-US"
-# EXPECTED:
-# {
-#     "root": {
-#         "id": "toplevel",
-#         "relevance": 1.0,
-#         "fields": {
-#             "totalCount": 1
-#         },
-#         "coverage": {
-#             "coverage": 100,
-#             "documents": 1,
-#             "full": true,
-#             "nodes": 1,
-#             "results": 1,
-#             "resultsFull": 1
-#         },
-#         "children": [
-#             {
-#                 "id": "id:news:news::1",
-#                 "relevance": 0.0,
-#                 "source": "news",
-#                 "fields": {
-#                     "sddocname": "news",
-#                     "documentid": "id:news:news::1",
-#                     "id": "1",
-#                     "title": "Helicopter Crashes in Colombian Drug War, Kills 20",
-#                     "description": "BOGOTA, Colombia  - A U.S.-made helicopter on an anti-drugs mission crashed in the Colombian jungle on Thursday, killing all 20 Colombian soldiers aboard, the army said."
-#                 }
-#             }
-#         ]
-#     }
-# }
+echo "Vespa initialization complete."
