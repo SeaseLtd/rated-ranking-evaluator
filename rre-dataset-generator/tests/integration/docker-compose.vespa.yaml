@@ -1,0 +1,18 @@
+services:
+  vespa:
+    image: vespaengine/vespa:8
+    container_name: vespa
+    hostname: vespa-container
+    ports:
+      - "8080:8080"
+      - "19071:19071"
+    volumes:
+      # Mount the application schema, data, and init script
+      - ./vespa-init/app:/app
+      - ./vespa-init/data:/data
+      - ./vespa-init/vespa-init.sh:/app/vespa-init.sh
+    healthcheck:
+      test: ["CMD", "curl", "-s", "--head", "http://localhost:19071/ApplicationStatus"]
+      interval: 1s
+      timeout: 10s
+      retries: 60
