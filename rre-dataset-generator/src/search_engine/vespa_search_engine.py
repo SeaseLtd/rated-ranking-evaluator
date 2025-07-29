@@ -18,7 +18,7 @@ DEFAULT_TIMEOUT = 10
 MAX_HITS = 100
 
 # Basic field name validation to prevent injection through identifiers
-_FIELD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_FIELD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$") #this only allows starting with a letter or underscore, and then any number of letters, numbers, or underscores. Not ., " , /..
 
 
 class VespaSearchEngine(BaseSearchEngine):
