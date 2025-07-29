@@ -14,9 +14,12 @@ import logging
 
 configure_logging(level=logging.DEBUG)
 
+@pytest.fixture
+def solr_config():
+    """Fixture that loads a valid OpenSearch config for unit tests."""
+    return Config.load("tests/unit/resources/solr_good_config.yaml")
 
-def test_solr_search_engine(monkeypatch):
-    config = Config.load("tests/unit/resources/solr_good_config.yaml")
+def test_solr_search_engine(monkeypatch, solr_config):
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="mock_id"))
     search_engine = SolrSearchEngine("https://fakeurl")
 
@@ -33,21 +36,20 @@ def test_solr_search_engine(monkeypatch):
     }
 
     # apply the monkeypatch for requests.post to mock_post
-    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine(mock_doc, status_code=200))
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([mock_doc], status_code=200))
 
     # search_engine.extract_documents_to_generate_queries, which contains requests.post, uses the monkeypatch
-    result = search_engine.fetch_for_query_generation(documents_filter=config.documents_filter,
-                                                      doc_number=config.doc_number,
-                                                      doc_fields=config.doc_fields)
+    result = search_engine.fetch_for_query_generation(documents_filter=solr_config.documents_filter,
+                                                      doc_number=solr_config.doc_number,
+                                                      doc_fields=solr_config.doc_fields)
     assert result[0] == Document(**mock_dict)
     # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_evaluation(keyword="and",
-                                                query_template=config.query_template,
-                                                doc_fields=config.doc_fields)
+                                                query_template=solr_config.query_template,
+                                                doc_fields=solr_config.doc_fields)
     assert result[0] == Document(**mock_dict)
 
-def test_solr_search_engine_negative_post(monkeypatch):
-    config = Config.load("tests/unit/resources/solr_good_config.yaml")
+def test_solr_search_engine_negative_post_fetch_for_query_generation_EXPECTED_HttpError(monkeypatch, solr_config):
     for status_code in [400, 401, 402, 403, 500]:
         monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="identifier"))
         monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([], status_code=status_code))
@@ -56,16 +58,25 @@ def test_solr_search_engine_negative_post(monkeypatch):
 
         with pytest.raises(HTTPError):
             search_engine.fetch_for_query_generation(
-                documents_filter=config.documents_filter,
-                doc_number=config.doc_number,
-                doc_fields=config.doc_fields
+                documents_filter=solr_config.documents_filter,
+                doc_number=solr_config.doc_number,
+                doc_fields=solr_config.doc_fields
             )
+
+
+def test_solr_search_engine_negative_post_fetch_for_evaluation_EXPECTED_HttpError(monkeypatch, solr_config):
+    for status_code in [400, 401, 402, 403, 500]:
+        monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="identifier"))
+        monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([], status_code=status_code))
+
+        search_engine = SolrSearchEngine("https://fakeurl")
+
 
         with pytest.raises(HTTPError):
             search_engine.fetch_for_evaluation(
                 keyword="and",
-                query_template=config.query_template,
-                doc_fields=config.doc_fields
+                query_template=solr_config.query_template,
+                doc_fields=solr_config.doc_fields
             )
 
 def test_template_to_json_payload(monkeypatch):
@@ -111,6 +122,6 @@ def test_template_to_json_payload(monkeypatch):
     }
     assert solr_engine._template_to_json_payload(template) == expected_payload
 
-def test_solr_search_engine_bad_url():
+def test_solr_search_engine_bad_url_EXPECTED_ValidationError():
     with pytest.raises(ValidationError):
         _ = SolrSearchEngine("fake-NONurl")
