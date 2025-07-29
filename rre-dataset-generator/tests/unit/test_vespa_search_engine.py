@@ -3,15 +3,13 @@ import json
 import pytest
 import requests
 from requests.exceptions import HTTPError
-from pydantic_core import ValidationError
 
 from src.logger import configure_logging
 from src.config import Config
 from src.search_engine.vespa_search_engine import VespaSearchEngine, MAX_HITS
 from src.model.document import Document
-from src.utils import clean_text
 
-from tests.mocks.vespa import MockResponseVespaSearch, MockResponseHealth
+from tests.mocks.vespa import MockResponseVespaSearch
 
 configure_logging()
 
