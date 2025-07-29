@@ -99,3 +99,32 @@ docker compose up --build
 This will start 2 services:
  - `solr`, available at http://localhost:8983/solr
  - `solr-init`, loads documents from solr/data/dataset.json only if Solr doesn't index any documents.
+
+##### Running Vespa (Standalone)
+
+To run a local Vespa test environment, navigate to the integration tests directory:
+
+```bash
+cd tests/integration/
+```
+
+You can use the provided `Makefile` to manage the Vespa container:
+
+-   **Start and initialize Vespa:**
+    ```bash
+    make vespa-all
+    ```
+
+-   **Start the container only:**
+    ```bash
+    make vespa-up
+    ```
+
+-   **Stop and remove the container:**
+    ```bash
+    make vespa-down
+    ```
+
+This will start a Vespa service available at `http://localhost:8080` (querying) and `http://localhost:19071` (admin/config).
+
+The `vespa-init` process deploys the application schema located in `vespa-init/app` and feeds the sample documents from `vespa-init/data`.

@@ -73,11 +73,11 @@ class VespaSearchEngine(BaseSearchEngine):
     @staticmethod
     def _yql_escape(s: str) -> str:
         """
-        Minimal and safe escaping for YQL literals: escapes quotes and backslashes
+        Minimal and basic escaping for YQL literals: escapes quotes and backslashes
         and removes problematic control characters.
         """
         s = s.replace("\\", "\\\\").replace('"', '\\"')
-        s = re.sub(r"[\x00-\x1F\x7F]", " ", s)  # remove control chars
+        s = re.sub(r"[\x00-\x1F\x7F]", " ", s)
         return s
 
     @staticmethod
@@ -277,7 +277,7 @@ class VespaSearchEngine(BaseSearchEngine):
                     log.warning("Skipping invalid field name '%s' in filters.", field)
                     continue
 
-                # Escape each value embedded as a literal
+                # Escape each value embedded as a literal " "
                 if len(values) == 1:
                     safe_val = VespaSearchEngine._safe_literal(values[0])
                     clauses.append(f'{field} contains {safe_val}')

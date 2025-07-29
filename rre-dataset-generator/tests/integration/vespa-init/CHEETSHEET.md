@@ -1,100 +1,99 @@
-# Vespa Integration Test Cheatsheet
+# Vespa Integration Cheatsheet
 
-This guide summarizes the commands used to manage and test integration with Vespa, using the workflow defined in the `Makefile`.
-
----
-
-## Main Workflow (Makefile)
-
-All commands must be executed from the `tests/integration/vespa-init/` directory.
-
-```bash
-# Run the full CI cycle: install, start, initialize, test, and clean up.
-make ci
-```
-
-What does this command do in the background? In detail:
-```bash
-# ---------------- CI / ONE-SHOT IN DETAIL: ----------------
-ci: install up init test down
-
-# ---------------- STEPS ----------------
-install:
-	# CAUTION: hard-coded path
-	pip install -e ../../../
-
-up:
-	$(VESPA_COMPOSE) up -d --remove-orphans
-
-init:
-	./vespa-init.sh
-
-test:
-	$(PYTEST)
-
-down:
-	$(VESPA_COMPOSE) down -v
-```
+Summary of commands to manage, inspect, and test the local Vespa integration environment.
 
 ---
 
-## General Container Management (Docker Compose)
+## 1. Environment Management (Makefile)
 
-For manual operations or debugging.
+These commands should be run from the `tests/integration/` directory. The `Makefile` is the simplest way to manage the container lifecycle.
 
-```bash
-# List running containers.
-docker compose ps
+-   **Start and Initialize Vespa** (Recommended)
+    ```bash
+    make vespa-all
+    ```
 
-# Tail Vespa container logs in real time.
-docker compose logs -f vespa
+-   **Start Container Only**
+    ```bash
+    make vespa-up
+    ```
 
-# Open an interactive shell inside the Vespa container.
-docker compose exec vespa bash
 
-# Stop the services.
-docker compose stop
+-   **Stop and Remove Container**
+    ```bash
+    make vespa-down
+    ```
 
-# Restart previously stopped services.
-docker compose start
-```
+-   **Open a Shell Inside the Container**
+    ```bash
+	# Start the container
+    docker compose -f docker-compose.vespa.yaml up -d
+	# Open a shell inside the container
+	docker exec -it vespa bash
+    ```
 
----
-
-## Vespa Commands
-
-These commands must be executed **inside the container** (`docker compose exec vespa ...`).
-
-```bash
-# Deploy the application (defined under /app inside the container).
-vespa deploy --wait 300 /app
-
-# Feed Vespa with test data (located in /dataset).
-vespa feed /dataset/dataset.json
-
-# Perform a basic query to verify data ingestion.
-vespa query "select * from news where true"
-
-# Retrieve a document by its ID.
-vespa document get id:news:news::1
-```
+-   **Follow Container Logs**
+    ```bash
+    docker compose -f docker-compose.vespa.yaml logs -f
+	# or the makefile shortcut
+	make vespa-logs
+    ```
 
 ---
 
-## Health Checks
-We're having some troubles using the healthchecks, but should be available at:
+## 2. Health and Status Checks
 
-```bash
-# Check Vespa container health.
-curl http://localhost:8080/state/v1/health
+Use these `curl` commands from your host machine to verify that Vespa is running correctly.
 
-# Check Vespa config server health.
-curl http://localhost:19071/state/v1/health
-```
+-   **Check Query Service Health**
+    ```bash
+    curl -s http://localhost:8080/state/v1/health
+    ```
+
+-   **Check Admin/Config Service Status**
+    ```bash
+    curl -s http://localhost:19071/ApplicationStatus
+    ```
 
 ---
 
-## Important Notes
-* **Test Configuration**: The tests in `test_vespa.py` connect to `http://localhost:8080` by default. This can be overridden using the `VESPA_ENDPOINT` environment variable. The pytest relies on the Vespa app / container being initialized before. So automatically it won't run all the tests by default. We need to configure in the GitLab CI to run properly.
+## 3. Application and Schema Inspection
 
-* **Working Directory**: The `make` and `docker compose` commands must be run from `tests/integration/vespa-init/`.
+-   **View Deployed Schema File** (in the directory containing this file)
+    The most reliable way to check the schema is to view the source file directly.
+    ```bash
+    cat /app/schemas/news.sd
+    ```
+
+-   **View Service Configuration** (in the directory containing this file)
+    This file defines the content cluster and services.
+    ```bash
+    cat /app/services.xml
+    ```
+
+---
+
+## 4. Querying
+
+-   **Run a YQL Query with `curl`** (from host machine)
+    ```bash
+    curl -s "http://localhost:8080/search/?yql=select%20*%20from%20news%20where%20true"
+    ```
+
+-   **Run a Query with `vespa-cli`** (from the container)
+    ```bash
+    docker exec vespa vespa query 'select * from news where true'
+    ```
+
+---
+
+## 5. Running Integration Tests
+
+Manual checks:
+
+```bash
+python -m pytest tests/integration/vespa-init/vespa_test_manual_integration.py
+```
+
+### TODO
+Implement integration tests using a make command
