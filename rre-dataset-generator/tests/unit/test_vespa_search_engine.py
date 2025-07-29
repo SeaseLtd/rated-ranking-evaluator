@@ -211,7 +211,7 @@ def test_fetch_for_query_generation_EXPECTS_warn_on_unknown_schema_fields(monkey
     _ = _capture_post(monkeypatch, vespa_raw, status_code=200)
 
     engine = VespaSearchEngine("https://fakehost/base", schema="doc")
-    with caplog.at_level("WARNING"):
+    with caplog.at_level("DEBUG"):
         _ = engine.fetch_for_query_generation(
             documents_filter=[{"unknown": ["x"]}, {"title": ["ok"]}],
             doc_number=1,
