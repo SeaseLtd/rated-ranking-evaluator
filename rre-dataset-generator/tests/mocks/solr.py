@@ -1,4 +1,5 @@
-from typing import Dict, List
+from typing import List
+import requests
 
 class MockResponseSolrEngine:
     def __init__(self, json_data: List, status_code: int =200):
@@ -11,6 +12,12 @@ class MockResponseSolrEngine:
                 "docs": self._json_data
             }
         }
+
+
+    def raise_for_status(self):
+        if self.status_code != 200:
+            raise requests.exceptions.HTTPError(f"Status code: {self.status_code}")
+
 
 class MockResponseUniqueKey:
     def __init__(self, ident):
