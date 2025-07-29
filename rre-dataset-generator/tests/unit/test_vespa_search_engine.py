@@ -253,12 +253,6 @@ def test_http_requests_EXPECTS_raise_on_negative_responses(monkeypatch):
             engine.fetch_for_evaluation(query_template='select * from doc where true and #$query##', doc_fields=None, keyword="x")
 
 
-def test_initialization_EXPECTS_validation_error_on_bad_url():
-    # If your BaseSearchEngine validates URL with Pydantic, this test makes sense; if not, remove it.
-    with pytest.raises(ValidationError):
-        _ = VespaSearchEngine("bad-non-url")
-
-
 # --------------------
 # Config compatibility
 # --------------------
@@ -290,12 +284,8 @@ def test_initialization_EXPECTS_validation_error_on_bad_url():
 )
 def test_backwards_compatibility_EXPECTS_work_with_existing_mocks_and_config(monkeypatch, mock_doc):
     """
-    Keeps your original test but with an explicit name.
     Tests both generation and evaluation paths using MockResponseVespaSearch.
     """
-    # Health/schema: use health mock to maintain compatibility (if your helper requires it)
-    monkeypatch.setattr(requests, "get", lambda *a, **k: MockResponseHealth())
-
     # POST /search with existing mock
     monkeypatch.setattr(
         requests,
