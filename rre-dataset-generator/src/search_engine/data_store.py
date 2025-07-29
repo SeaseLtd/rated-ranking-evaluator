@@ -87,14 +87,14 @@ class DataStore:
         """
         return self._get_query_rating_context_by_id(query_id)
 
-    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int) -> None:
+    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int, reasoning: Optional[str] = None) -> None:
         """
         Adds rating score associated with the given doc_id and query_id or raises KeyError
         if the query_id is not found.
         """
         context = self._get_query_rating_context_by_id(query_id)
 
-        context.add_rating_score(doc_id, rating_score)
+        context.add_rating_score(doc_id, rating_score, reasoning)
         self._queries_by_id[query_id] = context
 
     def get_rating_score(self, query_id: str, doc_id: str) -> int:
