@@ -45,3 +45,12 @@ class QueryRatingContext:
     def get_rating_score(self, doc_id: str) -> int:
         return self._doc_id_to_rating_score[doc_id]
 
+    @classmethod
+    def from_serialized(cls, query_id: str, query_text: str, doc_ratings: Dict[str, int]) -> "QueryRatingContext":
+        context = cls(query=query_text)
+        context._id = query_id
+        for doc_id, rating in doc_ratings.items():
+            context.add_rating_score(doc_id, rating)
+        return context
+
+
