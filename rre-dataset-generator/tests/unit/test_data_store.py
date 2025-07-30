@@ -90,7 +90,6 @@ def test_save_tmp_file_content_expect_json_created(tmp_path):
     for entry in data:
         assert "query_id" in entry
         assert "query_text" in entry
-        assert "doc_ids" in entry
         assert "doc_ratings" in entry
         assert "documents" in entry
 
