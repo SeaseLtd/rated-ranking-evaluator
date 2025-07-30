@@ -131,6 +131,7 @@ class DataStore:
         return {
             "query_id": query.get_query_id(),
             "query_text": query.get_query(),
+            # "doc_ids": query.get_doc_ids(),
             "doc_ratings": query._doc_id_to_rating_score.copy(), # save the queries as nested dict
             "documents": [doc.model_dump() for doc in documents if doc is not None] if save_documents else []
         }
@@ -144,12 +145,11 @@ class DataStore:
         return query_id, query_text, doc_ratings, documents
 
     @staticmethod
-    def check_tmp_file(filepath: str | Path = None) -> None:
+    def check_tmp_file(filepath: str | Path = None) -> Path:
         if filepath is None:
             filepath = TMP_FILE
 
         filepath = Path(filepath)
-        filepath.parent.mkdir(parents=True, exist_ok=True)  # ensure ./tmp/ exists
         if not filepath.exists():
             log.debug(f'Tmp file with previous data not found in DataStore: {filepath}')
             raise FileNotFoundError(f"Data file not found: {filepath}")
@@ -159,7 +159,10 @@ class DataStore:
         """
         Save queries, ratings, and documents to a unified JSON file on disk.
         """
-        filepath = self.check_tmp_file(filepath)
+        if filepath is None:
+            filepath = TMP_FILE
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
 
         all_content = []
         # Serialize all queries and documents
