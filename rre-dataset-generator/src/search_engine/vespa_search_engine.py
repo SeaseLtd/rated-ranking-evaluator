@@ -1,8 +1,8 @@
+import re
+import logging
 import requests
 from requests.exceptions import ConnectionError, Timeout, RequestException
 from typing import List, Dict, Any, Union, Optional
-import re
-import logging
 
 from src.utils import clean_text
 from src.search_engine.search_engine_base import BaseSearchEngine
@@ -53,11 +53,10 @@ class VespaSearchEngine(BaseSearchEngine):
         The loaded information is later used to warn the user when they attempt to
         filter on a field that is not part of the deployed schema.
 
-        Exceptions:
-            All exceptions are caught and logged at debug level. The schema list is set to empty on failure.
+        Exceptions: caught and logged at debug level. The schema list set to empty on failure.
         """
 
-        # Robust URL construction (preserving final path)
+        # Robust URL construction
         ## - rstrip removes trailing slash
         base = str(self.endpoint).rstrip("/") 
         schema_url = f"{base}/schema/fields"
@@ -65,13 +64,15 @@ class VespaSearchEngine(BaseSearchEngine):
             # Make the GET request to the schema endpoint
             schema_resp = requests.get(schema_url, timeout=DEFAULT_TIMEOUT, allow_redirects=False)
             
-            # Check the HTTP status code of the response: 
+            # Check the HTTP status code of the response
             ## - if (successful responses), passes
             ## - if it's a 4xx (client error) or 5xx (server error), it raises an HTTPError 
             schema_resp.raise_for_status() 
 
             # Parse the response JSON
             payload = schema_resp.json()
+
+            # Populate the schema fields
             self.schema_fields = {field["name"] for field in payload.get("fields", []) if "name" in field}
             log.debug(f"Schema fields loaded: {len(self.schema_fields)} fields found.")
 
@@ -87,10 +88,10 @@ class VespaSearchEngine(BaseSearchEngine):
         and removes problematic control characters.
         """
 
-        # escape backslashes and quotes
+        # Escape backslashes and quotes
         s = s.replace("\\", "\\\\").replace('"', '\\"') 
 
-        # remove control characters
+        # Remove control characters:
         ## \x00 to \x1F: (decimal 0 to 31)
         ## \x7F: (decimal 127, the "DEL" character)
         s = re.sub(r"[\x00-\x1F\x7F]", " ", s) 
