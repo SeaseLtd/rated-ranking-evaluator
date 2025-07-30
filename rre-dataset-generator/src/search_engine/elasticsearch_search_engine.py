@@ -7,6 +7,7 @@ from typing import List, Dict, Any, Union
 
 from src.search_engine.search_engine_base import BaseSearchEngine
 from src.model.document import Document
+from src.utils import clean_text
 
 import logging
 log = logging.getLogger(__name__)
@@ -113,12 +114,41 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
             log.error(f"ElasticSearch query failed: {e}\nPayload: {payload}")
             raise
 
-        data = response.json()
-        raw_docs = (data.get('hits') or {}).get('hits') or []
-        reformat_raw_doc = []
-        for doc in raw_docs:
-            clean_doc = dict()
-            clean_doc['id'] = doc[self.UNIQUE_KEY]
-            clean_doc['fields'] = doc['_source']
-            reformat_raw_doc.append(Document(**clean_doc))
-        return reformat_raw_doc
+        hits = response.json().get('hits', {}).get('hits', [])
+        result = []
+        for hit in hits:
+            source = hit.get("_source", {})
+            doc_id = source.get("id", hit.get(self.UNIQUE_KEY))
+
+            fields = {
+                key: self._normalize(value)
+                for key, value in source.items()
+                if key != "id"
+            }
+
+            result.append(Document(id=doc_id, fields=fields))
+        return result
+
+    @staticmethod
+    def _normalize(value: Any) -> List[str]:
+        """Normalize a field value into a list of cleaned strings or throws an exception."""
+        try:
+            if value is None:
+                return []
+
+            if isinstance(value, str):
+                return [clean_text(value)]
+
+            if isinstance(value, list):
+                return [clean_text(v) if isinstance(v, str) else str(v) for v in value]
+
+            if isinstance(value, dict):
+                cleaned_dict = {
+                    k: clean_text(v) if isinstance(v, str) else v
+                    for k, v in value.items()
+                }
+                return [json.dumps(cleaned_dict)]
+
+            return [str(value)]
+        except Exception as e:
+            raise ValueError(f"Failed to normalize value: {value}") from e
