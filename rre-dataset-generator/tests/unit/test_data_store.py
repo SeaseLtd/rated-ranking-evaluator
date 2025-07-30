@@ -88,10 +88,8 @@ def test_save_tmp_file_content_expect_json_created(tmp_path):
     assert isinstance(data, list)
     assert len(data) == 2
     for entry in data:
-        assert "query_id" in entry
-        assert "query_text" in entry
-        assert "doc_ratings" in entry
-        assert "documents" in entry
+        for field_ in ["query_id", "query_text", "doc_ratings", "documents"]:
+            assert field_ in entry
 
 
 def test_load_tmp_file_content_expect_data_restored_correctly(tmp_path):
@@ -100,7 +98,6 @@ def test_load_tmp_file_content_expect_data_restored_correctly(tmp_path):
         {
             "query_id": "q1",
             "query_text": "ai",
-            "doc_ids": ["d1", "d2"],
             "doc_ratings": {"d1": 1, "d2": 0},
             "documents": [
                 {"id": "d1", "fields": {"title": "AI", "text": "Deep learning"}},

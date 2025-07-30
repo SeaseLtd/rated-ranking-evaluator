@@ -146,6 +146,9 @@ class DataStore:
 
     @staticmethod
     def check_tmp_file(filepath: str | Path = None) -> Path:
+        """
+        Checks if the tmp file exists, if not, debugs/raises a FileNotFoundError.
+        """
         if filepath is None:
             filepath = TMP_FILE
 
@@ -159,16 +162,13 @@ class DataStore:
         """
         Save queries, ratings, and documents to a unified JSON file on disk.
         """
-        if filepath is None:
-            filepath = TMP_FILE
-        filepath = Path(filepath)
-        filepath.parent.mkdir(parents=True, exist_ok=True)
+        filepath = self.check_tmp_file(filepath)
 
-        all_content = []
         # Serialize all queries and documents
+        all_content = []
         for query_ctx in self._queries_by_id.values():
             docs_ = [self.get_document(doc_id) for doc_id in query_ctx.get_doc_ids()]
-            data = self.query_context_docs_to_dict(query_ctx, docs_, save_documents=True)
+            data  = self.query_context_docs_to_dict(query_ctx, docs_, save_documents=True)
             all_content.append(data)
 
         # Dumps JSON to memory file
