@@ -21,23 +21,28 @@ def elasticsearch_config():
     """Fixture that loads a valid OpenSearch config for unit tests."""
     return Config.load("tests/unit/resources/elasticsearch_good_config.yaml")
 
-def test_elasticsearch_search_engine(monkeypatch, elasticsearch_config):
+@pytest.fixture
+def mock_doc():
+    return {
+        "_id": "1",
+        '_source': {
+            "mock_title": ["A first mocked title"],
+            "mock_description": ["A first mocked description"]
+        }
+    }
+
+@pytest.fixture
+def mock_dict(mock_doc):
+    return {
+        'id': mock_doc['_id'],
+        'fields': mock_doc["_source"]
+    }
+
+def test_elasticsearch_search_engine_fetch_for_query_generation(monkeypatch, elasticsearch_config, mock_doc, mock_dict):
     url = "https://fakeurl"
     search_engine = ElasticsearchSearchEngine(url)
 
     payload = json.dumps({"match_all": {}})
-
-    mock_doc = {
-        "_id": "1",
-        '_source': {
-            "mock_title": "A first mocked title",
-            "mock_description": "A first mocked description"
-        }
-    }
-    mock_dict = {
-        'id': mock_doc['_id'],
-        'fields': mock_doc["_source"]
-    }
 
     # apply the monkeypatch for requests.post to mock_post
     monkeypatch.setattr(requests, "post",
@@ -48,6 +53,17 @@ def test_elasticsearch_search_engine(monkeypatch, elasticsearch_config):
                                                       doc_number=elasticsearch_config.doc_number,
                                                       doc_fields=elasticsearch_config.doc_fields)
     assert result[0] == Document(**mock_dict)
+
+def test_elasticsearch_search_engine_fetch_for_evaluation(monkeypatch, elasticsearch_config, mock_doc, mock_dict):
+    url = "https://fakeurl"
+    search_engine = ElasticsearchSearchEngine(url)
+
+    payload = json.dumps({"match_all": {}})
+
+    # apply the monkeypatch for requests.post to mock_post
+    monkeypatch.setattr(requests, "post",
+                        lambda *args, **kwargs: MockResponseElasticsearchEngine([mock_doc], status_code=200)
+                        )
     # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_evaluation(keyword="and",
                                                 query_template=elasticsearch_config.query_template,

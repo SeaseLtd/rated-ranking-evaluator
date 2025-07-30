@@ -19,21 +19,26 @@ def solr_config():
     """Fixture that loads a valid OpenSearch config for unit tests."""
     return Config.load("tests/unit/resources/solr_good_config.yaml")
 
-def test_solr_search_engine(monkeypatch, solr_config):
+@pytest.fixture
+def mock_doc():
+    return {
+        "mock_id": "1",
+        "mock_title": ["A first mocked title"],
+        "mock_description": ["A first mocked description"]
+    }
+
+@pytest.fixture
+def mock_dict(mock_doc):
+    return {
+        'id': mock_doc['mock_id'],
+        'fields': {k: v for k, v in mock_doc.items() if k != 'mock_id'}
+    }
+
+def test_solr_search_engine_fetch_for_query_generation(monkeypatch, solr_config, mock_doc, mock_dict):
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="mock_id"))
     search_engine = SolrSearchEngine("https://fakeurl")
 
     assert search_engine.UNIQUE_KEY == "mock_id"
-
-    mock_doc = {
-        "mock_id": "1",
-        "mock_title": "A first mocked title",
-        "mock_description": "A first mocked description"
-    }
-    mock_dict = {
-        'id': mock_doc['mock_id'],
-        'fields': {k:v for k, v in mock_doc.items() if k !='mock_id'}
-    }
 
     # apply the monkeypatch for requests.post to mock_post
     monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([mock_doc], status_code=200))
@@ -43,6 +48,16 @@ def test_solr_search_engine(monkeypatch, solr_config):
                                                       doc_number=solr_config.doc_number,
                                                       doc_fields=solr_config.doc_fields)
     assert result[0] == Document(**mock_dict)
+
+def test_solr_search_engine_fetch_for_evaluation(monkeypatch, solr_config, mock_doc, mock_dict):
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="mock_id"))
+    search_engine = SolrSearchEngine("https://fakeurl")
+
+    assert search_engine.UNIQUE_KEY == "mock_id"
+
+    # apply the monkeypatch for requests.post to mock_post
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([mock_doc], status_code=200))
+
     # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_evaluation(keyword="and",
                                                 query_template=solr_config.query_template,
