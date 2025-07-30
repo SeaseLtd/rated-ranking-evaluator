@@ -11,7 +11,7 @@ class LLMScoreResponse:
 
         Args:
             score:      The relevance score.
-            scale:      The relevance scale, either 'binary' (0-1) or 'graded' (0-2).
+            scale:      The relevance scale, either 'binary' {0,1} or 'graded' {0,1,2}.
             reasoning:  Explanation for the generated score or None.
 
         Raises:

@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import List, Tuple
 
@@ -17,6 +18,8 @@ class LlmExplanationWriter(AbstractWriter):
             }
             records.append(record)
 
+        output_path = Path(output_path)
+        os.makedirs(output_path.parent, exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as jsonfile:
             json.dump(records, jsonfile, indent=2, ensure_ascii=False)
 
