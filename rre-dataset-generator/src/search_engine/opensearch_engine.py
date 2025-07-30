@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List, Dict, Any, Union
 
@@ -99,15 +100,27 @@ class OpenSearchEngine(BaseSearchEngine):
         return result
 
     @staticmethod
-    def _normalize(value: Any) -> Any:
-        """
-        Normalize a field value:
-        - string → return [cleaned string]
-        - list of strings → return [cleaned strings]
-        - else → return as it is
-        """
-        if isinstance(value, str):
-            return [clean_text(value)]
-        if isinstance(value, list) and all(isinstance(i, str) for i in value):
-            return [clean_text(i) for i in value]
-        return value
+    def _normalize(value: Any) -> List[str]:
+        """Normalize a field value into a list of cleaned strings or throws an exception."""
+        try:
+            if value is None:
+                return []
+
+            if isinstance(value, str):
+                return [clean_text(value)]
+
+            if isinstance(value, list):
+                return [clean_text(v) if isinstance(v, str) else str(v) for v in value]
+
+            if isinstance(value, dict):
+                cleaned_dict = {
+                    k: clean_text(v) if isinstance(v, str) else v
+                    for k, v in value.items()
+                }
+                return [json.dumps(cleaned_dict)]
+
+            return [str(value)]
+
+        except Exception as e:
+            raise ValueError(f"Failed to normalize value: {value}") from e
+
