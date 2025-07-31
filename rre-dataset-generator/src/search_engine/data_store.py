@@ -1,13 +1,13 @@
 from __future__ import annotations
-import os 
+
 import json
 import logging
+import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from src.model.document import Document
 from src.model.query_rating_context import QueryRatingContext
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -18,16 +18,15 @@ class DataStore:
     """
     Stores/retrieves documents, queries, and rating scores.
     """
-    def __init__(self, save_documents: bool = False):
+    def __init__(self, ignore_saved_data: bool = False):
         self._documents: Dict[str, Document] = {}
         self._queries_by_id: Dict[str, QueryRatingContext] = {}
         self._query_text_to_query_id: Dict[str, str] = {}
-        self._save_documents = save_documents
 
         # Load from default file if present
-        if os.path.exists(TMP_FILE):
+        if not ignore_saved_data and os.path.exists(TMP_FILE):
             try:
-                self.load_tmp_file_content(TMP_FILE)
+                self.load_tmp_file_content()
                 log.debug(f"Loaded DataStore from default file: {TMP_FILE}")
             except Exception as e:
                 log.error(f"Could not load default datastore file '{TMP_FILE}': {e}")
@@ -85,7 +84,7 @@ class DataStore:
             return query_id
 
         # new query rating context
-        context = QueryRatingContext(query, doc_id)
+        context = QueryRatingContext(query=query, doc_id=doc_id)
         query_id = context.get_query_id()
         self._queries_by_id[query_id] = context
         self._query_text_to_query_id[query] = query_id
@@ -127,82 +126,51 @@ class DataStore:
         context = self._get_query_rating_context_by_id(query_id)
         return context.has_rating_score(doc_id)
 
-    
-    @staticmethod
-    def query_context_docs_to_dict(query: QueryRatingContext, documents: List[Document], add_documents: bool = False) -> dict:
-        """
-        Serializes a QueryRatingContext and a list of Document objects to a dictionary.
-        """
-        return_dict = {
-            "query_id": query.get_query_id(),
-            "query_text": query.get_query(),
-            # "doc_ids": query.get_doc_ids(),
-            "doc_ratings": query._doc_id_to_rating_score.copy(), # save the queries as nested dict
-        }
-
-        if add_documents:
-            return_dict["documents"] = [doc.model_dump() for doc in documents if doc is not None]
-        return return_dict
 
     @staticmethod
-    def dict_to_query_context_docs(dict_: dict) -> tuple[str, str, dict[str, int], list[dict]]:
-        """
-        Deserializes a dictionary to a QueryRatingContext and a list of Document objects.
-        """
-        query_id = dict_["query_id"]
-        query_text = dict_["query_text"]
-        doc_ratings = dict_["doc_ratings"]
-        documents = dict_.get("documents", [])
-        return query_id, query_text, doc_ratings, documents
-
-    @staticmethod
-    def check_tmp_file(filepath: str | Path | None = None) -> Path:
-        """Checks if a file exists on disk and returns its path. 
+    def ensure_tmp_file_exists() -> Path:
+        """Checks if a file exists on disk and returns its path or create the parent folder.
         Resolves a given path and logs a warning if the file does not exist.
 
         Returns:
             The resolved path as a Path object.
         """
-        path = Path(filepath) if filepath is not None else Path(TMP_FILE)
+        path = Path(TMP_FILE)
         if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
             log.debug(f'Previous file not found in DataStore: {path}')
         return path
 
-    def save_tmp_file_content(self, filepath: str | Path = None) -> None:
+    def save_tmp_file_content(self) -> None:
         """Saves the current state to a file on disk serializing queries, ratings, and optionally documents.
 
         Args:
             filepath: The path to the file where the data will be saved.
                       If None, a default path is used.
         """
-        path = self.check_tmp_file(filepath)
+        path = self.ensure_tmp_file_exists()
 
-        # Assure parent directory if the path doesn't exist
-        if not path.exists():
-            path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # loop the queries
-        all_content = []
-        for query_ctx in self._queries_by_id.values():
-            # loop the docs related to current query - creates a dict with doc_id: rating_score
-            ratings = {doc_id: query_ctx.get_rating_score(doc_id) for doc_id in query_ctx.get_doc_ids()}
-            data = {
-                "query_id": query_ctx.get_query_id(),
-                "query_text": query_ctx.get_query(),
-                "doc_ratings": ratings,
-            }
-            if self._save_documents:
-                # loop the docs related to current query - creates a list of Document
-                docs_ = [self.get_document(doc_id) for doc_id in query_ctx.get_doc_ids()]
-                # dumps each Pydantic Document (str in json format) to a common dict
-                data["documents"] = [doc.model_dump() for doc in docs_ if doc is not None]
-            all_content.append(data)
+        def default_serializer(obj):
+            """Default function to handle non-serializable objects"""
+            if isinstance(obj, QueryRatingContext):
+                return obj.to_dict()
+            elif isinstance(obj, Document):
+                return obj.model_dump()
+            else:
+                # Convert to string as fallback
+                return str(obj)
+
+        data = {
+            "queries": self._queries_by_id,
+            "documents": self._documents,
+        }
 
         # save the content to a file
         with path.open("w", encoding="utf-8") as f:
-            json.dump(all_content, f, indent=2, ensure_ascii=False)
+            json.dump(data, f, indent=2, ensure_ascii=False, default=default_serializer)
 
-    def load_tmp_file_content(self, filepath: str | Path = None, clear: Optional[bool] = None) -> None:
+
+    def load_tmp_file_content(self) -> None:
         """Loads state from a file on disk loading queries, ratings, and documents from a unified
         JSON file on disk.
 
@@ -212,43 +180,23 @@ class DataStore:
             clear: If True, clears existing data before loading.
                    Defaults to None.
         """
-        if clear == True:
-            self._documents.clear()
-            self._queries_by_id.clear()
-            self._query_text_to_query_id.clear()
-        
-        filepath = self.check_tmp_file(filepath)
 
-        if not filepath.exists():
-            log.debug(f"Attempting to load file with path {filepath}, but not found in DataStore")
-            return
+        self._documents.clear()
+        self._queries_by_id.clear()
+        self._query_text_to_query_id.clear()
+        
+        filepath = self.ensure_tmp_file_exists()
 
         with filepath.open("r", encoding="utf-8") as f:
-            all_content = json.load(f)
+            file_content = json.load(f)
 
-        for entry in all_content:
-            # Deserialize
-            query_id, query_text, doc_ratings, documents = self.dict_to_query_context_docs(entry)
-
-            # Store
-            for doc_data in documents:
-                document = Document.model_validate(doc_data)
-                # This prevent a doc_id to be added twice if related to different queries
-                ## we have to be careful since add document raises Error if doc_id is already present
-                if not self.has_document(document.id):
-                    self.add_document(document.id, document)
-
-            # Instanciate QueryRatingContext from fields
-            context = QueryRatingContext.from_serialized(query_id, query_text, doc_ratings)
-
-            # Add QueryRatingContext to in-memory dict
+        queries: Dict[str, Dict[str, Any]] = file_content.get("queries", {})
+        for query_id, context_dict in queries.items():
+            context: QueryRatingContext = QueryRatingContext.from_dict(context_dict)
             self._queries_by_id[query_id] = context
+            self._query_text_to_query_id[context.get_query()] = query_id
 
-            # Add query text-id to in-memory dict
-            ## Problem: what happens when a query_text appears more than once? -> We're overrinding the query_id
-            ## Solution: we should raise an error if a query_text appears more than once
-            if query_text in self._query_text_to_query_id:
-                _error_msg = f"Detected an error when loading query to the data store. Query {query_text} already present."
-                log.error(_error_msg)
-                raise KeyError(_error_msg)
-            self._query_text_to_query_id[query_text] = query_id
+        documents = file_content.get("documents", {})
+        for doc_id, doc_data in documents.items():
+            self.add_document(doc_id, Document.model_validate(doc_data))
+
