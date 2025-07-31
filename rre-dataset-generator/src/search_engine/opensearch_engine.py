@@ -27,6 +27,7 @@ class OpenSearchEngine(BaseSearchEngine):
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
                                    doc_fields: List[str]) -> List[Document]:
+        """Fetches a list of documents for query generation based on optional filters."""
         filters = []
         if documents_filter:
             for field_values in documents_filter:
@@ -60,6 +61,7 @@ class OpenSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str = "*") -> List[Document]:
+        """Fetches documents for evaluation by executing a query built from a template."""
         query = query_template.replace(self.PLACEHOLDER, keyword)
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
 
@@ -74,7 +76,9 @@ class OpenSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
+        """Perform a search to OpenSearch and return matching documents based on the given payload."""
         search_url = f"{self.endpoint}/_search"
+        log.debug(f"User-specified fields: {payload.get('_source')}")
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
@@ -87,6 +91,7 @@ class OpenSearchEngine(BaseSearchEngine):
 
         for hit in hits:
             source = hit.get("_source", {})
+            log.debug(f"Opensearch returns fields based on payload: {list(source.items())}")
             doc_id = source.get("id", hit.get("_id"))
 
             fields = {
