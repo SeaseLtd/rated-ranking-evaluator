@@ -24,12 +24,9 @@ def _write_json(path: Path, obj: Any):
     """
     path.write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8")
 
-def mock_datastore_empty(save_documents_: bool = False) -> DataStore:
-    ds = DataStore(save_documents=save_documents_)
-    return ds
 
-# NOTE: we can inject the mock as fixture. Eg:
 
+# NOTE: we can inject the datastore mock as fixture. Eg:
 # @pytest.fixture
 # def mock_datastore():
 #     return mock_datastore_with_sample_data(save_documents=True)
@@ -37,8 +34,12 @@ def mock_datastore_empty(save_documents_: bool = False) -> DataStore:
 # def test_something(mock_datastore_with_sample_data):
 # but in this case we avoid it to parametrize the tests with save_documents
 
-def mock_datastore_with_sample_data(save_documents: bool = False) -> DataStore:
-    ds = DataStore(save_documents=save_documents)
+def mock_datastore_empty(save_documents_: bool = False) -> DataStore:
+    ds = DataStore(save_documents=save_documents_)
+    return ds
+
+def mock_datastore_with_sample_data(save_documents_: bool = False) -> DataStore:
+    ds = DataStore(save_documents=save_documents_)
     d1 = Document(id="d1", fields={"title": "AI", "text": "Deep learning"})
     d2 = Document(id="d2", fields={"title": "LLMs", "text": "Transformers"})
     ds.add_document(d1.id, d1)
@@ -89,7 +90,7 @@ def test_add_and_get_query_EXPECTS_query_stored_in_data_store_and_check_same_que
 def test_save_tmp_file_content_EXPECTS_json_file_is_created_with_or_without_documents(tmp_path, save_documents, expects_documents_key):
     
     # Mock with default sample data
-    ds = mock_datastore_with_sample_data(save_documents)
+    ds = mock_datastore_with_sample_data(save_documents_)
     
     # Save sample data
     path = tmp_path / "datastore.json"
