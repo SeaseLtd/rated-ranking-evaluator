@@ -7,7 +7,9 @@ from typing import Dict, List, Optional
 
 from src.model.document import Document
 from src.model.query_rating_context import QueryRatingContext
-from src.logger import log
+import logging
+
+log = logging.getLogger(__name__)
 
 # FILE TO ROOT RRE-DATASET-GENERATOR/TMP DIRECTORY
 TMP_FILE = "./tmp/datastore.json"
