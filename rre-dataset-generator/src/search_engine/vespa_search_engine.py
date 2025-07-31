@@ -17,8 +17,7 @@ DEFAULT_TIMEOUT = 10
 MAX_HITS = 100
 
 # Basic field name validation to prevent injection / unvalid strings
-#_FIELD_RE only allows starting with a letter or underscore, and then any number of letters, numbers, or underscores.
-# > Not allowed: ., " , /, etc.
+# Valid field names: must start with a letter or underscore, followed by alphanumerics or underscores.
 _FIELD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$") 
 
 
@@ -31,16 +30,9 @@ class VespaSearchEngine(BaseSearchEngine):
         super().__init__(endpoint)
         self.schema = schema
         self.HEADERS = {"Content-Type": "application/json"}
-
-        # Will be populated by `_load_schema_fields` to allow validation of user provided filters.
         self.schema_fields: set[str] = set()
-
-        # Lazy loading of schema field names. If the endpoint is not reachable we continue gracefully.
         self._load_schema_fields()
 
-    def _build_yql(self, select_fields: List[str], where_clause: str = "true") -> str:
-        fields = ", ".join(select_fields) if select_fields else "*"
-        return f"select {fields} from {self.schema} where {where_clause}"
 
     # ------------------------------------------------------------------
     # Helper / internal utils
@@ -61,10 +53,10 @@ class VespaSearchEngine(BaseSearchEngine):
         base = str(self.endpoint).rstrip("/") 
         schema_url = f"{base}/schema/fields"
         try:
-            # Make the GET request to the schema endpoint
+            # GET request to the schema endpoint
             schema_resp = requests.get(schema_url, timeout=DEFAULT_TIMEOUT, allow_redirects=False)
             
-            # Check the HTTP status code of the response
+            # Check HTTP status code of the response
             ## - if (successful responses), passes
             ## - if it's a 4xx (client error) or 5xx (server error), it raises an HTTPError 
             schema_resp.raise_for_status() 
@@ -80,6 +72,10 @@ class VespaSearchEngine(BaseSearchEngine):
             # hard fallback: intentionally catch everything in schema loader
             log.debug(f"Schema fields endpoint did not return expected payload: {exc}; defaulting to empty schema list")
             self.schema_fields = set()
+
+    def _build_yql(self, select_fields: List[str], where_clause: str = "true") -> str:
+        fields = ", ".join(select_fields) if select_fields else "*"
+        return f"select {fields} from {self.schema} where {where_clause}"
 
     @staticmethod
     def _yql_escape(s: str) -> str:
@@ -169,7 +165,6 @@ class VespaSearchEngine(BaseSearchEngine):
             A list of `Document` instances parsed from the response.
         """
 
-        # Sanity-check filters against schema and build WHERE clause
         self._validate_filters(documents_filter)
         where = self._filter_to_where(documents_filter)
         yql = self._build_yql(doc_fields or [], where)
@@ -206,8 +201,8 @@ class VespaSearchEngine(BaseSearchEngine):
         yql = query_template.replace(self.PLACEHOLDER, safe_kw)
 
         # IMPORTANT: if the template includes a select clause with fields, doc_fields may be redundant.
-        # We keep it as a parameter we're not injecting it here
-        # (Vespa uses the fields declared in the YQL).
+        # > doc_fields is not used; field selection comes from the YQL template.
+
         payload = {
             "yql": yql,
             "hits": min(10, MAX_HITS),
@@ -232,7 +227,6 @@ class VespaSearchEngine(BaseSearchEngine):
             ConnectionError, Timeout, RequestException: If the search request fails.
         """
 
-        # Robust URL construction
         base = str(self.endpoint).rstrip("/")
         search_url = f"{base}/search/"
 
@@ -241,8 +235,8 @@ class VespaSearchEngine(BaseSearchEngine):
                 search_url,
                 headers=self.HEADERS,
                 json=payload,
-                timeout=DEFAULT_TIMEOUT, # added timeout and allow_redirects
-                allow_redirects=False,
+                timeout=DEFAULT_TIMEOUT, # added timeout 
+                allow_redirects=False,   # added allow_redirects
             )
             response.raise_for_status()
         except (ConnectionError, Timeout, RequestException) as e:
@@ -326,3 +320,4 @@ class VespaSearchEngine(BaseSearchEngine):
         else:
             # if there are no clauses, return true
             return "true"
+

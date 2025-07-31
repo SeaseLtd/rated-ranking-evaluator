@@ -14,6 +14,11 @@ from tests.mocks.vespa import MockResponseVespaSearch
 configure_logging()
 
 
+"""Magic Fixtures:
+- monkeypatch: PyTest fixture for patching HTTP calls.
+- caplog: PyTest log-capture fixture.
+"""
+
 # -----------------------
 # Helpers / monkeypatches
 # -----------------------
@@ -35,11 +40,7 @@ def _monkeypatch_schema_fail(monkeypatch):
 
 
 def _capture_post(monkeypatch, response_json, status_code=200):
-    """
-    Monkeypatch for requests.post that:
-      - captures url/headers/json from the request
-      - returns a Response-like object with .json() and .raise_for_status()
-    """
+    """Monkeypatch POST capturing request + simulating response with status code and payload."""
     calls = {}
     class _Resp:
         def __init__(self, data, code):
@@ -54,7 +55,7 @@ def _capture_post(monkeypatch, response_json, status_code=200):
     def _post(url, headers=None, json=None, **kwargs):
         calls["url"] = url
         calls["headers"] = headers
-        calls["json"] = json
+        calls["json"] = json        # payload
         calls["kwargs"] = kwargs
         return _Resp(response_json, status_code)
 
@@ -65,6 +66,8 @@ def _capture_post(monkeypatch, response_json, status_code=200):
 # ---------------------
 # Field Value Normalization
 # ---------------------
+
+# TODO: add real EDGE cases. E.g. None, empty, etc.
 @pytest.mark.parametrize(
     "input_val, expected_val",
     [
@@ -89,11 +92,7 @@ def test_normalize_field_value_EXPECTS_correct_conversion(input_val, expected_va
 # Happy-path generation
 # --------------
 def test_fetch_for_query_generation_EXPECTS_builds_valid_yql_caps_hits_and_parses_response(monkeypatch):
-    """Verify YQL composition, hit capping, and response parsing in the generation flow.
-
-    Args:
-        monkeypatch: PyTest fixture for patching HTTP calls.
-    """
+    """Verify YQL composition, hit capping, and response parsing in the generation flow."""
     _monkeypatch_schema_ok(monkeypatch)
 
     # Simulated Vespa response (one hit with title str, description list[str])
@@ -123,26 +122,18 @@ def test_fetch_for_query_generation_EXPECTS_builds_valid_yql_caps_hits_and_parse
         doc_fields=doc_fields,
     )
 
-    # Correct URL (robust construction with or without trailing slash)
     assert calls["url"].endswith("/base/search/")
 
-    # Payload with expected YQL and hits limit
     payload = calls["json"]
     assert payload["hits"] == MAX_HITS
+
     yql = payload["yql"]
-
-    # Should contain field selection
     assert re.search(r"select (title,\s*description|description,\s*title) from doc where ", yql)
-
-    # Should contain valid filters
     assert 'title contains "Helicopter"' in yql
     assert ('(description contains "BOGOTA" OR description contains "Colombia")' in yql or
             '(description contains "Colombia" OR description contains "BOGOTA")' in yql)
-    
-    # Should not contain the invalid field
     assert "bad-field" not in yql
 
-    # Field parsing and normalization - this is added in last place to avoid error propagation if previous test_ failures
     assert len(docs) == 1
     expected_fields = {
         k: VespaSearchEngine._normalize_field_value(v)
@@ -158,11 +149,7 @@ def test_fetch_for_query_generation_EXPECTS_builds_valid_yql_caps_hits_and_parse
 # Happy-path evaluation/keyword
 # -------------------
 def test_fetch_for_evaluation_EXPECTS_properly_quotes_and_escapes_keyword(monkeypatch):
-    """Ensure keyword literals are safely escaped/quoted in evaluation YQL.
-
-    Args:
-        monkeypatch: PyTest fixture for patching HTTP calls.
-    """
+    """Ensure keyword literals are safely escaped/quoted in evaluation YQL."""
     _monkeypatch_schema_ok(monkeypatch)
 
     vespa_raw = {"root": {"children": []}}
@@ -170,6 +157,7 @@ def test_fetch_for_evaluation_EXPECTS_properly_quotes_and_escapes_keyword(monkey
 
     engine = VespaSearchEngine("https://fakehost/base", schema="doc")
     template = 'select * from doc where title contains #$query##'
+
     # keyword with quotes, backslash and newline
     ## > should be quoted and escaped
     kw = 'He said "hi" \\ \n new'
@@ -195,11 +183,7 @@ def test_fetch_for_evaluation_EXPECTS_properly_quotes_and_escapes_keyword(monkey
 # Skips hits without ID
 # -------------------------
 def test_fetch_for_query_generation_EXPECTS_skip_hits_without_id(monkeypatch):
-    """Hits missing an ``id`` must be discarded during query generation.
-
-    Args:
-        monkeypatch: PyTest fixture for patching HTTP calls.
-    """
+    """Hits missing an ``id`` must be discarded during query generation."""
     _monkeypatch_schema_ok(monkeypatch)
 
     vespa_raw = {"root": {"children": [{"fields": {"title": "No ID here"}}]}}
@@ -214,12 +198,8 @@ def test_fetch_for_query_generation_EXPECTS_skip_hits_without_id(monkeypatch):
 # Schema warnings
 # ----------------------
 def test_fetch_for_query_generation_EXPECTS_warn_on_unknown_schema_fields(monkeypatch, caplog):
-    """Expect a warning when filters reference fields absent in the Vespa schema.
+    """Expect a warning when filters reference fields absent in the Vespa schema."""
 
-    Args:
-        monkeypatch: PyTest fixture.
-        caplog: PyTest log-capture fixture.
-    """
     # Load a schema with only "title"
     _monkeypatch_schema_ok(monkeypatch, fields=("title",))
 
@@ -233,7 +213,6 @@ def test_fetch_for_query_generation_EXPECTS_warn_on_unknown_schema_fields(monkey
             doc_number=1,
             doc_fields=["title"],
         )
-    # Should warn about "unknown"
     assert any("not present in schema" in rec.message for rec in caplog.records)
 
 
@@ -241,11 +220,7 @@ def test_fetch_for_query_generation_EXPECTS_warn_on_unknown_schema_fields(monkey
 # API loading failure
 # --------------------
 def test_schema_loading_EXPECTS_continue_on_failure(monkeypatch):
-    """Engine should fall back gracefully if the schema endpoint is unreachable.
-
-    Args:
-        monkeypatch: PyTest fixture for patching HTTP calls.
-    """
+    """Engine should fall back gracefully if the schema endpoint is unreachable."""
     _monkeypatch_schema_fail(monkeypatch)
 
     vespa_raw = {"root": {"children": []}}
@@ -263,11 +238,8 @@ def test_schema_loading_EXPECTS_continue_on_failure(monkeypatch):
 # -----------------------
 
 def test_http_requests_EXPECTS_raise_on_negative_responses(monkeypatch):
-    """Search/evaluation requests must raise ``HTTPError`` on non-success HTTP status codes.
+    """Search/evaluation requests must raise ``HTTPError`` on non-success HTTP status codes."""
 
-    Args:
-        monkeypatch: PyTest fixture for patching HTTP calls.
-    """
     _monkeypatch_schema_ok(monkeypatch)
 
     for code in (400, 401, 402, 403, 500):
@@ -309,18 +281,16 @@ def test_http_requests_EXPECTS_raise_on_negative_responses(monkeypatch):
     ],
 )
 def test_workflow_with_mocks_and_config_EXPECTS_work_with_existing(monkeypatch, mock_doc):
-    """Validate generation & evaluation flows against legacy mocks and YAML config.
+    """Validate generation & evaluation flows against legacy mocks and YAML config."""
 
-    Args:
-        monkeypatch: PyTest fixture.
-        mock_doc: Single mocked Vespa hit used by ``MockResponseVespaSearch``.
-    """
     # POST /search with existing mock
-    monkeypatch.setattr(
-        requests,
-        "post",
-        lambda *a, **k: MockResponseVespaSearch(mock_doc, status_code=200),
-    )
+    vespa_raw = {
+        "root": {
+            "children": [mock_doc]
+        }
+    }
+
+    _ = _capture_post(monkeypatch, vespa_raw, status_code=200)
 
     config = Config.load("tests/unit/resources/good_config_vespa.yaml")
     engine = VespaSearchEngine("https://fakeurl", schema="doc")
