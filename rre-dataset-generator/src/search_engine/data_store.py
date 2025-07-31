@@ -7,8 +7,7 @@ from typing import Dict, List, Optional
 
 from src.model.document import Document
 from src.model.query_rating_context import QueryRatingContext
-
-log = logging.getLogger(__name__)
+from src.logger import log
 
 # FILE TO ROOT RRE-DATASET-GENERATOR/TMP DIRECTORY
 TMP_FILE = "./tmp/datastore.json"
@@ -159,16 +158,12 @@ class DataStore:
         """Checks if a file exists on disk and returns its path. 
         Resolves a given path and logs a warning if the file does not exist.
 
-        Args:
-            filepath: The path to the file to check. Can be a string, a Path object, or None.
-                      If None, it will default to a predefined temporary file path.
-
         Returns:
             The resolved path as a Path object.
         """
         path = Path(filepath) if filepath is not None else Path(TMP_FILE)
         if not path.exists():
-            log.info(f'Previous file not found in DataStore: {path}')
+            log.debug(f'Previous file not found in DataStore: {path}')
         return path
 
     def save_tmp_file_content(self, filepath: str | Path = None) -> None:
@@ -180,6 +175,10 @@ class DataStore:
         """
         path = self.check_tmp_file(filepath)
 
+        # Assure parent directory if the path doesn't exist
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+        
         # loop the queries
         all_content = []
         for query_ctx in self._queries_by_id.values():
@@ -201,7 +200,7 @@ class DataStore:
         with path.open("w", encoding="utf-8") as f:
             json.dump(all_content, f, indent=2, ensure_ascii=False)
 
-    def load_tmp_file_content(self, filepath: str | Path = None, clear: bool = False) -> None:
+    def load_tmp_file_content(self, filepath: str | Path = None, clear: Optional[bool] = None) -> None:
         """Loads state from a file on disk loading queries, ratings, and documents from a unified
         JSON file on disk.
 
@@ -209,9 +208,9 @@ class DataStore:
             filepath: The path to the file to load data from. If None, a
                       default path is used.
             clear: If True, clears existing data before loading.
-                   Defaults to False.
+                   Defaults to None.
         """
-        if clear:
+        if clear == True:
             self._documents.clear()
             self._queries_by_id.clear()
             self._query_text_to_query_id.clear()
