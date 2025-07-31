@@ -2,16 +2,27 @@ import json
 from pathlib import Path
 
 import pytest
+from pathlib import Path
+from typing import Any
 from src.model.document import Document
 from src.search_engine.data_store import DataStore
 
 
 # -------------------- Helpers --------------------
 
-def _read_json(path):
+def _read_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
-def _write_json(path, obj):
+def _write_json(path: Path, obj: Any):
+    # direct read from the path - no need for open()
+    """
+    with open(path, "w") as f:
+        f.write(json.dumps(obj))
+    - Defaults to ASCII escaping (ugly for UTF-8),
+    - No indentation
+    - Encoding custom for plataform
+    - More verbose
+    """
     path.write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8")
 
 def _mk_ds_with_sample_data(save_documents: bool) -> DataStore:
