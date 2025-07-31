@@ -1,7 +1,6 @@
 import uuid
 from typing import Dict, List
 
-
 class QueryRatingContext:
     """
     QueryRatingContext holds
@@ -52,5 +51,4 @@ class QueryRatingContext:
         for doc_id, rating in doc_ratings.items():
             context.add_rating_score(doc_id, rating)
         return context
-
 
