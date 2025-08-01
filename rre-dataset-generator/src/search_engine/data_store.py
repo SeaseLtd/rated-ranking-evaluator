@@ -11,7 +11,7 @@ from src.model.query_rating_context import QueryRatingContext
 
 log = logging.getLogger(__name__)
 
-# FILE TO ROOT RRE-DATASET-GENERATOR/TMP DIRECTORY
+
 TMP_FILE = "./tmp/datastore.json"
 
 class DataStore:
@@ -107,7 +107,7 @@ class DataStore:
         Adds rating score associated with the given doc_id and query_id or raises KeyError
         if the query_id is not found.
         """
-        context = self._get_query_rating_context_by_id(query_id)
+        context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
         context.add_rating_score(doc_id, rating_score)
         self._queries_by_id[query_id] = context
 
@@ -115,7 +115,7 @@ class DataStore:
         """
         Returns the rating score for the given (query_id, doc_id) pair or raises KeyError if the query_id is not found.
         """
-        context = self._get_query_rating_context_by_id(query_id)
+        context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
         return context.get_rating_score(doc_id)
 
     def has_rating_score(self, query_id: str, doc_id: str) -> bool:
@@ -123,7 +123,7 @@ class DataStore:
         Returns True if the (query_id, doc_id) pair has a rating score (i.e. != -1) or raises KeyError
         if query_id is not found.
         """
-        context = self._get_query_rating_context_by_id(query_id)
+        context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
         return context.has_rating_score(doc_id)
 
 

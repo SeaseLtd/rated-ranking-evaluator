@@ -3,8 +3,15 @@ from pathlib import Path
 
 import pytest
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict
+
+import importlib
+import json
+
+import pytest
+
 from src.model.document import Document
+from src.search_engine import data_store as ds_module
 from src.search_engine.data_store import DataStore
 
 
@@ -14,15 +21,6 @@ def _read_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 def _write_json(path: Path, obj: Any):
-    # direct read from the path - no need for open()
-    """
-    with open(path, "w") as f:
-        f.write(json.dumps(obj))
-    - Defaults to ASCII escaping (ugly for UTF-8),
-    - No indentation
-    - Encoding custom for plataform
-    - More verbose
-    """
     path.write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8")
 
 def _mk_ds_with_sample_data(save_documents: bool) -> DataStore:
@@ -60,10 +58,10 @@ def test_add_and_get_query__expects__query_stored_in_data_store_and_check_same_q
     ds = DataStore(ignore_saved_data=True)
     # Alta de queries
     qid1 = ds.add_query("technology", "doc1")
-    assert ds.get_query(qid1).get_query() == "technology"
+    assert ds.get_query(qid1).get_query_text() == "technology"
 
     qid2 = ds.add_query("airpods", "doc2")
-    assert ds.get_query(qid2).get_query() == "airpods"
+    assert ds.get_query(qid2).get_query_text() == "airpods"
 
     # Misma query con nuevo doc_id -> reaprovecha el mismo query_id
     qid3 = ds.add_query("technology", "doc3")
@@ -85,6 +83,19 @@ def test_save_tmp_file_content__expect__json_file_is_created_with_or_without_doc
         assert context_1.get_query_id() == context_2.get_query_id()
         assert set(context_1.get_doc_ids()) == set(context_2.get_doc_ids())
 
+    assert save_path.exists()
+
+    # ---- Load phase ------------------------------------------------------
+    ds2 = DataStore(ignore_saved_data=False)
+
+    # The new instance should have identical observable state
+    assert ds2.has_document("d1") and ds2.get_document("d1") == ds1.get_document("d1")
+    assert ds2.get_query_text(ds2._query_text_to_query_id["artificial intelligence"]) == "artificial intelligence"
+    assert ds2.get_rating_score(ds2._query_text_to_query_id["artificial intelligence"], "d1") == 1
+
+    # Verify on-disk JSON structure
+    stored: Dict[str, Any] = _read_json(save_path)
+    assert set(stored.keys()) == {"queries", "documents"}
 
 # def test_load_tmp_file_content__expect__datastore_state_is_restored(tmp_path):
 #     content = [{
