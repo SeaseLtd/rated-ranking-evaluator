@@ -1,4 +1,6 @@
 import json
+from json import JSONDecodeError
+
 import requests
 from urllib.parse import urljoin
 from pydantic import HttpUrl
@@ -86,13 +88,17 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents matching the query.
         """
-        if keyword:
-             payload = json.loads(query_template.replace(self.PLACEHOLDER, keyword))
-        else:
-            payload = {
-            "query": {"match_all": {}}
-            }
-        payload["_source"] = doc_fields
+        try:
+            payload: Dict[str, Any] = json.loads(query_template)
+        except JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON query_template: {e}")
+
+        query_string_obj = payload.get("query", {}).get("query_string", {})
+        if "query" in query_string_obj:
+            query_string_obj["query"] = query_string_obj["query"].replace(self.PLACEHOLDER, keyword)
+
+        fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
+        payload["_source"] = fields
         return self._search(payload)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
