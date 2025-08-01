@@ -126,7 +126,6 @@ class DataStore:
         context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
         return context.has_rating_score(doc_id)
 
-
     @staticmethod
     def ensure_tmp_file_exists() -> Path:
         """Checks if a file exists on disk and returns its path or create the parent folder."""
@@ -145,7 +144,7 @@ class DataStore:
             """Default function to handle non-serializable objects"""
             if isinstance(obj, QueryRatingContext):
                 return obj.to_dict()
-            elif isinstance(obj, Document):
+            elif isinstance(obj, Document): # from pydantic import BaseModel
                 return obj.model_dump()
             else:
                 # Convert to string as fallback
@@ -173,19 +172,29 @@ class DataStore:
 
         with filepath.open("r", encoding="utf-8") as f:
             file_content = json.load(f)
+            print(file_content) 
 
         queries_data: Dict[str, Dict[str, Any]] = file_content.get("queries", {})
         documents_data: Dict[str, Dict[str, Any]] = file_content.get("documents", {})
 
-        for query_id, query_ctx_dict in queries_data.items():
-            ctx = QueryRatingContext.from_dict(query_ctx_dict)
+        for query_id, context_dict in queries_data.items():
 
+            context = QueryRatingContext.from_dict(context_dict)
+            if context.get_query_text() in self._query_text_to_query_id:
+                # log.error(f'Duplicate query text found: {context.get_query_text()}')
+                raise KeyError(f'Duplicate query text found: {context.get_query_text()}')
+            
             if query_id in self._queries_by_id:
-                log.info(f"Query {query_id} alreadys exists in DataStore; replacing.")
+                # log.error(f'Duplicate query id found: {query_id}')
+                raise KeyError(f'Duplicate query id found: {query_id}')
+            
 
-            self._queries_by_id[query_id] = ctx
-            self._query_text_to_query_id[ctx.get_query_text()] = query_id
+            self._queries_by_id[query_id] = context
+            self._query_text_to_query_id[context.get_query_text()] = query_id
 
         # documents
         for doc_id, doc_dict in documents_data.items():
             self._documents[doc_id] = Document.model_validate(doc_dict)
+
+
+# refactor/Dage-18-

@@ -46,7 +46,7 @@ def mock_datastore_with_sample_data(ignore_saved_data: bool = True) -> DataStore
 
 # -------------------- Unit tests (in-memory) --------------------
 
-def test_add_and_get_document_EXPECTS_documents_stored_in_data_store():
+def test_add_and_get_document__expects__documents_stored_in_data_store():
     ds = mock_datastore_empty()
     docs = [
         Document(id="doc1", fields={"title": "Gadgets", "description": "Cutting edge technologies are on demand."}),
@@ -61,7 +61,7 @@ def test_add_and_get_document_EXPECTS_documents_stored_in_data_store():
     assert ds.get_document("doc3") == docs[2]
 
 
-def test_add_and_get_query_EXPECTS_query_stored_in_data_store_and_check_same_queries():
+def test_add_and_get_query__expects__query_stored_in_data_store_and_check_same_queries():
     ds = mock_datastore_empty()
     # Add queries
     qid1 = ds.add_query("technology", "doc1")
@@ -81,9 +81,7 @@ def test_add_and_get_query_EXPECTS_query_stored_in_data_store_and_check_same_que
 def _patch_tmp(monkeypatch, tmp_path: Path) -> Path:
     """Override `TMP_FILE` constant in the datastore module so we can control I/O path."""
     path = tmp_path / "datastore.json"
-    monkeypatch.setattr(ds_module, "TMP_FILE", str(path), raising=False)
-    # ensure fresh import pick-up (for defensive re-imports elsewhere)
-    importlib.reload(ds_module)
+    monkeypatch.setattr(ds_module, "TMP_FILE", str(path))
     return path
 
 def test_save_and_load_roundtrip(tmp_path, monkeypatch):
@@ -101,23 +99,26 @@ def test_save_and_load_roundtrip(tmp_path, monkeypatch):
 
     # The new instance should have identical observable state
     assert ds2.has_document("d1") and ds2.get_document("d1") == ds1.get_document("d1")
-    assert ds2.get_query_text(ds2._query_text_to_query_id["artificial intelligence"]) == "artificial intelligence"
-    assert ds2.get_rating_score(ds2._query_text_to_query_id["artificial intelligence"], "d1") == 1
+    query_id = ds2._query_text_to_query_id["artificial intelligence"]
+    assert ds2.get_query(query_id).get_query_text() == "artificial intelligence"
+    assert ds2.get_rating_score(query_id, "d1") == 1
 
     # Verify on-disk JSON structure
     stored: Dict[str, Any] = _read_json(save_path)
     assert set(stored.keys()) == {"queries", "documents"}
+    assert "d1" in stored["documents"]
 
-def test_load_tmp_file_content_EXPECTS_datastore_state_is_restored(tmp_path):
+
+def test_load_tmp_file_content__expects__datastore_state_is_restored(tmp_path):
     content = {
-        "queries": [
-            {"query_id": "q1", "query_text": "ai", "doc_ratings": {"d1": 1, "d2": 0}},
-            {"query_id": "q2", "query_text": "transformer models", "doc_ratings": {"d2": 1}},
-        ],
-        "documents": [
-            {"id": "d1", "fields": {"title": "AI", "text": "Deep learning"}},
-            {"id": "d2", "fields": {"title": "LLMs", "text": "Transformers"}},
-        ],
+        "queries": {
+            "q1": {"query_id": "q1", "query_text": "ai", "doc_ratings": {"d1": 1, "d2": 0}},
+            "q2": {"query_id": "q2", "query_text": "transformer models", "doc_ratings": {"d2": 1}},
+        },
+        "documents": {
+            "d1": {"id": "d1", "fields": {"title": "AI", "text": "Deep learning"}},
+            "d2": {"id": "d2", "fields": {"title": "LLMs", "text": "Transformers"}},
+        },
     }
     path = tmp_path / "datastore.json"
     path.write_text(json.dumps(content, indent=2), encoding="utf-8")
@@ -126,21 +127,22 @@ def test_load_tmp_file_content_EXPECTS_datastore_state_is_restored(tmp_path):
     ds = mock_datastore_empty()
     ds.load_tmp_file_content()
 
-    assert ds.get_query_text(ds._query_text_to_query_id["ai"]) == "ai"
-    assert ds.get_rating_score(ds._query_text_to_query_id["ai"], "d1") == 1
-    assert ds.get_rating_score(ds._query_text_to_query_id["ai"], "d2") == 0
+    assert ds.get_query("q1").get_query_text() == "ai"
+    assert ds.get_rating_score("q1", "d1") == 1
+    assert ds.get_rating_score("q1", "d2") == 0
     assert ds.get_document("d1").fields["title"] == "AI"
     assert ds.get_document("d2").fields["text"] == "Transformers"
 
-def test_load_tmp_file_content_with_shared_document_EXPECTS_no_duplication(tmp_path):
+
+def test_load_tmp_file_content_with_shared_document__expects__no_duplication(tmp_path):
     content = {
-        "queries": [
-            {"query_id": "q1", "query_text": "q one", "doc_ratings": {"d1": 1}},
-            {"query_id": "q2", "query_text": "q two", "doc_ratings": {"d1": 0}},
-        ],
-        "documents": [
-            {"id": "d1", "fields": {"title": "AI", "text": "X"}},
-        ],
+        "queries": {
+            "q1": {"query_id": "q1", "query_text": "q one", "doc_ratings": {"d1": 1}},
+            "q2": {"query_id": "q2", "query_text": "q two", "doc_ratings": {"d1": 0}},
+        },
+        "documents": {
+            "d1": {"id": "d1", "fields": {"title": "AI", "text": "X"}},
+        },
     }
     path = tmp_path / "datastore.json"
     _write_json(path, content)
@@ -150,16 +152,17 @@ def test_load_tmp_file_content_with_shared_document_EXPECTS_no_duplication(tmp_p
     ds.load_tmp_file_content()
 
     assert ds.get_document("d1") is not None
-    assert ds.get_rating_score(ds._query_text_to_query_id["q one"], "d1") == 1
-    assert ds.get_rating_score(ds._query_text_to_query_id["q two"], "d1") == 0
+    assert ds.get_rating_score("q1", "d1") == 1
+    assert ds.get_rating_score("q2", "d1") == 0
 
-def test_load_tmp_file_content_with_duplicate_query_text_EXPECTS_key_error(tmp_path):
+
+def test_load_tmp_file_content_with_duplicate_query_text__expects__key_error(tmp_path):
     content = {
-        "queries": [
-            {"query_id": "q1", "query_text": "same", "doc_ratings": {}},
-            {"query_id": "q2", "query_text": "same", "doc_ratings": {}},
-        ],
-        "documents": [],
+        "queries": {
+            "q1": {"query_id": "q1", "query_text": "same", "doc_ratings": {}},
+            "q2": {"query_id": "q2", "query_text": "same", "doc_ratings": {}},
+        },
+        "documents": {},
     }
     path = tmp_path / "datastore.json"
     _write_json(path, content)
@@ -169,7 +172,8 @@ def test_load_tmp_file_content_with_duplicate_query_text_EXPECTS_key_error(tmp_p
     with pytest.raises(KeyError):
         ds.load_tmp_file_content()
 
-def test_save_tmp_file_content_to_custom_path_EXPECTS_file_is_created(tmp_path):
+
+def test_save_tmp_file_content_to_custom_path__expects__file_is_created(tmp_path):
     ds = DataStore()
 
     qid = ds.add_query("q", None)

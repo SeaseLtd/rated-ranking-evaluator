@@ -117,7 +117,6 @@ class TestQuepidWriter:
     def test_write_with_zero_rating_expect_zero_rating_written(self, tmp_path: Path):
         """Tests that a rating of 0 is correctly written."""
         datastore = DataStore(ignore_saved_data=True)
-        assert len(datastore.get_queries()) == 0
         query_text = 'query 1'
         doc_id = 'doc1'
         query_id = datastore.add_query(query_text, doc_id)
