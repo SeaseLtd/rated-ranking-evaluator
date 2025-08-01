@@ -1,9 +1,7 @@
 from .abstract_writer import AbstractWriter
 from .quepid_writer import QuepidWriter
 import logging
-from src.search_engine.data_store import DataStore
-from .rre_writer import RreWriter
-from ..config import Config
+from src.data_store import DataStore
 
 log = logging.getLogger(__name__)
 

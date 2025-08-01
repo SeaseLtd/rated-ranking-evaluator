@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 from pathlib import Path
 
-from src.search_engine.data_store import DataStore
+from src.data_store import DataStore
 
 
 class AbstractWriter(ABC):

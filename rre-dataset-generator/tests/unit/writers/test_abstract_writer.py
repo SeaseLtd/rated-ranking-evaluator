@@ -1,7 +1,7 @@
 import pytest
-from src.search_engine.data_store import DataStore
+from src.data_store import DataStore
 from src.writers.abstract_writer import AbstractWriter
-from src.model.query_rating_context import Document, Query
+from src.model import Document, Query
 from pathlib import Path
 
 

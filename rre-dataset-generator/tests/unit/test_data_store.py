@@ -13,8 +13,8 @@
 
 # import pytest
 # from pydantic import model_validator
-# from src.search_engine.data_store import DataStore
-# from src.model.query_rating_context import Document, Query, Rating
+# from src.data_store import DataStore
+# from src.model import Document, Query, Rating
 
 # # -----------------------
 # # fixtures

@@ -1,9 +1,9 @@
 import pytest, csv
 from pathlib import Path
 
-from src.search_engine.data_store import DataStore
+from src.data_store import DataStore
 from src.writers.quepid_writer import QuepidWriter
-from src.model.query_rating_context import Document, Query
+from src.model import Document, Query
 
 
 # helper shared with other writer tests

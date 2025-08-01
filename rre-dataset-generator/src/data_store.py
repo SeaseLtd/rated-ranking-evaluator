@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 from typing import Dict
-from src.model.query_rating_context import Document, Query, Rating
+from src.model import Document, Query, Rating
 import logging
 log = logging.getLogger(__name__)
 

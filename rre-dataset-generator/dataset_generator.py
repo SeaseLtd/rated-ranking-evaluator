@@ -3,18 +3,8 @@ from src.config import Config
 from src.utils import parse_args
 from src.llm.llm_config import LLMConfig
 
-# data types
-from typing import List
-from langchain_core.language_models import BaseChatModel
-from src.llm.llm_service import LLMService
-from src.model.document import Document
-from src.writers.abstract_writer import AbstractWriter
-from src.search_engine.search_engine_base import BaseSearchEngine
-from src.model.query_response import LLMQueryResponse
-from src.model.score_response import LLMScoreResponse
-
-# data structure
-from src.search_engine.data_store import DataStore
+# data structures
+from src.data_store import DataStore
 
 # build factories
 from src.llm.llm_provider_factory import LLMServiceFactory
