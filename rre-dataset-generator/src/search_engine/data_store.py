@@ -186,9 +186,12 @@ class DataStore:
         
         filepath = self.ensure_tmp_file_exists()
 
+        if not filepath.exists():
+            log.info(f"No datastore file yet at {filepath}, starting fresh.")
+            return
+
         with filepath.open("r", encoding="utf-8") as f:
             file_content = json.load(f)
-            print(file_content) 
 
         queries: Dict[str, Dict[str, Any]] = file_content.get("queries", {})
         for query_id, context_dict in queries.items():
