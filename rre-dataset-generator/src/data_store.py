@@ -3,6 +3,9 @@ import json
 from typing import Dict
 from src.model import Document, Query, Rating
 import logging
+from uuid import uuid4
+import os
+
 log = logging.getLogger(__name__)
 
 TMP_FILE = Path("./tmp/datastore.json")
