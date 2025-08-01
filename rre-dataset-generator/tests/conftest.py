@@ -19,7 +19,7 @@ def pytest_addoption(parser):
 def docker_compose_file(pytestconfig):
     engine = pytestconfig.getoption("search_engine")
     return os.path.join(
-        str(pytestconfig.rootdir), "tests", "integration", f"docker-compose-{engine}.yml"
+        str(pytestconfig.rootdir), "tests", "integration", f"docker-compose.{engine}.yml"
     )
 
 @pytest.fixture(scope="session")
