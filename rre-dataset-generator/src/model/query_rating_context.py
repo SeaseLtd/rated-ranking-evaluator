@@ -24,7 +24,7 @@ class QueryRatingContext:
         """Return the unique identifier for this query context."""
         return self._id
 
-    def get_query(self) -> str:
+    def get_query_text(self) -> str:
         """Return the original query string."""
         return self._query
 
@@ -54,7 +54,9 @@ class QueryRatingContext:
 
         context = cls(query=query_text, query_id=query_id)
         for doc_id, rating in doc_ratings.items():
+            context.add_doc_id(doc_id)
             context.add_rating_score(doc_id, rating)
+
         return context
 
     def to_dict(self) -> Dict[str, Any]:
