@@ -8,11 +8,13 @@ from typing import Any, Dict
 import importlib
 import json
 
-import pytest
 import json
+import pytest
+
 from src.model.document import Document
 from src.search_engine.data_store import DataStore
 from src.search_engine import data_store
+
 
 @pytest.fixture
 def empty_store():
@@ -73,10 +75,13 @@ def test_add_and_get_query__expects__query_stored_in_data_store_and_check_same_q
     assert set(ds.get_query(qid3).get_doc_ids()) == {"doc1", "doc3"}
 
 
-def test_add_query_and_rating(empty_store):
+def test_add_query_rating_and_has_rating_flag(empty_store):
     qid = empty_store.add_query("test", doc_id="d1")
+    # centinela: sin rating aún
+    assert empty_store.has_rating_score(qid, "d1") is False
     empty_store.add_rating_score(qid, "d1", 1)
     assert empty_store.get_rating_score(qid, "d1") == 1
+    assert empty_store.has_rating_score(qid, "d1") is True
 
 @pytest.mark.parametrize("save_documents, expects_documents_key", [(True, True), (False, False)])
 def test_save_tmp_file_content__expect__json_file_is_created_with_or_without_documents(tmp_path: Path, save_documents: bool, expects_documents_key: bool):
@@ -90,6 +95,7 @@ def test_save_tmp_file_content__expect__json_file_is_created_with_or_without_doc
         assert context_1.get_query_id() == context_2.get_query_id()
         assert set(context_1.get_doc_ids()) == set(context_2.get_doc_ids())
 
+    # Carga automática en __init__ porque ignore_saved_data=False
     ds2 = DataStore(ignore_saved_data=False)
     assert ds2.get_query(qid).get_query_text() == "test"
     assert ds2.get_rating_score(qid, "d1") == 1
