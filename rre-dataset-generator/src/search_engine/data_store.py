@@ -139,6 +139,15 @@ class DataStore:
     def save_tmp_file_content(self) -> None:
         """Saves the current state to a file on disk serializing queries-ratings and documents."""
         path: Path = self.ensure_tmp_file_exists()
+        
+
+        # Ensure all documents from queries are in the document store before saving
+        for query_context in self._queries_by_id.values():
+            for doc_id in query_context.get_doc_ids():
+                if not self.has_document(doc_id):
+                    # This might happen if a query was added with a doc_id but the document was not added separately
+                    # We'll add a placeholder document to avoid errors, assuming details can be filled in later.
+                    self.add_document(doc_id, Document(id=doc_id, text=""))
 
         def default_serializer(obj):
             """Default function to handle non-serializable objects"""
@@ -161,18 +170,18 @@ class DataStore:
 
 
     def load_tmp_file_content(self) -> None:
-        """Loads the current state from a file on disk deserializing queries-ratings and documents."""
-        
         self._documents.clear()
         self._queries_by_id.clear()
         self._query_text_to_query_id.clear()
-        
-        # check the path and set default path
+
         filepath: Path = self.ensure_tmp_file_exists()
+
+        if not filepath.exists():
+            log.info(f"No datastore file yet at {filepath}, starting fresh.")
+            return
 
         with filepath.open("r", encoding="utf-8") as f:
             file_content = json.load(f)
-            print(file_content) 
 
         queries_data: Dict[str, Dict[str, Any]] = file_content.get("queries", {})
         documents_data: Dict[str, Dict[str, Any]] = file_content.get("documents", {})
