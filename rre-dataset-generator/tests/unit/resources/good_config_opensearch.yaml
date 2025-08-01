@@ -1,4 +1,14 @@
-query_template: "q=#$query## AND title:cars"
+query_template: >
+  {
+    "query": {
+      "query_string": {
+        "query": "#$query##",
+        "default_field": "description",
+        "default_operator": "OR"
+      }
+    },
+    "size": 20
+  }
 search_engine_type: "opensearch"
 search_engine_collection_endpoint: "http://localhost:9200/testcore"
 doc_number: 20
