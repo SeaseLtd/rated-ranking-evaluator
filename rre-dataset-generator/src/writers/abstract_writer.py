@@ -30,7 +30,7 @@ class AbstractWriter(ABC):
         for query_ctx in self.datastore.get_queries():
             query_text = query_ctx.get_query_text()
             for doc_id in query_ctx.get_doc_ids():
-                rating = query_ctx.get_rating_score(doc_id)
-                if rating != QueryRatingContext.DOC_NOT_RATED:
+                if query_ctx.has_rating_score(doc_id):
+                    rating = query_ctx.get_rating_score(doc_id)
                     result.append((query_text, doc_id, rating))
         return result

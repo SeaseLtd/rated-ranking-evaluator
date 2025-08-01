@@ -12,8 +12,8 @@ class QueryRatingContext:
 
     DOC_NOT_RATED: int = -1  # doc is not yet rated
 
-    def __init__(self, query: str, doc_id: str | None = None, query_id:str = None):
-        self._id: str = str(uuid.uuid4()) if query_id is None else query_id
+    def __init__(self, query: str, doc_id: str | None = None, query_id: str | None = None):
+        self._id: str = str(uuid.uuid4()) if query_id is None else str(query_id)
         self._query: str = query
         self._doc_id_to_rating_score: Dict[str, int] = {}
         # HANDLING NONEs - threw error in some tests
@@ -40,10 +40,12 @@ class QueryRatingContext:
         self._doc_id_to_rating_score[doc_id] = rating_score
 
     def has_rating_score(self, doc_id: str) -> bool:
-        return doc_id in self._doc_id_to_rating_score and self._doc_id_to_rating_score[doc_id] != self.DOC_NOT_RATED
+        return doc_id in self._doc_id_to_rating_score and self._doc_id_to_rating_score.get(doc_id) != self.DOC_NOT_RATED
 
     def get_rating_score(self, doc_id: str) -> int:
-        return self._doc_id_to_rating_score[doc_id]
+        if self.has_rating_score(doc_id):
+            return self._doc_id_to_rating_score[doc_id]
+        raise KeyError(f"Rating for doc_id {doc_id} not found.")
 
 
     @classmethod
