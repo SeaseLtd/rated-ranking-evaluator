@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from src.model.document import Document
 from src.model.query_rating_context import QueryRatingContext
@@ -11,17 +12,24 @@ from src.model.query_rating_context import QueryRatingContext
 log = logging.getLogger(__name__)
 
 
-TMP_FILE = "./test_file.json"
+TMP_FILE = "./tmp/datastore.json"
 
 class DataStore:
     """
     Stores/retrieves documents, queries, and rating scores.
     """
+    def __init__(self, ignore_saved_data: bool = False):
+        self._documents: Dict[str, Document] = {}
+        self._queries_by_id: Dict[str, QueryRatingContext] = {}
+        self._query_text_to_query_id: Dict[str, str] = {}
 
-    def __init__(self):
-        self._documents: Dict[str, Document] = {}                # doc_id -> Document
-        self._queries_by_id: Dict[str, QueryRatingContext] = {}  # query_id → QueryRatingContext
-        self._query_text_to_query_id: Dict[str, str] = {}        # query_text -> query_id
+        # Load from default file if present
+        if not ignore_saved_data and os.path.exists(TMP_FILE):
+            try:
+                self.load_tmp_file_content()
+                log.debug(f"Loaded DataStore from default file: {TMP_FILE}")
+            except Exception as e:
+                log.error(f"Could not load default datastore file '{TMP_FILE}': {e}")
 
     def _get_query_rating_context_by_id(self, query_id: str) -> QueryRatingContext:
         if query_id not in self._queries_by_id:
@@ -76,8 +84,8 @@ class DataStore:
             return query_id
 
         # new query rating context
-        context = QueryRatingContext(query=query, doc_id=doc_id)
-        query_id = context.get_query_id()
+        context: QueryRatingContext = QueryRatingContext(query=query, doc_id=doc_id)
+        query_id: str = context.get_query_id()
         self._queries_by_id[query_id] = context
         self._query_text_to_query_id[query] = query_id
         return query_id
@@ -99,7 +107,7 @@ class DataStore:
         Adds rating score associated with the given doc_id and query_id or raises KeyError
         if the query_id is not found.
         """
-        context = self._get_query_rating_context_by_id(query_id)
+        context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
         context.add_rating_score(doc_id, rating_score)
         self._queries_by_id[query_id] = context
 
@@ -118,76 +126,66 @@ class DataStore:
         context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
         return context.has_rating_score(doc_id)
 
-    
+
     @staticmethod
-    def query_context_docs_to_dict(query: QueryRatingContext, documents: List[Document]) -> dict:
-        return {
-            "query_id": query.get_query_id(),
-            "query_text": query.get_query(),
-            "doc_ids": query.get_doc_ids(),
-            "doc_ratings": query._doc_id_to_rating_score.copy(),  # copy to avoid mutation
-            "documents": [doc.model_dump_json() for doc in documents if doc is not None]
+    def ensure_tmp_file_exists() -> Path:
+        """Checks if a file exists on disk and returns its path or create the parent folder."""
+        
+        path = Path(TMP_FILE)
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            log.debug(f'Previous file not found in DataStore: {path}')
+        return path
+
+    def save_tmp_file_content(self) -> None:
+        """Saves the current state to a file on disk serializing queries-ratings and documents."""
+        path: Path = self.ensure_tmp_file_exists()
+
+        def default_serializer(obj):
+            """Default function to handle non-serializable objects"""
+            if isinstance(obj, QueryRatingContext):
+                return obj.to_dict()
+            elif isinstance(obj, Document):
+                return obj.model_dump()
+            else:
+                # Convert to string as fallback
+                return str(obj)
+
+        data = {
+            "queries": self._queries_by_id,
+            "documents": self._documents,
         }
 
-    @staticmethod
-    def dict_to_query_context_docs(dict_: dict) -> tuple[str, str, list[str], dict[str, int], list[dict]]:
-        query_id = dict_["query_id"]
-        query_text = dict_["query_text"]
-        doc_ids = dict_["doc_ids"]
-        doc_ratings = dict_["doc_ratings"]
-        documents = dict_.get("documents", [])
-        return query_id, query_text, doc_ids, doc_ratings, documents
+        # save the content to a file
+        with path.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False, default=default_serializer)
 
 
-    def save_tmp_file_content(self, filepath: str | Path = None) -> None:
-        """
-        Save _queries_by_id, _query_text_to_query_id, and self._documents from a unified JSON file in disk
-        """
-        global TMP_FILE
-        if filepath is None:
-            filepath = TMP_FILE
-
-        all_content = []
-        for query_ctx in self._queries_by_id.values():
-            docs_ = [self.get_document(doc_id) for doc_id in query_ctx.get_doc_ids()]
-            data = self.query_context_docs_to_dict(query_ctx, docs_)
-            all_content.append(data)
-
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(all_content, f, indent=2)
-
-
-
-    def load_tmp_file_content(self, filepath: str | Path = None) -> None:
-        """
-        Reconstruct _queries_by_id, _query_text_to_query_id, and self._documents from disk file
-        """
-        global TMP_FILE
-
-        if filepath is None:
-            filepath = TMP_FILE
-
-        with open(filepath, "r", encoding="utf-8") as f:
-            all_content = json.load(f)
+    def load_tmp_file_content(self) -> None:
+        """Loads the current state from a file on disk deserializing queries-ratings and documents."""
         
-        # Loop to reconstruct each register
-        for entry in all_content:
-            query_id, query_text, doc_ids, doc_ratings, documents = self.dict_to_query_context_docs(entry)
+        self._documents.clear()
+        self._queries_by_id.clear()
+        self._query_text_to_query_id.clear()
+        
+        # check the path and set default path
+        filepath: Path = self.ensure_tmp_file_exists()
 
-            # Register docs
-            for doc_data in documents:
-                document = Document.model_validate(doc_data)
-                self.add_document(document.id, document)
+        with filepath.open("r", encoding="utf-8") as f:
+            file_content = json.load(f)
 
-            # Reconstruct the QueryRating
-            context = QueryRatingContext(query=query_text)
-            context._id = query_id  # generated UUID
+        queries_data: Dict[str, Dict[str, Any]] = file_content.get("queries", {})
+        documents_data: Dict[str, Dict[str, Any]] = file_content.get("documents", {})
 
-            for doc_id in doc_ids:
-                context.add_doc_id(doc_id)
+        for query_id, query_ctx_dict in queries_data.items():
+            ctx = QueryRatingContext.from_dict(query_ctx_dict)
 
-            for doc_id, rating in doc_ratings.items():
-                context.add_rating_score(doc_id, rating)
+            if query_id in self._queries_by_id:
+                log.info(f"Query {query_id} alreadys exists in DataStore; replacing.")
 
-            self._queries_by_id[query_id] = context
-            self._query_text_to_query_id[query_text] = query_id
+            self._queries_by_id[query_id] = ctx
+            self._query_text_to_query_id[ctx.get_query_text()] = query_id
+
+        # documents
+        for doc_id, doc_dict in documents_data.items():
+            self._documents[doc_id] = Document.model_validate(doc_dict)
