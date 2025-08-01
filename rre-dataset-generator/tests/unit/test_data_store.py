@@ -90,12 +90,14 @@ def test_save_tmp_file_content__expect__json_file_is_created_with_or_without_doc
 
     # The new instance should have identical observable state
     assert ds2.has_document("d1") and ds2.get_document("d1") == ds1.get_document("d1")
-    assert ds2.get_query_text(ds2._query_text_to_query_id["artificial intelligence"]) == "artificial intelligence"
-    assert ds2.get_rating_score(ds2._query_text_to_query_id["artificial intelligence"], "d1") == 1
+    query_id = ds2._query_text_to_query_id["artificial intelligence"]
+    assert ds2.get_query(query_id).get_query_text() == "artificial intelligence"
+    assert ds2.get_rating_score(query_id, "d1") == 1
 
     # Verify on-disk JSON structure
     stored: Dict[str, Any] = _read_json(save_path)
     assert set(stored.keys()) == {"queries", "documents"}
+    assert "d1" in stored["documents"]
 
 # def test_load_tmp_file_content__expect__datastore_state_is_restored(tmp_path):
 #     content = [{
