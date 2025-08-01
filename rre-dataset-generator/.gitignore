@@ -20,3 +20,6 @@ output/
 # Environment variables
 .env
 
+tmp/
+./tmp
+tmp/*
