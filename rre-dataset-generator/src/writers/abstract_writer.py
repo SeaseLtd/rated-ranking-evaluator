@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 from pathlib import Path
+
 from src.search_engine.data_store import DataStore
 
 
@@ -25,10 +26,18 @@ class AbstractWriter(ABC):
         This can be used by subclasses to get the data in a consistent format.
         """
         result = []
-        for query_ctx in self.datastore.get_queries():
-            query_text = query_ctx.get_query_text()
-            for doc_id in query_ctx.get_doc_ids():
-                if query_ctx.has_rating_score(doc_id):
-                    rating = query_ctx.get_rating_score(doc_id)
+        # DataStore now returns `Query` pydantic models. Iterate accordingly.
+        for query in self.datastore.get_queries():
+            query_text = query.text
+            # Depending on revision the query object may expose the list of
+            # associated documents under either `related_docs_ids` (legacy)
+            # or `doc_ids` (current). Support both for compatibility.
+            doc_ids = (
+                getattr(query, "related_docs_ids", None)
+                or getattr(query, "doc_ids", [])
+            )
+            for doc_id in doc_ids:
+                rating = self.datastore.get_rating_score(query.id, doc_id)
+                if rating is not None:
                     result.append((query_text, doc_id, rating))
         return result

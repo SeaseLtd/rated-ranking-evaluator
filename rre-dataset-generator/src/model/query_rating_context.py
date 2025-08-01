@@ -1,72 +1,56 @@
-import uuid
-from typing import Dict, List, Any
+from __future__ import annotations
+from uuid import uuid4
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator
+from typing import List, Dict, Any
+import logging
 
+log = logging.getLogger(__name__)
 
-class QueryRatingContext:
+class Document(BaseModel):
     """
-    QueryRatingContext holds
-    generated unique id,
-    query,
-    doc id → Rating (dict)
+    Represents a document with a unique identifier, and fields.
     """
-
-    DOC_NOT_RATED: int = -1  # doc is not yet rated
-
-    def __init__(self, query: str, doc_id: str | None = None, query_id: str | None = None):
-        self._id: str = str(uuid.uuid4()) if query_id is None else str(query_id)
-        self._query: str = query
-        self._doc_id_to_rating_score: Dict[str, int] = {}
-        # HANDLING NONEs - threw error in some tests
-        if doc_id is not None:
-            self._doc_id_to_rating_score[doc_id] = self.DOC_NOT_RATED
-
-    def get_query_id(self) -> str:
-        """Return the unique identifier for this query context."""
-        return self._id
-
-    def get_query_text(self) -> str:
-        """Return the original query string."""
-        return self._query
-
-    def get_doc_ids(self) -> List[str]:
-        """Return all doc ids currently tracked for this query context"""
-        return list(self._doc_id_to_rating_score.keys())
-
-    def add_doc_id(self, doc_id: str) -> None:
-        if doc_id not in self._doc_id_to_rating_score:
-            self._doc_id_to_rating_score[doc_id] = Rating(score=self.DOC_NOT_RATED)
-
-    def add_rating_score(self, doc_id: str, rating_score: int, explanation: Optional[str] = None) -> None:
-        self._doc_id_to_rating_score[doc_id] = Rating(score=rating_score, explanation=explanation)
-
-    def has_rating_score(self, doc_id: str) -> bool:
-        return doc_id in self._doc_id_to_rating_score and self._doc_id_to_rating_score.get(doc_id) != self.DOC_NOT_RATED
-
-    def get_rating_score(self, doc_id: str) -> int:
-        if self.has_rating_score(doc_id):
-            return self._doc_id_to_rating_score[doc_id]
-        raise KeyError(f"Rating for doc_id {doc_id} not found.")
-
-
+    id: str = Field(
+        ...,
+        description="Unique identifier of the document.",
+        min_length=1
+    )
+    fields: Dict[str, Any] = Field(
+        ...,
+        description="Fields of the document."
+    )
+    @field_validator('fields')
     @classmethod
-    def from_dict(cls, context_as_dict: Dict[str, Any]) -> "QueryRatingContext":
-        query_id = context_as_dict.get("query_id", None)
-        query_text = context_as_dict.get("query_text", "")
-        doc_ratings = context_as_dict.get("doc_ratings", {})
-        context = cls(query=query_text, query_id=query_id)
-            
-        for doc_id, rating in doc_ratings.items():
-            context.add_doc_id(doc_id)
-            context.add_rating_score(doc_id, rating)
+    def check_no_empty_fields(cls, v: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate that the fields dictionary is not empty and its keys are not empty."""
+        if not v:
+            log.error('The fields dictionary cannot be empty.')
+            raise ValueError('The fields dictionary cannot be empty.')
+        if any(not key for key in v.keys()):
+            log.error('Field keys cannot be empty strings.')
+            raise ValueError('Field keys cannot be empty strings.')
+        return v
 
-        return context
+class Rating(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    doc_id: str
+    query_id: str
+    score: NonNegativeInt
 
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert the QueryRatingContext to a JSON-serializable dictionary.
-        """
-        return {
-            "query_id": self._id,
-            "query_text": self._query,
-            "doc_ratings": self._doc_id_to_rating_score
-        }
+
+
+class Query(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    text: str
+    doc_ids: List[str] =  Field(default_factory=list)
+    related_ratings_ids: List[str] = Field(default_factory=list)
+
+    # helpers de dominio opcionales
+    def add_doc(self, doc: Document) -> None:
+        if doc.id not in self.doc_ids:
+            self.doc_ids.append(doc.id)
+
+    def add_rating(self, rating: Rating) -> None:
+        if rating.id not in self.related_ratings_ids:
+            self.related_ratings_ids.append(rating.id)
+

@@ -1,209 +1,130 @@
-from __future__ import annotations
-
-import json
-import logging
-import os
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-
-from src.model.document import Document
-from src.model.query_rating_context import QueryRatingContext
-
+import json
+from typing import Dict
+from src.model.query_rating_context import Document, Query, Rating
+import logging
 log = logging.getLogger(__name__)
 
-
-TMP_FILE = "./tmp/datastore.json"
+TMP_FILE = Path("./tmp/datastore.json")
 
 class DataStore:
-    """
-    Stores/retrieves documents, queries, and rating scores.
-    """
-    def __init__(self, ignore_saved_data: bool = False):
-        self._documents: Dict[str, Document] = {}
-        self._queries_by_id: Dict[str, QueryRatingContext] = {}
-        self._query_text_to_query_id: Dict[str, str] = {}
+    def __init__(self, path: Path = TMP_FILE, ignore_saved_data: bool = False):
+        self.path = path
+        self.docs: Dict[str, Document] = {}
+        self.queries: Dict[str, Query] = {}
+        self.ratings: Dict[str, Rating] = {} 
+        
+        self.rating_index: Dict[tuple[str, str], str] = {}
+        # (query_id, doc_id) -> rating_id - cache for quick access / deduplication
 
-        # Load from default file if present
-        if not ignore_saved_data and os.path.exists(TMP_FILE):
-            try:
-                self.load_tmp_file_content()
-                log.debug(f"Loaded DataStore from default file: {TMP_FILE}")
-            except Exception as e:
-                log.error(f"Could not load default datastore file '{TMP_FILE}': {e}")
+        if not ignore_saved_data:
+            self.load()
 
-    def _get_query_rating_context_by_id(self, query_id: str) -> QueryRatingContext:
-        if query_id not in self._queries_by_id:
-            _error_msg = f"Query id {query_id} not found in DataStore"
-            log.error(_error_msg)
-            raise KeyError(_error_msg)
-        return self._queries_by_id[query_id]
-
-    def _get_document(self, doc_id: str) -> Optional[Document]:
-        if doc_id not in self._documents:
-            _warning_msg = f"Detected an error when retrieving a document from the data store. Document {doc_id} not found in DataStore"
-            log.warning(_warning_msg)
-            return None
-        return self._documents[doc_id]
-
-    def add_document(self, doc_id: str, document: Document) -> None:
-        if doc_id in self._documents:
-            _error_msg = f"Detected an error when adding document to the data store. Document {doc_id} already present."
-            log.error(_error_msg)
-            raise KeyError(_error_msg)
-        self._documents[doc_id] = document
-
-    def has_document(self, doc_id: str) -> bool:
-        """
-        Returns True if Document with the given id exists, False otherwise.
-        """
-        return doc_id in self._documents
-
-    def get_document(self, doc_id: str) -> Optional[Document]:
-        """
-        Returns the Document with the given ID, or None if not found.
-        """
-        return self._get_document(doc_id)
-
-    def get_documents(self) -> List[Document]:
-        """
-        Returns a list of Document objects."
-        """
-        return list(self._documents.values())
-
-    def add_query(self, query: str, doc_id: str | None = None) -> str:
-        """
-        If `query` already exists, just adds `doc_id` to it.
-        Otherwise, creates a new QueryRatingContext.
-        Returns the query_id.
-        """
-        if query in self._query_text_to_query_id:
-            query_id = self._query_text_to_query_id[query]
-            context = self._queries_by_id[query_id]
-            if doc_id is not None:
-                context.add_doc_id(doc_id)
-            return query_id
-
-        # new query rating context
-        context: QueryRatingContext = QueryRatingContext(query=query, doc_id=doc_id)
-        query_id: str = context.get_query_id()
-        self._queries_by_id[query_id] = context
-        self._query_text_to_query_id[query] = query_id
-        return query_id
-
-    def get_queries(self) -> List[QueryRatingContext]:
-        """
-        Returns a list of all QueryRatingContext objects.
-        """
-        return list(self._queries_by_id.values())
-
-    def get_query(self, query_id: str) -> QueryRatingContext:
-        """
-        Returns QueryRatingContext object or raises KeyError if the query_id is not found.
-        """
-        return self._get_query_rating_context_by_id(query_id)
-
-    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int, explanation: Optional[str] = None) -> None:
-        """
-        Adds rating score associated with the given doc_id and query_id or raises KeyError
-        if the query_id is not found.
-        """
-        context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
-        context.add_rating_score(doc_id, rating_score)
-        self._queries_by_id[query_id] = context
-
-    def get_rating_score(self, query_id: str, doc_id: str) -> int:
-        """
-        Returns the rating score for the given (query_id, doc_id) pair or raises KeyError if the query_id is not found.
-        """
-        context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
-        return context.get_rating_score(doc_id)
+    # ---------- checks ----------
+    def has_doc(self, doc_id: str) -> bool: return doc_id in self.docs
+    def has_query(self, query_id: str) -> bool: return query_id in self.queries
+    def has_rating(self, rating_id: str) -> bool: return rating_id in self.ratings
 
     def has_rating_score(self, query_id: str, doc_id: str) -> bool:
-        """
-        Returns True if the (query_id, doc_id) pair has a rating score (i.e. != -1) or raises KeyError
-        if query_id is not found.
-        """
-        context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
-        return context.has_rating_score(doc_id)
+        return self.get_rating_score(query_id, doc_id) is not None
 
-    @staticmethod
-    def ensure_tmp_file_exists() -> Path:
-        """Checks if a file exists on disk and returns its path or create the parent folder."""
-        
-        path = Path(TMP_FILE)
-        if not path.exists():
-            path.parent.mkdir(parents=True, exist_ok=True)
-            log.debug(f'Previous file not found in DataStore: {path}')
-        return path
+    # ---------- getters ----------
+    def get_doc(self, doc_id: str) -> Document: return self.docs[doc_id]
+    def get_docs(self) -> list[Document]: return list(self.docs.values())
+    
+    def get_query(self, query_id: str) -> Query: return self.queries[query_id]
+    def get_queries(self)   -> list[Query]: return list(self.queries.values())
+    
+    def get_rating(self, rating_id: str) -> Rating: return self.ratings[rating_id]
+    def get_ratings(self) -> list[Rating]: return list(self.ratings.values())
 
-    def save_tmp_file_content(self) -> None:
-        """Saves the current state to a file on disk serializing queries-ratings and documents."""
-        path: Path = self.ensure_tmp_file_exists()
-        
+    def get_rating_score(self, query_id: str, doc_id: str) -> int | None:
+        if query_id not in self.queries:
+            log.error(f"Query {query_id} not found")
+            return 
+        if doc_id not in self.docs:
+            log.error(f"Document {doc_id} not found")
+            return 
+        for rating_id in self.queries[query_id].related_ratings_ids:
+            rating = self.ratings[rating_id]
+            if rating.doc_id == doc_id:
+                return rating.score
+        return None
+    
+    # ---------- commands ----------
+    def add_doc(self, doc: Document) -> None:
+        if doc.id in self.docs:
+            log.error(f"Document {doc.id} already exists")
+            return 
+        self.docs[doc.id] = doc
 
-        # Ensure all documents from queries are in the document store before saving
-        for query_context in self._queries_by_id.values():
-            for doc_id in query_context.get_doc_ids():
-                if not self.has_document(doc_id):
-                    # This might happen if a query was added with a doc_id but the document was not added separately
-                    # We'll add a placeholder document to avoid errors, assuming details can be filled in later.
-                    self.add_document(doc_id, Document(id=doc_id, text=""))
+    def add_query(self, query: Query) -> None:
+        if query.id in self.queries:
+            log.error(f"Query {query.id} already exists")
+            return 
+        self.queries[query.id] = query
 
-        def default_serializer(obj):
-            """Default function to handle non-serializable objects"""
-            if isinstance(obj, QueryRatingContext):
-                return obj.to_dict()
-            elif isinstance(obj, Document): # from pydantic import BaseModel
-                return obj.model_dump()
-            else:
-                # Convert to string as fallback
-                return str(obj)
+    def add_rating(self, rating: Rating) -> None:
+        if rating.id in self.ratings:
+            log.error(f"Rating {rating.id} already exists")
+            return 
+        self.ratings[rating.id] = rating
+        # maintain rating index for quick access / deduplication
+        self.rating_index[(rating.query_id, rating.doc_id)] = rating.id
 
-        data = {
-            "queries": self._queries_by_id,
-            "documents": self._documents,
+    def add_doc_to_query(self, query_id: str, doc_id: str) -> None:
+        if query_id not in self.queries:
+            log.error(f"Query {query_id} not found")
+            return 
+        if doc_id not in self.docs:
+            log.error(f"Document {doc_id} not found")
+            return 
+        self.queries[query_id].add_doc(self.docs[doc_id])
+    
+    def add_rating_score(self, query_id: str, doc_id: str, score: int) -> str:
+        if query_id not in self.queries: 
+            raise KeyError(f"Query {query_id} not found")
+        if doc_id not in self.docs: 
+            raise KeyError(f"Document {doc_id} not found")
+
+        key = (query_id, doc_id)
+        rating_id = self.rating_index.get(key)
+        if rating_id:
+            self.ratings[rating_id].score = score
+            return rating_id
+
+        rating = Rating(doc_id=doc_id, query_id=query_id, score=score)
+        self.add_rating(rating)
+        self.queries[query_id].add_rating(rating)
+        # optional: assure doc<->query
+        if doc_id not in self.queries[query_id].doc_ids:
+            self.queries[query_id].doc_ids.append(doc_id)
+        return rating.id
+    
+
+    # ---------- persistance ----------
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = self.path.with_suffix(self.path.suffix + f".{uuid4().hex}.tmp")
+        payload = {
+            "docs": [d.model_dump() for d in self.docs.values()],
+            "queries": [q.model_dump() for q in self.queries.values()],
+            "ratings": [r.model_dump() for r in self.ratings.values()],
         }
+        tmp_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
+        os.replace(tmp_path, self.path)  # better practice - avoid being hanged
 
-        # save the content to a file
-        with path.open("w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False, default=default_serializer)
+    def load(self) -> None:
+        if not self.path.exists(): return
+        self.docs.clear(); self.queries.clear(); self.ratings.clear(); self.rating_index.clear()
 
-
-    def load_tmp_file_content(self) -> None:
-        self._documents.clear()
-        self._queries_by_id.clear()
-        self._query_text_to_query_id.clear()
-
-        filepath: Path = self.ensure_tmp_file_exists()
-
-        if not filepath.exists():
-            log.info(f"No datastore file yet at {filepath}, starting fresh.")
-            return
-
-        with filepath.open("r", encoding="utf-8") as f:
-            file_content = json.load(f)
-
-        queries_data: Dict[str, Dict[str, Any]] = file_content.get("queries", {})
-        documents_data: Dict[str, Dict[str, Any]] = file_content.get("documents", {})
-
-        for query_id, context_dict in queries_data.items():
-
-            context = QueryRatingContext.from_dict(context_dict)
-            if context.get_query_text() in self._query_text_to_query_id:
-                # log.error(f'Duplicate query text found: {context.get_query_text()}')
-                raise KeyError(f'Duplicate query text found: {context.get_query_text()}')
-            
-            if query_id in self._queries_by_id:
-                # log.error(f'Duplicate query id found: {query_id}')
-                raise KeyError(f'Duplicate query id found: {query_id}')
-            
-
-            self._queries_by_id[query_id] = context
-            self._query_text_to_query_id[context.get_query_text()] = query_id
-
-        # documents
-        for doc_id, doc_dict in documents_data.items():
-            self._documents[doc_id] = Document.model_validate(doc_dict)
-
-
-# refactor/Dage-18-
+        data = json.loads(self.path.read_text())
+        for d in data.get("docs", []):
+            self.docs[d["id"]] = Document.model_validate(d)
+        for q in data.get("queries", []):
+            self.queries[q["id"]] = Query.model_validate(q)
+        for r in data.get("ratings", []):
+            robj = Rating.model_validate(r)
+            self.ratings[robj.id] = robj
+            # populate rating index for loaded data
+            self.rating_index[(robj.query_id, robj.doc_id)] = robj.id
