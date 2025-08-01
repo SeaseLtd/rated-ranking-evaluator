@@ -131,3 +131,4 @@ class DataStore:
             self.ratings[robj.id] = robj
             # populate rating index for loaded data
             self.rating_index[(robj.query_id, robj.doc_id)] = robj.id
+

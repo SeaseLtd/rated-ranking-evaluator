@@ -29,3 +29,4 @@ class Document(BaseModel):
             log.error('Field keys cannot be empty strings.')
             raise ValueError('Field keys cannot be empty strings.')
         return v
+

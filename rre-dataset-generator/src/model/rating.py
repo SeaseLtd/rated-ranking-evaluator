@@ -10,3 +10,4 @@ class Rating(BaseModel):
     doc_id: str
     query_id: str
     score: NonNegativeInt
+
