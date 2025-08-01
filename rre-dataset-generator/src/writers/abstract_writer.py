@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 from pathlib import Path
-
-from src.model.query_rating_context import QueryRatingContext
 from src.search_engine.data_store import DataStore
 
 

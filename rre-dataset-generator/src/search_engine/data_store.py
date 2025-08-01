@@ -153,7 +153,7 @@ class DataStore:
             """Default function to handle non-serializable objects"""
             if isinstance(obj, QueryRatingContext):
                 return obj.to_dict()
-            elif isinstance(obj, Document): # from pydantic import BaseModel
+            elif isinstance(obj, Document): # more generall: from pydantic import BaseModel
                 return obj.model_dump()
             else:
                 # Convert to string as fallback
