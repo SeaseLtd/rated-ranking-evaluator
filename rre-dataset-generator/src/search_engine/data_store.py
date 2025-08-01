@@ -126,7 +126,6 @@ class DataStore:
         context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
         return context.has_rating_score(doc_id)
 
-
     @staticmethod
     def ensure_tmp_file_exists() -> Path:
         """Checks if a file exists on disk and returns its path or create the parent folder.
@@ -154,7 +153,7 @@ class DataStore:
             """Default function to handle non-serializable objects"""
             if isinstance(obj, QueryRatingContext):
                 return obj.to_dict()
-            elif isinstance(obj, Document):
+            elif isinstance(obj, Document): # from pydantic import BaseModel
                 return obj.model_dump()
             else:
                 # Convert to string as fallback
@@ -189,6 +188,7 @@ class DataStore:
 
         with filepath.open("r", encoding="utf-8") as f:
             file_content = json.load(f)
+            print(file_content) 
 
         queries: Dict[str, Dict[str, Any]] = file_content.get("queries", {})
         for query_id, context_dict in queries.items():
