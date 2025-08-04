@@ -12,6 +12,7 @@ search_engine_type: "solr"
 index_name: "testcore"
 
 # Endpoint URL of the search engine collection or index
+# opensearch: http://localhost:9200/testcore/
 search_engine_collection_endpoint: "http://localhost:8983/solr/testcore/"
 
 # (Optional) Filter query to restrict the set of documents used to generate queries.
