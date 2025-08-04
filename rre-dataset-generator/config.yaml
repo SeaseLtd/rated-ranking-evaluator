@@ -58,8 +58,8 @@ llm_configuration_file: "llm_config.yaml"
 
 # Output format for the generated dataset
 # Accepted values: quepid, rre
-output_format: "rre"
+output_format: "quepid"
 
 # Path where the output dataset will be saved
 # For rre: json format, for quepid: csv format
-output_destination: "output/ratings.json"
+output_destination: "output/generated_dataset.csv"
