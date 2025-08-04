@@ -89,7 +89,8 @@ if __name__ == "__main__":
                                             doc.id,
                                             score)
 
-    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store)
+    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store,
+                                                 index=config.index_name, id_field="id")
     writer.write(config.output_destination)
 
     log.info(f"Synthetic Dataset has been generated in: {config.output_destination}")

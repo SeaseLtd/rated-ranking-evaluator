@@ -11,6 +11,10 @@ class QuepidWriter(AbstractWriter):
     The format is: query,docid,rating
     """
 
+    @classmethod
+    def from_factory(cls, data_store, **kwargs):
+        return cls(datastore=data_store)
+
     def write(self, output_path: str | Path) -> None:
         """
         Writes queries and their scored documents to a CSV file in Quepid format.

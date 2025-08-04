@@ -8,6 +8,9 @@ query_template: "q=#$query##&df=description&rows=2&q.op=OR&wt=json"
 # Accepted values: solr, elasticsearch, opensearch, vespa
 search_engine_type: "solr"
 
+# Name of the search engine index/collection
+index_name: "testcore"
+
 # Endpoint URL of the search engine collection or index
 search_engine_collection_endpoint: "http://localhost:8983/solr/testcore/"
 
@@ -54,7 +57,8 @@ llm_configuration_file: "llm_config.yaml"
 
 # Output format for the generated dataset
 # Accepted values: quepid, rre
-output_format: "quepid"
+output_format: "rre"
 
 # Path where the output dataset will be saved
-output_destination: "output/generated_dataset.csv"
+# For rre: json format, for quepid: csv format
+output_destination: "output/ratings.json"
