@@ -18,6 +18,12 @@ class SolrSearchEngine(BaseSearchEngine):
     Solr implementation to search into a given collection
     """
     def __init__(self, endpoint: HttpUrl):
+        """ 
+        ENDPOINTS:
+            http://localhost:8983/solr/testcore/schema/uniquekey
+            http://localhost:8983/solr/testcore/schema/fields
+            http://localhost:8983/solr/testcore/schema/dynamicfields
+        """
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
         log.debug(f"Working on endpoint: {self.endpoint}")
@@ -25,13 +31,17 @@ class SolrSearchEngine(BaseSearchEngine):
         log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
         # Solr default behavior, passing nonexistent fields results in a silent failure with no logging -- added logging
         try:
-            # Ask the endpoint the existing fields
+            
             schema_resp = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/fields')).json()
-            # subset only the present fields
-            self.schema_fields = {field['name'] for field in schema_resp.get('fields', [])}
+            dynamic_resp = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/dynamicfields')).json()
+
+            static_fields = {field['name'] for field in schema_resp.get('fields', [])}
+            dynamic_fields = {field['name'] for field in dynamic_resp.get('dynamicFields', [])}
+
+            self.schema_fields = static_fields.union(dynamic_fields)
         except Exception as exc:
             # In unit tests the mock response may not contain the expected structure -> store empty set
-            log.debug(f"Schema fields endpoint did not return expected payload: {exc}; defaulting to empty schema list")
+            log.debug(f"Error loading schema fields or dynamic fields: {exc}; defaulting to empty schema list")
             self.schema_fields = set()
         log.debug(f"Schema fields loaded: {len(self.schema_fields)} fields found.")
 
