@@ -1,5 +1,6 @@
 # Missing: query_template (optional)
 search_engine_type: "solr"
+index_name: "mycore"
 search_engine_collection_endpoint: "http://localhost"
 doc_number: 10
 doc_fields: ["title"]

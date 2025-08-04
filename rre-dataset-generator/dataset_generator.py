@@ -87,7 +87,8 @@ if __name__ == "__main__":
                                                                 endpoint=config.search_engine_collection_endpoint)
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
-    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store)
+    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store,
+                                                 index=config.index_name, id_field="id")
 
     # pipeline starts
     add_user_queries(config, data_store)
@@ -103,8 +104,6 @@ if __name__ == "__main__":
 
     add_cartesian_product_scores(service, config, data_store)
 
-    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store,
-                                                 index=config.index_name, id_field="id")
     writer.write(config.output_destination)
 
     log.info(f"Synthetic Dataset has been generated in: {config.output_destination}")

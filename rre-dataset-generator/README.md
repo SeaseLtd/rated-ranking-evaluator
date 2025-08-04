@@ -23,6 +23,7 @@ Create a `config.yaml` file in the root directory. This file controls the entire
 ```yaml
 query_template: "q=#$query##&fq=genre:horror&wt=json"
 search_engine_type: "solr"
+index_name: "testcore"
 search_engine_collection_endpoint: "http://localhost:8983/solr/mycore"
 documents_filter:
   - genre:

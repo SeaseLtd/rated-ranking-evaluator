@@ -26,6 +26,7 @@ def test_good_config_expect_all_parameters_read(config):
     assert config.relevance_scale == "graded"
     assert config.llm_configuration_file == FilePath("tests/unit/resources/llm_config.yaml")
     assert config.output_destination == Path("output/generated_dataset.json")
+    assert config.index_name == "mycore"
 
 def test_missing_optional_field_values():
     path = "tests/unit/resources/missing_optional.yaml"
