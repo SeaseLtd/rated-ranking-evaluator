@@ -197,9 +197,8 @@ class DataStore:
         for query_id, context_dict in queries.items():
             context: QueryRatingContext = QueryRatingContext.from_dict(context_dict)
             self._queries_by_id[query_id] = context
-            self._query_text_to_query_id[context.get_query()] = query_id
+            self._query_text_to_query_id[context.get_query_text()] = query_id
 
         documents = file_content.get("documents", {})
         for doc_id, doc_data in documents.items():
             self.add_document(doc_id, Document.model_validate(doc_data))
-
