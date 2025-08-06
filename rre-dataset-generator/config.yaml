@@ -64,5 +64,6 @@ output_destination: "output/generated_dataset.csv"
 # Default: false; set to true to save LLM rating reasoning
 save_llm_explanation: true
 
-# File path where it contains query, doc_id, rating, rating_explanation for the rating.
+# (Optional**) File path where it contains query, doc_id, rating, rating_explanation for the rating.
+# (**) When save_llm_explanation is set to True, this param needs to be present
 llm_explanation_destination: "output/rating_explanation.json"
