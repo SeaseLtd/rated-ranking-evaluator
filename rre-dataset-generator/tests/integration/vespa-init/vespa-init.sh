@@ -39,12 +39,31 @@ for i in {1..300}; do
 done
 
 # Feed the sample data
-echo "Feeding data …"
-vespa feed --target $HTTP_URL /data/*.json
-sleep 5
+EXPECTED_DOCS=$(ls /data/*.json | wc -l)
 
-# Verify a simple query works
-echo "Running test query …"
-vespa query --target $HTTP_URL "select * from news where true" language=en-US
+echo "Checking if corpus already indexed..."
+indexed_docs=$(curl -s "$HTTP_URL/document/v1/news/news/docid?hits=0" \
+               | jq '.root.fields.totalCount // 0')
 
-echo "Vespa initialization complete."
+if [ "$indexed_docs" -ge "$EXPECTED_DOCS" ]; then
+  echo "Dataset already indexed ($indexed_docs docs). Skipping feed."
+else
+  echo "Feeding $EXPECTED_DOCS documents ..."
+  vespa feed --target "$HTTP_URL" /data/*.json
+
+  # Wait until all docs are visible
+  echo "Waiting for Vespa to index documents ..."
+  for i in {1..300}; do
+    indexed_docs=$(curl -s "$HTTP_URL/document/v1/news/news/docid?hits=0" \
+                   | jq '.root.fields.totalCount // 0')
+    if [ "$indexed_docs" -ge "$EXPECTED_DOCS" ]; then
+      echo "All $indexed_docs documents indexed."
+      break
+    fi
+    sleep 1
+    if [ "$i" -eq 300 ]; then
+      echo "Timeout waiting for documents to be indexed" >&2
+      exit 1
+    fi
+  done
+fi
