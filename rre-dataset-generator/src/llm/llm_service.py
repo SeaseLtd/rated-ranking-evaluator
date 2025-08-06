@@ -70,8 +70,9 @@ class LLMService:
                 content=f"You are a professional data labeler and, given a documents with a set of fields and a query "
                         f"text, you need to return the relevance score in a scale called {relevance_scale.upper()}. The "
                         f"scores of this scale are built as follows:\n{description}\n"
-                        f"Knowing this, return a JSON object with key 'score' and the related score as an integer value."
-                        f"I'm expecting a JSON response like the following: {{\"score\": `integer`}}"
+                        f"Knowing this, ONLY return a **valid JSON** object  with key 'score' "
+                        f"and the related score as an integer value."
+                        f"I'm expecting a **valid JSON** response like the following: {{\"score\": `integer`}}"
             ),
             HumanMessage(
                 content=f"Document: {document.model_dump_json()}\n"

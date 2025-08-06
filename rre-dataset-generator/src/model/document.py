@@ -17,6 +17,7 @@ class Document(BaseModel):
         ...,
         description="Fields of the document."
     )
+
     @field_validator('fields')
     @classmethod
     def check_no_empty_fields(cls, v: Dict[str, Any]) -> Dict[str, Any]:
