@@ -3,7 +3,7 @@ import logging
 import requests
 from requests.exceptions import ConnectionError, Timeout, RequestException
 from typing import List, Dict, Any, Union, Optional
-
+from collections import defaultdict
 from src.utils import clean_text
 from src.search_engine.search_engine_base import BaseSearchEngine
 from src.model.document import Document
@@ -293,7 +293,6 @@ class VespaSearchEngine(BaseSearchEngine):
         #    `(field contains "a" OR field contains "b") AND (field contains "c")`
         #    which would always evaluate to false for scalar attributes that can only hold
         #    one value at query-time.
-        from collections import defaultdict
 
         aggregated: Dict[str, List[str]] = defaultdict(list)
 

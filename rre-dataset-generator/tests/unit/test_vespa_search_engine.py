@@ -83,7 +83,7 @@ def _capture_post(monkeypatch, response_json, status_code=200):
         ([], []),
     ],
 )
-def test_normalize_field_value_EXPECTS_correct_conversion(input_val, expected_val):
+def test_normalize_field_value__expects__correct_conversion(input_val, expected_val):
     """Tests the static method for normalizing field values."""
     assert VespaSearchEngine._normalize_field_value(input_val) == expected_val
 
@@ -91,8 +91,8 @@ def test_normalize_field_value_EXPECTS_correct_conversion(input_val, expected_va
 # --------------
 # Happy-path generation
 # --------------
-def test_fetch_for_query_generation_EXPECTS_builds_valid_yql_caps_hits_and_parses_response(monkeypatch):
-    """Verify YQL composition, hit capping, and response parsing in the generation flow."""
+def test_fetch_for_query_generation__expects__builds_valid_yql_handles_hits_and_parses_response(monkeypatch):
+    """Verify YQL composition, *hits* propagation, and response parsing in the generation flow."""
     _monkeypatch_schema_ok(monkeypatch)
 
     # Simulated Vespa response (one hit with title str, description list[str])
@@ -113,7 +113,7 @@ def test_fetch_for_query_generation_EXPECTS_builds_valid_yql_caps_hits_and_parse
         {"description": ["BOGOTA", "Colombia"]},
         {"bad-field": ["oops"]},  # invalid due to identifier regex -> should be ignored
     ]
-    doc_number = MAX_HITS + 50  # should be capped at MAX_HITS
+    doc_number = MAX_HITS + 50  # any positive integer is accepted; no internal capping now
     doc_fields = ["title", "description"]
 
     docs = engine.fetch_for_query_generation(
@@ -125,7 +125,7 @@ def test_fetch_for_query_generation_EXPECTS_builds_valid_yql_caps_hits_and_parse
     assert calls["url"].endswith("/base/search/")
 
     payload = calls["json"]
-    assert payload["hits"] == MAX_HITS
+    assert payload["hits"] == doc_number
 
     yql = payload["yql"]
     assert re.search(r"select (title,\s*description|description,\s*title) from doc where ", yql)
@@ -148,7 +148,7 @@ def test_fetch_for_query_generation_EXPECTS_builds_valid_yql_caps_hits_and_parse
 # -------------------
 # Happy-path evaluation/keyword
 # -------------------
-def test_fetch_for_evaluation_EXPECTS_properly_quotes_and_escapes_keyword(monkeypatch):
+def test_fetch_for_evaluation__expects__properly_quotes_and_escapes_keyword(monkeypatch):
     """Ensure keyword literals are safely escaped/quoted in evaluation YQL."""
     _monkeypatch_schema_ok(monkeypatch)
 
@@ -182,7 +182,7 @@ def test_fetch_for_evaluation_EXPECTS_properly_quotes_and_escapes_keyword(monkey
 # -------------------------
 # Skips hits without ID
 # -------------------------
-def test_fetch_for_query_generation_EXPECTS_skip_hits_without_id(monkeypatch):
+def test_fetch_for_query_generation__expects__skip_hits_without_id(monkeypatch):
     """Hits missing an ``id`` must be discarded during query generation."""
     _monkeypatch_schema_ok(monkeypatch)
 
@@ -197,7 +197,7 @@ def test_fetch_for_query_generation_EXPECTS_skip_hits_without_id(monkeypatch):
 # ----------------------
 # Schema warnings
 # ----------------------
-def test_fetch_for_query_generation_EXPECTS_warn_on_unknown_schema_fields(monkeypatch, caplog):
+def test_fetch_for_query_generation__expects__warn_on_unknown_schema_fields(monkeypatch, caplog):
     """Expect a warning when filters reference fields absent in the Vespa schema."""
 
     # Load a schema with only "title"
@@ -219,7 +219,7 @@ def test_fetch_for_query_generation_EXPECTS_warn_on_unknown_schema_fields(monkey
 # --------------------
 # API loading failure
 # --------------------
-def test_schema_loading_EXPECTS_continue_on_failure(monkeypatch):
+def test_schema_loading__expects__continue_on_failure(monkeypatch):
     """Engine should fall back gracefully if the schema endpoint is unreachable."""
     _monkeypatch_schema_fail(monkeypatch)
 
@@ -237,7 +237,7 @@ def test_schema_loading_EXPECTS_continue_on_failure(monkeypatch):
 # HTTP/validation errors
 # -----------------------
 
-def test_http_requests_EXPECTS_raise_on_negative_responses(monkeypatch):
+def test_http_requests__expects__raise_on_negative_responses(monkeypatch):
     """Search/evaluation requests must raise ``HTTPError`` on non-success HTTP status codes."""
 
     _monkeypatch_schema_ok(monkeypatch)
@@ -280,7 +280,7 @@ def test_http_requests_EXPECTS_raise_on_negative_responses(monkeypatch):
         },
     ],
 )
-def test_workflow_with_mocks_and_config_EXPECTS_work_with_existing(monkeypatch, mock_doc):
+def test_workflow_with_mocks_and_config__expects__work_with_existing(monkeypatch, mock_doc):
     """Validate generation & evaluation flows against legacy mocks and YAML config."""
 
     # POST /search with existing mock
