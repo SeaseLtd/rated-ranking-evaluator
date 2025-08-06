@@ -34,12 +34,15 @@ def get_and_setup_logging(verbose: bool = False) -> Logger:
 
     return getLogger(__name__)
 
+
 def add_user_queries(config: Config, data_store: DataStore):
     if config.queries is not None:
         with open(config.queries, 'r', encoding='utf-8') as file:
             for line in file:
-                if line.strip():
-                    data_store.add_query(line)
+                cleaned = line.strip()
+                if cleaned:
+                    data_store.add_query(cleaned)
+
 
 def generate_and_add_queries(llm_service: LLMService, config: Config, data_store: DataStore) -> None:
     num_queries_per_doc: int = int(((config.num_queries_needed - len(data_store.get_queries())) // config.doc_number) * 1.5)

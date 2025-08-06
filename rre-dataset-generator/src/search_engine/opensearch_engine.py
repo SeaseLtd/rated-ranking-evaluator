@@ -1,5 +1,6 @@
 import json
 import logging
+from json import JSONDecodeError
 from typing import List, Dict, Any, Union
 
 import requests
@@ -62,17 +63,18 @@ class OpenSearchEngine(BaseSearchEngine):
 
     def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str = "*") -> List[Document]:
         """Fetches documents for evaluation by executing a query built from a template."""
-        query = query_template.replace(self.PLACEHOLDER, keyword)
-        fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
+        try:
+            payload: Dict[str, Any] = json.loads(query_template)
+        except JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON query_template: {e}")
 
-        payload = {
-            "query": {
-                "query_string": {
-                    "query": query
-                }
-            },
-            "_source": fields
-        }
+        query_string_obj = payload.get("query", {}).get("query_string", {})
+        if "query" in query_string_obj:
+            query_string_obj["query"] = query_string_obj["query"].replace(self.PLACEHOLDER, keyword)
+
+        fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
+        payload["_source"] = fields
+
         return self._search(payload)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
