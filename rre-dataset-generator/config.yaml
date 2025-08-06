@@ -60,6 +60,12 @@ llm_configuration_file: "llm_config.yaml"
 # Accepted values: quepid, rre
 output_format: "quepid"
 
+# For rre output format, you need other fields, e.g.:
+#   corpora_file: "tests/integration/solr-init/data/dataset.json"
+#   id_field: "id"
+#   rre_query_template: "tests/unit/resources/only_q.json"
+#   rre_query_placeholder: "$query"
+
 # Path where the output dataset will be saved
 # For rre: json format, for quepid: csv format
 output_destination: "output/generated_dataset.csv"

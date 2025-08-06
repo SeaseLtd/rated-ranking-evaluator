@@ -11,7 +11,7 @@ from src.writers.rre_writer import RreWriter
 @pytest.fixture
 def rre_config():
     """Loads a valid rre based config."""
-    return Config.load("tests/unit/resources/rre_based_config.yaml")
+    return Config.load("tests/unit/resources/rre_config.yaml")
 
 
 @pytest.fixture
@@ -38,7 +38,11 @@ def populated_datastore() -> DataStore:
 class TestRreWriter:
     def test_rre_file_successfully_written(self, rre_config, populated_datastore, tmp_path: Path):
         output_file = tmp_path/"ratings.json"
-        writer = RreWriter(populated_datastore, index=rre_config.index_name, id_field="id")
+        writer = RreWriter(populated_datastore, index=rre_config.index_name,
+                           corpora_file=rre_config.corpora_file,
+                           id_field=rre_config.id_field,
+                           query_template=rre_config.rre_query_template,
+                           query_placeholder=rre_config.rre_query_placeholder)
 
         writer.write(str(output_file))
 

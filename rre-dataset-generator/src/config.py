@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, Literal, Dict
+from typing import List, Optional, Literal, Dict, Union
 from pydantic import BaseModel, HttpUrl, Field, field_validator, FilePath
 import yaml
 import logging
@@ -66,15 +66,27 @@ class Config(BaseModel):
             raise ValueError(error_msg)
 
     @classmethod
-    def load(cls, config_path: str) -> Config:
+    def load(cls, config_path: str) -> Union['Config', 'RreConfig']:
         """
         Load and validate configuration from a YAML file.
 
-        :param config_path: Path to the YAML config file
-        :return: Parsed and validated Config object
-        """
+            :param config_path: Path to the YAML config file
+            :return: Parsed and validated Config/RreConfig object
+            """
         with open(config_path, 'r') as f:
             raw_config = yaml.safe_load(f)
 
         log.debug("Configuration file loaded successfully.")
+
+        if raw_config.get("output_format") == "rre":
+            return RreConfig(**raw_config)
         return cls(**raw_config)
+
+
+class RreConfig(Config):
+    output_format: Literal['rre'] = 'rre'
+    corpora_file: FilePath = Field(..., description="JSON formatted dataset file.")
+    id_field: str = Field(..., description="ID field for the unique key.")
+    rre_query_template: FilePath = Field(..., description="Query template for rre evaluator.")
+    rre_query_placeholder: str = Field(..., description="Key-value pair to substitute in the rre query template.")
+

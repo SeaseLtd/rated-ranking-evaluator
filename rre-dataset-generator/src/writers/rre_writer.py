@@ -1,10 +1,9 @@
 import json
 import logging
 import os
-import tempfile
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 from src.search_engine.data_store import DataStore
 from src.writers.abstract_writer import AbstractWriter
@@ -17,31 +16,25 @@ class RreWriter(AbstractWriter):
     Writes query ratings in RRE format (ratings.json).
     """
 
-    QUERY_TEMPLATE = {"q": "$query"}
-
-    QUERY_PLACEHOLDER = "$query"
-
     @classmethod
     def from_factory(cls, data_store, **kwargs):
         return cls(
             datastore=data_store,
             index=kwargs['index'],
-            id_field=kwargs['id_field']
+            corpora_file=kwargs['index'],
+            id_field=kwargs['id_field'],
+            query_template=kwargs['query_template'],
+            query_placeholder=kwargs['query_placeholder']
         )
 
-    @staticmethod
-    def _create_query_template_file(query_template: Dict[str, str]) -> str:
-        """Write the query template to a temporary file and return the file path."""
-
-        temp = tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".json")
-        json.dump(query_template, temp)
-        temp.close()
-        return temp.name
-
-    def __init__(self, datastore: DataStore, index: str, id_field: str):
+    def __init__(self, datastore: DataStore, index: str, corpora_file: str, id_field: str,
+                 query_template: str, query_placeholder: str):
         super().__init__(datastore)
         self.index = index
+        self.corpora_file = corpora_file
         self.id_field = id_field
+        self.query_template = query_template
+        self.query_placeholder = query_placeholder
 
     def _build_json_doc_records(self) -> dict[str, Any]:
         query_to_doc_ratings = defaultdict(list)
@@ -59,9 +52,9 @@ class RreWriter(AbstractWriter):
                 "name": query_text,
                 "queries": [
                     {
-                        "template": self._create_query_template_file(self.QUERY_TEMPLATE),
+                        "template": str(self.query_template),
                         "placeholders": {
-                            self.QUERY_PLACEHOLDER: query_text
+                            self.query_placeholder: query_text
                         }
                     }
                 ],
@@ -71,8 +64,9 @@ class RreWriter(AbstractWriter):
 
         rre_formatted = {
             "index": self.index,
+            "corpora_file": str(self.corpora_file),
             "id_field": self.id_field,
-            "query_placeholder": self.QUERY_PLACEHOLDER,
+            "query_placeholder": self.query_placeholder,
             "query_groups": query_groups
         }
         return rre_formatted

@@ -45,7 +45,8 @@ def add_user_queries(config: Config, data_store: DataStore):
 
 
 def generate_and_add_queries(llm_service: LLMService, config: Config, data_store: DataStore) -> None:
-    num_queries_per_doc: int = int(((config.num_queries_needed - len(data_store.get_queries())) // config.doc_number) * 1.5)
+    num_queries_per_doc: int = int(
+        ((config.num_queries_needed - len(data_store.get_queries())) // config.doc_number) * 1.5)
 
     for doc in docs_to_generate_queries:
         data_store.add_document(doc.id, doc)
@@ -59,20 +60,21 @@ def generate_and_add_queries(llm_service: LLMService, config: Config, data_store
 
 def retrieve_and_add_documents(config: Config, data_store: DataStore) -> None:
     for query_rating_context in data_store.get_queries():
-        docs_eval: List[Document] = search_engine.fetch_for_evaluation(keyword=query_rating_context.get_query(),
+        docs_eval: List[Document] = search_engine.fetch_for_evaluation(keyword=query_rating_context.get_query_text(),
                                                                        query_template=config.query_template,
                                                                        doc_fields=config.doc_fields)
         for doc in docs_eval:
             if not data_store.has_document(doc.id):
                 data_store.add_document(doc.id, doc)
 
+
 def add_cartesian_product_scores(llm_service: LLMService, config: Config, data_store: DataStore) -> None:
     for query_rating_context in data_store.get_queries():
         for doc in data_store.get_documents():
             if not data_store.has_rating_score(query_rating_context.get_query_id(), doc.id):
                 score_response: LLMScoreResponse = llm_service.generate_score(data_store.get_document(doc.id),
-                                                        query_rating_context.get_query(),
-                                                        config.relevance_scale)
+                                                                              query_rating_context.get_query_text(),
+                                                                              config.relevance_scale)
                 data_store.add_rating_score(query_rating_context.get_query_id(),
                                             doc.id,
                                             score_response.get_score())
@@ -91,14 +93,19 @@ if __name__ == "__main__":
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
     writer: AbstractWriter = WriterFactory.build(config.output_format, data_store,
-                                                 index=config.index_name, id_field="id")
+                                                 index=config.index_name,
+                                                 corpora_file=config.corpora_file,
+                                                 id_field=config.id_field,
+                                                 query_template=config.rre_query_template,
+                                                 query_placeholder=config.rre_query_placeholder)
 
     # pipeline starts
     add_user_queries(config, data_store)
 
-    docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(documents_filter=config.documents_filter,
-                                                                                        doc_number=config.doc_number,
-                                                                                        doc_fields=config.doc_fields)
+    docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
+        documents_filter=config.documents_filter,
+        doc_number=config.doc_number,
+        doc_fields=config.doc_fields)
     log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
 
     generate_and_add_queries(service, config, data_store)
