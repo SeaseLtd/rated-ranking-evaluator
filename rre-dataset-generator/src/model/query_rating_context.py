@@ -68,10 +68,9 @@ class QueryRatingContext:
         doc_ratings = context_as_dict.get("doc_ratings", {})
 
         context = cls(query=query_text, query_id=query_id)
-        for doc_id, rating in doc_ratings.items():
-            context.add_doc_id(doc_id)
-            context.add_rating_score(doc_id, rating)
-
+        for doc_id, rating_dict in doc_ratings.items():
+            rating = Rating(**rating_dict)
+            context._doc_id_to_rating_score[doc_id] = rating
         return context
 
     def to_dict(self) -> Dict[str, Any]:
@@ -81,5 +80,8 @@ class QueryRatingContext:
         return {
             "id": self._id,
             "query": self._query,
-            "doc_ratings": self._doc_id_to_rating_score
+            "doc_ratings": {
+                doc_id: rating.model_dump()
+                for doc_id, rating in self._doc_id_to_rating_score.items()
+            }
         }

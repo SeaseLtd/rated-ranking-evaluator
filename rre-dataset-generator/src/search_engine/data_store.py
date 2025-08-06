@@ -11,13 +11,14 @@ from src.model.query_rating_context import QueryRatingContext
 
 log = logging.getLogger(__name__)
 
-
 TMP_FILE = "./tmp/datastore.json"
+
 
 class DataStore:
     """
     Stores/retrieves documents, queries, and rating scores.
     """
+
     def __init__(self, ignore_saved_data: bool = False):
         self._documents: Dict[str, Document] = {}
         self._queries_by_id: Dict[str, QueryRatingContext] = {}
@@ -103,13 +104,13 @@ class DataStore:
         """
         return self._get_query_rating_context_by_id(query_id)
 
-    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int) -> None:
+    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int, reasoning: Optional[str] = None) -> None:
         """
         Adds rating score associated with the given doc_id and query_id or raises KeyError
         if the query_id is not found.
         """
         context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
-        context.add_rating_score(doc_id, rating_score)
+        context.add_rating_score(doc_id, rating_score, reasoning)
         self._queries_by_id[query_id] = context
 
     def get_rating_score(self, query_id: str, doc_id: str) -> int:
@@ -169,7 +170,6 @@ class DataStore:
         with path.open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False, default=default_serializer)
 
-
     def load_tmp_file_content(self) -> None:
         """Loads state from a file on disk loading queries, ratings, and documents from a unified
         JSON file on disk.
@@ -203,3 +203,25 @@ class DataStore:
         documents = file_content.get("documents", {})
         for doc_id, doc_data in documents.items():
             self.add_document(doc_id, Document.model_validate(doc_data))
+
+    def export_all_records_with_reasoning(self, output_path: str | Path) -> None:
+        """
+        Exports query-doc-rating-reasoning tuples to a JSON file.
+        """
+        records = []
+        for query_context in self._queries_by_id.values():
+            query_text = query_context.get_query_text()
+            for doc_id in query_context.get_doc_ids():
+                if query_context.has_rating_score(doc_id):
+                    rating = query_context.get_rating(doc_id)
+                    records.append({
+                        "query": query_text,
+                        "doc_id": doc_id,
+                        "rating": rating.score,
+                        "reasoning": rating.reasoning
+                    })
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(records, f, indent=2, ensure_ascii=False)

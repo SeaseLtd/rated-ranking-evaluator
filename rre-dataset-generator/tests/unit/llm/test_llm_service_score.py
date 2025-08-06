@@ -39,6 +39,13 @@ def test_generate_score_with_valid_scale_EXPECTED_integer_score(scale, valid_sco
     assert response.get_reasoning() is None
 
 
+def test_generate_score__with_invalid_json_response__expects_error(example_doc):
+    fake_llm = FakeListChatModel(responses=['{malformed-json}'])
+    service = LLMService(chat_model=fake_llm)
+    with pytest.raises(ValueError, match="Invalid LLM response:"):
+        service.generate_score(example_doc, "query", relevance_scale="binary", reasoning=True)
+
+
 @pytest.mark.parametrize("scale, valid_score, explanation", [
     ("graded", 0, "The query is clearly not about cars."),
     ("graded", 1, "Camry is a car, so it is relevant."),

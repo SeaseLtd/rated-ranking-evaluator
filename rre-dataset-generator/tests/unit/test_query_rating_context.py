@@ -44,8 +44,7 @@ def test_add_doc_id__when_doc_id_exists__expects__duplicate_is_ignored():
     assert ctx.get_doc_ids() == ["d1"]
 
 
-def test_get_rating_score__when_no_rating_exists__expects__keyerror_is_raised():
+def test_get_rating_score__when_no_rating_exists__expects__default_score_is_returned():
     ctx = QueryRatingContext(query="AI")
     ctx.add_doc_id("d1")
-    with pytest.raises(KeyError):
-        ctx.get_rating_score("d1")
+    assert ctx.get_rating_score("d1") == QueryRatingContext.DOC_NOT_RATED
