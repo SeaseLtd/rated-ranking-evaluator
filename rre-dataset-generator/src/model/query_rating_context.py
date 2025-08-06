@@ -1,5 +1,5 @@
 import uuid
-from typing import Dict, List, Optional
+from typing import Dict, List, Any, Optional
 
 from src.model.rating import Rating
 
@@ -14,8 +14,8 @@ class QueryRatingContext:
 
     DOC_NOT_RATED: int = -1  # doc is not yet rated
 
-    def __init__(self, query: str, doc_id: str | None = None):
-        self._id: str = str(uuid.uuid4())
+    def __init__(self, query: str, doc_id: str | None = None, query_id: str | None = None):
+        self._id: str = str(uuid.uuid4()) if query_id is None else str(query_id)
         self._query: str = query
         self._doc_id_to_rating_score: Dict[str, Rating] = {}
         # HANDLING NONEs - thrown error in some tests
@@ -26,7 +26,7 @@ class QueryRatingContext:
         """Return the unique identifier for this query context."""
         return self._id
 
-    def get_query(self) -> str:
+    def get_query_text(self) -> str:
         """Return the original query string."""
         return self._query
 
@@ -45,13 +45,6 @@ class QueryRatingContext:
         return (doc_id in self._doc_id_to_rating_score and
                 self._doc_id_to_rating_score[doc_id].score != self.DOC_NOT_RATED)
 
-    def has_rating_reasoning(self, doc_id: str) -> bool:
-        return (doc_id in self._doc_id_to_rating_score and
-                self._doc_id_to_rating_score[doc_id].reasoning is not None)
-
-    def get_rating(self, doc_id: str) -> Rating:
-        return self._doc_id_to_rating_score[doc_id]
-
     def get_rating_score(self, doc_id: str) -> int:
         return self._doc_id_to_rating_score[doc_id].score
 
@@ -61,3 +54,32 @@ class QueryRatingContext:
         """
         return self._doc_id_to_rating_score[doc_id].reasoning
 
+    def has_rating_reasoning(self, doc_id: str) -> bool:
+        return (doc_id in self._doc_id_to_rating_score and
+                self._doc_id_to_rating_score[doc_id].reasoning is not None)
+
+    def get_rating(self, doc_id: str) -> Rating:
+        return self._doc_id_to_rating_score[doc_id]
+
+    @classmethod
+    def from_dict(cls, context_as_dict: Dict[str, Any]) -> "QueryRatingContext":
+        query_id = context_as_dict.get("id", None)
+        query_text = context_as_dict.get("query", "")
+        doc_ratings = context_as_dict.get("doc_ratings", {})
+
+        context = cls(query=query_text, query_id=query_id)
+        for doc_id, rating in doc_ratings.items():
+            context.add_doc_id(doc_id)
+            context.add_rating_score(doc_id, rating)
+
+        return context
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the QueryRatingContext to a JSON-serializable dictionary.
+        """
+        return {
+            "id": self._id,
+            "query": self._query,
+            "doc_ratings": self._doc_id_to_rating_score
+        }

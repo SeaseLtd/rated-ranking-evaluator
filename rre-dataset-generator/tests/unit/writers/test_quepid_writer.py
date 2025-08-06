@@ -9,7 +9,7 @@ from src.writers.quepid_writer import QuepidWriter
 @pytest.fixture
 def populated_datastore() -> DataStore:
     """Returns a DataStore instance populated with test data."""
-    datastore = DataStore()
+    datastore = DataStore(ignore_saved_data=True)
 
     # Query 1: 2 rated docs, 1 unrated
     query_1_id = datastore.add_query("test query 1", "doc1")
@@ -31,13 +31,13 @@ def populated_datastore() -> DataStore:
 @pytest.fixture
 def empty_datastore() -> DataStore:
     """Returns an empty DataStore instance."""
-    return DataStore()
+    return DataStore(ignore_saved_data=True)
 
 
 @pytest.fixture
 def unrated_datastore() -> DataStore:
     """Returns a DataStore with unrated documents."""
-    datastore = DataStore()
+    datastore = DataStore(ignore_saved_data=True)
     datastore.add_query("query 1", "doc1")
     datastore.add_query("query 2", "doc2")
     return datastore
@@ -96,7 +96,7 @@ class TestQuepidWriter:
 
     def test_write_with_special_characters_expect_file_successfully_written(self, tmp_path: Path):
         """Tests writing with special characters in query and doc_id."""
-        datastore = DataStore()
+        datastore = DataStore(ignore_saved_data=True)
         query_text = 'query with "quotes" and a comma,'
         doc_id = 'doc_id_with_a_newline\n'
         query_id = datastore.add_query(query_text, doc_id)
@@ -116,7 +116,8 @@ class TestQuepidWriter:
 
     def test_write_with_zero_rating_expect_zero_rating_written(self, tmp_path: Path):
         """Tests that a rating of 0 is correctly written."""
-        datastore = DataStore()
+        datastore = DataStore(ignore_saved_data=True)
+        assert len(datastore.get_queries()) == 0
         query_text = 'query 1'
         doc_id = 'doc1'
         query_id = datastore.add_query(query_text, doc_id)

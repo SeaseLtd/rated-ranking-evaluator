@@ -70,7 +70,7 @@ class LLMService:
 
         if reasoning:
             system_prompt += (
-                f"Return a JSON object with two keys:"
+                f"Return ONLY a **valid JSON** object with two keys:"
                 " `score`: the related score as an integer value\n"
                 " `reasoning`: your concise reasoning for that score\n"
                 f"As an example, I expect a JSON response like the following: "
@@ -78,7 +78,7 @@ class LLMService:
             )
         else:
             system_prompt += (
-                f"Return a JSON object with key 'score' and the related score as an integer value."
+                f"Return ONLY a **valid JSON** object with key 'score' and the related score as an integer value."
                 f"I expect a JSON response like the following: {{\"score\": \"integer value\"}}"
             )
 

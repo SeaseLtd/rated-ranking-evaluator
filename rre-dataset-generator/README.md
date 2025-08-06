@@ -45,6 +45,9 @@ output_destination: "output/generated_dataset.json"
 
 ### 3. Running the Generator
 
+Before running the command below, you need to have running search engine instance (`solr`/`opensearch`/`elasticsearch`/`vespa`).
+
+
 Execute the main script via the `argparse` CLI, pointing to your configuration file:
 ```bash
 uv run dataset_generator.py --config_file config.yaml
@@ -98,4 +101,28 @@ docker compose up --build
 
 This will start 2 services:
  - `solr`, available at http://localhost:8983/solr
- - `solr-init`, loads documents from solr/data/dataset.json only if Solr doesn't index any documents.
+ - `solr-init`, loads documents from solr-init/data/dataset.json.
+
+
+##### Running OpenSearch (Single Node)
+
+To run a local OpenSearch test environment using docker-compose:
+```bash
+cd tests/integration/
+```
+
+Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
+If you have Docker Compose v1 installed, use:
+
+```bash
+docker-compose -f docker-compose.opensearch.yml up --build
+```
+If you have Docker Compose v2 installed, use:
+```bash
+docker compose -f docker-compose.opensearch.yml up --build
+```
+
+This will start 2 services:
+ - `opensearch`, available at http://localhost:9200/
+ - `opensearch-init`, loads documents (`bulk indexing`) from opensearch-init/data/dataset.jsonl.
+

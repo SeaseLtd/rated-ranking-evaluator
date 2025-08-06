@@ -6,7 +6,7 @@ from src.writers.abstract_writer import AbstractWriter
 @pytest.fixture
 def populated_datastore() -> DataStore:
     """Returns a DataStore instance populated with test data."""
-    datastore = DataStore()
+    datastore = DataStore(ignore_saved_data=True)
 
     # Query 1: 2 rated docs, 1 unrated
     query_1_id = datastore.add_query("test query 1", "doc1")
