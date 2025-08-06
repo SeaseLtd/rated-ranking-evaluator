@@ -47,10 +47,10 @@ class LLMService:
         return output
 
     def generate_score(self, document: Document, query: str, relevance_scale: str,
-                       reasoning: bool = False) -> LLMScoreResponse:
+                       explanation: bool = False) -> LLMScoreResponse:
         """
         Generates a relevance score for a given document-query pair using a specified relevance scale.
-        If reasoning flag is set to true, score reasoning/explanation is generated as well.
+        If explanation flag is set to true, score explanation is generated as well.
         """
         if relevance_scale == "binary":
             description = (" - 0: the query is NOT relevant to the given document\n"
@@ -68,13 +68,13 @@ class LLMService:
                          f"and you need to return the relevance score in a scale called {relevance_scale.upper()}. "
                          f"The scores of this scale are built as follows:\n{description}\n")
 
-        if reasoning:
+        if explanation:
             system_prompt += (
                 f"Return ONLY a **valid JSON** object with two keys:"
                 " `score`: the related score as an integer value\n"
-                " `reasoning`: your concise reasoning for that score\n"
+                " `explanation`: your concise explanation for that score\n"
                 f"As an example, I expect a JSON response like the following: "
-                f"{{\"score\": \"integer value\",\"reasoning\": \"I rated this score because...\" }}"
+                f"{{\"score\": \"integer value\",\"explanation\": \"I rated this score because...\" }}"
             )
         else:
             system_prompt += (
@@ -96,15 +96,15 @@ class LLMService:
 
         try:
             score = json.loads(raw)['score']
-            score_reasoning = None
-            if reasoning:
-                score_reasoning = json.loads(raw)['reasoning']
+            score_explanation = None
+            if explanation:
+                score_explanation = json.loads(raw)['explanation']
         except (JSONDecodeError, KeyError) as e:
             log.debug(f"LLM unexpected response. Raw output: {raw}")
             raise ValueError(f"Invalid LLM response: {e}")
 
         try:
-            parsed = LLMScoreResponse(score=score, scale=relevance_scale, reasoning=score_reasoning)
+            parsed = LLMScoreResponse(score=score, scale=relevance_scale, explanation=score_explanation)
             return parsed
         except ValueError as e:
             log.warning(f"Validation error for score '{score}' on scale '{relevance_scale}': {e}")

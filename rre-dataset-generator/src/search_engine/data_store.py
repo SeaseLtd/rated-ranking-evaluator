@@ -104,13 +104,13 @@ class DataStore:
         """
         return self._get_query_rating_context_by_id(query_id)
 
-    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int, reasoning: Optional[str] = None) -> None:
+    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int, explanation: Optional[str] = None) -> None:
         """
         Adds rating score associated with the given doc_id and query_id or raises KeyError
         if the query_id is not found.
         """
         context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
-        context.add_rating_score(doc_id, rating_score, reasoning)
+        context.add_rating_score(doc_id, rating_score, explanation)
         self._queries_by_id[query_id] = context
 
     def get_rating_score(self, query_id: str, doc_id: str) -> int:
@@ -204,21 +204,21 @@ class DataStore:
         for doc_id, doc_data in documents.items():
             self.add_document(doc_id, Document.model_validate(doc_data))
 
-    def export_all_records_with_reasoning(self, output_path: str | Path) -> None:
+    def export_all_records_with_explanation(self, output_path: str | Path) -> None:
         """
-        Exports query-doc-rating-reasoning tuples to a JSON file.
+        Exports query-doc-rating-explanation tuples to a JSON file.
         """
         records = []
         for query_context in self._queries_by_id.values():
             query_text = query_context.get_query_text()
             for doc_id in query_context.get_doc_ids():
-                if query_context.has_rating_score(doc_id):
+                if query_context.has_rating_score(doc_id) and query_context.has_rating_explanation(doc_id):
                     rating = query_context.get_rating(doc_id)
                     records.append({
                         "query": query_text,
                         "doc_id": doc_id,
                         "rating": rating.score,
-                        "reasoning": rating.reasoning
+                        "explanation": rating.explanation
                     })
 
         output_path = Path(output_path)

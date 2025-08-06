@@ -27,7 +27,7 @@ class Config(BaseModel):
     output_format: Literal['quepid', 'rre']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
     save_llm_explanation: Optional[bool] = False
-    llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating reasoning")
+    llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
 
     @field_validator('doc_fields')
     def check_no_empty_fields(cls, v):

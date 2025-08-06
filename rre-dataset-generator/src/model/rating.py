@@ -4,16 +4,16 @@ from pydantic import BaseModel, Field, field_validator
 
 class Rating(BaseModel):
     """
-    Represents a rating score for a document with an optional reasoning.
+    Represents a rating score for a document with an optional explanation.
     """
     score: int = Field(..., description="Relevance score of the document.")
-    reasoning: Optional[str] = Field(None, description="LLM-generated explanation for the score.")
+    explanation: Optional[str] = Field(None, description="LLM-generated explanation for the score.")
 
-    @field_validator("reasoning")
+    @field_validator("explanation")
     @classmethod
-    def non_empty_reasoning(cls, reasoning):
-        if reasoning is not None and not reasoning.strip():
-            raise ValueError("Reasoning must not be empty if provided.")
-        return reasoning
+    def non_empty_explanation(cls, explanation):
+        if explanation is not None and not explanation.strip():
+            raise ValueError("Explanation must not be empty if provided.")
+        return explanation
 
 

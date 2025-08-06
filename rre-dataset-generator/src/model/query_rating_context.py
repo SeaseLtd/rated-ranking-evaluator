@@ -38,8 +38,8 @@ class QueryRatingContext:
         if doc_id not in self._doc_id_to_rating_score:
             self._doc_id_to_rating_score[doc_id] = Rating(score=self.DOC_NOT_RATED)
 
-    def add_rating_score(self, doc_id: str, rating_score: int, reasoning: Optional[str] = None) -> None:
-        self._doc_id_to_rating_score[doc_id] = Rating(score=rating_score, reasoning=reasoning)
+    def add_rating_score(self, doc_id: str, rating_score: int, explanation: Optional[str] = None) -> None:
+        self._doc_id_to_rating_score[doc_id] = Rating(score=rating_score, explanation=explanation)
 
     def has_rating_score(self, doc_id: str) -> bool:
         return (doc_id in self._doc_id_to_rating_score and
@@ -48,15 +48,15 @@ class QueryRatingContext:
     def get_rating_score(self, doc_id: str) -> int:
         return self._doc_id_to_rating_score[doc_id].score
 
-    def get_reasoning(self, doc_id: str) -> Optional[str]:
+    def get_explanation(self, doc_id: str) -> Optional[str]:
         """
-        Returns the reasoning text or None.
+        Returns the explanation or None.
         """
-        return self._doc_id_to_rating_score[doc_id].reasoning
+        return self._doc_id_to_rating_score[doc_id].explanation
 
-    def has_rating_reasoning(self, doc_id: str) -> bool:
+    def has_rating_explanation(self, doc_id: str) -> bool:
         return (doc_id in self._doc_id_to_rating_score and
-                self._doc_id_to_rating_score[doc_id].reasoning is not None)
+                self._doc_id_to_rating_score[doc_id].explanation is not None)
 
     def get_rating(self, doc_id: str) -> Rating:
         return self._doc_id_to_rating_score[doc_id]
