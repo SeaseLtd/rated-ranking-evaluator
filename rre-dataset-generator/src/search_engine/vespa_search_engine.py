@@ -171,8 +171,8 @@ class VespaSearchEngine(BaseSearchEngine):
 
         payload = {
             "yql": yql,
-            # Defensive result limit to MAX_HITS - avoids large consults
-            "hits": min(max(0, int(doc_number)), MAX_HITS), 
+            # Defensive: cast + range limit for negatives
+            "hits": max(0, int(doc_number)),
             "presentation.format": "json",
         }
         log.debug(f"Vespa payload (generation): {str(payload)[:1000]}")
@@ -288,29 +288,45 @@ class VespaSearchEngine(BaseSearchEngine):
             # > return "true" if no filters are provided.
             return "true"
 
-        clauses: List[str] = []
+        # 1. Aggregate values by field so that multiple entries for the same field
+        #    are merged together. This prevents logical errors such as
+        #    `(field contains "a" OR field contains "b") AND (field contains "c")`
+        #    which would always evaluate to false for scalar attributes that can only hold
+        #    one value at query-time.
+        from collections import defaultdict
+
+        aggregated: Dict[str, List[str]] = defaultdict(list)
+
         for f in filters:
             for field, values in f.items():
-                # Validate field identifier; skip if invalid or empty list
+                # Validate field identifier and values
                 if not values or not isinstance(values, list):
                     continue
                 if not _FIELD_RE.match(field):
                     log.warning(f"Skipping invalid field name '{field}' in filters.")
                     continue
 
-                # Escape each value embedded as a literal " " with _safe_literal
-                if len(values) == 1:
-                    safe_val = VespaSearchEngine._safe_literal(values[0])
-                    clauses.append(f'{field} contains {safe_val}')
-                else:
-                    # return a list of safe values of the field
-                    safe_vals = [VespaSearchEngine._safe_literal(v) for v in values]
-                    # iterate over the safe values of the field and create a safe OR clause
-                    ors = " OR ".join(f'{field} contains {sv}' for sv in safe_vals)
-                    # joined safe clause for the field filters with AND logic
-                    clauses.append(f"({ors})")
+                # Append values, duplicates will be deduplicated later
+                aggregated[field].extend(values)
 
-        
+        # 2. Build YQL clauses per field
+        clauses: List[str] = []
+        for field, values in aggregated.items():
+            # Deduplicate while preserving original order (Python 3.7+ dicts are ordered)
+            seen = set()
+            unique_vals = [v for v in values if not (v in seen or seen.add(v))]
+
+            if not unique_vals:
+                continue
+
+            safe_vals = [VespaSearchEngine._safe_literal(v) for v in unique_vals]
+
+            if len(safe_vals) == 1:
+                clauses.append(f"{field} contains {safe_vals[0]}")
+            else:
+                ors = " OR ".join(f"{field} contains {sv}" for sv in safe_vals)
+                clauses.append(f"({ors})")
+
         if len(clauses) == 1:
             # if there's only one clause, return it
             return clauses[0]
@@ -320,4 +336,3 @@ class VespaSearchEngine(BaseSearchEngine):
         else:
             # if there are no clauses, return true
             return "true"
-

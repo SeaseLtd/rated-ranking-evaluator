@@ -11,7 +11,7 @@ from src.model.document import Document
 
 from tests.mocks.vespa import MockResponseVespaSearch
 
-configure_logging()
+configure_logging(level="DEBUG")
 
 
 """Magic Fixtures:

@@ -5,6 +5,20 @@ set -euo pipefail
 CONFIG_URL="http://localhost:19071"
 HTTP_URL="http://localhost:8080"
 
+# Wait for Vespa to be healthy
+echo "Waiting for Vespa to become healthy..."
+for i in {1..300}; do
+  if curl -s --head "$CONFIG_URL/ApplicationStatus" | grep "200 OK" >/dev/null; then
+    echo "Vespa is healthy. Starting initialization..."
+    break
+  fi
+  sleep 1
+  if [ "$i" -eq 300 ]; then
+    echo "Timeout waiting for Vespa to become healthy" >&2
+    exit 1
+  fi
+done
+
 # Deploy the application package
 echo "Deploying Vespa application (config server $CONFIG_URL)…"
 vespa deploy --wait 300 --target $CONFIG_URL /app
