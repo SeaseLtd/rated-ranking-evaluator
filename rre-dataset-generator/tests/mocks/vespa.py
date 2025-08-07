@@ -1,3 +1,7 @@
+from typing import List, Dict, Any
+from src.model.document import Document
+
+
 class MockResponseHealth:
     """Mock a successful call to /state/v1/health"""
     def __init__(self, status_code: int = 200):
@@ -14,8 +18,8 @@ class MockResponseVespaSearch:
     The payload structure mirrors the real Vespa JSON structure that the
     VespaSearchEngine expects: {"root": {"children": [...]}}
     """
-    def __init__(self, docs, status_code: int = 200):
-        # `docs` can be a list of dicts or a single dict
+    def __init__(self, docs: Union[Document, List[Document]], status_code: int = 200):
+        # `docs` could be a list of Docs or a single Doc
         self._docs = docs if isinstance(docs, list) else [docs]
         self.status_code = status_code
 
@@ -24,7 +28,7 @@ class MockResponseVespaSearch:
             from requests.exceptions import HTTPError
             raise HTTPError(f"Status {self.status_code}")
 
-    def json(self):
+    def json(self) -> Dict[str, Any]:
         return {
             "root": {
                 "children": self._docs,

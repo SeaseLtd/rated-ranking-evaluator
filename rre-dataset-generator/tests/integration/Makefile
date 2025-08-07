@@ -18,9 +18,7 @@ vespa-logs:
 
 # Run the initialization script inside the Vespa container
 vespa-init:
-	@echo "Waiting for Vespa admin endpoint to respond..."
-	@timeout 300 bash -c 'until curl -s --head http://localhost:19071/ApplicationStatus | grep "200 OK" >/dev/null; do sleep 1; done'
-	@echo "Vespa is healthy. Running initialization script..."
+	@echo "Running initialization script. Checking health state..\n"
 	docker exec vespa bash /app/vespa-init.sh
 
 # Run a test query against the Vespa container
