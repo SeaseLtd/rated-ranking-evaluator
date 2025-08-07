@@ -6,6 +6,9 @@ dist/
 wheels/
 *.egg-info
 
+# Docker
+**/volumes/
+
 # Virtual environments
 .venv
 uv.lock
@@ -19,4 +22,3 @@ output/
 
 # Environment variables
 .env
-
