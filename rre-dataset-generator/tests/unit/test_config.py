@@ -5,6 +5,7 @@ import pytest
 
 from src.config import Config
 
+
 @pytest.fixture
 def config():
     return Config.load("tests/unit/resources/good_config.yaml")
@@ -26,6 +27,9 @@ def test_good_config_expect_all_parameters_read(config):
     assert config.relevance_scale == "graded"
     assert config.llm_configuration_file == FilePath("tests/unit/resources/llm_config.yaml")
     assert config.output_destination == Path("output/generated_dataset.json")
+    assert config.save_llm_explanation is True
+    assert config.llm_explanation_destination == Path("output/rating_explanation.json")
+
 
 def test_missing_optional_field_values():
     path = "tests/unit/resources/missing_optional.yaml"
@@ -43,10 +47,12 @@ def test_missing_required_field_raises_error():
     with pytest.raises(ValidationError):
         _ = Config.load(path)
 
+
 def test_invalid_doc_number_type_raises_error():
     path = "tests/unit/resources/invalid_type.yaml"
     with pytest.raises(ValidationError):
         _ = Config.load(path)
+
 
 def test_file_not_found_raises_exception():
     path = "tests/unit/resources/file_does_not_exist.yaml"

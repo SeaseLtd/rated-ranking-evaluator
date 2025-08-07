@@ -14,7 +14,6 @@ def empty_store() -> DataStore:
     return DataStore(ignore_saved_data=True)
 
 
-
 def mock_datastore_with_sample_data() -> DataStore:
     """Helper to create a DataStore instance with sample data."""
     ds = DataStore(ignore_saved_data=True)
@@ -35,8 +34,10 @@ def mock_datastore_with_sample_data() -> DataStore:
 def test_add_and_get_document__expects__documents_stored_in_data_store(empty_store: DataStore):
     docs = [
         Document(id="doc1", fields={"title": "Gadgets", "description": "Cutting edge technologies are on demand."}),
-        Document(id="doc2", fields={"title": "Airpods", "description": "The quality of airpods from Apple is getting worse."}),
-        Document(id="doc3", fields={"title": "MacBook Pro", "description": "The price of Apple laptops has been skyrocketed."}),
+        Document(id="doc2",
+                 fields={"title": "Airpods", "description": "The quality of airpods from Apple is getting worse."}),
+        Document(id="doc3",
+                 fields={"title": "MacBook Pro", "description": "The price of Apple laptops has been skyrocketed."}),
     ]
     for d in docs:
         empty_store.add_document(d.id, d)
@@ -93,6 +94,40 @@ def test_save_and_load_tmp_file__expects__state_is_persisted_and_restored(tmp_pa
     doc = ds2.get_document("d1")
     assert doc is not None
     assert doc.fields["title"] == "AI"
+
+
+def test_export_all_records_with_explanation_expect_stored_records_in_file(empty_store: DataStore, tmp_path: Path):
+    query_id1 = empty_store.add_query("test", doc_id="doc1")
+    empty_store.add_query("test", doc_id="doc2")
+
+    empty_store.add_rating_score(query_id1, "doc1", 1, "doc1 explanation")
+    empty_store.add_rating_score(query_id1, "doc2", 2, "doc2 explanation")
+
+    query_id2 = empty_store.add_query("test 2", doc_id="doc3")
+    empty_store.add_rating_score(query_id2, "doc3", 0)  # No explanation, won't be added to the file
+
+    output_path = tmp_path / "rating_explanation.json"
+    empty_store.export_all_records_with_explanation(output_path)
+
+    with output_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    expected_records = [
+        {
+            "query": "test",
+            "doc_id": "doc1",
+            "rating": 1,
+            "explanation": "doc1 explanation"
+        },
+        {
+            "query": "test",
+            "doc_id": "doc2",
+            "rating": 2,
+            "explanation": "doc2 explanation"
+        }
+    ]
+
+    assert data == expected_records
 
 
 # Ensure the temporary file is cleaned up after tests

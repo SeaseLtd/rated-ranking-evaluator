@@ -59,3 +59,11 @@ output_format: "quepid"
 
 # Path where the output dataset will be saved
 output_destination: "output/generated_dataset.csv"
+
+# (Optional) Whether to save LLM rating score explanation to file
+# Default: false; set to true to save LLM rating explanation
+save_llm_explanation: true
+
+# (Optional**) File path where it contains <query, doc_id, rating, explanation> records.
+# (**) When save_llm_explanation is set to True, this param needs to be present
+llm_explanation_destination: "output/rating_explanation.json"
