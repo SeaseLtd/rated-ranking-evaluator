@@ -2,10 +2,12 @@ services:
   mysql:
     container_name: quepid_prod_db
     image: mysql:8
+    restart: unless-stopped
     ports:
       - 3306:3306
     environment:
       - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=quepid
     volumes:
       - ./volumes/mysql_data:/var/lib/mysql
     healthcheck:
@@ -16,10 +18,10 @@ services:
       start_period: 10s
   app:
     container_name: quepid_prod_app
-    platform: linux/amd64
     image: o19s/quepid:8.2.0
+    restart: unless-stopped
     volumes:
-      - ./init-quepid.sh:/usr/src/app/init-quepid.sh
+      - ./quepid-init/init-quepid.sh:/usr/src/app/init-quepid.sh
     entrypoint: ["/usr/src/app/init-quepid.sh"]
     command: ["bundle", "exec", "puma", "-C", "config/puma.rb"]
     #env_file:   # Use this approach if you would rather manage your environment settings elsewhere.
@@ -40,7 +42,7 @@ services:
       - PRIVACY_URL=
       - COOKIES_URL=
       - QUEPID_GA=UA-ERIC
-      - QUEPID_DOMAIN=https://example.com
+      - QUEPID_DOMAIN=http://localhost
       - EMAIL_MARKETING_MODE=false
       - QUEPID_DEFAULT_SCORER=AP@10
       - SIGNUP_ENABLED=true

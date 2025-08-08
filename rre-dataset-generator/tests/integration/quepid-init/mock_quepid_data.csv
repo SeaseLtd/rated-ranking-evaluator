@@ -1,0 +1,7 @@
+query,docid,rating
+python programming,doc1,2
+python programming,doc2,1
+data science,doc3,2
+data science,doc5,1
+web development,doc4,2
+web development,doc1,0
