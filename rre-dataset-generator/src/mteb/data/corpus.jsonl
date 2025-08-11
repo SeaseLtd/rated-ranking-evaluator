@@ -1,0 +1,5 @@
+{"id": "d1", "title": "Vespa quickstart", "text": "How to deploy and query a Vespa application."}
+{"id": "d2", "title": "OpenSearch basics", "text": "Indexing, querying, aggregations, and dashboards."}
+{"id": "d3", "title": "Solr getting started", "text": "Schema, collections, and query parameters overview."}
+{"id": "d4", "title": "LangChain ", "text": "Chains, prompts, retrievers integration."}
+{"id": "d5", "title": "ColBERT", "text": "Late interaction paradigm"}

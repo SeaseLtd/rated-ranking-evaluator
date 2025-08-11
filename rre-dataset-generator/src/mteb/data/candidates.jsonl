@@ -1,0 +1,15 @@
+{"query_id":"q1","doc_id":"d2","label":1}
+{"query_id":"q1","doc_id":"d1","label":0}
+{"query_id":"q1","doc_id":"d3","label":0}
+{"query_id":"q1","doc_id":"d4","label":0}
+{"query_id":"q1","doc_id":"d5","label":0}
+{"query_id":"q2","doc_id":"d1","label":1}
+{"query_id":"q2","doc_id":"d2","label":0}
+{"query_id":"q2","doc_id":"d3","label":0}
+{"query_id":"q2","doc_id":"d4","label":0}
+{"query_id":"q2","doc_id":"d5","label":0}
+{"query_id":"q3","doc_id":"d5","label":1}
+{"query_id":"q3","doc_id":"d2","label":0}
+{"query_id":"q3","doc_id":"d4","label":0}
+{"query_id":"q3","doc_id":"d3","label":0}
+{"query_id":"q3","doc_id":"d1","label":0}
