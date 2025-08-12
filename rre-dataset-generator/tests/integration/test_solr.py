@@ -13,7 +13,7 @@ if os.environ.get("PYTEST_CURRENT_TEST", "").endswith("test_solr.py::"):
 
 @pytest.fixture(scope="session")
 def solr_config():
-    """Fixture that loads a valid OpenSearch config for unit tests."""
+    """Fixture that loads a valid Solr config for e2e tests."""
     return Config.load("tests/integration/resources/good_solr_config.yaml")
 
 def test_core_exists(search_url):

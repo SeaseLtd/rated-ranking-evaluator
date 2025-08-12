@@ -46,9 +46,11 @@ def end_to_end_pipeline_with_llm_mock(config):
         documents_filter=config.documents_filter,
         doc_number=config.doc_number,
         doc_fields=config.doc_fields)
-    log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
+    assert len(docs_to_generate_queries) == config.doc_number
 
     generate_and_add_queries(config, data_store, service, docs_to_generate_queries)
+
+    assert len(data_store.get_queries()) == config.num_queries_needed
 
     retrieve_and_add_documents(config, data_store, search_engine)
 
@@ -56,4 +58,4 @@ def end_to_end_pipeline_with_llm_mock(config):
 
     writer.write(config.output_destination)
 
-    log.info(f"Synthetic Dataset has been generated in: {config.output_destination}")
+    assert True
