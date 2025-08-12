@@ -51,10 +51,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
                 for field, values in dict_field.items():
                     if not values:
                         continue
-                    if len(values) == 1:
-                        filter_clauses.append({"term": {field: values[0]}})
-                    else:
-                        filter_clauses.append({"terms": {field: values}})
+                    filter_clauses.append({"terms": {field: values}})
 
         # Wrap in a bool query if there are any filters
         if filter_clauses:
