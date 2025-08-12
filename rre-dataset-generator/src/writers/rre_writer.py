@@ -5,6 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+from src.config import RreConfig
 from src.search_engine.data_store import DataStore
 from src.writers.abstract_writer import AbstractWriter
 
@@ -17,14 +18,14 @@ class RreWriter(AbstractWriter):
     """
 
     @classmethod
-    def from_factory(cls, data_store, **kwargs):
+    def build(cls, config: RreConfig, data_store: DataStore):
         return cls(
             datastore=data_store,
-            index=kwargs['index'],
-            corpora_file=kwargs['index'],
-            id_field=kwargs['id_field'],
-            query_template=kwargs['query_template'],
-            query_placeholder=kwargs['query_placeholder']
+            index=config.index_name,
+            corpora_file=config.corpora_file,
+            id_field=config.id_field,
+            query_template=config.rre_query_template,
+            query_placeholder=config.rre_query_placeholder
         )
 
     def __init__(self, datastore: DataStore, index: str, corpora_file: str, id_field: str,

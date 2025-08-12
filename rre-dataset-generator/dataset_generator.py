@@ -92,12 +92,7 @@ if __name__ == "__main__":
                                                                 endpoint=config.search_engine_collection_endpoint)
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
-    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store,
-                                                 index=config.index_name,
-                                                 corpora_file=config.corpora_file,
-                                                 id_field=config.id_field,
-                                                 query_template=config.rre_query_template,
-                                                 query_placeholder=config.rre_query_placeholder)
+    writer: AbstractWriter = WriterFactory.build(config, data_store)
 
     # pipeline starts
     add_user_queries(config, data_store)
