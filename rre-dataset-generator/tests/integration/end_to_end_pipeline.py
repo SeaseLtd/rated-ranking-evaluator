@@ -1,13 +1,14 @@
 from logging import Logger
 from typing import List
 import pytest
+import os
+import csv
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from dataset_generator import get_and_setup_logging, add_user_queries, generate_and_add_queries, \
     retrieve_and_add_documents, add_cartesian_product_scores
-from src.config import Config
 from src.llm.llm_service import LLMService
 from src.model.document import Document
 from src.search_engine.data_store import DataStore
@@ -58,4 +59,9 @@ def end_to_end_pipeline_with_llm_mock(config):
 
     writer.write(config.output_destination)
 
-    assert True
+    assert os.path.exists(config.output_destination), f"File not found: {config.output_destination}"
+
+    with open(config.output_destination, newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        header = next(reader, None)
+        assert header == ["query", "docid", "rating"], f"Unexpected header: {header}"
