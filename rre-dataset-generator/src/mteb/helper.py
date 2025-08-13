@@ -20,12 +20,12 @@ def read_queries(path) -> Dict[str, str]:
     return out
 
 
-def read_query_relations_tsv(path) -> Dict[str, Dict[str, int]]:
-    query_relations = {}
+def read_relevant_docs_tsv(path) -> Dict[str, Dict[str, int]]:
+    relevant_docs = {}
     with open(path) as file:
         for query_id, doc_id, score in csv.reader(file, delimiter="\t"):
-            query_relations.setdefault(query_id, {})[doc_id] = int(score)
-    return query_relations
+            relevant_docs.setdefault(query_id, {})[doc_id] = int(score)
+    return relevant_docs
 
 
 def read_candidates_jsonl(path) -> Dict[str, Dict[str, int]]:

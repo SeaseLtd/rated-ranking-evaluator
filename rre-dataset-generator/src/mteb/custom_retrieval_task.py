@@ -3,7 +3,7 @@ from pathlib import Path
 
 from mteb import AbsTaskRetrieval, TaskMetadata
 
-from src.mteb.helper import read_corpus, read_queries, read_query_relations_tsv
+from src.mteb.helper import read_corpus, read_queries, read_relevant_docs_tsv
 
 ROOT = Path(__file__).resolve().parent
 DATA_ROOT = ROOT / "data"
@@ -43,4 +43,4 @@ class MyRetrievalTask(AbsTaskRetrieval):
         base = DATA_ROOT
         self.corpus = {"test": read_corpus(os.path.join(base, "corpus.jsonl"))}
         self.queries = {"test": read_queries(os.path.join(base, "queries.jsonl"))}
-        self.relevant_docs = {"test": read_query_relations_tsv(os.path.join(base, "relevant_docs.tsv"))}
+        self.relevant_docs = {"test": read_relevant_docs_tsv(os.path.join(base, "relevant_docs.tsv"))}

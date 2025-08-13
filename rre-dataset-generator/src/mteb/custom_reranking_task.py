@@ -4,7 +4,7 @@ from pathlib import Path
 from datasets import Dataset, DatasetDict
 from mteb import TaskMetadata, AbsTaskReranking
 
-from src.mteb.helper import read_corpus, read_query_relations_tsv, read_queries, read_candidates_jsonl
+from src.mteb.helper import read_corpus, read_relevant_docs_tsv, read_queries, read_candidates_jsonl
 
 ROOT = Path(__file__).resolve().parent
 DATA_ROOT = ROOT / "data"
@@ -59,7 +59,7 @@ class MyRerankingTask(AbsTaskReranking):
         base = DATA_ROOT
         corpus = {"test": read_corpus(os.path.join(base, "corpus.jsonl"))}
         queries = {"test": read_queries(os.path.join(base, "queries.jsonl"))}
-        relevant_docs = {"test": read_query_relations_tsv(os.path.join(base, "relevant_docs.tsv"))}
+        relevant_docs = {"test": read_relevant_docs_tsv(os.path.join(base, "relevant_docs.tsv"))}
         candidates = {"test": read_candidates_jsonl(os.path.join(base, "candidates.jsonl"))}
 
         samples_test = _make_samples_from_beir(corpus["test"], queries["test"], relevant_docs["test"],
