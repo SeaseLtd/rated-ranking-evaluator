@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class Config(BaseModel):
     query_template: Optional[str] = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
     search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
-    index_name: str = Field(..., description="Name of the search engine index/collection.")
+    index_name: str = Field(..., description="Name of the index/collection of the search engine")
     search_engine_collection_endpoint: HttpUrl
     documents_filter: Optional[List[Dict[str, List[str]]]] = Field(
         None,
