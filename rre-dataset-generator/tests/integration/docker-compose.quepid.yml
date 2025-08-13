@@ -6,18 +6,13 @@ services:
     container_name: quepid_app
     restart: unless-stopped
     env_file:
-      - .env
+      - ./quepid-init/corenv
     environment:
       - DOCKER_CONTAINER=true
       - RAILS_ENV=production
       - RACK_ENV=production
-      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
-      - DATABASE_URL=mysql2://root:${MYSQL_ROOT_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
-      - QUEPID_DOMAIN=${QUEPID_DOMAIN:-http://localhost}
       - RAILS_LOG_TO_STDOUT=true
       - RAILS_SERVE_STATIC_FILES=true
-      - SIGNUP_ENABLED=${SIGNUP_ENABLED:-true}
-      - QUEPID_DEFAULT_SCORER=${QUEPID_DEFAULT_SCORER:-AP@10}
     ports:
       - "80:5000"
     depends_on:
@@ -28,7 +23,7 @@ services:
 
   mysql:
     env_file:
-      - .env
+      - ./quepid-init/corenv
     image: mysql:8.4.3
     container_name: quepid_db
     restart: unless-stopped
@@ -38,7 +33,7 @@ services:
     volumes:
       - quepid_mysql:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-password}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 5
