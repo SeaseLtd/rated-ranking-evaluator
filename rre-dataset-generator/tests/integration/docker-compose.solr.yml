@@ -1,7 +1,7 @@
 services:
   solr:
     image: solr:9.8.1
-    container_name: solr_test
+    #container_name: solr_test
     ports:
       - "8983:8983"
     command: ["solr-precreate", "testcore"]

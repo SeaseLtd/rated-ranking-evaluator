@@ -5,6 +5,22 @@ import os
 import json
 import requests
 from requests.exceptions import ConnectionError
+import docker
+
+def pytest_configure(config):
+    """
+    Remove any existing container for the selected search engine
+    to avoid 'container name already in use' errors.
+    """
+    engine = config.getoption("--search-engine")
+    client = docker.from_env()
+
+    try:
+        container = client.containers.get(engine)
+        print(f"[pytest-docker] Removing existing container '{engine}' to avoid name conflicts.")
+        container.remove(force=True)
+    except docker.errors.NotFound:
+        pass
 
 def pytest_addoption(parser):
     parser.addoption(
