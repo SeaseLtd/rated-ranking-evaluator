@@ -68,6 +68,7 @@ def retrieve_and_add_documents(config: Config, data_store: DataStore, search_eng
             if not data_store.has_document(doc.id):
                 data_store.add_document(doc.id, doc)
 
+
 def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_service: LLMService) -> None:
     for query_rating_context in data_store.get_queries():
         for doc in data_store.get_documents():
@@ -94,7 +95,7 @@ if __name__ == "__main__":
                                                                 endpoint=config.search_engine_collection_endpoint)
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
-    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store)
+    writer: AbstractWriter = WriterFactory.build(config, data_store)
 
     # pipeline starts
     add_user_queries(config, data_store)

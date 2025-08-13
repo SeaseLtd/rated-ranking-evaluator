@@ -2,6 +2,8 @@ import csv
 import os
 from pathlib import Path
 
+from src.config import Config
+from src.search_engine.data_store import DataStore
 from src.writers.abstract_writer import AbstractWriter
 
 
@@ -10,6 +12,10 @@ class QuepidWriter(AbstractWriter):
     QuepidWriter: Write the data structure to a Quepid format (CSV).
     The format is: query,docid,rating
     """
+
+    @classmethod
+    def build(cls, config: Config, data_store: DataStore):
+        return cls(datastore=data_store)
 
     def write(self, output_path: str | Path) -> None:
         """

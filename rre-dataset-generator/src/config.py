@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 class Config(BaseModel):
     query_template: Optional[str] = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
     search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
+    index_name: str = Field(..., description="Name of the index/collection of the search engine")
     search_engine_collection_endpoint: HttpUrl
     documents_filter: Optional[List[Dict[str, List[str]]]] = Field(
         None,
@@ -28,6 +29,10 @@ class Config(BaseModel):
     output_destination: Path = Field(..., description="Path to save the output dataset.")
     save_llm_explanation: Optional[bool] = False
     llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
+    corpora_file: FilePath = Field(None, description="JSON formatted dataset file.")
+    id_field: str = Field(None, description="ID field for the unique key.")
+    rre_query_template: FilePath = Field(None, description="Query template for rre evaluator.")
+    rre_query_placeholder: str = Field(None, description="Key-value pair to substitute in the rre query template.")
 
     @field_validator('doc_fields')
     def check_no_empty_fields(cls, v):
@@ -71,6 +76,18 @@ class Config(BaseModel):
             error_msg = f"Unknown relevance scale: {self.relevance_scale}"
             log.error(error_msg)
             raise ValueError(error_msg)
+
+    @model_validator(mode="after")
+    def check_rre_fields_required(self):
+        if self.output_format == "rre" and not self.corpora_file:
+            raise ValueError("corpora_file is required when output_format='rre'")
+        if self.output_format == "rre" and not self.id_field:
+            raise ValueError("id_field is required when output_format='rre'")
+        if self.output_format == "rre" and not self.rre_query_template:
+            raise ValueError("rre_query_template is required when output_format='rre'")
+        if self.output_format == "rre" and not self.rre_query_placeholder:
+            raise ValueError("rre_query_placeholder is required when output_format='rre'")
+        return self
 
     @classmethod
     def load(cls, config_path: str) -> Config:

@@ -1,5 +1,6 @@
 # Missing: query_template (optional)
 search_engine_type: "solr"
+index_name: "testcore"
 search_engine_collection_endpoint: "http://localhost"
 doc_number: 10
 doc_fields: ["title"]
@@ -9,3 +10,7 @@ llm_configuration_file: "tests/unit/resources/llm_config.yaml"
 output_format: "rre"
 output_destination: "output.json"
 llm_explanation_destination: "output/rating_explanation.json"
+id_field: "id"
+corpora_file: "tests/integration/solr-init/data/dataset.json"
+rre_query_template: "tests/unit/resources/only_q.json"
+rre_query_placeholder: "$query"

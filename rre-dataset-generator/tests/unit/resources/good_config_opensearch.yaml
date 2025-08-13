@@ -10,6 +10,7 @@ query_template: >
     "size": 20
   }
 search_engine_type: "opensearch"
+index_name: "testcore"
 search_engine_collection_endpoint: "http://localhost:9200/testcore"
 doc_number: 20
 doc_fields:
