@@ -5,7 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from src.config import RreConfig
+from src.config import Config
 from src.search_engine.data_store import DataStore
 from src.writers.abstract_writer import AbstractWriter
 
@@ -18,7 +18,7 @@ class RreWriter(AbstractWriter):
     """
 
     @classmethod
-    def build(cls, config: RreConfig, data_store: DataStore):
+    def build(cls, config: Config, data_store: DataStore):
         return cls(
             datastore=data_store,
             index=config.index_name,
