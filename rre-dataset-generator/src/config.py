@@ -27,6 +27,8 @@ class Config(BaseModel):
     llm_configuration_file: FilePath = Field(..., description="Path to the LLM configuration file.")
     output_format: Literal['quepid', 'rre']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
+    save_llm_explanation: Optional[bool] = False
+    llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
     corpora_file: FilePath = Field(None, description="JSON formatted dataset file.")
     id_field: str = Field(None, description="ID field for the unique key.")
     rre_query_template: FilePath = Field(None, description="Query template for rre evaluator.")
@@ -54,6 +56,12 @@ class Config(BaseModel):
                 log.error("LLM_config file must have .yaml extension")
                 raise ValueError("LLM_config file must have .yaml extension")
         return v
+
+    @model_validator(mode="after")
+    def validate_llm_explanation_fields(self) -> "Config":
+        if self.save_llm_explanation and self.llm_explanation_destination is None:
+            raise ValueError("llm_explanation_destination must be set when save_llm_explanation is set to True.")
+        return self
 
     @property
     def relevance_label_set(self) -> set[int]:

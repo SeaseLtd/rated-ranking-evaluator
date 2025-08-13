@@ -11,13 +11,14 @@ from src.model.query_rating_context import QueryRatingContext
 
 log = logging.getLogger(__name__)
 
-
 TMP_FILE = "./tmp/datastore.json"
+
 
 class DataStore:
     """
     Stores/retrieves documents, queries, and rating scores.
     """
+
     def __init__(self, ignore_saved_data: bool = False):
         self._documents: Dict[str, Document] = {}
         self._queries_by_id: Dict[str, QueryRatingContext] = {}
@@ -40,7 +41,8 @@ class DataStore:
 
     def _get_document(self, doc_id: str) -> Optional[Document]:
         if doc_id not in self._documents:
-            _warning_msg = f"Detected an error when retrieving a document from the data store. Document {doc_id} not found in DataStore"
+            _warning_msg = (f"Detected an error when retrieving a document from the data store. Document {doc_id} not "
+                            f"found in DataStore")
             log.warning(_warning_msg)
             return None
         return self._documents[doc_id]
@@ -102,13 +104,13 @@ class DataStore:
         """
         return self._get_query_rating_context_by_id(query_id)
 
-    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int) -> None:
+    def add_rating_score(self, query_id: str, doc_id: str, rating_score: int, explanation: Optional[str] = None) -> None:
         """
         Adds rating score associated with the given doc_id and query_id or raises KeyError
         if the query_id is not found.
         """
         context: QueryRatingContext = self._get_query_rating_context_by_id(query_id)
-        context.add_rating_score(doc_id, rating_score)
+        context.add_rating_score(doc_id, rating_score, explanation)
         self._queries_by_id[query_id] = context
 
     def get_rating_score(self, query_id: str, doc_id: str) -> int:
@@ -153,7 +155,7 @@ class DataStore:
             """Default function to handle non-serializable objects"""
             if isinstance(obj, QueryRatingContext):
                 return obj.to_dict()
-            elif isinstance(obj, Document): # more generall: from pydantic import BaseModel
+            elif isinstance(obj, Document):  # more general: from pydantic import BaseModel
                 return obj.model_dump()
             else:
                 # Convert to string as fallback
@@ -167,7 +169,6 @@ class DataStore:
         # save the content to a file
         with path.open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False, default=default_serializer)
-
 
     def load_tmp_file_content(self) -> None:
         """Loads state from a file on disk loading queries, ratings, and documents from a unified
@@ -183,7 +184,7 @@ class DataStore:
         self._documents.clear()
         self._queries_by_id.clear()
         self._query_text_to_query_id.clear()
-        
+
         filepath = self.ensure_tmp_file_exists()
 
         if not filepath.exists():
@@ -202,3 +203,25 @@ class DataStore:
         documents = file_content.get("documents", {})
         for doc_id, doc_data in documents.items():
             self.add_document(doc_id, Document.model_validate(doc_data))
+
+    def export_all_records_with_explanation(self, output_path: str | Path) -> None:
+        """
+        Exports query-doc-rating-explanation tuples to a JSON file.
+        """
+        records = []
+        for query_context in self._queries_by_id.values():
+            query_text = query_context.get_query_text()
+            for doc_id in query_context.get_doc_ids():
+                if query_context.has_rating_score(doc_id) and query_context.has_rating_explanation(doc_id):
+                    rating = query_context.get_rating(doc_id)
+                    records.append({
+                        "query": query_text,
+                        "doc_id": doc_id,
+                        "rating": rating.score,
+                        "explanation": rating.explanation
+                    })
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(records, f, indent=2, ensure_ascii=False)

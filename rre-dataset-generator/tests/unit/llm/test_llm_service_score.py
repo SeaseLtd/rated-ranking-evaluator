@@ -1,10 +1,11 @@
-import pytest
 import json
+
+import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+
 from src.llm.llm_service import LLMService
 from src.model.document import Document
 from src.model.score_response import LLMScoreResponse
-from src.model.query_response import LLMQueryResponse
 
 
 @pytest.fixture
@@ -25,13 +26,47 @@ def example_doc():
     ("graded", 1),
     ("graded", 2),
 ])
-def test_generate_score_with_valid_scale_EXPECTED_integer_score(scale, valid_score, example_doc):
+def test_generate_score_with_valid_scale_expect_integer_score(scale, valid_score, example_doc):
     fake_llm = FakeListChatModel(responses=[f'{{"score": {valid_score}}}'])
     service = LLMService(chat_model=fake_llm)
     query = "Is a Toyota the car of the year?"
-    response = service.generate_score(example_doc, query, relevance_scale=scale)
+    response = service.generate_score(example_doc,
+                                      query,
+                                      relevance_scale=scale,
+                                      explanation=False)
     assert isinstance(response, LLMScoreResponse)
     assert response.get_score() == valid_score
+    assert response.get_explanation() is None
+
+
+def test_generate_score__with_invalid_json_response__expect_error(example_doc):
+    fake_llm = FakeListChatModel(responses=['{malformed-json}'])
+    service = LLMService(chat_model=fake_llm)
+    with pytest.raises(ValueError, match="Invalid LLM response:"):
+        service.generate_score(example_doc, "query", relevance_scale="binary", explanation=True)
+
+
+@pytest.mark.parametrize("scale, valid_score, explanation", [
+    ("graded", 0, "The query is clearly not about cars."),
+    ("graded", 1, "Camry is a car, so it is relevant."),
+    ("graded", 2, "This exactly matches the definition of 'car of the year'."),
+])
+def test_generate_score_with_valid_explanation_expect_explanation(scale, valid_score, explanation, example_doc):
+
+    llm_output = {"score": valid_score, "explanation": explanation}
+    fake_llm = FakeListChatModel(responses=[json.dumps(llm_output)])
+    service = LLMService(chat_model=fake_llm)
+
+    response = service.generate_score(
+        example_doc,
+        "Is a Toyota the car of the year?",
+        relevance_scale=scale,
+        explanation=True
+    )
+
+    assert isinstance(response, LLMScoreResponse)
+    assert response.get_score() == valid_score
+    assert response.get_explanation() == explanation
 
 
 @pytest.mark.parametrize("scale, response_json, expected_error", [
@@ -45,7 +80,8 @@ def test_generate_score_with_valid_scale_EXPECTED_integer_score(scale, valid_sco
     ('graded', '{"score": 1.5}', 'Score must be 0, 1, or 2 for graded scale, got 1.5'),
     ('graded', '{"score": null}', 'Score must be 0, 1, or 2 for graded scale, got None'),
 ])
-def test_generate_score_with_invalid_llm_responses_EXPECTED_value_error(scale, response_json, expected_error, example_doc):
+def test_generate_score_with_invalid_llm_responses_expect_value_error(scale, response_json, expected_error,
+                                                                        example_doc):
     fake_llm = FakeListChatModel(responses=[response_json])
     service = LLMService(chat_model=fake_llm)
     query = "Is a Toyota the car of the year?"
@@ -53,7 +89,7 @@ def test_generate_score_with_invalid_llm_responses_EXPECTED_value_error(scale, r
         service.generate_score(example_doc, query, relevance_scale=scale)
 
 
-def test_generate_score_with_invalid_relevance_scale_EXPECTED_value_error(example_doc):
+def test_generate_score_with_invalid_relevance_scale_expect_value_error(example_doc):
     fake_llm = FakeListChatModel(responses=['{"score": 1}'])
     service = LLMService(chat_model=fake_llm)
     query = "What car won?"

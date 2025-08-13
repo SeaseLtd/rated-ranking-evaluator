@@ -1,6 +1,7 @@
-from __future__ import annotations
 import uuid
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+
+from src.model.rating import Rating
 
 
 class QueryRatingContext:
@@ -8,7 +9,7 @@ class QueryRatingContext:
     QueryRatingContext holds
     generated unique id,
     query,
-    doc id → rating score (dict)
+    doc id → Rating (dict)
     """
 
     DOC_NOT_RATED: int = -1  # doc is not yet rated
@@ -16,10 +17,10 @@ class QueryRatingContext:
     def __init__(self, query: str, doc_id: str | None = None, query_id: str | None = None):
         self._id: str = str(uuid.uuid4()) if query_id is None else str(query_id)
         self._query: str = query
-        self._doc_id_to_rating_score: Dict[str, int] = {}
-        # HANDLING NONEs - threw error in some tests
+        self._doc_id_to_rating_score: Dict[str, Rating] = {}
+        # HANDLING NONEs - thrown error in some tests
         if doc_id is not None:
-            self._doc_id_to_rating_score[doc_id] = self.DOC_NOT_RATED
+            self._doc_id_to_rating_score[doc_id] = Rating(score=self.DOC_NOT_RATED)
 
     def get_query_id(self) -> str:
         """Return the unique identifier for this query context."""
@@ -35,19 +36,30 @@ class QueryRatingContext:
 
     def add_doc_id(self, doc_id: str) -> None:
         if doc_id not in self._doc_id_to_rating_score:
-            self._doc_id_to_rating_score[doc_id] = self.DOC_NOT_RATED
+            self._doc_id_to_rating_score[doc_id] = Rating(score=self.DOC_NOT_RATED)
 
-    def add_rating_score(self, doc_id: str, rating_score: int) -> None:
-        self._doc_id_to_rating_score[doc_id] = rating_score
+    def add_rating_score(self, doc_id: str, rating_score: int, explanation: Optional[str] = None) -> None:
+        self._doc_id_to_rating_score[doc_id] = Rating(score=rating_score, explanation=explanation)
 
     def has_rating_score(self, doc_id: str) -> bool:
-        return doc_id in self._doc_id_to_rating_score and self._doc_id_to_rating_score.get(doc_id) != self.DOC_NOT_RATED
+        return (doc_id in self._doc_id_to_rating_score and
+                self._doc_id_to_rating_score[doc_id].score != self.DOC_NOT_RATED)
 
     def get_rating_score(self, doc_id: str) -> int:
-        if self.has_rating_score(doc_id):
-            return self._doc_id_to_rating_score[doc_id]
-        raise KeyError(f"Rating for doc_id {doc_id} not found.")
+        return self._doc_id_to_rating_score[doc_id].score
 
+    def get_explanation(self, doc_id: str) -> Optional[str]:
+        """
+        Returns the explanation or None.
+        """
+        return self._doc_id_to_rating_score[doc_id].explanation
+
+    def has_rating_explanation(self, doc_id: str) -> bool:
+        return (doc_id in self._doc_id_to_rating_score and
+                self._doc_id_to_rating_score[doc_id].explanation is not None)
+
+    def get_rating(self, doc_id: str) -> Rating:
+        return self._doc_id_to_rating_score[doc_id]
 
     @classmethod
     def from_dict(cls, context_as_dict: Dict[str, Any]) -> "QueryRatingContext":
@@ -56,10 +68,9 @@ class QueryRatingContext:
         doc_ratings = context_as_dict.get("doc_ratings", {})
 
         context = cls(query=query_text, query_id=query_id)
-        for doc_id, rating in doc_ratings.items():
-            context.add_doc_id(doc_id)
-            context.add_rating_score(doc_id, rating)
-
+        for doc_id, rating_dict in doc_ratings.items():
+            rating = Rating(**rating_dict)
+            context._doc_id_to_rating_score[doc_id] = rating
         return context
 
     def to_dict(self) -> Dict[str, Any]:
@@ -69,5 +80,8 @@ class QueryRatingContext:
         return {
             "id": self._id,
             "query": self._query,
-            "doc_ratings": self._doc_id_to_rating_score
+            "doc_ratings": {
+                doc_id: rating.model_dump()
+                for doc_id, rating in self._doc_id_to_rating_score.items()
+            }
         }

@@ -1,0 +1,16 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.4
+    container_name: elasticsearch_test
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+
+  eslasticsearch-init:
+    build: ./elasticsearch-init
+    depends_on:
+      - elasticsearch
+    command: ["sh", "-c", "/opt/rre-dataset-generator/elasticsearch-init.sh"]
