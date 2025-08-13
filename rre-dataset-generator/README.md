@@ -132,20 +132,23 @@ This will start 2 services:
 ##### Set up the Quepid container
 
 ```bash
-docker compose -f docker-compose.quepid.yml up -d --build --remove-orphans
+cd tests/integration/
+docker compose -f docker-compose.quepid.yml up -d
 
-# then go to http://localhost/sessions/new and sign up / sign in. 
+# then go to http://localhost/sessions/new and sign up / sign in.
 ```
 
-This will download the Quepid image and start the "tuned" container. The container will be named `quepid_prod_app` and will be running on port 3000.
+This will download the Quepid nightly image and start two containers:
+- `quepid_app` (HTTP available at http://localhost on port 80; internal port 5000)
+- `quepid_db` (MySQL exposed on port 3306)
 
+Data persists in the Docker volume `integration_quepid_mysql`.
 
-Notes about the "tuned" version of the Quepid Docker Compose vs default ()
-- Fixed version to 8.2.0 to avoid inestability
-- Added entrypoint: init-quepid.sh + puma ..
-- Re-start policy: auto-relaunch when the service falls
-- Create the MySQL schema on Startup (execute rails db:prepare -> raise "database does not exists"
-- QUEPID_DOMAIN -> localhost instead of "example"
+Notes about the nightly Docker Compose setup
+- Uses image `o19s/quepid:nightly` (no build step required).
+- Both services load environment from `tests/integration/quepid-init/corenv`. See `tests/integration/quepid-init/README.md` for variable details.
+- App requires `DATABASE_URL` and `SECRET_KEY_BASE`; optional: `QUEPID_DOMAIN`, `SIGNUP_ENABLED`, `QUEPID_DEFAULT_SCORER`.
+- MySQL healthcheck uses `CMD-SHELL` with `-p$$MYSQL_ROOT_PASSWORD` so the password expands inside the container.
 
 
 
