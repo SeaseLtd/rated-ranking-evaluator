@@ -36,7 +36,7 @@ def test_generate_score_with_valid_scale_expect_integer_score(scale, valid_score
                                       explanation=False)
     assert isinstance(response, LLMScoreResponse)
     assert response.get_score() == valid_score
-    assert response.get_explanation() is None
+    assert response.explanation is None
 
 
 def test_generate_score__with_invalid_json_response__expect_error(example_doc):
@@ -66,7 +66,7 @@ def test_generate_score_with_valid_explanation_expect_explanation(scale, valid_s
 
     assert isinstance(response, LLMScoreResponse)
     assert response.get_score() == valid_score
-    assert response.get_explanation() == explanation
+    assert response.explanation == explanation
 
 
 @pytest.mark.parametrize("scale, response_json, expected_error", [
