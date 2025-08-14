@@ -36,9 +36,7 @@ def queryQ() -> Query:
     return Query(text="hello world")
 
 
-# --- helper: normalize return value of create_rating_score / add_rating_score ---
-def rating_id_of(ret):
-    return ret if isinstance(ret, str) else ret.id
+
 
 
 # --- tests ---
@@ -68,33 +66,34 @@ def test_add_document_to_query__expects__association_successful(ds, docA, queryQ
     ds.add_document_to_query(queryQ.id, docA.id)
     assert docA.id in ds.get_doc_ids_for_query(queryQ.id)
 
-def test_add_document_to_query__expects__logs_debug_for_unknown_ids(ds, caplog):
-    caplog.set_level(logging.DEBUG)
+def test_add_document_to_query__expects__logs_warning_for_unknown_ids(ds, caplog):
+    caplog.set_level(logging.WARNING)
     ds.add_document_to_query("missing-q", "missing-d")
     assert "query_not_found" in caplog.text
 
 def test_create_rating_score__expects__creates_rating_and_indexes(ds, docA, queryQ):
     ds.add_document(docA)
     ds.add_query(queryQ)
-    ret = ds.create_rating_score(queryQ.id, docA.id, 2)
-    rid = rating_id_of(ret)
-    assert ds.has_rating(rid)
+    rating = ds.create_rating_score(queryQ.id, docA.id, 2)
+
+    assert rating is not None
     assert ds.get_rating_score(queryQ.id, docA.id) == 2
-    # principal index (q,d) -> rid
-    assert ds.rating_index[(queryQ.id, docA.id)] == rid
+    # Check if the rating object is in the main dictionary
+    assert ds.rating_by_pair.get((queryQ.id, docA.id)) is rating
     
-    # query -> ratings (deterministic order by id)
-    rating_ids = [r.id for r in ds.get_ratings_for_query(queryQ.id)]
-    assert rid in rating_ids
-    # query -> docs
+    # Check if the rating is returned for the query
+    ratings_for_query = ds.get_ratings_for_query(queryQ.id)
+    assert rating in ratings_for_query
+    
+    # Check if the doc is now linked to the query
     assert docA.id in ds.get_doc_ids_for_query(queryQ.id)
 
 def test_create_rating_score__expects__second_call_does_not_update_existing(ds, docA, queryQ, caplog):
     ds.add_document(docA); ds.add_query(queryQ)
-    rid1 = rating_id_of(ds.create_rating_score(queryQ.id, docA.id, 1))
+    rating1 = ds.create_rating_score(queryQ.id, docA.id, 1)
     caplog.set_level(logging.DEBUG)
-    rid2 = rating_id_of(ds.create_rating_score(queryQ.id, docA.id, 4))  # insert-only: does not update
-    assert rid1 == rid2
+    rating2 = ds.create_rating_score(queryQ.id, docA.id, 4)  # insert-only: does not update
+    assert rating1 is rating2  # Should return the exact same object
     assert ds.get_rating_score(queryQ.id, docA.id) == 1  # keeps the first
     assert "existing" in caplog.text
 
@@ -114,17 +113,16 @@ def test_persistence__expects__save_and_load_roundtrip(tmp_db_path, docA, queryQ
     ds1 = DataStore(path=tmp_db_path, ignore_saved_data=True)
     ds1.add_document(docA)
     ds1.add_query(queryQ)
-    rid = rating_id_of(ds1.create_rating_score(queryQ.id, docA.id, 5))
+    ds1.create_rating_score(queryQ.id, docA.id, 5)
     ds1.save()
     assert os.path.exists(tmp_db_path)
 
     ds2 = DataStore(path=tmp_db_path)  # load() is called in __init__
     assert ds2.has_document(docA.id)
     assert ds2.has_query(queryQ.id)
-    assert ds2.has_rating(rid)
     assert ds2.get_rating_score(queryQ.id, docA.id) == 5
-    # ratings index reconstructed
-    assert ds2.rating_index[(queryQ.id, docA.id)] == rid
+    # Check that the rating object was reconstructed
+    assert (queryQ.id, docA.id) in ds2.rating_by_pair
 
 def test_load_when_file_missing__expects__returns_empty_store(tmp_path):
     path = tmp_path / "no-such.json"
@@ -156,8 +154,8 @@ def test_load_with_broken_references__expects__skips_dangling_ratings(tmp_db_pat
     caplog.set_level(logging.WARNING)
     ds = DataStore(path=tmp_db_path)
 
-    assert len(ds.get_ratings()) == 0 # The dangling rating should be skipped
-    assert "skip_rating_broken_ref" in caplog.text
+    assert len(ds.get_ratings()) == 0  # The dangling rating should be skipped
+    assert "doc_not_found" in caplog.text  # V2-Lite logs this from add_rating
 
 def test_get_doc_ids_for_query__expects__returns_union_of_rated_and_linked_docs(ds, docA, docB, queryQ):
     docC = Document(id="doc-C", fields={"title": "C"})
