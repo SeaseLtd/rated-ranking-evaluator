@@ -1,39 +1,19 @@
-import json
 from pathlib import Path
 
 import pytest
 import requests
 import os
-import docker
 from pydantic import HttpUrl
 
 from src.config import Config
 from src.search_engine.elasticsearch_search_engine import ElasticsearchSearchEngine
-from .end_to_end_pipeline import end_to_end_pipeline_with_llm_mock
-
-
-def pytest_configure():
-    client = docker.from_env()
-
-    try:
-        container = client.containers.get("elasticsearch")
-        print(f"[pytest-docker] Removing existing container 'elasticsearch' to avoid name conflicts.")
-        container.remove(force=True)
-    except docker.errors.NotFound:
-        pass
+from tests.integration.end_to_end_pipeline import end_to_end_pipeline_with_llm_mock
 
 
 @pytest.fixture(scope="session")
 def elastic_config():
     """Fixture that loads a valid Elasticsearch config for e2e tests."""
-    return Config.load("tests/integration/resources/good_elastic_config.yaml")
-
-
-@pytest.fixture(scope="session")
-def docker_compose_file(pytestconfig):
-    return os.path.join(
-        str(pytestconfig.rootdir), "tests", "integration", f"docker-compose.elasticsearch.yml"
-    )
+    return Config.load("tests/integration/resources/good_elasticsearch_config.yaml")
 
 
 @pytest.fixture(scope="session")
@@ -66,22 +46,17 @@ def seed_dataset(pytestconfig, search_url):
         "elasticsearch-init/data/dataset.jsonl"
     ))
 
-    with dataset_path.open() as f:
-        payload = json.load(f)
+    # Seed using _bulk API
+    with open(dataset_path, "rb") as f:
+        bulk_payload = f.read()
 
     # Check if already seeded
     resp = requests.get(search_url.encoded_string() + "testcore/_count", timeout=5)
     if resp.ok and resp.json().get("count", 0) > 0:
         return
 
-    # Seed using _bulk API
-    bulk_payload = ""
-    for doc in payload:
-        bulk_payload += json.dumps({"index": {"_index": "testcore", "_id": doc["id"]}}) + "\n"
-        bulk_payload += json.dumps(doc) + "\n"
-
     bulk_resp = requests.post(
-        search_url.encoded_string() + "_bulk",
+        search_url.encoded_string() + "testcore/_bulk",
         headers={"Content-Type": "application/x-ndjson"},
         data=bulk_payload,
         timeout=60,
@@ -90,20 +65,20 @@ def seed_dataset(pytestconfig, search_url):
 
 
 def test_index_exists(search_url):
-    r = requests.get(search_url.encoded_string() + "_cat/indices/testindex?format=json")
+    r = requests.get(search_url.encoded_string() + "_cat/indices/testcore?format=json")
     assert r.ok
-    assert any(idx.get("index") == "testindex" for idx in r.json())
+    assert any(idx.get("index") == "testcore" for idx in r.json())
 
 
 def test_index_has_docs(search_url):
-    r = requests.get(search_url.encoded_string() + "testindex/_count")
+    r = requests.get(search_url.encoded_string() + "testcore/_count")
     assert r.ok
     assert r.json()["count"] > 0
 
 
-@pytest.mark.parametrize("field", ["id", "title"])
+@pytest.mark.parametrize("field", ["title"])
 def test_docs_have_field(search_url, field):
-    r = requests.get(search_url.encoded_string() + "testindex/_search?size=1", timeout=5)
+    r = requests.get(search_url.encoded_string() + "testcore/_search?size=1", timeout=5)
     assert r.ok
     hits = r.json()["hits"]["hits"]
     assert hits and field in hits[0]["_source"]

@@ -1,36 +1,15 @@
-import json
-from pathlib import Path
-
 import pytest
 import requests
-import os
-import docker
 from pydantic import HttpUrl
 
 from src.config import Config
 from src.search_engine.solr_search_engine import SolrSearchEngine
-from .end_to_end_pipeline import end_to_end_pipeline_with_llm_mock
-
-def pytest_configure():
-    client = docker.from_env()
-
-    try:
-        container = client.containers.get("solr")
-        print(f"[pytest-docker] Removing existing container 'solr' to avoid name conflicts.")
-        container.remove(force=True)
-    except docker.errors.NotFound:
-        pass
+from tests.integration.end_to_end_pipeline import end_to_end_pipeline_with_llm_mock
 
 @pytest.fixture(scope="session")
 def solr_config():
     """Fixture that loads a valid Solr config for e2e tests."""
     return Config.load("tests/integration/resources/good_solr_config.yaml")
-
-@pytest.fixture(scope="session")
-def docker_compose_file(pytestconfig):
-    return os.path.join(
-        str(pytestconfig.rootdir), "tests", "integration", f"docker-compose.solr.yml"
-    )
 
 @pytest.fixture(scope="session")
 def search_url(pytestconfig, docker_ip, docker_services):
@@ -50,26 +29,6 @@ def search_url(pytestconfig, docker_ip, docker_services):
 
     docker_services.wait_until_responsive(timeout=60, pause=0.5, check=_is_ready)
     return HttpUrl(url)
-
-@pytest.fixture(scope="session", autouse=True)
-def seed_dataset(pytestconfig, search_url):
-    dataset_path = Path(os.path.join(str(pytestconfig.rootdir),
-                                     "tests", "integration",
-                                     "solr-init/data/dataset.json")
-                        )
-
-    with dataset_path.open() as f:
-        payload = json.load(f)
-
-    if requests.get(search_url.encoded_string() + "select?q=*:*&rows=0&wt=json").json()["response"]["numFound"] > 0:
-        return
-    resp = requests.post(
-        search_url.encoded_string() + "update?commit=true",
-        headers={"Content-Type": "application/json"},
-        data=json.dumps(payload),
-        timeout=60,
-    )
-    resp.raise_for_status()
 
 def test_core_exists(search_url):
     r = requests.get(search_url.encoded_string() + "../admin/cores?action=STATUS&wt=json")

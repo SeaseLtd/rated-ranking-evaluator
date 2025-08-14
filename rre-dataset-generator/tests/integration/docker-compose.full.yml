@@ -1,0 +1,36 @@
+services:
+
+  elasticsearch:
+    extends:
+      file: docker-compose.elasticsearch.yml
+      service: elasticsearch
+
+  eslasticsearch-init:
+    extends:
+      file: docker-compose.elasticsearch.yml
+      service: eslasticsearch-init
+
+  opensearch:
+    extends:
+      file: docker-compose.opensearch.yml
+      service: opensearch
+
+  opensearch-dashboards:
+    extends:
+      file: docker-compose.opensearch.yml
+      service: opensearch-dashboards
+
+  opensearch-init:
+    extends:
+      file: docker-compose.opensearch.yml
+      service: opensearch-init
+
+  solr:
+    extends:
+      file: docker-compose.solr.yml
+      service: solr
+
+  solr-init:
+    extends:
+      file: docker-compose.solr.yml
+      service: solr-init
