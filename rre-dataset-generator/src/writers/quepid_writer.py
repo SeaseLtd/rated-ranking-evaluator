@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import List, Tuple
 
 from src.config import Config
-from src.search_engine.data_store import DataStore
 from src.writers.abstract_writer import AbstractWriter
 from src.data_store import DataStore
 

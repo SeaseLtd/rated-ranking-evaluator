@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from src.config import Config
-from src.search_engine.data_store import DataStore
+from src.data_store import DataStore
+from src.model import Query, Document
 from src.writers.rre_writer import RreWriter
 
 
@@ -17,34 +18,40 @@ def rre_config():
 @pytest.fixture
 def populated_datastore() -> DataStore:
     """Returns a DataStore instance populated with test data."""
-    datastore = DataStore()
+    ds = DataStore()
 
-    # Query 1: 2 rated docs
-    query_1_id = datastore.add_query("test query 1", "doc1")
-    datastore.add_query("test query 1", "doc2")
-    datastore.add_rating_score(query_1_id, "doc1", 1)
-    datastore.add_rating_score(query_1_id, "doc2", 1)
+    # Add docs
+    ds.add_doc(Document(id="doc1", fields={"title": "title 1"}))
+    ds.add_doc(Document(id="doc2", fields={"title": "title 2"}))
+    ds.add_doc(Document(id="doc4", fields={"title": "title 4"}))
+    ds.add_doc(Document(id="doc5", fields={"title": "title 5"}))
 
-    # Query 2: 1 rated doc
-    query_2_id = datastore.add_query("test query 2", "doc4")
-    datastore.add_rating_score(query_2_id, "doc4", 2)
+    # Add queries and ratings
+    q1 = Query(text="test query 1")
+    ds.add_query(q1)
+    ds.create_rating_score(q1.id, "doc1", 1)
+    ds.create_rating_score(q1.id, "doc2", 1)
 
-    # Query 3: No rated docs
-    datastore.add_query("test query 3", "doc5")
+    q2 = Query(text="test query 2")
+    ds.add_query(q2)
+    ds.create_rating_score(q2.id, "doc4", 2)
 
-    return datastore
+    q3 = Query(text="test query 3")
+    ds.add_query(q3)
+
+    return ds
 
 
 class TestRreWriter:
     def test_rre_file_successfully_written(self, rre_config, populated_datastore, tmp_path: Path):
         output_file = tmp_path/"ratings.json"
-        writer = RreWriter(populated_datastore, index=rre_config.index_name,
-                           corpora_file=rre_config.corpora_file,
-                           id_field=rre_config.id_field,
-                           query_template=rre_config.rre_query_template,
-                           query_placeholder=rre_config.rre_query_placeholder)
+        writer = RreWriter(index=rre_config.index_name,
+                         corpora_file=rre_config.corpora_file,
+                         id_field=rre_config.id_field,
+                         query_template=rre_config.rre_query_template,
+                         query_placeholder=rre_config.rre_query_placeholder)
 
-        writer.write(str(output_file))
+        writer.write(str(output_file), populated_datastore)
 
         assert output_file.exists()
 
