@@ -1,5 +1,6 @@
 from .abstract_writer import AbstractWriter
 from .quepid_writer import QuepidWriter
+from .rre_writer import RreWriter
 import logging
 
 log = logging.getLogger(__name__)

@@ -21,10 +21,10 @@ def populated_datastore() -> DataStore:
     ds = DataStore()
 
     # Add docs
-    ds.add_doc(Document(id="doc1", fields={"title": "title 1"}))
-    ds.add_doc(Document(id="doc2", fields={"title": "title 2"}))
-    ds.add_doc(Document(id="doc4", fields={"title": "title 4"}))
-    ds.add_doc(Document(id="doc5", fields={"title": "title 5"}))
+    ds.add_document(Document(id="doc1", fields={"title": "title 1"}))
+    ds.add_document(Document(id="doc2", fields={"title": "title 2"}))
+    ds.add_document(Document(id="doc4", fields={"title": "title 4"}))
+    ds.add_document(Document(id="doc5", fields={"title": "title 5"}))
 
     # Add queries and ratings
     q1 = Query(text="test query 1")
@@ -77,3 +77,45 @@ class TestRreWriter:
 
             relevant = group["relevant_documents"]
             assert "doc4" in relevant["2"]
+
+    def test_write_with_empty_datastore(self, rre_config, tmp_path: Path):
+        output_file = tmp_path/"ratings.json"
+        writer = RreWriter(index=rre_config.index_name,
+                         corpora_file=rre_config.corpora_file,
+                         id_field=rre_config.id_field,
+                         query_template=rre_config.rre_query_template,
+                         query_placeholder=rre_config.rre_query_placeholder)
+
+        ds = DataStore(ignore_saved_data=True)
+        writer.write(str(output_file), ds)
+
+        assert output_file.exists()
+        with open(output_file, 'r') as f:
+            data = json.load(f)
+            assert data["index"] == "testcore"
+            assert data["id_field"] == "id"
+            assert data["query_groups"] == []
+
+    def test_write_ignores_queries_without_ratings(self, rre_config, tmp_path: Path):
+        output_file = tmp_path/"ratings.json"
+        writer = RreWriter(index=rre_config.index_name,
+                         corpora_file=rre_config.corpora_file,
+                         id_field=rre_config.id_field,
+                         query_template=rre_config.rre_query_template,
+                         query_placeholder=rre_config.rre_query_placeholder)
+
+        ds = DataStore(ignore_saved_data=True)
+        q_with_rating = Query(text="rated query")
+        q_without_rating = Query(text="unrated query")
+        doc = Document(id="doc1", fields={"title": "test title"})
+        ds.add_document(doc)
+        ds.add_query(q_with_rating)
+        ds.add_query(q_without_rating)
+        ds.create_rating_score(q_with_rating.id, doc.id, 1)
+
+        writer.write(str(output_file), ds)
+
+        with open(output_file, 'r') as f:
+            data = json.load(f)
+            assert len(data["query_groups"]) == 1
+            assert data["query_groups"][0]["name"] == q_with_rating.text

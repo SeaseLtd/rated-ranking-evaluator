@@ -9,10 +9,10 @@ from src.model import Document, Query
 # helper shared with other writer tests
 def _add_query_with_doc(ds: DataStore, qtext: str, doc_id: str) -> str:
     doc = Document(id=doc_id, fields={"field": "v"})
-    ds.add_doc(doc)
+    ds.add_document(doc)
     q = Query(text=qtext)
     ds.add_query(q)
-    ds.add_doc_to_query(q.id, doc_id)
+    ds.add_document_to_query(q.id, doc_id)
     return q.id
 
 
