@@ -41,7 +41,7 @@ def generate_and_add_queries(llm_service: LLMService, config: Config, data_store
         for query_text in query_response.get_queries():
             if len(data_store.get_queries()) >= config.num_queries_needed:
                 return
-            query = Query(text=query_text, generated_from_doc_id=doc.id)
+            query = Query(text=query_text)
             query_id: str = data_store.add_query(query)
             data_store.create_rating_score(query_id, doc.id, max(config.relevance_label_set))
 
