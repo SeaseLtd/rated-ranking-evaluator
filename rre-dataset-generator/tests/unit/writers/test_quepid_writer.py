@@ -17,18 +17,17 @@ def _add_query_with_doc(ds: DataStore, qtext: str, doc_id: str) -> str:
 
 
 # ---------------- fixtures -----------------
-
 @pytest.fixture
 def populated_datastore() -> DataStore:
     ds = DataStore(ignore_saved_data=True)
     q1 = _add_query_with_doc(ds, "test query 1", "doc1")
     _add_query_with_doc(ds, "test query 1", "doc2")
     _add_query_with_doc(ds, "test query 1", "doc3")
-    ds.add_rating_score(q1, "doc1", 1)
-    ds.add_rating_score(q1, "doc2", 2)
+    ds.create_rating_score(q1, "doc1", 1)
+    ds.create_rating_score(q1, "doc2", 2)
 
     q2 = _add_query_with_doc(ds, "test query 2", "doc4")
-    ds.add_rating_score(q2, "doc4", 3)
+    ds.create_rating_score(q2, "doc4", 3)
 
     _add_query_with_doc(ds, "test query 3", "doc5")  # no ratings
     return ds
@@ -58,7 +57,7 @@ class TestQuepidWriter:
 
     def test_write_success(self, populated_datastore, tmp_path: Path):
         out = tmp_path / "out.csv"
-        QuepidWriter(populated_datastore).write(out)
+        QuepidWriter().write(out, populated_datastore)
         self._assert_csv(out, [
             ("test query 1", "doc1", "1"),
             ("test query 1", "doc2", "2"),
@@ -67,12 +66,12 @@ class TestQuepidWriter:
 
     def test_write_empty(self, empty_datastore, tmp_path: Path):
         out = tmp_path / "o.csv"
-        QuepidWriter(empty_datastore).write(out)
+        QuepidWriter().write(out, empty_datastore)
         self._assert_csv(out, [])
 
     def test_write_no_rated_docs(self, unrated_datastore, tmp_path: Path):
         out = tmp_path / "o.csv"
-        QuepidWriter(unrated_datastore).write(out)
+        QuepidWriter().write(out, unrated_datastore)
         self._assert_csv(out, [])
 
     def test_special_characters(self, tmp_path: Path):
@@ -80,15 +79,15 @@ class TestQuepidWriter:
         qtext = 'query with "quotes" and a comma,'
         doc = 'doc_id_with_a_newline\n'
         qid = _add_query_with_doc(ds, qtext, doc)
-        ds.add_rating_score(qid, doc, 1)
+        ds.create_rating_score(qid, doc, 1)
         out = tmp_path / "o.csv"
-        QuepidWriter(ds).write(out)
+        QuepidWriter().write(out, ds)
         self._assert_csv(out, [(qtext, doc, "1")])
 
     def test_zero_rating(self, tmp_path: Path):
         ds = DataStore(ignore_saved_data=True)
         qid = _add_query_with_doc(ds, "query 1", "doc1")
-        ds.add_rating_score(qid, "doc1", 0)
+        ds.create_rating_score(qid, "doc1", 0)
         out = tmp_path / "o.csv"
-        QuepidWriter(ds).write(out)
+        QuepidWriter().write(out, ds)
         self._assert_csv(out, [("query 1", "doc1", "0")])
