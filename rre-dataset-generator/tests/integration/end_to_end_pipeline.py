@@ -83,7 +83,7 @@ def end_to_end_pipeline_with_llm_mock(config, tmp_path):
     writer.write(output_file)
     assert output_file.exists(), f"File not found: {output_file}"
 
-    with open(config.output_destination, newline="", encoding="utf-8") as f:
+    with open(output_file, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader, None)
         assert header == ["query", "docid", "rating"], f"Unexpected header: {header}"
