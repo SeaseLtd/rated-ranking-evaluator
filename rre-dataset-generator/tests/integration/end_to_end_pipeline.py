@@ -21,7 +21,7 @@ from src.writers.abstract_writer import AbstractWriter
 from src.writers.writer_factory import WriterFactory
 
 
-def end_to_end_pipeline_with_llm_mock(config):
+def end_to_end_pipeline_with_llm_mock(config, tmp_path):
     """Big Bang integration test with Solr using all pipeline steps."""
 
     log: Logger = get_and_setup_logging(True)
@@ -79,8 +79,9 @@ def end_to_end_pipeline_with_llm_mock(config):
         assert isinstance(p[2], int), "Score must be numeric"
         assert p[2] in config.relevance_label_set, "Score out of expected range"
 
-    writer.write(config.output_destination)
-    assert os.path.exists(config.output_destination), f"File not found: {config.output_destination}"
+    output_file = tmp_path / "generated_dataset.csv"
+    writer.write(output_file)
+    assert output_file.exists(), f"File not found: {output_file}"
 
     with open(config.output_destination, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)

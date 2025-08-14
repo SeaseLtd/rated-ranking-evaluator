@@ -10,9 +10,9 @@ def docker_compose_file(pytestconfig):
 
 @pytest.fixture(scope="session", autouse=True)
 def docker_compose_cleanup(docker_compose_file):
-    # Yield to let tests run
+
     yield
-    # Cleanup after tests
+
     print("\nStopping and removing Docker Compose services...")
     try:
         subprocess.run(
