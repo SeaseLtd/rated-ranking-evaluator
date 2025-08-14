@@ -1,5 +1,6 @@
 query_template: "q=description:#$query##&rows=2"
 search_engine_type: "solr"
+index_name: "testcore"
 search_engine_collection_endpoint: "http://localhost:8983/solr/testcore/"
 documents_filter:
   - title:

@@ -32,7 +32,7 @@ def end_to_end_pipeline_with_llm_mock(config):
         search_engine_type=config.search_engine_type,
         endpoint=config.search_engine_collection_endpoint
     )
-    writer: AbstractWriter = WriterFactory.build(config.output_format, data_store)
+    writer: AbstractWriter = WriterFactory.build(config, data_store)
 
     add_user_queries(config, data_store)
 
@@ -57,7 +57,7 @@ def end_to_end_pipeline_with_llm_mock(config):
     generate_and_add_queries(config, data_store, service, docs_to_generate_queries)
     queries = data_store.get_queries()
     assert len(queries) == config.num_queries_needed, "Unexpected number of queries generated"
-    assert all(isinstance(q, QueryRatingContext) and q.get_query().strip() for q in queries), "Queries must be non-empty strings"
+    assert all(isinstance(q, QueryRatingContext) and q.get_query_text().strip() for q in queries), "Queries must be non-empty strings"
 
     retrieve_and_add_documents(config, data_store, search_engine)
     retrieved_docs = data_store.get_documents()
@@ -67,7 +67,7 @@ def end_to_end_pipeline_with_llm_mock(config):
     add_cartesian_product_scores(config, data_store, service)
     pairs = []
     for query_ctx in data_store.get_queries():
-        query_text = query_ctx.get_query()
+        query_text = query_ctx.get_query_text()
         for doc_id in query_ctx.get_doc_ids():
             rating = query_ctx.get_rating_score(doc_id)
             if rating != QueryRatingContext.DOC_NOT_RATED:
