@@ -26,10 +26,6 @@ jobs:
       run: uv sync
       working-directory: rre-dataset-generator
 
-    - name: Run unit tests
-      run: uv run pytest tests/unit
-      working-directory: rre-dataset-generator
-
-    - name: Run integration tests
-      run: uv run pytest tests/integration
+    - name: Run all tests (unit+integration)
+      run: uv run pytest
       working-directory: rre-dataset-generator
