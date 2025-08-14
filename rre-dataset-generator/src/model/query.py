@@ -14,6 +14,8 @@ class Query(BaseModel):
     # frozen=True - immutability after creation.
     # model_config = ConfigDict(extra='forbid', validate_assignment=True, frozen=True)
 
+    model_config = ConfigDict(extra='ignore')
+
     id: str = Field(default_factory=lambda: str(uuid4()), description="Unique identifier of the query.", min_length=1)
     text: str = Field(..., description="The raw query text.", min_length=1)
     # Reference to the document ID that generated this query (used by Pipeline for query generation tracking)

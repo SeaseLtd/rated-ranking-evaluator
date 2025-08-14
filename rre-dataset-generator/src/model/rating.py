@@ -1,7 +1,7 @@
 from __future__ import annotations
 from uuid import uuid4
 from typing import Optional
-from pydantic import BaseModel, Field, NonNegativeInt
+from pydantic import BaseModel, Field, ConfigDict, NonNegativeInt
 
 class Rating(BaseModel):
     """
@@ -14,7 +14,8 @@ class Rating(BaseModel):
     # frozen=True - immutability after creation.
     # model_config = ConfigDict(extra='forbid', validate_assignment=True, frozen=True)
 
-    id: str = Field(default_factory=lambda: str(uuid4()), description="Unique identifier of the rating.", min_length=1)
+    model_config = ConfigDict(extra='ignore')
+    
     doc_id: str = Field(..., description="ID of the rated document.", min_length=1)
     query_id: str = Field(..., description="ID of the query associated with the rating.", min_length=1)
     score: NonNegativeInt = Field(..., description="Non-negative rating score.")

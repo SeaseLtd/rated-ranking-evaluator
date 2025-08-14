@@ -16,6 +16,8 @@ class Document(BaseModel):
     # frozen=True - immutability after creation.
     # model_config = ConfigDict(extra='forbid', validate_assignment=True, frozen=True)
 
+    model_config = ConfigDict(extra='ignore')
+
     id: str = Field(
         ...,
         description="Unique identifier of the document.",
