@@ -35,9 +35,10 @@ class DataStore:
         self.queries: Dict[str, Query] = {}
 
         # Simplified ratings storage for MVP
-        self.rating_by_pair: Dict[Tuple[str, str], Rating] = {} # (query_id, doc_id) → Rating
+        self.rating_by_pair: Dict[Tuple[str, str], Rating] = {}    # (query_id, doc_id) → Rating
         self.docs_by_query: Dict[str, Set[str]] = defaultdict(set) # query_id → doc_ids
-        self.query_text_to_query_id: Dict[str, str] = {} # normalized_query_text → query_id
+        self.query_text_to_query_id: Dict[str, str] = {}           # query_text → query_id
+        # TODO: we could add normalizing function to text -> Proposal: refactor utils clean_text() and import / reuse here
 
         if not ignore_saved_data:
             self.load()
@@ -64,17 +65,17 @@ class DataStore:
     # ────────────────────────────────────────────
     # Getters
     # ────────────────────────────────────────────
-    def get_document(self, doc_id: str) -> Document:
-        """Gets a single document by its ID. Raises KeyError if not found."""
-        return self.docs[doc_id]
+    def get_document(self, doc_id: str) -> Optional[Document]:
+        """Gets a single document by its ID, or None if not found."""
+        return self.docs.get(doc_id)
 
     def get_documents(self) -> List[Document]:
         """Gets all documents. Complexity: O(N) where N is the number of docs."""
         return list(self.docs.values())
 
-    def get_query(self, query_id: str) -> Query:
-        """Gets a single query by its ID. Raises KeyError if not found."""
-        return self.queries[query_id]
+    def get_query(self, query_id: str) -> Optional[Query]:
+        """Gets a single query by its ID, or None if not found."""
+        return self.queries.get(query_id)
 
     def get_queries(self) -> List[Query]:
         """Gets all queries. Complexity: O(M) where M is the number of queries."""
@@ -87,13 +88,13 @@ class DataStore:
     def get_ratings_for_query(self, query_id: str) -> List[Rating]:
         """(MVP) Returns ratings for a query. Complexity: O(P) where P is the number of ratings."""
         if not self.has_query(query_id):
-            raise KeyError(f"Query '{query_id}' not found")
+            return []
         return [r for r in self.rating_by_pair.values() if r.query_id == query_id]
 
     def get_doc_ids_for_query(self, query_id: str) -> List[str]:
         """Returns doc IDs for a query, from both ratings and explicit links. O(P)"""
         if not self.has_query(query_id):
-            raise KeyError(f"Query '{query_id}' not found")
+            return []
         via_ratings = {r.doc_id for r in self.rating_by_pair.values() if r.query_id == query_id}
         via_links = self.docs_by_query.get(query_id, set())
         return sorted(via_ratings | via_links)
@@ -121,7 +122,7 @@ class DataStore:
         log.debug(f"[add_document] added doc_id={doc.id}")
 
     def add_query(self, query: Query) -> str:
-        """Adds a query if its normalized text is new, returns its ID. O(1)."""
+        """Adds a query if its text is new, returns its ID. O(1)."""
         key = query.text
         if (existing_id := self.query_text_to_query_id.get(key)):
             log.debug(f"[add_query] exists text='{query.text}' existing_id={existing_id}")
@@ -155,10 +156,10 @@ class DataStore:
     ) -> Optional[Rating]:
         """Create rating (if not exists) and add via `add_rating`. Complexity: O(1)."""
         if not self.has_query(query_id):
-            log.debug(f"[create_rating_score] query_not_found query_id={query_id}")
+            log.warning(f"[create_rating_score] query_not_found query_id={query_id}")
             return None
         if not self.has_document(doc_id):
-            log.debug(f"[create_rating_score] doc_not_found doc_id={doc_id}")
+            log.warning(f"[create_rating_score] doc_not_found doc_id={doc_id}")
             return None
 
         key = (query_id, doc_id)
@@ -270,4 +271,4 @@ class DataStore:
                 json.dump(records, f, indent=2, ensure_ascii=False)
             log.info("[export] ok path=%s records=%d", output_path, len(records))
         except Exception as e:
-            log.exception("[export] fail path=%s err=%s", output_path, e)
+            log.warning("[export] fail path=%s err=%s", output_path, e)

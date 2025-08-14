@@ -45,6 +45,7 @@ def test_add_and_get_doc__expects__datastore_returns_the_same_document(ds, docA)
     assert ds.has_document(docA.id)
     assert ds.get_document(docA.id) is docA
     assert len(ds.get_documents()) == 1
+    assert ds.get_document("missing-doc") is None
 
 def test_add_document_duplicate__expects__logs_debug_and_keeps_original(ds, docA, caplog):
     caplog.set_level(logging.DEBUG)  # Ensure debug logs are captured
@@ -59,6 +60,7 @@ def test_add_and_get_query__expects__datastore_returns_the_same_query(ds, queryQ
     assert ds.has_query(queryQ.id)
     assert ds.get_query(queryQ.id) is queryQ
     assert len(ds.get_queries()) == 1
+    assert ds.get_query("missing-query") is None
 
 def test_add_document_to_query__expects__association_successful(ds, docA, queryQ):
     ds.add_document(docA)
@@ -84,6 +86,7 @@ def test_create_rating_score__expects__creates_rating_and_indexes(ds, docA, quer
     # Check if the rating is returned for the query
     ratings_for_query = ds.get_ratings_for_query(queryQ.id)
     assert rating in ratings_for_query
+    assert ds.get_ratings_for_query("missing-query") == []
     
     # Check if the doc is now linked to the query
     assert docA.id in ds.get_doc_ids_for_query(queryQ.id)
@@ -104,9 +107,9 @@ def test_create_rating_score__expects__negative_value_is_none_and_logs_error(ds,
     assert ret is None
     assert "validation_failed" in caplog.text
 
-def test_get_rating_score__expects__logs_debug_for_missing_query_or_doc(ds, caplog):
-    caplog.set_level(logging.DEBUG)
-    assert ds.get_rating_score("q-missing", "d-missing") is None
+def test_create_rating_score__expects__logs_warning_for_missing_ids(ds, caplog):
+    caplog.set_level(logging.WARNING)
+    assert ds.create_rating_score("q-missing", "d-existing", 1) is None
     assert "query_not_found" in caplog.text
 
 def test_persistence__expects__save_and_load_roundtrip(tmp_db_path, docA, queryQ):
@@ -154,7 +157,8 @@ def test_load_with_broken_references__expects__skips_dangling_ratings(tmp_db_pat
     caplog.set_level(logging.WARNING)
     ds = DataStore(path=tmp_db_path)
 
-    assert len(ds.get_ratings()) == 0  # The dangling rating should be skipped
+    # Reconstruction avoid adding "corrupt" ratings - must be associated to an existing query and document
+    assert len(ds.get_ratings()) == 0      # The dangling rating should be skipped
     assert "doc_not_found" in caplog.text  # V2-Lite logs this from add_rating
 
 def test_get_doc_ids_for_query__expects__returns_union_of_rated_and_linked_docs(ds, docA, docB, queryQ):

@@ -32,7 +32,7 @@ def add_user_queries(config: Config, data_store: DataStore):
                     query = Query(text=line.strip())
                     data_store.add_query(query)
 
-def generate_and_add_queries(llm_service: LLMService, config: Config, data_store: DataStore) -> None:
+def generate_and_add_queries(llm_service: LLMService, config: Config, data_store: DataStore, docs_to_generate_queries: List[Document]) -> None:
     num_queries_per_doc: int = int(((config.num_queries_needed - len(data_store.get_queries())) // config.doc_number) * 1.5)
 
     for doc in docs_to_generate_queries:
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                                                                                         doc_fields=config.doc_fields)
     log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
 
-    generate_and_add_queries(service, config, data_store)
+    generate_and_add_queries(service, config, data_store, docs_to_generate_queries)
 
     retrieve_and_add_documents(config, data_store)
 
