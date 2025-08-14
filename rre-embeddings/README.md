@@ -1,5 +1,33 @@
 # Exact Search Evaluator
 
+## Code Quality Tools
+
+This project uses [Ruff](https://github.com/astral-sh/ruff) for linting and [Mypy](https://mypy.readthedocs.io/) for static type checking to maintain code quality and consistency.
+
+### Running Code Quality Checks
+
+#### Linting with Ruff
+```bash
+# Check for issues
+ruff check .
+
+# Auto-fix fixable issues
+ruff check --fix .
+
+# Format code (if formatter is enabled)
+ruff format .
+```
+
+#### Type Checking with Mypy
+```bash
+# Run type checking
+mypy .
+```
+
+### Configuration Files
+- `ruff.toml`: Configures Ruff's linting rules and settings
+- `mypy.ini`: Configures Mypy's type checking settings
+
 > **Exact Search vs. Approximate Search**
 
 - **Approximate Search** uses a proxy to score a subset of documents considered *similar* via a pre-filtering stage. Techniques like ANN (Approximate Nearest Neighbors) rely on precomputed structures in the index (e.g., HNSW, IVF) to accelerate retrieval at the cost of some accuracy.

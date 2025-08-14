@@ -1,7 +1,7 @@
 [project]
-name = "Exact-Search-Evaluator"
+name = "rre-embeddings"
 version = "0.1.0"
-description = "Exact Search Evaluator project"
+description = "Embeddings Exact Search Benchmarking project"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -13,11 +13,18 @@ dependencies = [
     "langchain-openai>=0.3.27",
     "langchain-google-genai>=2.1.7",
     "python-dotenv>=1.1.1",
+    "mteb>=0.1.0"
 ]
 
 
 [project.scripts]
-exact-search-evaluator = "main:main"
+rre-embeddings = "main:main"
+
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "ruff"
+]
 
 [tool.setuptools]
 py-modules = ["main"]
