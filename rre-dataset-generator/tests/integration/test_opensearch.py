@@ -28,13 +28,13 @@ def search_url(pytestconfig, docker_ip, docker_services):
         except requests.exceptions.RequestException:
             return False
 
-    docker_services.wait_until_responsive(timeout=60, pause=0.5, check=_is_ready)
+    docker_services.wait_until_responsive(timeout=90, pause=0.5, check=_is_ready)
 
     def _has_200_docs() -> bool:
         response = requests.get(url + "testcore/_count")
         return response.json()["count"] == 200
 
-    docker_services.wait_until_responsive(timeout=60, pause=0.5, check=_has_200_docs)
+    docker_services.wait_until_responsive(timeout=90, pause=0.5, check=_has_200_docs)
 
     return HttpUrl(url)
 

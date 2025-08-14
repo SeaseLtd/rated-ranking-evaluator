@@ -16,7 +16,7 @@ def docker_compose_cleanup(docker_compose_file):
     print("\nStopping and removing Docker Compose services...")
     try:
         subprocess.run(
-            ["docker-compose", "-f", docker_compose_file, "down", "--volumes", "--remove-orphans"],
+            ["docker", "compose", "-f", docker_compose_file, "down", "--volumes", "--remove-orphans"],
             check=True,
         )
     except subprocess.CalledProcessError as e:
