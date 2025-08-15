@@ -33,6 +33,9 @@ class Config(BaseModel):
     id_field: str = Field(None, description="ID field for the unique key.")
     rre_query_template: FilePath = Field(None, description="Query template for rre evaluator.")
     rre_query_placeholder: str = Field(None, description="Key-value pair to substitute in the rre query template.")
+    mteb_corpus_destination: Path = Field(..., description="File path to save the MTEB corpus.")
+    mteb_queries_destination: Path = Field(..., description="File path to save the MTEB queries.")
+    mteb_candidates_destination: Path = Field(..., description="File path to save the MTEB candidates.")
 
     @field_validator('doc_fields')
     def check_no_empty_fields(cls, v):

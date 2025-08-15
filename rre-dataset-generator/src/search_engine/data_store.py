@@ -68,7 +68,7 @@ class DataStore:
 
     def get_documents(self) -> List[Document]:
         """
-        Returns a list of Document objects."
+        Returns a list of Document objects.
         """
         return list(self._documents.values())
 
@@ -206,7 +206,7 @@ class DataStore:
 
     def export_all_records_with_explanation(self, output_path: str | Path) -> None:
         """
-        Exports query-doc-rating-explanation tuples to a JSON file.
+        Exports query-doc_id-rating-explanation tuples to a JSON file.
         """
         records = []
         for query_context in self._queries_by_id.values():

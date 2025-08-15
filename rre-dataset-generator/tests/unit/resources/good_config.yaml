@@ -21,3 +21,7 @@ output_format: "quepid"
 output_destination: "output/generated_dataset.json"
 save_llm_explanation: true
 llm_explanation_destination: "output/rating_explanation.json"
+mteb_corpus_destination: "data/corpus.jsonl"
+mteb_queries_destination: "data/queries.jsonl"
+mteb_candidates_destination: "data/candidates.jsonl"
+

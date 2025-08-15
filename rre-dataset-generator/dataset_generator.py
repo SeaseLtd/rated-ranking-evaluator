@@ -18,6 +18,7 @@ from src.search_engine.data_store import DataStore
 
 # build factories
 from src.llm.llm_provider_factory import LLMServiceFactory
+from src.writers.mteb_writer import MtebWriter
 from src.writers.writer_factory import WriterFactory
 from src.search_engine.search_engine_factory import SearchEngineFactory
 
@@ -96,6 +97,7 @@ if __name__ == "__main__":
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
     writer: AbstractWriter = WriterFactory.build(config, data_store)
+    mteb_writer: MtebWriter = MtebWriter.build(config, data_store)
 
     # pipeline starts
     add_user_queries(config, data_store)
@@ -119,3 +121,12 @@ if __name__ == "__main__":
     if config.save_llm_explanation:
         data_store.export_all_records_with_explanation(config.llm_explanation_destination)
         log.info(f"Dataset with LLM explanation is saved into: {config.llm_explanation_destination}")
+
+    mteb_writer.write_corpus(config.mteb_corpus_destination)
+    log.info(f"MTEB corpus is saved into: {config.mteb_corpus_destination}")
+
+    mteb_writer.write_queries(config.mteb_queries_destination)
+    log.info(f"MTEB queries are saved into: {config.mteb_queries_destination}")
+
+    mteb_writer.write_candidates(config.mteb_candidates_destination)
+    log.info(f"MTEB candidates are saved into: {config.mteb_candidates_destination}")
