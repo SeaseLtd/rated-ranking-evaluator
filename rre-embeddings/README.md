@@ -49,8 +49,11 @@ uv venv .venv
 # activate env
 source .venv/bin/activate
 
-# install dependencies
+# install dependencies (editable mode - for devs)
 uv pip install -e . 
+
+# install dependencies (for users)
+uv sync
 
 # now we can run the package entry point with our alias
 ## ( Check the pyproject.toml line: [project.scripts] rre-embeddings = "main:main")
