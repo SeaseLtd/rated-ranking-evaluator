@@ -60,12 +60,26 @@ uv run dataset_generator.py --help
 
 ## Running tests
 
+To run all available tests, execute `pytest` command as follows:
+```bash
+uv run pytest
+```
+
 ### 1. Unit Tests
 
 Execute `pytest` command as follows:
 ```bash
-uv run pytest
+uv run pytest tests/unit/
 ```
+
+### 2. Integration Tests
+
+Execute `pytest` command as follows:
+```bash
+uv run pytest tests/integration/
+```
+
+
 
 The script will then:
 1.  Fetch documents from the specified search engine.
