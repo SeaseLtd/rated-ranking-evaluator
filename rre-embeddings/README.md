@@ -40,7 +40,7 @@ mypy .
 - dataset metadata (list - name, path or url)
 - task_to_evaluate (internal mapping (name-id)? EG: {"Retrieval:0, Rerank: 1..}, or flat. Eg: "Retrieval", "Rerank"..)
 
-## Usage
+## Installing and Use
 
 ```bash
 # create env if don't exists
@@ -53,19 +53,19 @@ source .venv/bin/activate
 uv pip install -e . 
 
 # now we can run the package entry point with our alias
-## ( Check the pyproject.toml line: [project.scripts] exact-search-evaluator = "main:main")
-exact-search-evaluator
+## ( Check the pyproject.toml line: [project.scripts] rre-embeddings = "main:main")
+rre-embeddings
 ```
 
-## Proposed usage (Future Work)
+## Proposed execution (Future Work)
 
 ### 1. Run exact search evaluator with CLI arguments
 ```bash
-exact-search-evaluator --embedding-model "model_name" --dataset "path_to_dataset" --task-to-evaluate "Retrieval" --output_path "path_to_output"
+rre-embeddings --embedding-model "model_name" --dataset "path_to_dataset" --task-to-evaluate "Retrieval" --output_path "path_to_output"
 ```
 
 
 ### 2. Run exact search evaluator with  yaml config file
 ```bash
-exact-search-evaluator --config "path_to_config_yaml"
+rre-embeddings --config "path_to_config_yaml"
 ```
