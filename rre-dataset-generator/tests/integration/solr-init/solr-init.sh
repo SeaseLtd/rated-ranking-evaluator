@@ -57,11 +57,11 @@ else
 fi
 
 if [ "$COUNT_FOUND" -eq 0 ]; then
-  echo "[INFO] Indexing into Solr…"
+  echo "[INFO] Indexing dataset…";
   curl -f -X POST \
        -H "Content-Type: application/json" \
        --data-binary @"$TMP_FILE" \
-       "$COLLECTION_ENDPOINT/update?commit=true"
+       $COLLECTION_ENDPOINT/update?commit=true;
   echo "[INFO] Done indexing.";
 else
   echo "[INFO] Collection already contains data, skipping indexing.";
