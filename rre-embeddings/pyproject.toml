@@ -1,24 +1,28 @@
 [project]
-name = "rre-embeddings"
+name = "rre_embeddings"
 version = "0.1.0"
-description = "Embeddings Exact Search Benchmarking project"
+description = "RRE-Embeddings - A tool for embeddings exact search benchmarking"
 readme = "README.md"
+authors = []
+license = {text = "Apache-2.0"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
 requires-python = ">=3.10"
 dependencies = [
-    "argparse>=1.4.0",
-    "pydantic>=2.0",
     "pytest>=8.4.1",
     "pyyaml>=6.0.2",
-    "langchain-core>=0.3.68",
-    "langchain-openai>=0.3.27",
-    "langchain-google-genai>=2.1.7",
     "python-dotenv>=1.1.1",
     "mteb>=0.1.0"
 ]
 
 
 [project.scripts]
-rre-embeddings = "main:main"
+rre-embeddings = "src.main:main"
 
 [project.optional-dependencies]
 dev = [
@@ -27,7 +31,7 @@ dev = [
 ]
 
 [tool.setuptools]
-py-modules = ["main"]
+packages = ["src"]
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
