@@ -4,12 +4,17 @@ services:
     container_name: solr_test
     ports:
       - "8983:8983"
-    command: ["solr-precreate", "testcore"]
+    command:
+      - solr-precreate
+      - testcore
 
   solr-init:
     build:
       context: solr-init
     depends_on:
       - solr
+    volumes:
+      - ./solr-init/data/dataset.json:/opt/rre-dataset-generator/data/dataset.json
+      - ../../output/embeddings:/opt/rre-dataset-generator/embeddings
+    working_dir: /opt/rre-dataset-generator
     command: ["sh", "-c", "/opt/rre-dataset-generator/solr-init.sh"]
-
