@@ -34,7 +34,7 @@ class DataStore:
         self.docs: Dict[str, Document] = {}
         self.queries: Dict[str, Query] = {}
 
-        # Simplified ratings storage for MVP
+        # Simplified ratings storage
         self.rating_by_pair: Dict[Tuple[str, str], Rating] = {}    # (query_id, doc_id) → Rating
         self.docs_by_query: Dict[str, Set[str]] = defaultdict(set) # query_id → doc_ids
         self.query_text_to_query_id: Dict[str, str] = {}           # query_text → query_id
