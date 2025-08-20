@@ -13,7 +13,6 @@ relevance_scale: "graded"
 llm_configuration_file: "tests/unit/resources/llm_config.yaml"
 output_format: "quepid"
 output_destination: "output/generated_dataset.json"
-mteb_corpus_destination: "data/corpus.jsonl"
-mteb_queries_destination: "data/queries.jsonl"
-mteb_candidates_destination: "data/candidates.jsonl"
+mteb_destination: "data"
+
 

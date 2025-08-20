@@ -78,11 +78,9 @@ save_llm_explanation: true
 # (**) When save_llm_explanation is set to True, this param needs to be present
 llm_explanation_destination: "output/rating_explanation.json"
 
-# JSONL file path which contains <id,title,text> corpus records extracted from search engine.
-mteb_corpus_destination: "data/corpus.jsonl"
+# File path for MTEB, where the following three files will be written into: corpus.jsonl, queries.jsonl, and candidates.jsonl
+# corpus.jsonl contains <id,title,text> corpus records extracted from search engine.
+# queries.jsonl contains <id,text> query records LLM-generated and/or user-defined.
+# candidates.jsonl contains <query_id,doc_id,rating> candidate records.
+mteb_destination: "data"
 
-# JSONL file path which contains <id,text> query records LLM-generated and/or user-defined.
-mteb_queries_destination: "data/queries.jsonl"
-
-# JSONL file path which contains <query_id,doc_id,rating> candidate records.
-mteb_candidates_destination: "data/candidates.jsonl"

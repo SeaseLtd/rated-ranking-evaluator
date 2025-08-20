@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -6,6 +7,8 @@ from src.config import Config
 from src.search_engine.data_store import DataStore
 from src.utils import _to_string
 from src.writers.abstract_writer import AbstractWriter
+
+log = logging.getLogger(__name__)
 
 
 class MtebWriter(AbstractWriter):
@@ -22,7 +25,7 @@ class MtebWriter(AbstractWriter):
     def build(cls, config: Config, data_store: DataStore):
         return cls(datastore=data_store)
 
-    def write_corpus(self, output_path: str | Path) -> None:
+    def _write_corpus(self, output_path: str | Path) -> None:
         """
         Writes corpus records extracted from search engine to JSONL file:
         {"id": <doc_id>, "title": <title>, "text": <description>}
@@ -39,7 +42,7 @@ class MtebWriter(AbstractWriter):
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-    def write_queries(self, output_path: str | Path) -> None:
+    def _write_queries(self, output_path: str | Path) -> None:
         """
         Writes queries LLM-generated and/or user-defined records to JSONL file:
         {"id": <query_id>, "text": <query_text>}
@@ -54,7 +57,7 @@ class MtebWriter(AbstractWriter):
                 row = {"id": query_id, "text": query_text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-    def write_candidates(self, output_path: str | Path) -> None:
+    def _write_candidates(self, output_path: str | Path) -> None:
         """
         Writes candidates to JSONL file:
         {"query_id": <query_id>, "doc_id": <doc_id>, "rating": <rating_score>}
@@ -73,7 +76,20 @@ class MtebWriter(AbstractWriter):
 
     def write(self, output_path: str | Path) -> None:
         """
-        Call these methods to write to JSONL files for MTEB: self.write_corpus(), self.write_queries() and
-        self.write_candidates()
+        Write corpus, queries, and candidates JSONL files for MTEB.
         """
-        pass
+        path = Path(output_path)
+        os.makedirs(path, exist_ok=True)
+        try:
+            self._write_corpus(path / "corpus.jsonl")
+            log.info("Corpus written successfully")
+
+            self._write_queries(path / "queries.jsonl")
+            log.info("Queries written successfully")
+
+            self._write_candidates(path / "candidates.jsonl")
+            log.info("Candidates written successfully")
+
+        except Exception as e:
+            log.exception("Failed to write MTEB files: %s", e)
+            raise

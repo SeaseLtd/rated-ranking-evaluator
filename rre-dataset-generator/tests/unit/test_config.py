@@ -30,9 +30,7 @@ def test_good_config_expect_all_parameters_read(config):
     assert config.save_llm_explanation is True
     assert config.llm_explanation_destination == Path("output/rating_explanation.json")
     assert config.index_name == "testcore"
-    assert config.mteb_corpus_destination == Path("data/corpus.jsonl")
-    assert config.mteb_queries_destination == Path("data/queries.jsonl")
-    assert config.mteb_candidates_destination == Path("data/candidates.jsonl")
+    assert config.mteb_destination == Path("data")
 
 
 def test_missing_optional_field_values():

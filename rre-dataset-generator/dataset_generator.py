@@ -122,11 +122,5 @@ if __name__ == "__main__":
         data_store.export_all_records_with_explanation(config.llm_explanation_destination)
         log.info(f"Dataset with LLM explanation is saved into: {config.llm_explanation_destination}")
 
-    mteb_writer.write_corpus(config.mteb_corpus_destination)
-    log.info(f"MTEB corpus is saved into: {config.mteb_corpus_destination}")
-
-    mteb_writer.write_queries(config.mteb_queries_destination)
-    log.info(f"MTEB queries are saved into: {config.mteb_queries_destination}")
-
-    mteb_writer.write_candidates(config.mteb_candidates_destination)
-    log.info(f"MTEB candidates are saved into: {config.mteb_candidates_destination}")
+    mteb_writer.write(config.mteb_destination)
+    log.info(f"MTEB candidates are saved into: {config.mteb_destination}")

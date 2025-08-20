@@ -37,15 +37,21 @@ def populated_datastore() -> DataStore:
 
 class TestMtebWriter:
 
-    def test_write_corpus_expect_written_to_jsonl(self, config, populated_datastore, tmp_path: Path):
-        output_file = tmp_path/"corpus.jsonl"
+    def test_write_expect_written_to_jsonl(self, config, populated_datastore, tmp_path: Path):
+        output_dir = tmp_path / "data"
         writer = MtebWriter(populated_datastore)
 
-        writer.write_corpus(str(output_file))
+        writer.write(output_dir)
 
-        assert output_file.exists()
+        corpus_file = output_dir / "corpus.jsonl"
+        queries_file = output_dir / "queries.jsonl"
+        candidates_file = output_dir / "candidates.jsonl"
 
-        lines = output_file.read_text(encoding="utf-8").splitlines()
+        assert corpus_file.exists()
+        assert queries_file.exists()
+        assert candidates_file.exists()
+
+        lines = corpus_file.read_text(encoding="utf-8").splitlines()
         rows = [json.loads(line) for line in lines if line.strip()]
 
         docs = populated_datastore.get_documents()
@@ -57,15 +63,7 @@ class TestMtebWriter:
             assert isinstance(row["title"], str)
             assert isinstance(row["text"], str)
 
-    def test_write_queries_expect_written_to_jsonl(self, config, populated_datastore, tmp_path: Path):
-        output_file = tmp_path / "queries.jsonl"
-        writer = MtebWriter(populated_datastore)
-
-        writer.write_queries(output_file)
-
-        assert output_file.exists()
-
-        lines = output_file.read_text(encoding="utf-8").splitlines()
+        lines = queries_file.read_text(encoding="utf-8").splitlines()
         rows = [json.loads(line) for line in lines if line.strip()]
 
         queries = populated_datastore.get_queries()
@@ -76,15 +74,7 @@ class TestMtebWriter:
             assert isinstance(row["id"], str)
             assert isinstance(row["text"], str)
 
-    def test_write_candidates_expect_written_to_jsonl(self, config, populated_datastore, tmp_path: Path):
-        output_file = tmp_path / "candidates.jsonl"
-        writer = MtebWriter(populated_datastore)
-
-        writer.write_candidates(output_file)
-
-        assert output_file.exists()
-
-        lines = output_file.read_text(encoding="utf-8").splitlines()
+        lines = candidates_file.read_text(encoding="utf-8").splitlines()
         rows = [json.loads(line) for line in lines if line.strip()]
 
         expected = set()
