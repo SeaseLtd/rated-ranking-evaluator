@@ -206,3 +206,6 @@ __marimo__/
 # Raw files - MTEB / BEIR datasets
 *.tsv
 *.csv
+
+# uv file
+uv.lock

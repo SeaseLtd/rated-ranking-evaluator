@@ -1,0 +1,4 @@
+model_id: "sentence-transformers/all-MiniLM-L6-v2"
+corpus_path: "tests/unit/resources/data/corpus.jsonl"
+queries_path: "tests/unit/resources/data/queries.jsonl"
+candidates_path: "tests/unit/resources/data/candidates.jsonl"
