@@ -55,6 +55,9 @@ uv pip install -e .
 # install dependencies (for users)
 uv sync
 
+# install optional dev dependencies such as mypy/ruff
+uv sync --extra dev
+
 # now we can run the package entry point with our alias
 ## ( Check the pyproject.toml line: [project.scripts] rre-embeddings = "main:main")
 rre-embeddings

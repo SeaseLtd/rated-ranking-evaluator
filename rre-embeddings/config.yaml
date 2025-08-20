@@ -1,0 +1,14 @@
+# Model ID (HuggingFace models).
+model_id: "sentence-transformers/all-MiniLM-L6-v2"
+
+# Corpus jsonl file path with records - <id,title,text>.
+corpus_path: "data/corpus.jsonl"
+
+# Queries jsonl file path with records - <id,text>.
+queries_path: "data/queries.jsonl"
+
+# Candidates jsonl file path with records - <query_id,doc_id,rating>.
+candidates_path: "data/candidates.jsonl"
+
+# (Optional) File path to write mteb output, if not given it will be written to output dir in the root folder
+output_dest: "output"
