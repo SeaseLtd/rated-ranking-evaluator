@@ -36,7 +36,7 @@ class DataStore:
 
         # Text based deduplication for queries
         self.query_text_to_query_id: Dict[str, str] = {}           # query_text → query_id 
-        # TODO: add normalizing function to text for query_text_to_query_id (strip, lower, etc).
+        # TODO: add normalizing function for the text keys (strip, lower, etc).
         ### Proposal: refactor utils clean_text() and import / reuse here
 
         if not ignore_saved_data:
@@ -179,25 +179,25 @@ class DataStore:
         self._clear_all_data()
 
         # docs
-        for d in data.get("docs", []):
+        for doc in data.get("docs", []):
             try:
-                self.add_document(Document.model_validate(d))
+                self.add_document(Document.model_validate(doc))
             except ValidationError as e:
-                log.warning("[load] skip_doc_invalid data=%s error=%s", d, e)
+                log.warning("[load] skip_doc_invalid data=%s error=%s", doc, e)
 
         # queries
-        for q in data.get("queries", []):
+        for query_obj in data.get("queries", []):
             try:
-                self.add_query(Query.model_validate(q))
+                self.add_query(Query.model_validate(query_obj))
             except ValidationError as e:
-                log.warning("[load] skip_query_invalid data=%s error=%s", q, e)
+                log.warning("[load] skip_query_invalid data=%s error=%s", query_obj, e)
 
         # ratings
-        for r in data.get("ratings", []):
+        for rating_obj in data.get("ratings", []):
             try:
-                robj = Rating.model_validate(r)
+                robj = Rating.model_validate(rating_obj)
             except ValidationError as e:
-                log.warning("[load] skip_rating_invalid data=%s error=%s", r, e)
+                log.warning("[load] skip_rating_invalid data=%s error=%s", rating_obj, e)
                 continue
             self._add_rating(robj)  # verifies refs and creates query→doc link
 
@@ -213,16 +213,16 @@ class DataStore:
     def export_all_records_with_explanation(self, output_path: str | Path) -> None:
         """Export (query_text, doc_id, rating, explanation) to JSON."""
         records = []
-        for r in self.rating_by_pair.values():
+        for rating_obj in self.rating_by_pair.values():
             # Guard against dangling references (defensive)
-            q = self.queries.get(r.query_id)
-            if not q:
+            query_obj = self.queries.get(rating_obj.query_id)
+            if not query_obj:
                 continue
             records.append({
-                "query": q.text,
-                "doc_id": r.doc_id,
-                "rating": r.score,
-                "explanation": r.explanation or ""
+                "query": query_obj.text,
+                "doc_id": rating_obj.doc_id,
+                "rating": rating_obj.score,
+                "explanation": rating_obj.explanation or ""
             })
 
         output_path = Path(output_path)
