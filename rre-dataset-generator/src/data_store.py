@@ -7,7 +7,6 @@ import json
 import logging
 import os
 from uuid import uuid4
-from collections import defaultdict # difference with normal dicts: this avoid raising KeyError
 from pydantic import ValidationError
 from src.model import Document, Query, Rating
 
@@ -32,10 +31,13 @@ class DataStore:
         self.docs: Dict[str, Document] = {}
         self.queries: Dict[str, Query] = {}
 
-        # Simplified ratings storage
-        self.rating_by_pair: Dict[Tuple[str, str], Rating] = {}    # (query_id, doc_id) → Rating
-        self.query_text_to_query_id: Dict[str, str] = {}           # query_text → query_id
-        # TODO: we could add normalizing function to text -> Proposal: refactor utils clean_text() and import / reuse here
+        # Ratings storage
+        self.rating_by_pair: Dict[Tuple[str, str], Rating] = {}    # (query_id, doc_id) → Rating 
+
+        # Text based deduplication for queries
+        self.query_text_to_query_id: Dict[str, str] = {}           # query_text → query_id 
+        # TODO: add normalizing function to text for query_text_to_query_id (strip, lower, etc).
+        ### Proposal: refactor utils clean_text() and import / reuse here
 
         if not ignore_saved_data:
             self.load()
@@ -95,7 +97,8 @@ class DataStore:
         log.debug(f"[add_document] added doc_id={doc.id}")
 
     def add_query(self, query: Query) -> str:
-        """Adds a query if its text is new, returns its ID. O(1)."""
+        """Adds a new query only if the Query.text is not already cached. 
+        If the query text is already cached, return the existing query ID. O(1)."""
         key = query.text
         if (existing_id := self.query_text_to_query_id.get(key)):
             log.warning(f"[add_query] exists text='{query.text}' existing_id={existing_id}")
@@ -198,6 +201,7 @@ class DataStore:
                 continue
             self._add_rating(robj)  # verifies refs and creates query→doc link
 
+
     def _clear_all_data(self) -> None:
         """Reset state."""
         self.docs.clear()
@@ -205,9 +209,6 @@ class DataStore:
         self.rating_by_pair.clear()
         self.query_text_to_query_id.clear()
 
-    def get_query_id_by_text(self, text: str) -> Optional[str]:
-        """Returns the ID of a query with the given text, if any. O(1)."""
-        return self.query_text_to_query_id.get(text)
 
     def export_all_records_with_explanation(self, output_path: str | Path) -> None:
         """Export (query_text, doc_id, rating, explanation) to JSON."""

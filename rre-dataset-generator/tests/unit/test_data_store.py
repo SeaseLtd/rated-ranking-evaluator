@@ -3,7 +3,6 @@ from pathlib import Path
 import os
 import json
 import logging
-from pydantic import ValidationError
 
 from src.data_store import DataStore
 from src.model import Document, Query
