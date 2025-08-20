@@ -38,20 +38,17 @@ class RreWriter(AbstractWriter):
         self.query_placeholder = query_placeholder
 
     def _build_json_doc_records(self, datastore: DataStore) -> dict[str, Any]:
-        query_to_doc_ratings = defaultdict(list)
-
-        for query in datastore.get_queries():
-            ratings = datastore.get_ratings_for_query(query.id)
-            if not ratings:
-                continue
-            for rating in ratings:
-                query_to_doc_ratings[query.text].append((rating.doc_id, int(rating.score)))
+        query_text_to_doc_and_scores = defaultdict(list)
+        ratings = datastore.get_ratings()
+        for rating in ratings:
+            query = datastore.get_query(rating.query_id)
+            query_text_to_doc_and_scores[query.text].append((rating.doc_id, int(rating.score)))
 
         query_groups = []
-        for query_text, relevant_docs in query_to_doc_ratings.items():
+        for query_text, related_docs_and_scores in query_text_to_doc_and_scores.items():
             rating_to_doc_ids = defaultdict(list)
-            for doc_id, gain in relevant_docs:
-                rating_to_doc_ids[str(gain)].append(doc_id)
+            for doc_id, score in related_docs_and_scores:
+                rating_to_doc_ids[str(score)].append(doc_id)
 
             query_group = {
                 "name": query_text,
