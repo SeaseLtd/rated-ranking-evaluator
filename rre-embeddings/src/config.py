@@ -43,7 +43,7 @@ class Config(BaseModel):
         Load and validate configuration from a yaml file.
 
         :param config_path: Path to the yaml config file
-        :return: Parsed and validated MtebConfig object
+        :return: Parsed and validated Config object
         """
         with open(config_path, "r") as f:
             raw_config = yaml.safe_load(f)
