@@ -16,11 +16,8 @@ class QuepidWriter(AbstractWriter):
     def _get_queries_and_ratings(self, datastore: DataStore) -> List[Tuple[str, str, int]]:
         """Helper to extract (query_text, doc_id, rating) tuples from the datastore."""
         result = []
-        for query in datastore.get_queries():
-            for doc_id in datastore.get_doc_ids_for_query(query.id):
-                rating = datastore.get_rating_score(query.id, doc_id)
-                if rating is not None:
-                    result.append((query.text, doc_id, rating))
+        for rating in datastore.get_ratings():
+            result.append((rating.query_id, rating.doc_id, rating.score))
         return result
 
     def write(self, output_path: str | Path, datastore: DataStore) -> None:
@@ -33,5 +30,5 @@ class QuepidWriter(AbstractWriter):
             writer.writerow(['query', 'docid', 'rating'])
             
             rated_pairs = self._get_queries_and_ratings(datastore)
-            for query_text, doc_id, rating in rated_pairs:
-                writer.writerow([query_text, doc_id, rating])
+            for query_id, doc_id, rating in rated_pairs:
+                writer.writerow([query_id, doc_id, rating])

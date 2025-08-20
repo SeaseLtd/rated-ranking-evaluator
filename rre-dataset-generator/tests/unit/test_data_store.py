@@ -62,16 +62,6 @@ def test_add_and_get_query__expects__datastore_returns_the_same_query(ds, queryQ
     assert len(ds.get_queries()) == 1
     assert ds.get_query("missing-query") is None
 
-def test_add_document_to_query__expects__association_successful(ds, docA, queryQ):
-    ds.add_document(docA)
-    ds.add_query(queryQ)
-    ds.add_document_to_query(queryQ.id, docA.id)
-    assert docA.id in ds.get_doc_ids_for_query(queryQ.id)
-
-def test_add_document_to_query__expects__logs_warning_for_unknown_ids(ds, caplog):
-    caplog.set_level(logging.WARNING)
-    ds.add_document_to_query("missing-q", "missing-d")
-    assert "query_not_found" in caplog.text
 
 def test_create_rating_score__expects__creates_rating_and_indexes(ds, docA, queryQ):
     ds.add_document(docA)
@@ -88,8 +78,6 @@ def test_create_rating_score__expects__creates_rating_and_indexes(ds, docA, quer
     assert rating in ratings_for_query
     assert ds.get_ratings_for_query("missing-query") == []
     
-    # Check if the doc is now linked to the query
-    assert docA.id in ds.get_doc_ids_for_query(queryQ.id)
 
 def test_create_rating_score__expects__second_call_does_not_update_existing(ds, docA, queryQ, caplog):
     ds.add_document(docA); ds.add_query(queryQ)
@@ -161,22 +149,3 @@ def test_load_with_broken_references__expects__skips_dangling_ratings(tmp_db_pat
     assert len(ds.get_ratings()) == 0      # The dangling rating should be skipped
     assert "doc_not_found" in caplog.text  # V2-Lite logs this from add_rating
 
-def test_get_doc_ids_for_query__expects__returns_union_of_rated_and_linked_docs(ds, docA, docB, queryQ):
-    docC = Document(id="doc-C", fields={"title": "C"})
-    ds.add_document(docA)
-    ds.add_document(docB)
-    ds.add_document(docC)
-    ds.add_query(queryQ)
-
-    # Link docA via a rating, which also creates an implicit link
-    ds.create_rating_score(queryQ.id, docA.id, 5)
-
-    # Link docB explicitly
-    ds.add_document_to_query(queryQ.id, docB.id)
-
-    # Get the doc IDs
-    doc_ids = ds.get_doc_ids_for_query(queryQ.id)
-
-    # Expecting docA and docB, sorted. docC should not be present.
-    assert doc_ids == sorted([docA.id, docB.id])
-    assert len(doc_ids) == 2

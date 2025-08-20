@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Set, List
+from typing import Dict, Optional, Tuple, List
 
 import json
 import logging
@@ -36,7 +35,6 @@ class DataStore:
 
         # Simplified ratings storage
         self.rating_by_pair: Dict[Tuple[str, str], Rating] = {}    # (query_id, doc_id) → Rating
-        self.docs_by_query: Dict[str, Set[str]] = defaultdict(set) # query_id → doc_ids
         self.query_text_to_query_id: Dict[str, str] = {}           # query_text → query_id
         # TODO: we could add normalizing function to text -> Proposal: refactor utils clean_text() and import / reuse here
 
@@ -88,24 +86,17 @@ class DataStore:
     def get_ratings_for_query(self, query_id: str) -> List[Rating]:
         """(MVP) Returns ratings for a query. Complexity: O(P) where P is the number of ratings."""
         if not self.has_query(query_id):
+            log.warning(f"[get_ratings_for_query] query_not_found query_id={query_id}")
             return []
         return [r for r in self.rating_by_pair.values() if r.query_id == query_id]
-
-    def get_doc_ids_for_query(self, query_id: str) -> List[str]:
-        """Returns doc IDs for a query, from both ratings and explicit links. O(P)"""
-        if not self.has_query(query_id):
-            return []
-        via_ratings = {r.doc_id for r in self.rating_by_pair.values() if r.query_id == query_id}
-        via_links = self.docs_by_query.get(query_id, set())
-        return sorted(via_ratings | via_links)
 
     def get_rating_score(self, query_id: str, doc_id: str) -> Optional[int]:
         """Returns the score for a (query, doc) pair, or None if not found. Complexity: O(1)."""
         if not self.has_query(query_id):
-            log.debug(f"[get_rating_score] query_not_found query_id={query_id}")
+            log.warning(f"[get_rating_score] query_not_found query_id={query_id}")
             return None
         if not self.has_document(doc_id):
-            log.debug(f"[get_rating_score] doc_not_found doc_id={doc_id}")
+            log.warning(f"[get_rating_score] doc_not_found doc_id={doc_id}")
             return None
         rating = self.rating_by_pair.get((query_id, doc_id))
         return rating.score if rating else None
@@ -116,7 +107,7 @@ class DataStore:
     def add_document(self, doc: Document) -> None:
         """Adds a document. Complexity: O(1)."""
         if self.has_document(doc.id):
-            log.debug(f"[add_document] exists doc_id={doc.id}")
+            log.warning(f"[add_document] exists doc_id={doc.id}")
             return
         self.docs[doc.id] = doc
         log.debug(f"[add_document] added doc_id={doc.id}")
@@ -125,7 +116,7 @@ class DataStore:
         """Adds a query if its text is new, returns its ID. O(1)."""
         key = query.text
         if (existing_id := self.query_text_to_query_id.get(key)):
-            log.debug(f"[add_query] exists text='{query.text}' existing_id={existing_id}")
+            log.warning(f"[add_query] exists text='{query.text}' existing_id={existing_id}")
             return existing_id
 
         self.queries[query.id] = query
@@ -133,7 +124,7 @@ class DataStore:
         log.debug(f"[add_query] added query_id={query.id}")
         return query.id
 
-    def add_rating(self, rating: Rating) -> None:
+    def _add_rating(self, rating: Rating) -> None:
         """Adds a rating. Complexity: O(1)."""
         if not self.has_query(rating.query_id):
             log.warning(f"[add_rating] query_not_found query_id={rating.query_id}")
@@ -144,11 +135,10 @@ class DataStore:
 
         key = (rating.query_id, rating.doc_id)
         if key in self.rating_by_pair:
-            log.debug(f"[add_rating] exists q={rating.query_id} d={rating.doc_id}")
+            log.warning(f"[add_rating] exists q={rating.query_id} d={rating.doc_id}")
             return
 
         self.rating_by_pair[key] = rating
-        self.add_document_to_query(rating.query_id, rating.doc_id)  # Ensure link exists
         log.debug(f"[add_rating] added q={rating.query_id} d={rating.doc_id}")
 
     def create_rating_score(
@@ -164,12 +154,12 @@ class DataStore:
 
         key = (query_id, doc_id)
         if (existing_rating := self.rating_by_pair.get(key)):
-            log.debug(f"[create_rating_score] existing q={query_id} d={doc_id}")
+            log.warning(f"[create_rating_score] existing q={query_id} d={doc_id}")
             return existing_rating
 
         try:
             rating = Rating(doc_id=doc_id, query_id=query_id, score=score, explanation=explanation)
-            self.add_rating(rating)
+            self._add_rating(rating)
             return rating
         except ValidationError as e:
             log.warning(f"[create_rating_score] validation_failed q={query_id} d={doc_id} score={score} error={e}")
@@ -224,25 +214,13 @@ class DataStore:
             except ValidationError as e:
                 log.warning("[load] skip_rating_invalid data=%s error=%s", r, e)
                 continue
-            self.add_rating(robj)  # verifies refs and creates query→doc link
-
-
-    def add_document_to_query(self, query_id: str, doc_id: str) -> None:
-        """Idempotently links a document to a query."""
-        if not self.has_query(query_id):
-            log.warning(f"[add_document_to_query] query_not_found query_id={query_id}")
-            return
-        if not self.has_document(doc_id):
-            log.warning(f"[add_document_to_query] doc_not_found doc_id={doc_id}")
-            return
-        self.docs_by_query[query_id].add(doc_id)
+            self._add_rating(robj)  # verifies refs and creates query→doc link
 
     def _clear_all_data(self) -> None:
         """Reset state."""
         self.docs.clear()
         self.queries.clear()
         self.rating_by_pair.clear()
-        self.docs_by_query.clear()
         self.query_text_to_query_id.clear()
 
     def get_query_id_by_text(self, text: str) -> Optional[str]:

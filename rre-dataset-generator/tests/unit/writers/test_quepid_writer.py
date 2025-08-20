@@ -12,7 +12,6 @@ def _add_query_with_doc(ds: DataStore, qtext: str, doc_id: str) -> str:
     ds.add_document(doc)
     q = Query(text=qtext)
     ds.add_query(q)
-    ds.add_document_to_query(q.id, doc_id)
     return q.id
 
 

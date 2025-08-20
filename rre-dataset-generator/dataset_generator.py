@@ -1,5 +1,6 @@
 # data types
 from typing import List
+from logging import Logger, getLogger, DEBUG, INFO
 from langchain_core.language_models import BaseChatModel
 
 # Internal modules
@@ -7,13 +8,10 @@ from src.logger import configure_logging
 from src.config import Config
 from src.utils import parse_args
 from src.data_store import DataStore
-from src.llm import LLMConfig, LLMServiceFactory, LLMService
-from src.model import Document, Query, Rating, LLMQueryResponse, LLMScoreResponse
 from src.search_engine import SearchEngineFactory
-from src.writers import WriterFactory
-from src.writers.abstract_writer import AbstractWriter
-
-from logging import Logger, getLogger, DEBUG, INFO
+from src.writers import WriterFactory, AbstractWriter
+from src.llm import LLMConfig, LLMServiceFactory, LLMService
+from src.model import Document, Query, LLMQueryResponse, LLMScoreResponse
 
 
 def get_and_setup_logging(verbose: bool = False) -> Logger:
@@ -28,8 +26,9 @@ def add_user_queries(config: Config, data_store: DataStore):
     if config.queries is not None:
         with open(config.queries, 'r', encoding='utf-8') as file:
             for line in file:
-                if line.strip():
-                    query = Query(text=line.strip())
+                line_striped = line.strip()
+                if line_striped:
+                    query = Query(text=line_striped)
                     data_store.add_query(query)
 
 def generate_and_add_queries(llm_service: LLMService, config: Config, data_store: DataStore, docs_to_generate_queries: List[Document]) -> None:
