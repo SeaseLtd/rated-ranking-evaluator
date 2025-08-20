@@ -7,7 +7,7 @@ import json
 import logging
 import os
 from uuid import uuid4
-
+from collections import defaultdict # difference with normal dicts: this avoid raising KeyError
 from pydantic import ValidationError
 from src.model import Document, Query, Rating
 
@@ -22,7 +22,6 @@ class DataStore:
 
     Invariants:
     - A (query_id, doc_id) pair is unique within `rating_by_pair`.
-    - An entry in `docs_by_query` (a link) does not imply a rating exists.
     - `has_rating_score` is True only if a `Rating` object exists for the pair (query_id, document_id).
     """
 
@@ -83,23 +82,6 @@ class DataStore:
         """Gets all ratings. Complexity: O(P) where P is the number of ratings."""
         return list(self.rating_by_pair.values())
 
-    def get_ratings_for_query(self, query_id: str) -> List[Rating]:
-        """(MVP) Returns ratings for a query. Complexity: O(P) where P is the number of ratings."""
-        if not self.has_query(query_id):
-            log.warning(f"[get_ratings_for_query] query_not_found query_id={query_id}")
-            return []
-        return [r for r in self.rating_by_pair.values() if r.query_id == query_id]
-
-    def get_rating_score(self, query_id: str, doc_id: str) -> Optional[int]:
-        """Returns the score for a (query, doc) pair, or None if not found. Complexity: O(1)."""
-        if not self.has_query(query_id):
-            log.warning(f"[get_rating_score] query_not_found query_id={query_id}")
-            return None
-        if not self.has_document(doc_id):
-            log.warning(f"[get_rating_score] doc_not_found doc_id={doc_id}")
-            return None
-        rating = self.rating_by_pair.get((query_id, doc_id))
-        return rating.score if rating else None
 
     # ────────────────────────────────────────────
     # Mutators (all O(1) on average)
@@ -138,7 +120,7 @@ class DataStore:
             log.warning(f"[add_rating] exists q={rating.query_id} d={rating.doc_id}")
             return
 
-        self.rating_by_pair[key] = rating
+        self.rating_by_pair[key] = rating 
         log.debug(f"[add_rating] added q={rating.query_id} d={rating.doc_id}")
 
     def create_rating_score(

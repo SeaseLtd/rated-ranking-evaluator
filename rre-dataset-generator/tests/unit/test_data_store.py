@@ -9,11 +9,6 @@ from src.data_store import DataStore
 from src.model import Document, Query
 
 
-# --- pytests integrated fixtures ---
-## caplog for logging messages when calling functions
-## tmp_path: pytest fixture for temporary directory
-
-
 # --- fixtures ---
 @pytest.fixture
 def tmp_db_path(tmp_path: Path) -> Path:
@@ -36,7 +31,10 @@ def queryQ() -> Query:
     return Query(text="hello world")
 
 
-
+# --- helpers (tests only) ---
+def _ratings_for_query(ds: DataStore, query_id: str):
+    """Compat helper now that DataStore has no get_ratings_for_query()."""
+    return [r for r in ds.get_ratings() if r.query_id == query_id]
 
 
 # --- tests ---
@@ -48,7 +46,7 @@ def test_add_and_get_doc__expects__datastore_returns_the_same_document(ds, docA)
     assert ds.get_document("missing-doc") is None
 
 def test_add_document_duplicate__expects__logs_debug_and_keeps_original(ds, docA, caplog):
-    caplog.set_level(logging.DEBUG)  # Ensure debug logs are captured
+    caplog.set_level(logging.DEBUG)  # Ensure logs are captured (warnings/debug)
     ds.add_document(docA)
     assert len(ds.get_documents()) == 1
     ds.add_document(docA)
@@ -62,22 +60,20 @@ def test_add_and_get_query__expects__datastore_returns_the_same_query(ds, queryQ
     assert len(ds.get_queries()) == 1
     assert ds.get_query("missing-query") is None
 
-
 def test_create_rating_score__expects__creates_rating_and_indexes(ds, docA, queryQ):
     ds.add_document(docA)
     ds.add_query(queryQ)
     rating = ds.create_rating_score(queryQ.id, docA.id, 2)
 
     assert rating is not None
-    assert ds.get_rating_score(queryQ.id, docA.id) == 2
     # Check if the rating object is in the main dictionary
     assert ds.rating_by_pair.get((queryQ.id, docA.id)) is rating
-    
-    # Check if the rating is returned for the query
-    ratings_for_query = ds.get_ratings_for_query(queryQ.id)
+
+    # Check ratings "by query" via helper (since no get_ratings_for_query)
+    ratings_for_query = _ratings_for_query(ds, queryQ.id)
     assert rating in ratings_for_query
-    assert ds.get_ratings_for_query("missing-query") == []
-    
+    # Missing query returns empty
+    assert _ratings_for_query(ds, "missing-query") == []
 
 def test_create_rating_score__expects__second_call_does_not_update_existing(ds, docA, queryQ, caplog):
     ds.add_document(docA); ds.add_query(queryQ)
@@ -85,7 +81,8 @@ def test_create_rating_score__expects__second_call_does_not_update_existing(ds, 
     caplog.set_level(logging.DEBUG)
     rating2 = ds.create_rating_score(queryQ.id, docA.id, 4)  # insert-only: does not update
     assert rating1 is rating2  # Should return the exact same object
-    assert ds.get_rating_score(queryQ.id, docA.id) == 1  # keeps the first
+    assert (queryQ.id, docA.id) in ds.rating_by_pair
+    assert ds.rating_by_pair[(queryQ.id, docA.id)] == rating1
     assert "existing" in caplog.text
 
 def test_create_rating_score__expects__negative_value_is_none_and_logs_error(ds, docA, queryQ, caplog):
@@ -111,9 +108,9 @@ def test_persistence__expects__save_and_load_roundtrip(tmp_db_path, docA, queryQ
     ds2 = DataStore(path=tmp_db_path)  # load() is called in __init__
     assert ds2.has_document(docA.id)
     assert ds2.has_query(queryQ.id)
-    assert ds2.get_rating_score(queryQ.id, docA.id) == 5
-    # Check that the rating object was reconstructed
+
     assert (queryQ.id, docA.id) in ds2.rating_by_pair
+    assert ds2.rating_by_pair[(queryQ.id, docA.id)].score == 5
 
 def test_load_when_file_missing__expects__returns_empty_store(tmp_path):
     path = tmp_path / "no-such.json"
@@ -127,14 +124,14 @@ def test_add_query__expects__returns_id_for_new_and_duplicate_queries(ds):
     returned_id1 = ds.add_query(query1)
     assert returned_id1 == query1.id
 
-    query2_duplicate = Query(text="unique text") # Same text, different object/id
+    query2_duplicate = Query(text="unique text")  # Same text, different object/id
     returned_id2 = ds.add_query(query2_duplicate)
-    assert returned_id2 == query1.id # Should return the ID of the original query
+    assert returned_id2 == query1.id  # Should return the ID of the original query
 
 def test_load_with_broken_references__expects__skips_dangling_ratings(tmp_db_path, docA, queryQ, caplog):
     # Simulate a corrupt file with a rating pointing to a non-existent doc
     corrupt_data = {
-        "docs": [], # docA is missing
+        "docs": [],  # docA is missing
         "queries": [queryQ.model_dump()],
         "ratings": [
             {"id": "r1", "query_id": queryQ.id, "doc_id": docA.id, "score": 5}
@@ -145,7 +142,6 @@ def test_load_with_broken_references__expects__skips_dangling_ratings(tmp_db_pat
     caplog.set_level(logging.WARNING)
     ds = DataStore(path=tmp_db_path)
 
-    # Reconstruction avoid adding "corrupt" ratings - must be associated to an existing query and document
+    # Reconstruction avoids adding "corrupt" ratings - must be associated to an existing query and document
     assert len(ds.get_ratings()) == 0      # The dangling rating should be skipped
-    assert "doc_not_found" in caplog.text  # V2-Lite logs this from add_rating
-
+    assert "doc_not_found" in caplog.text  # Logged from _add_rating
