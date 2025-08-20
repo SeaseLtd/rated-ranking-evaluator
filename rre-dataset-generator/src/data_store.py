@@ -179,25 +179,25 @@ class DataStore:
         self._clear_all_data()
 
         # docs
-        for doc in data.get("docs", []):
+        for doc_as_str in data.get("docs", []):
             try:
-                self.add_document(Document.model_validate(doc))
+                self.add_document(Document.model_validate(doc_as_str))
             except ValidationError as e:
-                log.warning("[load] skip_doc_invalid data=%s error=%s", doc, e)
+                log.warning("[load] skip_doc_invalid data=%s error=%s", doc_as_str, e)
 
         # queries
-        for query_obj in data.get("queries", []):
+        for query_as_str in data.get("queries", []):
             try:
-                self.add_query(Query.model_validate(query_obj))
+                self.add_query(Query.model_validate(query_as_str))
             except ValidationError as e:
-                log.warning("[load] skip_query_invalid data=%s error=%s", query_obj, e)
+                log.warning("[load] skip_query_invalid data=%s error=%s", query_as_str, e)
 
         # ratings
-        for rating_obj in data.get("ratings", []):
+        for rating_as_str in data.get("ratings", []):
             try:
-                robj = Rating.model_validate(rating_obj)
+                robj = Rating.model_validate(rating_as_str)
             except ValidationError as e:
-                log.warning("[load] skip_rating_invalid data=%s error=%s", rating_obj, e)
+                log.warning("[load] skip_rating_invalid data=%s error=%s", rating_as_str, e)
                 continue
             self._add_rating(robj)  # verifies refs and creates query→doc link
 
