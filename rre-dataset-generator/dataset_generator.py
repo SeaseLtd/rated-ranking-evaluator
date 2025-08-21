@@ -127,7 +127,6 @@ if __name__ == "__main__":
     log.info(f"Synthetic Dataset has been generated in: {output_destination}")
 
     # save explanation
-    explanation_destination = getattr(config, "save_llm_explanation", False)
-    if explanation_destination:
-        data_store.export_all_records_with_explanation(explanation_destination)
-        log.info(f"Dataset with LLM explanation is saved into: {explanation_destination}")
+    if config.save_llm_explanation:
+        data_store.export_all_records_with_explanation(config.llm_explanation_destination)
+        log.info(f"Dataset with LLM explanation is saved into: {config.llm_explanation_destination}")
