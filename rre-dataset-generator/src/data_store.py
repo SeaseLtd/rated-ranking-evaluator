@@ -95,7 +95,7 @@ class DataStore:
     def add_query(self, query_text_str: str, id: Optional[str] = None) -> Query:
         """Adds a new query. If text is cached, returns existing Query. If id is given, it's used."""
         if (existing_id := self.query_text_to_query_id.get(query_text_str)):
-            log.debug(f"[add_query] exists text='{query_text_str}' existing_id={existing_id}")
+            log.warning(f"[add_query] exists text='{query_text_str}' existing_id={existing_id}")
             return self.queries[existing_id]
 
         query = Query(id=id, text=query_text_str) if id else Query(text=query_text_str)
@@ -182,8 +182,8 @@ class DataStore:
         # queries
         for query_as_dict in data.get("queries", []):
             try:
-                tmp_query = Query.model_validate(query_as_dict) # Create a new tmp query with loaded dict 
-                self.add_query(tmp_query.text, id=tmp_query.id) # Pass the query values (text, ID) to keep ID consistent
+                tmp_query = Query.model_validate(query_as_dict)                # Create a new tmp query with loaded dict 
+                self.add_query(query_text_str=tmp_query.text, id=tmp_query.id) # Pass (text, ID) values to keep ID consistent
             except ValidationError as e:
                 log.warning(f"[load] skip_query_invalid data={query_as_dict} error={e}")
 

@@ -47,9 +47,7 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
     log.debug(f"Number of queries per document: {num_queries_per_doc}")
 
     for doc in docs_to_generate_queries:
-        # assure the docs exists in the store
-        if not data_store.has_document(doc.id):
-            data_store.add_document(doc)
+        data_store.add_document(doc)
 
         query_response: LLMQueryResponse = llm_service.generate_queries(doc, num_queries_per_doc)
         for query_ in query_response.get_queries():
@@ -84,8 +82,7 @@ def expand_docset_with_search_engine_topK(config: Config, data_store: DataStore,
             keyword=query_obj.text, query_template=config.query_template, doc_fields=config.doc_fields
         )
         for doc_obj in docs_eval:
-            if not data_store.has_document(doc_obj.id):
-                data_store.add_document(doc_obj)
+            data_store.add_document(doc_obj)
             if not data_store.has_rating_score(query_obj.id, doc_obj.id):
                 score_resp: LLMScoreResponse = llm_service.generate_score(
                     doc_obj, query_obj.text, config.relevance_scale, config.save_llm_explanation
