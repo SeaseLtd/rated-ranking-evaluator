@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Dict, Any
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 import logging
+from ..utils import is_jsonable
 
 log = logging.getLogger(__name__)
 
@@ -30,23 +31,14 @@ class Document(BaseModel):
 
     @field_validator('fields')
     @classmethod
-    def validate_fields(cls, v: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_fields(cls, field_values: Dict[str, Any]) -> Dict[str, Any]:
         """Validate that the fields dictionary and its keys are not empty and that all values are JSON-serializable."""
-        if not v:
+        if not field_values:
             raise ValueError('The fields dictionary cannot be empty.')
-        if any(not key for key in v.keys()):
+        if any(not key for key in field_values.keys()):
             raise ValueError('Field keys cannot be empty strings.')
 
-        def is_jsonable(value: Any) -> bool:
-            if isinstance(value, (str, int, float, bool)) or value is None:
-                return True
-            if isinstance(value, list):
-                return all(is_jsonable(item) for item in value)
-            if isinstance(value, dict):
-                return all(isinstance(k, str) and is_jsonable(val) for k, val in value.items())
-            return False
-
-        if not is_jsonable(v):
+        if not is_jsonable(field_values):
             raise ValueError('Field values must be JSON-serializable (primitives, lists, or dicts).')
-        return v
+        return field_values
 
