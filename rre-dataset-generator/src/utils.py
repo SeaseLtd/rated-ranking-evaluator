@@ -1,7 +1,7 @@
 import argparse
 import re
 import html
-from pathlib import Path
+from typing import Any
 
 
 _TAG_REGEX = re.compile('<.*?>')
@@ -21,3 +21,12 @@ def parse_args():
 def clean_text(text: str) -> str:
     text_without_html = re.sub(_TAG_REGEX, '', text).strip()
     return html.unescape(re.sub(r"\s{2,}", " ", text_without_html))
+
+def is_jsonable(value: Any) -> bool:
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return True
+    if isinstance(value, list):
+        return all(is_jsonable(item) for item in value)
+    if isinstance(value, dict):
+        return all(isinstance(k, str) and is_jsonable(val) for k, val in value.items())
+    return False
