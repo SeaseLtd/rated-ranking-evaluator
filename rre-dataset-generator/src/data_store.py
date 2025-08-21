@@ -225,6 +225,6 @@ class DataStore:
         try:
             with output_path.open("w", encoding=ENCODING) as f:
                 json.dump(records, f, indent=2, ensure_ascii=False)
-            log.info("[export] ok path=%s records=%d", output_path, len(records))
+            log.info(f"[export] ok path={output_path} records={len(records)}")
         except Exception as e:
-            log.warning("[export] fail path=%s err=%s", output_path, e)
+            log.warning(f"[export] fail path={output_path} err={e}")
