@@ -8,7 +8,7 @@ import logging
 import os
 from uuid import uuid4
 from pydantic import ValidationError
-from src.model import Document, Query, Rating
+from .model import Document, Query, Rating
 
 log = logging.getLogger(__name__)
 
@@ -46,20 +46,16 @@ class DataStore:
     # Existence checks
     # ────────────────────────────────────────────
     def has_document(self, doc_id: str) -> bool:
-        """Checks for document existence. Complexity: O(1)."""
+        """Checks for document existence."""
         return doc_id in self.docs
 
     def has_query(self, query_id: str) -> bool:
-        """Checks for query existence. Complexity: O(1)."""
+        """Checks for query existence."""
         return query_id in self.queries
 
     def has_rating_score(self, query_id: str, doc_id: str) -> bool:
-        """Checks for a rating by (query, doc) pair. Complexity: O(1)."""
+        """Checks for a rating by (query, doc) pair."""
         return (query_id, doc_id) in self.rating_by_pair
-
-    def has_rating(self, rating_id: str) -> bool:
-        """Checks for rating existence by rating_id. O(P)"""
-        return any(r.id == rating_id for r in self.rating_by_pair.values())
 
     # ────────────────────────────────────────────
     # Getters
@@ -69,7 +65,7 @@ class DataStore:
         return self.docs.get(doc_id)
 
     def get_documents(self) -> List[Document]:
-        """Gets all documents. Complexity: O(N) where N is the number of docs."""
+        """Gets all documents."""
         return list(self.docs.values())
 
     def get_query(self, query_id: str) -> Optional[Query]:
@@ -77,11 +73,11 @@ class DataStore:
         return self.queries.get(query_id)
 
     def get_queries(self) -> List[Query]:
-        """Gets all queries. Complexity: O(M) where M is the number of queries."""
+        """Gets all queries."""
         return list(self.queries.values())
 
     def get_ratings(self) -> List[Rating]:
-        """Gets all ratings. Complexity: O(P) where P is the number of ratings."""
+        """Gets all ratings."""
         return list(self.rating_by_pair.values())
 
 
@@ -89,28 +85,27 @@ class DataStore:
     # Mutators (all O(1) on average)
     # ────────────────────────────────────────────
     def add_document(self, doc: Document) -> None:
-        """Adds a document. Complexity: O(1)."""
+        """Adds a document."""
         if self.has_document(doc.id):
             log.warning(f"[add_document] exists doc_id={doc.id}")
             return
         self.docs[doc.id] = doc
         log.debug(f"[add_document] added doc_id={doc.id}")
 
-    def add_query(self, query: Query) -> str:
-        """Adds a new query only if the Query.text is not already cached. 
-        If the query text is already cached, return the existing query ID. O(1)."""
-        key = query.text
-        if (existing_id := self.query_text_to_query_id.get(key)):
-            log.warning(f"[add_query] exists text='{query.text}' existing_id={existing_id}")
-            return existing_id
+    def add_query(self, query_text_str: str, id: Optional[str] = None) -> Query:
+        """Adds a new query. If text is cached, returns existing Query. If id is given, it's used."""
+        if (existing_id := self.query_text_to_query_id.get(query_text_str)):
+            log.debug(f"[add_query] exists text='{query_text_str}' existing_id={existing_id}")
+            return self.queries[existing_id]
 
+        query = Query(id=id, text=query_text_str) if id else Query(text=query_text_str)
         self.queries[query.id] = query
-        self.query_text_to_query_id[key] = query.id
+        self.query_text_to_query_id[query_text_str] = query.id
         log.debug(f"[add_query] added query_id={query.id}")
-        return query.id
+        return query
 
     def _add_rating(self, rating: Rating) -> None:
-        """Adds a rating. Complexity: O(1)."""
+        """Adds a rating."""
         if not self.has_query(rating.query_id):
             log.warning(f"[add_rating] query_not_found query_id={rating.query_id}")
             return
@@ -129,18 +124,18 @@ class DataStore:
     def create_rating_score(
         self, query_id: str, doc_id: str, score: int, explanation: Optional[str] = None
     ) -> Optional[Rating]:
-        """Create rating (if not exists) and add via `add_rating`. Complexity: O(1)."""
-        if not self.has_query(query_id):
-            log.warning(f"[create_rating_score] query_not_found query_id={query_id}")
-            return None
-        if not self.has_document(doc_id):
-            log.warning(f"[create_rating_score] doc_not_found doc_id={doc_id}")
-            return None
+        """Create rating (if not exists) and add via `add_rating`."""
 
         key = (query_id, doc_id)
         if (existing_rating := self.rating_by_pair.get(key)):
             log.warning(f"[create_rating_score] existing q={query_id} d={doc_id}")
             return existing_rating
+
+        # Warn if referenced entities don't exist, but create the rating anyway.
+        if not self.has_query(query_id):
+            log.warning(f"[create_rating_score] query_not_found qid={query_id}")
+        if not self.has_document(doc_id):
+            log.warning(f"[create_rating_score] doc_not_found did={doc_id}")
 
         try:
             rating = Rating(doc_id=doc_id, query_id=query_id, score=score, explanation=explanation)
@@ -169,38 +164,38 @@ class DataStore:
     def load(self) -> None:
         if not self.path.exists():
             return
+
+        # Clear previous data
+        self._clear_all_data()
+
         try:
             data = json.loads(self.path.read_text(encoding=ENCODING))
         except json.JSONDecodeError as e:
             log.warning("Could not read datastore %s (JSON). Starting clean. Error: %s", self.path, e)
-            self._clear_all_data()
             return
 
-        self._clear_all_data()
-
         # docs
-        for doc_as_str in data.get("docs", []):
+        for doc_as_dict in data.get("docs", []):
             try:
-                self.add_document(Document.model_validate(doc_as_str))
+                self.add_document(Document.model_validate(doc_as_dict))
             except ValidationError as e:
-                log.warning("[load] skip_doc_invalid data=%s error=%s", doc_as_str, e)
+                log.warning("[load] skip_doc_invalid data=%s error=%s", doc_as_dict, e)
 
         # queries
-        for query_as_str in data.get("queries", []):
+        for query_as_dict in data.get("queries", []):
             try:
-                self.add_query(Query.model_validate(query_as_str))
+                query = Query.model_validate(query_as_dict)
+                self.add_query(query.text, id=query.id)  # Add a new query based on the text and the ID
             except ValidationError as e:
-                log.warning("[load] skip_query_invalid data=%s error=%s", query_as_str, e)
+                log.warning("[load] skip_query_invalid data=%s error=%s", query_as_dict, e)
 
         # ratings
-        for rating_as_str in data.get("ratings", []):
+        for rating_as_dict in data.get("ratings", []):
             try:
-                robj = Rating.model_validate(rating_as_str)
+                robj = Rating.model_validate(rating_as_dict)
+                self._add_rating(robj)
             except ValidationError as e:
-                log.warning("[load] skip_rating_invalid data=%s error=%s", rating_as_str, e)
-                continue
-            self._add_rating(robj)  # verifies refs and creates query→doc link
-
+                log.warning("[load] skip_rating_invalid data=%s error=%s", rating_as_dict, e)
 
     def _clear_all_data(self) -> None:
         """Reset state."""
