@@ -158,9 +158,7 @@ class DataStore:
         tmp_path = self.path.with_name(self.path.name + f".{uuid4().hex}.tmp")
         tmp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding=ENCODING)
         os.replace(tmp_path, self.path)
-        log.info("[save] ok path=%s n_docs=%d n_queries=%d n_ratings=%d",
-                self.path, len(self.docs), len(self.queries), len(self.rating_by_pair))
-
+        
     def load(self) -> None:
         if not self.path.exists():
             return
@@ -171,7 +169,7 @@ class DataStore:
         try:
             data = json.loads(self.path.read_text(encoding=ENCODING))
         except json.JSONDecodeError as e:
-            log.warning("Could not read datastore %s (JSON). Starting clean. Error: %s", self.path, e)
+            log.warning(f"Could not read datastore {self.path} (JSON). Starting clean. Error: {e}")
             return
 
         # docs
@@ -179,15 +177,15 @@ class DataStore:
             try:
                 self.add_document(Document.model_validate(doc_as_dict))
             except ValidationError as e:
-                log.warning("[load] skip_doc_invalid data=%s error=%s", doc_as_dict, e)
+                log.warning(f"[load] skip_doc_invalid data={doc_as_dict} error={e}")
 
         # queries
         for query_as_dict in data.get("queries", []):
             try:
-                query = Query.model_validate(query_as_dict)
-                self.add_query(query.text, id=query.id)  # Add a new query based on the text and the ID
+                tmp_query = Query.model_validate(query_as_dict) # Create a new tmp query with loaded dict 
+                self.add_query(tmp_query.text, id=tmp_query.id) # Pass the query values (text, ID) to keep ID consistent
             except ValidationError as e:
-                log.warning("[load] skip_query_invalid data=%s error=%s", query_as_dict, e)
+                log.warning(f"[load] skip_query_invalid data={query_as_dict} error={e}")
 
         # ratings
         for rating_as_dict in data.get("ratings", []):
@@ -195,7 +193,7 @@ class DataStore:
                 robj = Rating.model_validate(rating_as_dict)
                 self._add_rating(robj)
             except ValidationError as e:
-                log.warning("[load] skip_rating_invalid data=%s error=%s", rating_as_dict, e)
+                log.warning(f"[load] skip_rating_invalid data={rating_as_dict} error={e}")
 
     def _clear_all_data(self) -> None:
         """Reset state."""
