@@ -10,20 +10,20 @@ from src.model import Document, Query
 def _add_query_with_doc(ds: DataStore, qtext: str, doc_id: str) -> str:
     doc = Document(id=doc_id, fields={"field": "v"})
     ds.add_document(doc)
-    q = Query(text=qtext)
-    ds.add_query(q)
-    return q.id
+    # Capture the query object from the datastore to get the correct ID
+    query_in_store = ds.add_query(qtext)
+    return query_in_store.id
 
 
 # ---------------- fixtures -----------------
 @pytest.fixture
 def populated_datastore() -> DataStore:
     ds = DataStore(ignore_saved_data=True)
-    q1 = _add_query_with_doc(ds, "test query 1", "doc1")
-    _add_query_with_doc(ds, "test query 1", "doc2")
-    _add_query_with_doc(ds, "test query 1", "doc3")
-    ds.create_rating_score(q1, "doc1", 1)
-    ds.create_rating_score(q1, "doc2", 2)
+    q1_id = _add_query_with_doc(ds, "test query 1", "doc1")
+    _add_query_with_doc(ds, "test query 1", "doc2")  # doc for q1
+    _add_query_with_doc(ds, "test query 1", "doc3")  # doc for q1
+    ds.create_rating_score(q1_id, "doc1", 1)
+    ds.create_rating_score(q1_id, "doc2", 2)
 
     q2 = _add_query_with_doc(ds, "test query 2", "doc4")
     ds.create_rating_score(q2, "doc4", 3)

@@ -27,17 +27,15 @@ def populated_datastore() -> DataStore:
     ds.add_document(Document(id="doc5", fields={"title": "title 5"}))
 
     # Add queries and ratings
-    q1 = Query(text="test query 1")
-    ds.add_query(q1)
+    q1 = ds.add_query("test query 1")
     ds.create_rating_score(q1.id, "doc1", 1)
     ds.create_rating_score(q1.id, "doc2", 1)
 
-    q2 = Query(text="test query 2")
-    ds.add_query(q2)
+    q2 = ds.add_query("test query 2")
     ds.create_rating_score(q2.id, "doc4", 2)
 
     q3 = Query(text="test query 3")
-    ds.add_query(q3)
+    ds.add_query(q3.text)
 
     return ds
 
@@ -105,12 +103,10 @@ class TestRreWriter:
                          query_placeholder=rre_config.rre_query_placeholder)
 
         ds = DataStore(ignore_saved_data=True)
-        q_with_rating = Query(text="rated query")
-        q_without_rating = Query(text="unrated query")
         doc = Document(id="doc1", fields={"title": "test title"})
         ds.add_document(doc)
-        ds.add_query(q_with_rating)
-        ds.add_query(q_without_rating)
+        q_with_rating = ds.add_query("rated query")
+        ds.add_query("unrated query")  # q_without_rating
         ds.create_rating_score(q_with_rating.id, doc.id, 1)
 
         writer.write(str(output_file), ds)
