@@ -74,9 +74,9 @@ class RreWriter(AbstractWriter):
 
     def write(self, output_path: str | Path) -> None:
         """
-        Writes queries and their ratings to json file in RRE format.
+        Writes queries and their ratings to ratings.json file in RRE format.
         """
-        output_path = Path(output_path)
+        output_path = Path(output_path) / "ratings.json"
         os.makedirs(output_path.parent, exist_ok=True)
         with open(output_path, 'w', newline='') as json_file:
             log.debug("Started writing RRE formatted records to json file")

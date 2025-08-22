@@ -16,6 +16,5 @@ id_field: "id"
 rre_query_template: "tests/unit/resources/only_q.json"
 rre_query_placeholder: "$query"
 output_destination: "output/ratings.json"
-mteb_destination: "data"
 
 

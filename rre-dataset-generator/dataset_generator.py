@@ -97,7 +97,6 @@ if __name__ == "__main__":
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
     writer: AbstractWriter = WriterFactory.build(config, data_store)
-    mteb_writer: MtebWriter = MtebWriter.build(config, data_store)
 
     # pipeline starts
     add_user_queries(config, data_store)
@@ -122,5 +121,3 @@ if __name__ == "__main__":
         data_store.export_all_records_with_explanation(config.llm_explanation_destination)
         log.info(f"Dataset with LLM explanation is saved into: {config.llm_explanation_destination}")
 
-    mteb_writer.write(config.mteb_destination)
-    log.info(f"MTEB candidates are saved into: {config.mteb_destination}")

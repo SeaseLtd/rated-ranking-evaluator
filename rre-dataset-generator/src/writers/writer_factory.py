@@ -1,4 +1,5 @@
 from .abstract_writer import AbstractWriter
+from .mteb_writer import MtebWriter
 from .quepid_writer import QuepidWriter
 import logging
 from src.search_engine.data_store import DataStore
@@ -12,6 +13,7 @@ class WriterFactory:
     OUTPUT_FORMAT_REGISTRY = {
         "quepid": QuepidWriter,
         "rre": RreWriter,
+        "mteb": MtebWriter,
     }
 
     @classmethod

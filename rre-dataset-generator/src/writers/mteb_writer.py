@@ -25,14 +25,12 @@ class MtebWriter(AbstractWriter):
     def build(cls, config: Config, data_store: DataStore):
         return cls(datastore=data_store)
 
-    def _write_corpus(self, output_path: str | Path) -> None:
+    def _write_corpus(self, corpus_path: Path) -> None:
         """
         Writes corpus records extracted from search engine to JSONL file:
         {"id": <doc_id>, "title": <title>, "text": <description>}
         """
-        path = Path(output_path)
-        os.makedirs(path.parent, exist_ok=True)
-        with path.open("w", encoding="utf-8") as file:
+        with corpus_path.open("w", encoding="utf-8") as file:
             for doc in self.datastore.get_documents():
                 doc_id = str(doc.id)
                 fields = doc.fields
@@ -42,14 +40,12 @@ class MtebWriter(AbstractWriter):
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-    def _write_queries(self, output_path: str | Path) -> None:
+    def _write_queries(self, queries_path: Path) -> None:
         """
         Writes queries LLM-generated and/or user-defined records to JSONL file:
         {"id": <query_id>, "text": <query_text>}
         """
-        path = Path(output_path)
-        os.makedirs(path.parent, exist_ok=True)
-        with path.open("w", encoding="utf-8") as file:
+        with queries_path.open("w", encoding="utf-8") as file:
             for query_context in self.datastore.get_queries():
                 query_id = query_context.get_query_id()
                 query_text = query_context.get_query_text()
@@ -57,14 +53,12 @@ class MtebWriter(AbstractWriter):
                 row = {"id": query_id, "text": query_text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-    def _write_candidates(self, output_path: str | Path) -> None:
+    def _write_candidates(self, candidates_path: Path) -> None:
         """
         Writes candidates to JSONL file:
         {"query_id": <query_id>, "doc_id": <doc_id>, "rating": <rating_score>}
         """
-        path = Path(output_path)
-        os.makedirs(path.parent, exist_ok=True)
-        with path.open("w", encoding="utf-8") as file:
+        with candidates_path.open("w", encoding="utf-8") as file:
             for query_context in self.datastore.get_queries():
                 query_id = query_context.get_query_id()
                 for doc_id in query_context.get_doc_ids():

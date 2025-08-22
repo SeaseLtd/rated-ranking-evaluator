@@ -11,7 +11,7 @@ from src.writers.mteb_writer import MtebWriter
 @pytest.fixture
 def config():
     """Loads a valid config."""
-    return Config.load("tests/unit/resources/good_config.yaml")
+    return Config.load("tests/unit/resources/mteb_config.yaml")
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def populated_datastore() -> DataStore:
 class TestMtebWriter:
 
     def test_write_expect_written_to_jsonl(self, config, populated_datastore, tmp_path: Path):
-        output_dir = tmp_path / "data"
+        output_dir = tmp_path
         writer = MtebWriter(populated_datastore)
 
         writer.write(output_dir)
