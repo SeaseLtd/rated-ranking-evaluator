@@ -1,0 +1,46 @@
+from mteb.abstasks.AbsTask import TaskMetadata
+from mteb.abstasks.AbsTaskRetrieval import AbsTaskRetrieval
+
+from src.config import Config
+from src.utilities.helper import read_corpus, read_queries, read_candidates
+
+
+class CustomRetrievalTask(AbsTaskRetrieval):
+    metadata = TaskMetadata(
+        name="CustomRetrievalTask",
+        description="Custom Retrieval Task.",
+        reference="https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings",
+        type="Retrieval",
+        category="s2p",
+        eval_splits=["test"],
+        eval_langs=["en"],
+        main_score="ndcg_at_10",
+        date=("2020-01-01", "2030-01-01"),
+        domains=["Engineering"],
+        task_subtypes=["Article retrieval"],
+        license="not specified",
+        annotations_creators="derived",
+        sample_creation="created",
+        dataset={
+            "name": "data",
+            "path": "rre-embeddings/resources/data",
+            "revision": "v1",
+            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data"
+        },
+    )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.queries = {}
+        self.corpus = {}
+        self.relevant_docs = {}
+
+    def load_data(self, config: Config, **kwargs):
+        if config is None:
+            raise ValueError("Pass your internal Config via MTEB.run(..., config=Config).")
+
+        self.corpus = {"test": read_corpus(config.corpus_path)}
+        self.queries = {"test": read_queries(config.queries_path)}
+        self.relevant_docs = {"test": read_candidates(config.candidates_path)["relevant_docs"]}
+        self.data_loaded = True
+

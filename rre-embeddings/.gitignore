@@ -209,3 +209,6 @@ __marimo__/
 
 # uv file
 uv.lock
+
+# mteb task evaluaton results
+output/
