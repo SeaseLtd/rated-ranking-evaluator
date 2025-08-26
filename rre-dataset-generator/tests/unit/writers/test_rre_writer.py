@@ -37,14 +37,16 @@ def populated_datastore() -> DataStore:
 
 class TestRreWriter:
     def test_rre_file_successfully_written(self, rre_config, populated_datastore, tmp_path: Path):
-        output_file = tmp_path/"ratings.json"
+        output_dir = tmp_path
         writer = RreWriter(populated_datastore, index=rre_config.index_name,
                            corpora_file=rre_config.corpora_file,
                            id_field=rre_config.id_field,
                            query_template=rre_config.rre_query_template,
                            query_placeholder=rre_config.rre_query_placeholder)
 
-        writer.write(str(output_file))
+        writer.write(str(output_dir))
+
+        output_file = Path(output_dir) / "ratings.json"
 
         assert output_file.exists()
 

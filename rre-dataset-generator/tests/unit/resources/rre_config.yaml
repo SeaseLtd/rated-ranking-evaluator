@@ -15,4 +15,5 @@ corpora_file: "tests/integration/solr-init/data/dataset.json"
 id_field: "id"
 rre_query_template: "tests/unit/resources/only_q.json"
 rre_query_placeholder: "$query"
-output_destination: "output/ratings.json"
+output_destination: "output"
+

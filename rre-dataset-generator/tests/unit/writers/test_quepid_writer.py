@@ -46,11 +46,12 @@ def unrated_datastore() -> DataStore:
 class TestQuepidWriter:
     def test_write_expect_file_successfully_written(self, populated_datastore, tmp_path: Path):
         """Tests that the QuepidWriter correctly writes a CSV file."""
-        output_file = tmp_path / "output.csv"
+        output_dir = tmp_path
         writer = QuepidWriter(populated_datastore)
 
-        writer.write(str(output_file))
+        writer.write(str(output_dir))
 
+        output_file = Path(output_dir) / "quepid.csv"
         assert output_file.exists()
 
         with open(output_file, 'r', newline='') as csvfile:
@@ -68,9 +69,12 @@ class TestQuepidWriter:
 
     def test_write_with_empty_datastore_expect_output_file_written_with_only_header(self, empty_datastore, tmp_path: Path):
         """Tests writing from an empty datastore."""
-        output_file = tmp_path / "output.csv"
+        output_dir = tmp_path
         writer = QuepidWriter(empty_datastore)
-        writer.write(str(output_file))
+        writer.write(str(output_dir))
+
+        output_file = Path(output_dir) / "quepid.csv"
+        assert output_file.exists()
 
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
@@ -82,9 +86,12 @@ class TestQuepidWriter:
 
     def test_write_with_no_rated_documents_expect_empty_file(self, unrated_datastore, tmp_path: Path):
         """Tests writing when no documents have been rated."""
-        output_file = tmp_path / "output.csv"
+        output_dir = tmp_path
         writer = QuepidWriter(unrated_datastore)
-        writer.write(str(output_file))
+        writer.write(str(output_dir))
+
+        output_file = Path(output_dir) / "quepid.csv"
+        assert output_file.exists()
 
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
@@ -102,9 +109,12 @@ class TestQuepidWriter:
         query_id = datastore.add_query(query_text, doc_id)
         datastore.add_rating_score(query_id, doc_id, 1)
 
-        output_file = tmp_path / "output.csv"
+        output_dir = tmp_path
         writer = QuepidWriter(datastore)
-        writer.write(str(output_file))
+        writer.write(str(output_dir))
+
+        output_file = Path(output_dir) / "quepid.csv"
+        assert output_file.exists()
 
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
@@ -123,9 +133,12 @@ class TestQuepidWriter:
         query_id = datastore.add_query(query_text, doc_id)
         datastore.add_rating_score(query_id, doc_id, 0)
 
-        output_file = tmp_path / "output.csv"
+        output_dir = tmp_path
         writer = QuepidWriter(datastore)
-        writer.write(str(output_file))
+        writer.write(str(output_dir))
+
+        output_file = Path(output_dir) / "quepid.csv"
+        assert output_file.exists()
 
         with open(output_file, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)

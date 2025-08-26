@@ -25,7 +25,7 @@ class Config(BaseModel):
     num_queries_needed: int = Field(..., gt=0, description="Total number of queries to generate.")
     relevance_scale: Literal['binary', 'graded']
     llm_configuration_file: FilePath = Field(..., description="Path to the LLM configuration file.")
-    output_format: Literal['quepid', 'rre']
+    output_format: Literal['quepid', 'rre', 'mteb']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
     save_llm_explanation: Optional[bool] = False
     llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
@@ -33,6 +33,7 @@ class Config(BaseModel):
     id_field: str = Field(None, description="ID field for the unique key.")
     rre_query_template: FilePath = Field(None, description="Query template for rre evaluator.")
     rre_query_placeholder: str = Field(None, description="Key-value pair to substitute in the rre query template.")
+
 
     @field_validator('doc_fields')
     def check_no_empty_fields(cls, v):
