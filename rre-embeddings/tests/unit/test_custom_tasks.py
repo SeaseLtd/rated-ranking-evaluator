@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 import jsonlines
 
@@ -7,13 +8,13 @@ from src.custom_tasks.reranking_task import CustomRerankingTask
 from src.custom_tasks.retrieval_task import CustomRetrievalTask
 
 
-def _write_jsonl(path: Path, rows) -> None:
+def _write_jsonl(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with jsonlines.open(path, mode="w") as file:
         file.write_all(rows)
 
 
-def _create_dataset_and_load_config(tmp_path: Path, task_to_evaluate: str) -> Config:
+def _create_dataset_and_load_config(tmp_path: Path, task_to_evaluate: Literal["retrieval", "reranking"]) -> Config:
     corpus_path = tmp_path / "corpus.jsonl"
     queries_path = tmp_path / "queries.jsonl"
     candidates_path = tmp_path / "candidates.jsonl"

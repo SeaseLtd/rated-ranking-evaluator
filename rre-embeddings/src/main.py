@@ -7,7 +7,7 @@ from src.custom_tasks.reranking_task import CustomRerankingTask
 from src.custom_tasks.retrieval_task import CustomRetrievalTask
 
 
-def _parse_args():
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
 
     parser.add_argument('--config', type=str,

@@ -1,28 +1,27 @@
 from pathlib import Path
-from typing import Dict
 
 from jsonlines import jsonlines
 
 
-def read_corpus(path: Path) -> Dict[str, Dict]:
-    corpus_dict = {}
+def read_corpus(path: Path) -> dict[str, dict[str, str]]:
+    corpus_dict: dict[str, dict[str, str]] = {}
     with jsonlines.open(path) as rows:
         for row in rows:
             corpus_dict[row["id"]] = {"title": row["title"], "text": row["text"]}
     return corpus_dict
 
 
-def read_queries(path: Path) -> Dict[str, str]:
-    queries_dict = {}
+def read_queries(path: Path) -> dict[str, str]:
+    queries_dict: dict[str, str] = {}
     with jsonlines.open(path) as rows:
         for row in rows:
             queries_dict[row["id"]] = row["text"]
     return queries_dict
 
 
-def read_candidates(path: Path) -> Dict[str, Dict[str, Dict[str, int]]]:
-    candidates_dict: Dict[str, Dict[str, int]] = {}
-    relevant_docs: Dict[str, Dict[str, int]] = {}
+def read_candidates(path: Path) -> dict[str, dict[str, dict[str, int]]]:
+    candidates_dict: dict[str, dict[str, int]] = {}
+    relevant_docs: dict[str, dict[str, int]] = {}
     with jsonlines.open(path) as rows:
         for row in rows:
             query_id = row["query_id"]

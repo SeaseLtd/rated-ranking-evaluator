@@ -1,3 +1,5 @@
+from typing import Any
+
 from mteb.abstasks.AbsTask import TaskMetadata
 from mteb.abstasks.AbsTaskRetrieval import AbsTaskRetrieval
 
@@ -29,13 +31,13 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         },
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.queries = {}
-        self.corpus = {}
-        self.relevant_docs = {}
+        self.corpus: dict[str, dict[str, dict[str, str]]] = {}
+        self.queries: dict[str, dict[str, str]] = {}
+        self.relevant_docs: dict[str, dict[str, dict[str, int]]] = {}
 
-    def load_data(self, config: Config, **kwargs):
+    def load_data(self, config: Config, **kwargs: Any) -> None:
         if config is None:
             raise ValueError("Pass your internal Config via MTEB.run(..., config=Config).")
 

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, Optional, Any
 
 from datasets import Dataset, DatasetDict
 from mteb.abstasks.AbsTask import TaskMetadata
@@ -11,10 +11,10 @@ from src.utilities.helper import read_corpus, read_queries, read_candidates
 log = logging.getLogger(__name__)
 
 
-def _compose_text(title: str, description: str) -> str:
+def _compose_text(title: Optional[str], description: Optional[str]) -> str:
     if title and description:
         return f"{title}\n\n{description}"
-    return title or description
+    return title or description or ""
 
 
 def _build_dataset(corpus: Dict[str, Dict], queries: Dict[str, str], candidates: Dict[str, Dict[str, int]],
@@ -72,7 +72,7 @@ class CustomRerankingTask(AbsTaskReranking):
         },
     )
 
-    def load_data(self, config: Config, **kwargs):
+    def load_data(self, config: Config, **kwargs: Any) -> None:
         if config is None:
             raise ValueError("Pass your internal Config via MTEB.run(..., config=Config).")
 
