@@ -51,7 +51,7 @@ services:
       - EMAIL_SENDER=
       - QUERY_LIST_SORTABLE=true
     ports:
-      - 80:3000 # Map to port 80 for outside users when you are not using Nginx
+      - 80:3000
     links:
       - mysql
       - ollama

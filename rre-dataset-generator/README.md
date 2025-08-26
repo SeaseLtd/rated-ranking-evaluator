@@ -128,25 +128,41 @@ This will start 2 services:
  - `opensearch-init`, loads documents (`bulk indexing`) from opensearch-init/data/dataset.jsonl.
 
 
-##### Running Elasticsearch (Single Node)
 
-Similarly to Solr, to run a local Elasticsearch test environment using docker-compose:
-```bash
-cd tests/integration/
-```
-
-Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
-If you have Docker Compose v1 installed, use:
+##### Set up the Quepid container
 
 ```bash
-docker-compose -f docker-compose.elasticsearch.yml up --build 
-```
-If you have Docker Compose v2 installed, use:
-```bash
-docker compose -f docker-compose.elasticsearch.yml up --build
+docker compose -f docker-compose.quepid.yml up -d --build --remove-orphans
+
+# then go to http://localhost/sessions/new and sign up / sign in. 
 ```
 
-This will start 2 services:
- - `elasticsearch`, available at http://localhost:9200
- - `elasticsearch-init`, loads documents from elasticsearch-init/data/dataset.jsonl only if Elasticsearch doesn't have 
-any documents in the index.
+This will download the Quepid image and start the "tuned" container. The container will be named `quepid_prod_app` and will be running on port 3000.
+
+
+Notes about the "tuned" version of the Quepid Docker Compose vs default ()
+- Fixed version to 8.2.0 to avoid inestability
+- Added entrypoint: init-quepid.sh + puma ..
+- Re-start policy: auto-relaunch when the service falls
+- Create the MySQL schema on Startup (execute rails db:prepare -> raise "database does not exists"
+- QUEPID_DOMAIN -> localhost instead of "example"
+
+
+
+##### Set up the Quepid container
+
+```bash
+docker compose -f docker-compose.quepid.yml up -d --build --remove-orphans
+
+# then go to http://localhost/sessions/new and sign up / sign in. 
+```
+
+This will download the Quepid image and start the "tuned" container. The container will be named `quepid_prod_app` and will be running on port 3000.
+
+
+Notes about the "tuned" version of the Quepid Docker Compose vs default ()
+- Fixed version to 8.2.0 to avoid inestability
+- Added entrypoint: init-quepid.sh + puma ..
+- Re-start policy: auto-relaunch when the service falls
+- Create the MySQL schema on Startup (execute rails db:prepare -> raise "database does not exists"
+- QUEPID_DOMAIN -> localhost instead of "example"
