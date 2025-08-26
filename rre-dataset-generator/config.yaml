@@ -57,7 +57,7 @@ relevance_scale: "graded"
 llm_configuration_file: "llm_config.yaml"
 
 # Output format for the generated dataset
-# Accepted values: quepid, rre
+# Accepted values: quepid, rre, mteb
 output_format: "quepid"
 
 # For rre output format, you need other fields, e.g.:
@@ -67,8 +67,13 @@ output_format: "quepid"
 #   rre_query_placeholder: "$query"
 
 # Path where the output dataset will be saved
-# For rre: json format, for quepid: csv format
-output_destination: "output/generated_dataset.csv"
+# For rre, output dataset will be saved into output_destination/"ratings.json"
+# For quepid, output dataset will be saved into output_destination/"quepid.scv"
+# For mteb, the following three files will be saved into: corpus.jsonl, queries.jsonl, and candidates.jsonl
+# corpus.jsonl contains <id,title,text> corpus records extracted from search engine.
+# queries.jsonl contains <id,text> query records LLM-generated and/or user-defined.
+# candidates.jsonl contains <query_id,doc_id,rating> candidate records.
+output_destination: "output"
 
 # (Optional) Whether to save LLM rating score explanation to file
 # Default: false; set to true to save LLM rating explanation
@@ -77,3 +82,4 @@ save_llm_explanation: true
 # (Optional**) File path where it contains <query, doc_id, rating, explanation> records.
 # (**) When save_llm_explanation is set to True, this param needs to be present
 llm_explanation_destination: "output/rating_explanation.json"
+

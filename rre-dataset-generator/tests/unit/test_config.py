@@ -26,10 +26,12 @@ def test_good_config_expect_all_parameters_read(config):
     assert config.num_queries_needed == 10
     assert config.relevance_scale == "graded"
     assert config.llm_configuration_file == FilePath("tests/unit/resources/llm_config.yaml")
-    assert config.output_destination == Path("output/generated_dataset.json")
+    assert config.output_format == "quepid"
+    assert config.output_destination == Path("output")
     assert config.save_llm_explanation is True
     assert config.llm_explanation_destination == Path("output/rating_explanation.json")
     assert config.index_name == "testcore"
+
 
 def test_missing_optional_field_values():
     path = "tests/unit/resources/missing_optional.yaml"
@@ -58,3 +60,10 @@ def test_file_not_found_raises_exception():
     path = "tests/unit/resources/file_does_not_exist.yaml"
     with pytest.raises(FileNotFoundError):
         _ = Config.load(path)
+
+
+def test_mteb_config_expect_successful_load():
+    path = "tests/unit/resources/mteb_config.yaml"
+    mteb_config = Config.load(path)
+    assert mteb_config.output_format == "mteb"
+    assert mteb_config.output_destination == Path("output")
