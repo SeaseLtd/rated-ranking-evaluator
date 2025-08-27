@@ -22,11 +22,11 @@ def clean_text(text: str) -> str:
     text_without_html = re.sub(_TAG_REGEX, '', text).strip()
     return html.unescape(re.sub(r"\s{2,}", " ", text_without_html))
 
-def is_jsonable(value: Any) -> bool:
+def is_json_serializable(value: Any) -> bool:
     if isinstance(value, (str, int, float, bool)) or value is None:
         return True
     if isinstance(value, list):
-        return all(is_jsonable(item) for item in value)
+        return all(is_json_serializable(item) for item in value)
     if isinstance(value, dict):
-        return all(isinstance(k, str) and is_jsonable(val) for k, val in value.items())
+        return all(isinstance(k, str) and is_json_serializable(val) for k, val in value.items())
     return False
