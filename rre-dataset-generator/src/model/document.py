@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Dict, Any
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 import logging
-from ..utils import is_jsonable
+from ..utils import is_json_serializable
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class Document(BaseModel):
         if any(not key for key in field_values.keys()):
             raise ValueError('Field keys cannot be empty strings.')
 
-        if not is_jsonable(field_values):
+        if not is_json_serializable(field_values):
             raise ValueError('Field values must be JSON-serializable (primitives, lists, or dicts).')
         return field_values
 
