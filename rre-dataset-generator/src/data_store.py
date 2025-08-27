@@ -131,12 +131,6 @@ class DataStore:
             log.warning(f"[create_rating_score] existing q={query_id} d={doc_id}")
             return existing_rating
 
-        # Warn if referenced entities don't exist, but create the rating anyway.
-        if not self.has_query(query_id):
-            log.warning(f"[create_rating_score] query_not_found qid={query_id}")
-        if not self.has_document(doc_id):
-            log.warning(f"[create_rating_score] doc_not_found did={doc_id}")
-
         try:
             rating = Rating(doc_id=doc_id, query_id=query_id, score=score, explanation=explanation)
             self._add_rating(rating)
