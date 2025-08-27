@@ -6,7 +6,7 @@ import pytest
 from src.config import Config
 from src.data_store import DataStore
 from src.model import Query, Document
-from src.writers.rre_writer import RreWriter
+from src.writers.rre_writer import RreWriter, RRE_OUTPUT_FILENAME
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ def populated_datastore() -> DataStore:
 
 class TestRreWriter:
     def test_rre_file_successfully_written(self, rre_config, populated_datastore, tmp_path: Path):
-        output_file = tmp_path / "ratings.json"
+        output_file = tmp_path / RRE_OUTPUT_FILENAME
         writer = RreWriter(index=rre_config.index_name,
                          corpora_file=rre_config.corpora_file,
                          id_field=rre_config.id_field,
@@ -77,7 +77,7 @@ class TestRreWriter:
             assert "doc4" in relevant["2"]
 
     def test_write_with_empty_datastore(self, rre_config, tmp_path: Path):
-        output_file = tmp_path / "ratings.json"
+        output_file = tmp_path / RRE_OUTPUT_FILENAME
         writer = RreWriter(index=rre_config.index_name,
                          corpora_file=rre_config.corpora_file,
                          id_field=rre_config.id_field,
@@ -95,7 +95,7 @@ class TestRreWriter:
             assert data["query_groups"] == []
 
     def test_write_ignores_queries_without_ratings(self, rre_config, tmp_path: Path):
-        output_file = tmp_path / "ratings.json"
+        output_file = tmp_path / RRE_OUTPUT_FILENAME
         writer = RreWriter(index=rre_config.index_name,
                          corpora_file=rre_config.corpora_file,
                          id_field=rre_config.id_field,
