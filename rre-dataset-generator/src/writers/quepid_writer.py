@@ -18,7 +18,7 @@ class QuepidWriter(AbstractWriter):
         for rating_obj in datastore.get_ratings():
             query_obj = datastore.get_query(rating_obj.query_id)
             if not query_obj:
-                # Defensive: skip dangling rating if query not found
+                # Indulgent - Skip rating if query not found
                 continue
             result.append((query_obj.text, rating_obj.doc_id, rating_obj.score))
         return result
