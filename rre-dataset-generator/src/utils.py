@@ -21,6 +21,12 @@ def parse_args():
 def clean_text(text: str) -> str:
     text_without_html = re.sub(_TAG_REGEX, '', text).strip()
     return html.unescape(re.sub(r"\s{2,}", " ", text_without_html))
+def _to_string(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, (list, tuple)):
+        return " ".join(str(val) for val in value if val is not None)
+    return str(value)
 
 def is_json_serializable(value: Any) -> bool:
     if isinstance(value, (str, int, float, bool)) or value is None:

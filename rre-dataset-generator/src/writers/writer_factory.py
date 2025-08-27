@@ -1,4 +1,5 @@
 from .abstract_writer import AbstractWriter
+from .mteb_writer import MtebWriter
 from .quepid_writer import QuepidWriter
 from .rre_writer import RreWriter
 import logging
@@ -10,6 +11,7 @@ class WriterFactory:
     OUTPUT_FORMAT_REGISTRY = {
         "quepid": QuepidWriter,
         "rre": RreWriter,
+        "mteb": MtebWriter,
     }
 
     @classmethod

@@ -1,14 +1,7 @@
-query_template: > 
-    {
-        "query": { 
-            "match": { 
-                "message": "#$query##" 
-            } 
-        } 
-    }
-search_engine_type: "elasticsearch"
+query_template: "q=#$query##&fq=genre:horror&wt=json"
+search_engine_type: "solr"
 index_name: "testcore"
-search_engine_collection_endpoint: 'http://localhost:9200/testcore/'
+search_engine_collection_endpoint: "http://localhost:8983/solr/testcore/"
 doc_number: 100
 doc_fields:
   - "title"
@@ -18,6 +11,5 @@ generate_queries_from_documents: true
 num_queries_needed: 10
 relevance_scale: "graded"
 llm_configuration_file: "tests/unit/resources/llm_config.yaml"
-output_format: "quepid"
+output_format: "mteb"
 output_destination: "output"
-

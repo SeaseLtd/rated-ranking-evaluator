@@ -18,6 +18,6 @@ num_queries_needed: 10
 relevance_scale: "graded"
 llm_configuration_file: "tests/unit/resources/llm_config.yaml"
 output_format: "quepid"
-output_destination: "output/generated_dataset.json"
+output_destination: "output"
 save_llm_explanation: true
 llm_explanation_destination: "output/rating_explanation.json"
