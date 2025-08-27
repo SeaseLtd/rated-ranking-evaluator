@@ -11,6 +11,7 @@ from src.writers.abstract_writer import AbstractWriter
 
 log = logging.getLogger(__name__)
 
+RRE_OUTPUT_FILENAME = "ratings.json"
 
 class RreWriter(AbstractWriter):
     """
@@ -77,7 +78,7 @@ class RreWriter(AbstractWriter):
         """
         Writes queries and their ratings to ratings.json file in RRE format.
         """
-        output_path = Path(output_path) / "ratings.json"
+        output_path = Path(output_path) / RRE_OUTPUT_FILENAME
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w', newline='') as json_file:
             log.debug("Started writing RRE formatted records to json file")

@@ -6,6 +6,8 @@ from typing import List, Tuple
 from src.writers.abstract_writer import AbstractWriter
 from src.data_store import DataStore
 
+QUEPID_OUTPUT_FILENAME = "quepid.csv"
+
 class QuepidWriter(AbstractWriter):
     """
     QuepidWriter: Write the data structure to a Quepid format (CSV).
@@ -25,7 +27,7 @@ class QuepidWriter(AbstractWriter):
 
     def write(self, output_path: str | Path, datastore: DataStore) -> None:
         """Writes queries and their scored documents to a CSV file in Quepid format."""
-        output_path = Path(output_path) / "quepid.csv"
+        output_path = Path(output_path) / QUEPID_OUTPUT_FILENAME
         os.makedirs(output_path.parent, exist_ok=True)
 
         with open(output_path, 'w', newline='') as csvfile:
