@@ -33,7 +33,7 @@ def _build_dataset(corpus: Dict[str, Dict], queries: Dict[str, str], candidates:
             text = doc.get("text")
 
             if not title and not text:
-                log.error(f"{doc_id} has no description and no title")
+                log.warning(f"{doc_id} has no description and no title")
                 continue
             composed_context = _compose_text(title, text)
             if relevance_scale == "binary":
@@ -50,6 +50,8 @@ def _build_dataset(corpus: Dict[str, Dict], queries: Dict[str, str], candidates:
 
         if positive_text and negative_text:
             dataset.append({"query": query, "positive": positive_text, "negative": negative_text})
+        else:
+            log.warning("Empty positive_text and negative_text lists")
 
     return dataset
 
