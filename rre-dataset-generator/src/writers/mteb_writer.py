@@ -2,9 +2,9 @@ import json
 import logging
 import os
 from pathlib import Path
+from typing import Optional
 
-from src.config import Config
-from src.search_engine.data_store import DataStore
+from src.data_store import DataStore
 from src.utils import _to_string
 from src.writers.abstract_writer import AbstractWriter
 
@@ -22,16 +22,16 @@ class MtebWriter(AbstractWriter):
     """
 
     @classmethod
-    def build(cls, config: Config, data_store: DataStore):
-        return cls(datastore=data_store)
+    def build(cls, *args, **kwargs):
+        return cls()
 
-    def _write_corpus(self, corpus_path: Path) -> None:
+    def _write_corpus(self, corpus_path: Path, datastore: DataStore) -> None:
         """
         Writes corpus records extracted from search engine to JSONL file:
         {"id": <doc_id>, "title": <title>, "text": <description>}
         """
         with corpus_path.open("w", encoding="utf-8") as file:
-            for doc in self.datastore.get_documents():
+            for doc in datastore.get_documents():
                 doc_id = str(doc.id)
                 fields = doc.fields
                 title = _to_string(fields.get("title"))
@@ -40,48 +40,44 @@ class MtebWriter(AbstractWriter):
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-    def _write_queries(self, queries_path: Path) -> None:
+    def _write_queries(self, queries_path: Path, datastore: DataStore) -> None:
         """
         Writes queries LLM-generated and/or user-defined records to JSONL file:
         {"id": <query_id>, "text": <query_text>}
         """
         with queries_path.open("w", encoding="utf-8") as file:
-            for query_context in self.datastore.get_queries():
-                query_id = query_context.get_query_id()
-                query_text = query_context.get_query_text()
-
-                row = {"id": query_id, "text": query_text}
+            for query in datastore.get_queries():
+                row = {"id": query.id, "text": query.text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-    def _write_candidates(self, candidates_path: Path) -> None:
+    def _write_candidates(self, candidates_path: Path, datastore: DataStore) -> None:
         """
         Writes candidates to JSONL file:
         {"query_id": <query_id>, "doc_id": <doc_id>, "rating": <rating_score>}
         """
         with candidates_path.open("w", encoding="utf-8") as file:
-            for query_context in self.datastore.get_queries():
-                query_id = query_context.get_query_id()
-                for doc_id in query_context.get_doc_ids():
-                    if query_context.has_rating_score(doc_id):
-                        rating_score = query_context.get_rating_score(doc_id)
+            for rating in datastore.get_ratings():
+                row = {"query_id": rating.query_id, "doc_id": rating.doc_id, "rating": rating.score}
+                file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-                        row = {"query_id": query_id, "doc_id": doc_id, "rating": rating_score}
-                        file.write(json.dumps(row, ensure_ascii=False) + "\n")
-
-    def write(self, output_path: str | Path) -> None:
+    def write(self, output_path: str | Path, datastore: DataStore) -> None:
         """
         Write corpus, queries, and candidates JSONL files for MTEB.
+        
+        Args:
+            output_path: Directory where the MTEB files will be written
+            datastore: DataStore containing the data to write
         """
         path = Path(output_path)
         os.makedirs(path, exist_ok=True)
         try:
-            self._write_corpus(path / "corpus.jsonl")
+            self._write_corpus(path / "corpus.jsonl", datastore)
             log.info("Corpus written successfully")
 
-            self._write_queries(path / "queries.jsonl")
+            self._write_queries(path / "queries.jsonl", datastore)
             log.info("Queries written successfully")
 
-            self._write_candidates(path / "candidates.jsonl")
+            self._write_candidates(path / "candidates.jsonl", datastore)
             log.info("Candidates written successfully")
 
         except Exception as e:
