@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from mteb.abstasks.AbsTask import TaskMetadata
@@ -5,6 +6,8 @@ from mteb.abstasks.AbsTaskRetrieval import AbsTaskRetrieval
 
 from src.config import Config
 from src.utilities.helper import read_corpus, read_queries, read_candidates
+
+log = logging.getLogger(__name__)
 
 
 class CustomRetrievalTask(AbsTaskRetrieval):
@@ -39,10 +42,10 @@ class CustomRetrievalTask(AbsTaskRetrieval):
 
     def load_data(self, config: Config, **kwargs: Any) -> None:
         if config is None:
-            raise ValueError("Pass your internal Config via MTEB.run(..., config=Config).")
+            log.error("No config is provided. Pass your internal Config via MTEB.run(..., config=Config).")
+            raise ValueError("No config is provided. Pass your internal Config via MTEB.run(..., config=Config).")
 
         self.corpus = {"test": read_corpus(config.corpus_path)}
         self.queries = {"test": read_queries(config.queries_path)}
         self.relevant_docs = {"test": read_candidates(config.candidates_path)["relevant_docs"]}
         self.data_loaded = True
-
