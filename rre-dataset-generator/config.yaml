@@ -68,7 +68,7 @@ output_format: "quepid"
 
 # Path where the output dataset will be saved
 # For rre, output dataset will be saved into output_destination/"ratings.json"
-# For quepid, output dataset will be saved into output_destination/"quepid.scv"
+# For quepid, output dataset will be saved into output_destination/"quepid.csv"
 # For mteb, the following three files will be saved into: corpus.jsonl, queries.jsonl, and candidates.jsonl
 # corpus.jsonl contains <id,title,text> corpus records extracted from search engine.
 # queries.jsonl contains <id,text> query records LLM-generated and/or user-defined.
