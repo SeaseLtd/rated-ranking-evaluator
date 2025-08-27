@@ -1,19 +1,22 @@
+from __future__ import annotations
+from uuid import uuid4
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
-
+from pydantic import BaseModel, Field, ConfigDict, NonNegativeInt
 
 class Rating(BaseModel):
     """
-    Represents a rating score for a document with an optional explanation.
+    Represents a rating assigned to a document for a given query.
     """
-    score: int = Field(..., description="Relevance score of the document.")
-    explanation: Optional[str] = Field(None, description="LLM-generated explanation for the score.")
 
-    @field_validator("explanation")
-    @classmethod
-    def non_empty_explanation(cls, explanation):
-        if explanation is not None and not explanation.strip():
-            raise ValueError("Explanation must not be empty if provided.")
-        return explanation
+    # [Optional] apply strict model config:
+    # extra='forbid' - catch unexpected fields -> Raise
+    # validate_assignment=True - re-validate on mutation.
+    # frozen=True - immutability after creation.
+    # model_config = ConfigDict(extra='forbid', validate_assignment=True, frozen=True)
 
-
+    model_config = ConfigDict(extra='ignore')
+    
+    doc_id: str = Field(..., description="ID of the rated document.", min_length=1)
+    query_id: str = Field(..., description="ID of the query associated with the rating.", min_length=1)
+    score: NonNegativeInt = Field(..., description="Non-negative rating score.")
+    explanation: Optional[str] = Field(default=None, description="Optional explanation for the rating score provided by LLM.")

@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from src.config import Config
-from src.search_engine.data_store import DataStore
+from src.data_store import DataStore
 from src.writers.abstract_writer import AbstractWriter
 
 log = logging.getLogger(__name__)
@@ -28,26 +28,27 @@ class RreWriter(AbstractWriter):
             query_placeholder=config.rre_query_placeholder
         )
 
-    def __init__(self, datastore: DataStore, index: str, corpora_file: str, id_field: str,
+    def __init__(self, index: str, corpora_file: str, id_field: str,
                  query_template: str, query_placeholder: str):
-        super().__init__(datastore)
+        super().__init__()
         self.index = index
         self.corpora_file = corpora_file
         self.id_field = id_field
         self.query_template = query_template
         self.query_placeholder = query_placeholder
 
-    def _build_json_doc_records(self) -> dict[str, Any]:
-        query_to_doc_ratings = defaultdict(list)
-
-        for query_text, doc_id, rating in self._get_queries_with_ratings():
-            query_to_doc_ratings[query_text].append((doc_id, int(rating)))
+    def _build_json_doc_records(self, datastore: DataStore) -> dict[str, Any]:
+        query_text_to_doc_and_scores = defaultdict(list)
+        ratings = datastore.get_ratings()
+        for rating in ratings:
+            query = datastore.get_query(rating.query_id)
+            query_text_to_doc_and_scores[query.text].append((rating.doc_id, int(rating.score)))
 
         query_groups = []
-        for query_text, relevant_docs in query_to_doc_ratings.items():
+        for query_text, related_docs_and_scores in query_text_to_doc_and_scores.items():
             rating_to_doc_ids = defaultdict(list)
-            for doc_id, gain in relevant_docs:
-                rating_to_doc_ids[str(gain)].append(doc_id)
+            for doc_id, score in related_docs_and_scores:
+                rating_to_doc_ids[str(score)].append(doc_id)
 
             query_group = {
                 "name": query_text,
@@ -72,13 +73,13 @@ class RreWriter(AbstractWriter):
         }
         return rre_formatted
 
-    def write(self, output_path: str | Path) -> None:
+    def write(self, output_path: str | Path, datastore: DataStore) -> None:
         """
         Writes queries and their ratings to ratings.json file in RRE format.
         """
-        output_path = Path(output_path) / "ratings.json"
-        os.makedirs(output_path.parent, exist_ok=True)
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w', newline='') as json_file:
             log.debug("Started writing RRE formatted records to json file")
-            json.dump(self._build_json_doc_records(), json_file, indent=2)
+            json.dump(self._build_json_doc_records(datastore), json_file, indent=2)
             log.debug("Finished writing RRE formatted records to json file")

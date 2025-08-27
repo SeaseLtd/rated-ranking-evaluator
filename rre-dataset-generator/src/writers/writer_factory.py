@@ -1,10 +1,8 @@
 from .abstract_writer import AbstractWriter
 from .mteb_writer import MtebWriter
 from .quepid_writer import QuepidWriter
-import logging
-from src.search_engine.data_store import DataStore
 from .rre_writer import RreWriter
-from ..config import Config
+import logging
 
 log = logging.getLogger(__name__)
 
@@ -17,10 +15,9 @@ class WriterFactory:
     }
 
     @classmethod
-    def build(cls, config: Config, data_store: DataStore) -> AbstractWriter:
-        output_format = config.output_format
+    def build(cls, output_format: str) -> AbstractWriter:
         if output_format not in cls.OUTPUT_FORMAT_REGISTRY:
-            log.error("Unsupported output format requested: %s", output_format)
+            log.error(f"Unsupported output format requested: {output_format}")
             raise ValueError(f"Unsupported output format: {output_format}")
-        log.info("Selected output format: %s", output_format)
-        return cls.OUTPUT_FORMAT_REGISTRY[output_format].build(config, data_store)
+        log.info(f"Selected output format: {output_format}")
+        return cls.OUTPUT_FORMAT_REGISTRY[output_format]()
