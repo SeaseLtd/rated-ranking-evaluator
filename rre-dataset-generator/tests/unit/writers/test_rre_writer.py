@@ -18,7 +18,7 @@ def rre_config():
 @pytest.fixture
 def populated_datastore() -> DataStore:
     """Returns a DataStore instance populated with test data."""
-    ds = DataStore()
+    ds = DataStore(ignore_saved_data=True)
 
     # Add docs
     ds.add_document(Document(id="doc1", fields={"title": "title 1"}))
@@ -42,14 +42,14 @@ def populated_datastore() -> DataStore:
 
 class TestRreWriter:
     def test_rre_file_successfully_written(self, rre_config, populated_datastore, tmp_path: Path):
-        output_file = tmp_path/"ratings.json"
+        output_file = tmp_path / "ratings.json"
         writer = RreWriter(index=rre_config.index_name,
                          corpora_file=rre_config.corpora_file,
                          id_field=rre_config.id_field,
                          query_template=rre_config.rre_query_template,
                          query_placeholder=rre_config.rre_query_placeholder)
 
-        writer.write(str(output_file), populated_datastore)
+        writer.write(tmp_path, populated_datastore)
 
         assert output_file.exists()
 
@@ -77,7 +77,7 @@ class TestRreWriter:
             assert "doc4" in relevant["2"]
 
     def test_write_with_empty_datastore(self, rre_config, tmp_path: Path):
-        output_file = tmp_path/"ratings.json"
+        output_file = tmp_path / "ratings.json"
         writer = RreWriter(index=rre_config.index_name,
                          corpora_file=rre_config.corpora_file,
                          id_field=rre_config.id_field,
@@ -85,7 +85,7 @@ class TestRreWriter:
                          query_placeholder=rre_config.rre_query_placeholder)
 
         ds = DataStore(ignore_saved_data=True)
-        writer.write(str(output_file), ds)
+        writer.write(tmp_path, ds)
 
         assert output_file.exists()
         with open(output_file, 'r') as f:
@@ -95,7 +95,7 @@ class TestRreWriter:
             assert data["query_groups"] == []
 
     def test_write_ignores_queries_without_ratings(self, rre_config, tmp_path: Path):
-        output_file = tmp_path/"ratings.json"
+        output_file = tmp_path / "ratings.json"
         writer = RreWriter(index=rre_config.index_name,
                          corpora_file=rre_config.corpora_file,
                          id_field=rre_config.id_field,
@@ -109,7 +109,7 @@ class TestRreWriter:
         ds.add_query("unrated query")  # q_without_rating
         ds.create_rating_score(q_with_rating.id, doc.id, 1)
 
-        writer.write(str(output_file), ds)
+        writer.write(tmp_path, ds)
 
         with open(output_file, 'r') as f:
             data = json.load(f)

@@ -77,7 +77,7 @@ class RreWriter(AbstractWriter):
         """
         Writes queries and their ratings to ratings.json file in RRE format.
         """
-        output_path = Path(output_path)
+        output_path = Path(output_path) / "ratings.json"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w', newline='') as json_file:
             log.debug("Started writing RRE formatted records to json file")

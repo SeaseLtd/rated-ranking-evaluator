@@ -25,7 +25,7 @@ class QuepidWriter(AbstractWriter):
 
     def write(self, output_path: str | Path, datastore: DataStore) -> None:
         """Writes queries and their scored documents to a CSV file in Quepid format."""
-        output_path = Path(output_path)
+        output_path = Path(output_path) / "quepid.csv"
         os.makedirs(output_path.parent, exist_ok=True)
 
         with open(output_path, 'w', newline='') as csvfile:
