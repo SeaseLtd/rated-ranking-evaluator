@@ -5,7 +5,6 @@ description = "Dataset Generator project"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "argparse>=1.4.0",
     "pydantic>=2.0",
     "pytest>=8.4.1",
     "pyyaml>=6.0.2",
@@ -15,3 +14,21 @@ dependencies = [
     "langchain-google-genai>=2.1.7",
     "python-dotenv>=1.1.1",
 ]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.17.1",
+    "mypy-extensions>=1.1.0",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "ruff>=0.12.10",
+    "typing-extensions>=4.14.1",
+    "types-PyYAML>=6.0.2",
+    "types-requests>=2.32.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --tb=short"
