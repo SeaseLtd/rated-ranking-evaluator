@@ -13,4 +13,4 @@ class AbstractWriter(ABC):
     @abstractmethod
     def write(self, output_path: str | Path, datastore: DataStore) -> None:
         """Writes the data from the datastore to a file."""
-        pass
+        raise NotImplementedError

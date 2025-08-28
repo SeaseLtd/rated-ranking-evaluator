@@ -19,8 +19,8 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
     """
     Elasticsearch implementation to search into a given collection
     """
-    def __init__(self, endpoint: Union[HttpUrl, str]):
-        super().__init__(HttpUrl(str(endpoint)))
+    def __init__(self, endpoint: HttpUrl):
+        super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
         log.debug(f"Working on endpoint: {self.endpoint}")
         self.UNIQUE_KEY = "_id"
