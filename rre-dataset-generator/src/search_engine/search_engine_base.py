@@ -1,14 +1,15 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Union
 from pydantic import HttpUrl
 from src.model.document import Document
 
-class BaseSearchEngine:
+class BaseSearchEngine(ABC):
     def __init__(self, endpoint: HttpUrl):
         self.endpoint = HttpUrl(endpoint)
         self.PLACEHOLDER = "#$query##"
         self.UNIQUE_KEY = 'id'
 
+    @abstractmethod
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
@@ -17,6 +18,7 @@ class BaseSearchEngine:
         """Extract documents for generating queries."""
         raise NotImplementedError
 
+    @abstractmethod
     def fetch_for_evaluation(self,
                              query_template: str,
                              doc_fields: List[str],
@@ -25,6 +27,7 @@ class BaseSearchEngine:
         """Search for documents based on a keyword and a query template to evaluate the system."""
         raise NotImplementedError
 
+    @abstractmethod
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
         raise NotImplementedError
