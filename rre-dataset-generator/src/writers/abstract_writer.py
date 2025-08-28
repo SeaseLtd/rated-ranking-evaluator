@@ -7,7 +7,7 @@ class AbstractWriter(ABC):
     Abstract base class for writers.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abstractmethod

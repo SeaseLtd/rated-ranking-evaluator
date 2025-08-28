@@ -19,18 +19,17 @@ class RreWriter(AbstractWriter):
     """
 
     @classmethod
-    def build(cls, config: Config, data_store: DataStore):
+    def build(cls, config: Config) -> "RreWriter":
         return cls(
-            datastore=data_store,
             index=config.index_name,
-            corpora_file=config.corpora_file,
+            corpora_file=str(config.corpora_file),
             id_field=config.id_field,
-            query_template=config.rre_query_template,
+            query_template=str(config.rre_query_template),
             query_placeholder=config.rre_query_placeholder
         )
 
-    def __init__(self, index: str, corpora_file: str, id_field: str,
-                 query_template: str, query_placeholder: str):
+    def __init__(self, index: str, corpora_file: str, id_field: str | None,
+                 query_template: str, query_placeholder: str | None):
         super().__init__()
         self.index = index
         self.corpora_file = corpora_file
@@ -43,7 +42,8 @@ class RreWriter(AbstractWriter):
         ratings = datastore.get_ratings()
         for rating in ratings:
             query = datastore.get_query(rating.query_id)
-            query_text_to_doc_and_scores[query.text].append((rating.doc_id, int(rating.score)))
+            if query:
+                query_text_to_doc_and_scores[query.text].append((rating.doc_id, int(rating.score)))
 
         query_groups = []
         for query_text, related_docs_and_scores in query_text_to_doc_and_scores.items():
@@ -57,7 +57,7 @@ class RreWriter(AbstractWriter):
                     {
                         "template": str(self.query_template),
                         "placeholders": {
-                            self.query_placeholder: query_text
+                            str(self.query_placeholder): query_text
                         }
                     }
                 ],

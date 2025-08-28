@@ -6,7 +6,7 @@ from typing import Any
 
 _TAG_REGEX = re.compile('<.*?>')
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
 
     parser.add_argument('-c', '--config_file', type=str,
