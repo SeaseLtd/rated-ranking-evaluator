@@ -30,6 +30,7 @@ def build_openai(config: LLMConfig) -> BaseChatModel:
     log.debug("Building OpenAI ChatModel using model=%s", config.model)
     return ChatOpenAI(
         model=config.model,
+        max_tokens=config.max_tokens,
         api_key=SecretStr(key),
     )
 

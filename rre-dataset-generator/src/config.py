@@ -28,7 +28,7 @@ class Config(BaseModel):
     output_format: Literal['quepid', 'rre', 'mteb']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
     save_llm_explanation: bool = False
-    llm_explanation_destination: Optional[FilePath] = Field(None, description="Path to save the LLM rating explanation")
+    llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
     corpora_file: Optional[FilePath] = Field(None, description="JSON formatted dataset file.")
     id_field: Optional[str] = Field(None, description="ID field for the unique key.")
     rre_query_template: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
