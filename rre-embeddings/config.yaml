@@ -19,5 +19,9 @@ candidates_path: "resources/data/candidates.jsonl"
 #   - graded: 0 (not relevant), 1 (maybe ok), 2 (that’s my result)
 relevance_scale: "binary"
 
-# (Optional) File path to write mteb output, if not given it will be written to output dir in the root folder
+# (Optional) Path to write mteb output, if not given it will be written to output dir in the root folder
 output_dest: "output"
+
+# (Optional) Path to write mteb document and query embeddings, if not given it will be written to output/embeddings dir
+embeddings_dest: "output/embeddings"
+

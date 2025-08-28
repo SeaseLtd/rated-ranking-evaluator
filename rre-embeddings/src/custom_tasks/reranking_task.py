@@ -11,14 +11,18 @@ from src.utilities.helper import read_corpus, read_queries, read_candidates
 log = logging.getLogger(__name__)
 
 
-def _compose_text(title: Optional[str], description: Optional[str]) -> str:
+def compose_text(title: Optional[str], description: Optional[str]) -> str:
     if title and description:
         return f"{title}\n\n{description}"
     return title or description or ""
 
 
-def _build_dataset(corpus: Dict[str, Dict], queries: Dict[str, str], candidates: Dict[str, Dict[str, int]],
-                   relevance_scale: str) -> list[dict]:
+def _build_dataset(
+    corpus: Dict[str, Dict],
+    queries: Dict[str, str],
+    candidates: Dict[str, Dict[str, int]],
+    relevance_scale: str,
+) -> list[dict]:
     dataset = []
     for query_id, query in queries.items():
         candidate_map = candidates.get(query_id)
@@ -35,7 +39,7 @@ def _build_dataset(corpus: Dict[str, Dict], queries: Dict[str, str], candidates:
             if not title and not text:
                 log.warning(f"{doc_id} has no description and no title")
                 continue
-            composed_context = _compose_text(title, text)
+            composed_context = compose_text(title, text)
             if relevance_scale == "binary":
                 if rating > 0:
                     positive_text.append(composed_context)
@@ -49,7 +53,9 @@ def _build_dataset(corpus: Dict[str, Dict], queries: Dict[str, str], candidates:
                     negative_text.append(composed_context)
 
         if positive_text and negative_text:
-            dataset.append({"query": query, "positive": positive_text, "negative": negative_text})
+            dataset.append(
+                {"query": query, "positive": positive_text, "negative": negative_text}
+            )
         else:
             log.warning("Empty positive_text and negative_text lists")
 
@@ -70,13 +76,15 @@ class CustomRerankingTask(AbsTaskReranking):
             "name": "data",
             "path": "rre-embeddings/resources/data",
             "revision": "v1",
-            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data"
+            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data",
         },
     )
 
     def load_data(self, config: Config, **kwargs: Any) -> None:
         if config is None:
-            raise ValueError("Pass your internal Config via MTEB.run(..., config=Config).")
+            raise ValueError(
+                "Pass your internal Config via MTEB.run(..., config=Config)."
+            )
 
         corpus = read_corpus(config.corpus_path)
         queries = read_queries(config.queries_path)

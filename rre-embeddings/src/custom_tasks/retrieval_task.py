@@ -30,7 +30,7 @@ class CustomRetrievalTask(AbsTaskRetrieval):
             "name": "data",
             "path": "rre-embeddings/resources/data",
             "revision": "v1",
-            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data"
+            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data",
         },
     )
 
@@ -40,12 +40,15 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         self.queries: dict[str, dict[str, str]] = {}
         self.relevant_docs: dict[str, dict[str, dict[str, int]]] = {}
 
-    def load_data(self, config: Config, **kwargs: Any) -> None:
+    def load_data(self, config: Config | None, **kwargs: Any) -> None:
         if config is None:
-            log.error("No config is provided. Pass your internal Config via MTEB.run(..., config=Config).")
-            raise ValueError("No config is provided. Pass your internal Config via MTEB.run(..., config=Config).")
+            message = "No config is provided. Pass your internal Config via MTEB.run(..., config=Config)."
+            log.error(message)
+            raise ValueError(message)
 
         self.corpus = {"test": read_corpus(config.corpus_path)}
         self.queries = {"test": read_queries(config.queries_path)}
-        self.relevant_docs = {"test": read_candidates(config.candidates_path)["relevant_docs"]}
+        self.relevant_docs = {
+            "test": read_candidates(config.candidates_path)["relevant_docs"]
+        }
         self.data_loaded = True
