@@ -29,7 +29,7 @@ class OpenSearchEngine(BaseSearchEngine):
                                    doc_number: int,
                                    doc_fields: List[str]) -> List[Document]:
         """Fetches a list of documents for query generation based on optional filters."""
-        filters = []
+        filters: List[Dict[str, Any]] = []
         if documents_filter:
             for field_values in documents_filter:
                 for field, values in field_values.items():

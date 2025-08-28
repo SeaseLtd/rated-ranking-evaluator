@@ -11,11 +11,12 @@ import os
 
 from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
+from pydantic import SecretStr
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from .llm_config import LLMConfig
 from langchain_core.language_models import BaseChatModel
 
+from src.llm.llm_config import LLMConfig
 
 log = logging.getLogger(__name__)
 
@@ -29,8 +30,7 @@ def build_openai(config: LLMConfig) -> BaseChatModel:
     log.debug("Building OpenAI ChatModel using model=%s", config.model)
     return ChatOpenAI(
         model=config.model,
-        max_tokens=config.max_tokens,
-        api_key=key,
+        api_key=SecretStr(key),
     )
 
 

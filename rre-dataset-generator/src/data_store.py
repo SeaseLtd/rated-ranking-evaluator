@@ -8,7 +8,7 @@ import logging
 import os
 from uuid import uuid4
 from pydantic import ValidationError
-from .model import Document, Query, Rating
+from src.model import Document, Query, Rating
 
 log = logging.getLogger(__name__)
 

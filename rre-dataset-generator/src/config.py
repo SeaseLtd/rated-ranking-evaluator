@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class Config(BaseModel):
-    query_template: Optional[str] = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
+    query_template: str = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
     search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
     index_name: str = Field(..., description="Name of the index/collection of the search engine")
     search_engine_collection_endpoint: HttpUrl
@@ -27,31 +27,31 @@ class Config(BaseModel):
     llm_configuration_file: FilePath = Field(..., description="Path to the LLM configuration file.")
     output_format: Literal['quepid', 'rre', 'mteb']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
-    save_llm_explanation: Optional[bool] = False
-    llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
-    corpora_file: FilePath = Field(None, description="JSON formatted dataset file.")
-    id_field: str = Field(None, description="ID field for the unique key.")
-    rre_query_template: FilePath = Field(None, description="Query template for rre evaluator.")
-    rre_query_placeholder: str = Field(None, description="Key-value pair to substitute in the rre query template.")
+    save_llm_explanation: bool = False
+    llm_explanation_destination: Optional[FilePath] = Field(None, description="Path to save the LLM rating explanation")
+    corpora_file: Optional[FilePath] = Field(None, description="JSON formatted dataset file.")
+    id_field: Optional[str] = Field(None, description="ID field for the unique key.")
+    rre_query_template: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
+    rre_query_placeholder: Optional[str] = Field(None, description="Key-value pair to substitute in the rre query template.")
     verbose: bool = False
 
 
     @field_validator('doc_fields')
-    def check_no_empty_fields(cls, v):
+    def check_no_empty_fields(cls, v: List[str]) -> List[str]:
         if any(not f.strip() for f in v):
             log.error("docFields cannot contain empty strings.")
             raise ValueError("docFields cannot contain empty strings.")
         return v
 
     @field_validator('queries')
-    def check_doc_type(cls, v):
+    def check_doc_type(cls, v: Optional[FilePath]) -> Optional[FilePath]:
         if v is not None and v.suffix[1:] != "txt" :
             log.error("queries' file must have .txt extension")
             raise ValueError("queries' file must have .txt extension")
         return v
 
     @field_validator('llm_configuration_file')
-    def check_config_type(cls, v):
+    def check_config_type(cls, v: Optional[FilePath]) -> Optional[FilePath]:
         if v is not None and v.suffix[1:] not in {"yaml", "yml"}:
             log.error("LLM_config file must have .yaml extension")
             raise ValueError("LLM_config file must have .yaml extension")
@@ -78,7 +78,7 @@ class Config(BaseModel):
             raise ValueError(error_msg)
 
     @model_validator(mode="after")
-    def check_rre_fields_required(self):
+    def check_rre_fields_required(self) -> "Config":
         if self.output_format == "rre" and not self.corpora_file:
             raise ValueError("corpora_file is required when output_format='rre'")
         elif self.output_format == "rre" and not self.id_field:
@@ -90,7 +90,7 @@ class Config(BaseModel):
         return self
 
     @classmethod
-    def load(cls, config_path: str) -> Config:
+    def load(cls, config_path: str) -> "Config":
         """
         Load and validate configuration from a YAML file.
 
