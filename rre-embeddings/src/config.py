@@ -15,8 +15,9 @@ class Config(BaseModel):
     corpus_path: FilePath = Field(..., description="Corpus jsonl file path")
     queries_path: FilePath = Field(..., description="Queries jsonl file path")
     candidates_path: FilePath = Field(..., description="Candidates jsonl file path")
-    output_dest: Optional[FilePath] = Field(
-        None, description="Path to save mteb output, by default saved in output dir."
+    output_dest: Optional[Path] = Field(
+        None,
+        description="Path to save mteb output, by default saved into <output> dir.",
     )
 
     @field_validator("corpus_path", "queries_path", "candidates_path", mode="before")
