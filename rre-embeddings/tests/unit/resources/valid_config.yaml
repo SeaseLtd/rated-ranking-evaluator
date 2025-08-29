@@ -4,4 +4,6 @@ corpus_path: "tests/unit/resources/data/corpus.jsonl"
 queries_path: "tests/unit/resources/data/queries.jsonl"
 candidates_path: "tests/unit/resources/data/candidates.jsonl"
 relevance_scale: "binary"
+output_dest: "output"
+embeddings_dest: "output/dummy_embeddings"
 

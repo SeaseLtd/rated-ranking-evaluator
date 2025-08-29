@@ -53,18 +53,20 @@ def test_embeddings_writer_expect_jsonl_files_success(
     cached = _create_fake_cache_wrapper(
         doc_vectors=doc_vectors, query_vectors=query_vectors
     )
+    config.embeddings_dest = tmp_path / "output" / "embeddings"
+
     writer = EmbeddingWriter(
         config=config,
         cached=cached,
         cache_path=tmp_path / "cache",
-        task_name="mytask",
+        task_name="test_custom_task",
         normalize_embeddings=True,
         batch_size=32,
     )
 
     writer.write(config.embeddings_dest)
 
-    embedding_dir = Path("output/embeddings")
+    embedding_dir = config.embeddings_dest
     docs_file = embedding_dir / "documents_embeddings.jsonl"
     queries_file = embedding_dir / "queries_embeddings.jsonl"
     assert docs_file.exists()
