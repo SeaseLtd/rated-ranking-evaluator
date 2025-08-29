@@ -33,6 +33,7 @@ class Config(BaseModel):
     id_field: str = Field(None, description="ID field for the unique key.")
     rre_query_template: FilePath = Field(None, description="Query template for rre evaluator.")
     rre_query_placeholder: str = Field(None, description="Key-value pair to substitute in the rre query template.")
+    verbose: bool = False
 
 
     @field_validator('doc_fields')
@@ -44,18 +45,16 @@ class Config(BaseModel):
 
     @field_validator('queries')
     def check_doc_type(cls, v):
-        if v is not None:
-            if v.suffix[1:] != "txt":
-                log.error("queries' file must have .txt extension")
-                raise ValueError("queries' file must have .txt extension")
+        if v is not None and v.suffix[1:] != "txt" :
+            log.error("queries' file must have .txt extension")
+            raise ValueError("queries' file must have .txt extension")
         return v
 
     @field_validator('llm_configuration_file')
     def check_config_type(cls, v):
-        if v is not None:
-            if v.suffix[1:] not in {"yaml", "yml"}:
-                log.error("LLM_config file must have .yaml extension")
-                raise ValueError("LLM_config file must have .yaml extension")
+        if v is not None and v.suffix[1:] not in {"yaml", "yml"}:
+            log.error("LLM_config file must have .yaml extension")
+            raise ValueError("LLM_config file must have .yaml extension")
         return v
 
     @model_validator(mode="after")
@@ -82,11 +81,11 @@ class Config(BaseModel):
     def check_rre_fields_required(self):
         if self.output_format == "rre" and not self.corpora_file:
             raise ValueError("corpora_file is required when output_format='rre'")
-        if self.output_format == "rre" and not self.id_field:
+        elif self.output_format == "rre" and not self.id_field:
             raise ValueError("id_field is required when output_format='rre'")
-        if self.output_format == "rre" and not self.rre_query_template:
+        elif self.output_format == "rre" and not self.rre_query_template:
             raise ValueError("rre_query_template is required when output_format='rre'")
-        if self.output_format == "rre" and not self.rre_query_placeholder:
+        elif self.output_format == "rre" and not self.rre_query_placeholder:
             raise ValueError("rre_query_placeholder is required when output_format='rre'")
         return self
 

@@ -18,7 +18,8 @@ class Config(BaseModel):
     candidates_path: FilePath = Field(..., description="Candidates jsonl file path")
     relevance_scale: Literal['binary', 'graded']
     output_dest: Optional[Path] = Field(
-        None, description="Path to save mteb output, by default saved in output dir."
+        None,
+        description="Path to save mteb output, by default saved into <output> dir.",
     )
 
     @field_validator("corpus_path", "queries_path", "candidates_path", mode="before")

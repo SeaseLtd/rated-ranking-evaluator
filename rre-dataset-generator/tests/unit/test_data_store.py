@@ -1,142 +1,155 @@
-import json
-from pathlib import Path
-from typing import Any
-
 import pytest
+from pathlib import Path
+import os
+import json
+import logging
 
-from src.model.document import Document
-from src.search_engine.data_store import DataStore, TMP_FILE
+from src.data_store import DataStore
+from src.model import Document, Query
 
+
+# --- fixtures ---
+@pytest.fixture
+def tmp_db_path(tmp_path: Path) -> Path:
+    return tmp_path / "datastore.json"
 
 @pytest.fixture
-def empty_store() -> DataStore:
-    """Fixture for an empty DataStore that ignores any saved data."""
-    return DataStore(ignore_saved_data=True)
+def ds(tmp_db_path: Path) -> DataStore:
+    return DataStore(path=tmp_db_path, ignore_saved_data=True)
+
+@pytest.fixture
+def docA() -> Document:
+    return Document(id="doc-A", fields={"title": "A", "body": "..."})
+
+@pytest.fixture
+def docB() -> Document:
+    return Document(id="doc-B", fields={"title": "B"})
+
+@pytest.fixture
+def queryQ() -> Query:
+    return Query(text="hello world")
 
 
-def mock_datastore_with_sample_data() -> DataStore:
-    """Helper to create a DataStore instance with sample data."""
-    ds = DataStore(ignore_saved_data=True)
-    d1 = Document(id="d1", fields={"title": "AI", "text": "Deep learning"})
-    d2 = Document(id="d2", fields={"title": "LLMs", "text": "Transformers"})
-    ds.add_document(d1.id, d1)
-    ds.add_document(d2.id, d2)
-    qid1 = ds.add_query("artificial intelligence", d1.id)
-    ds.add_rating_score(qid1, "d1", 1)
-    ds.add_rating_score(qid1, "d2", 0)
-    qid2 = ds.add_query("transformer models", d2.id)
-    ds.add_rating_score(qid2, "d2", 1)
-    return ds
+# --- helpers (tests only) ---
+def _ratings_for_query(ds: DataStore, query_id: str):
+    """Compat helper now that DataStore has no get_ratings_for_query()."""
+    return [r for r in ds.get_ratings() if r.query_id == query_id]
 
 
-# -------------------- Unit tests (in-memory) --------------------
+# --- tests ---
+def test_add_and_get_doc__expects__datastore_returns_the_same_document(ds, docA):
+    ds.add_document(docA)
+    assert ds.has_document(docA.id)
+    assert ds.get_document(docA.id) is docA
+    assert len(ds.get_documents()) == 1
+    assert ds.get_document("missing-doc") is None
 
-def test_add_and_get_document__expects__documents_stored_in_data_store(empty_store: DataStore):
-    docs = [
-        Document(id="doc1", fields={"title": "Gadgets", "description": "Cutting edge technologies are on demand."}),
-        Document(id="doc2",
-                 fields={"title": "Airpods", "description": "The quality of airpods from Apple is getting worse."}),
-        Document(id="doc3",
-                 fields={"title": "MacBook Pro", "description": "The price of Apple laptops has been skyrocketed."}),
-    ]
-    for d in docs:
-        empty_store.add_document(d.id, d)
+def test_add_document_duplicate__expects__logs_debug_and_keeps_original(ds, docA, caplog):
+    caplog.set_level(logging.DEBUG)  # Ensure logs are captured (warnings/debug)
+    ds.add_document(docA)
+    assert len(ds.get_documents()) == 1
+    ds.add_document(docA)
+    assert "exists" in caplog.text
+    assert len(ds.get_documents()) == 1  # does not overwrite
 
-    assert empty_store.get_document("doc1") == docs[0]
-    assert empty_store.get_document("doc2") == docs[1]
-    assert empty_store.get_document("doc3") == docs[2]
+def test_add_and_get_query__expects__datastore_returns_the_same_query(ds, queryQ):
+    query = ds.add_query(queryQ.text)
+    assert isinstance(query, Query)
+    assert ds.has_query(query.id)
+    assert ds.get_query(query.id).text == queryQ.text
+    assert len(ds.get_queries()) == 1
+    assert ds.get_query("missing-query") is None
 
+def test_create_rating_score__expects__creates_rating_and_indexes(ds, docA, queryQ):
+    query = ds.add_query(queryQ.text)
+    ds.add_document(docA)
+    rating = ds.create_rating_score(query.id, docA.id, 2)
 
-def test_add_and_get_query__expects__query_stored_and_reused(empty_store: DataStore):
-    # Add new queries
-    qid1 = empty_store.add_query("technology", "doc1")
-    assert empty_store.get_query(qid1).get_query_text() == "technology"
+    assert rating is not None
+    # Check if the rating object is in the main dictionary
+    assert ds.rating_by_pair.get((query.id, docA.id)) is rating
 
-    qid2 = empty_store.add_query("airpods", "doc2")
-    assert empty_store.get_query(qid2).get_query_text() == "airpods"
+    # Check ratings "by query" via helper (since no get_ratings_for_query)
+    ratings_for_query = _ratings_for_query(ds, query.id)
+    assert rating in ratings_for_query
+    # Missing query returns empty
+    assert _ratings_for_query(ds, "missing-query") == []
 
-    # Same query with a new doc_id -> should reuse the same query_id
-    qid3 = empty_store.add_query("technology", "doc3")
-    assert qid1 == qid3
-    assert set(empty_store.get_query(qid3).get_doc_ids()) == {"doc1", "doc3"}
+def test_create_rating_score__expects__second_call_does_not_update_existing(ds, docA, queryQ, caplog):
+    query = ds.add_query(queryQ.text)
+    ds.add_document(docA)
+    rating1 = ds.create_rating_score(query.id, docA.id, 1)
+    caplog.set_level(logging.DEBUG)
+    rating2 = ds.create_rating_score(query.id, docA.id, 4)  # insert-only: does not update
+    assert rating1 is rating2  # Should return the exact same object
+    assert (query.id, docA.id) in ds.rating_by_pair
+    assert ds.rating_by_pair[(query.id, docA.id)] == rating1
+    assert "existing" in caplog.text
 
+def test_create_rating_score__expects__negative_value_is_none_and_logs_error(ds, docA, queryQ, caplog):
+    ds.add_document(docA); ds.add_query(queryQ.text)
+    caplog.set_level(logging.DEBUG)
+    ret = ds.create_rating_score(queryQ.id, docA.id, -1)
+    assert ret is None
+    assert "validation_failed" in caplog.text
 
-def test_datastore_add_query__expects__rating_can_be_added_and_checked(empty_store: DataStore):
-    qid = empty_store.add_query("test", doc_id="d1")
-    # sentinel: without rating yet
-    assert empty_store.has_rating_score(qid, "d1") is False
-    empty_store.add_rating_score(qid, "d1", 1)
-    assert empty_store.get_rating_score(qid, "d1") == 1
-    assert empty_store.has_rating_score(qid, "d1") is True
+def test_create_rating_score__expects__logs_warning_for_missing_ids(ds, caplog):
+    caplog.set_level(logging.WARNING)
+    rating = ds.create_rating_score("q-missing", "d-existing", 1)
+    assert rating is not None
+    assert rating.query_id == "q-missing"
+    assert rating.doc_id == "d-existing"
+    assert "query_not_found" in caplog.text
 
+def test_persistence__expects__save_and_load_roundtrip(tmp_db_path, docA, queryQ):
+    ds1 = DataStore(path=tmp_db_path, ignore_saved_data=True)
+    ds1.add_document(docA)
+    query = ds1.add_query(queryQ.text)
+    ds1.create_rating_score(query.id, docA.id, 5)
+    ds1.save()
+    assert os.path.exists(tmp_db_path)
 
-def test_save_and_load_tmp_file__expects__state_is_persisted_and_restored(tmp_path):
-    """Tests that data store content is correctly saved and loaded from the default file."""
-    # 1. Create a datastore, add data, and save it
-    ds1 = mock_datastore_with_sample_data()
-    ds1.save_tmp_file_content()
+    ds2 = DataStore(path=tmp_db_path)  # load() is called in __init__
+    assert len(ds2.get_documents()) == 1
+    assert len(ds2.get_queries()) == 1
+    assert len(ds2.get_ratings()) == 1
+    assert ds2.get_document(docA.id).fields == docA.fields
+    assert ds2.get_queries()[0].text == queryQ.text
+    assert ds2.get_ratings()[0].score == 5
 
-    # 2. Create a new datastore, which should auto-load the file
-    ds2 = DataStore(ignore_saved_data=False)
+def test_load_when_file_missing__expects__returns_empty_store(tmp_path):
+    path = tmp_path / "no-such.json"
+    ds = DataStore(path=path)  # should not raise
+    assert ds.get_documents() == []
+    assert ds.get_queries() == []
+    assert ds.get_ratings() == []
 
-    # 3. Verify that the loaded data is correct
-    assert len(ds1.get_queries()) == len(ds2.get_queries())
-    assert len(ds1.get_documents()) == len(ds2.get_documents())
+def test_add_query__expects__returns_id_for_new_and_duplicate_queries(ds):
+    query1 = Query(text="unique text")
+    returned_query1 = ds.add_query(query1.text)
+    assert isinstance(returned_query1, Query)
+    assert returned_query1.text == query1.text
+    assert len(ds.get_queries()) == 1
 
-    # Check a specific query and its ratings
-    qid = ds1._query_text_to_query_id["artificial intelligence"]
-    loaded_q = ds2.get_query(qid)
-    assert loaded_q.get_query_text() == "artificial intelligence"
-    assert loaded_q.get_rating_score("d1") == 1
-    assert loaded_q.get_rating_score("d2") == 0
+    query2_duplicate = Query(text="unique text")  # Same text, different object/id
+    returned_query2 = ds.add_query(query2_duplicate.text)
+    assert isinstance(returned_query2, Query)
+    assert returned_query2.id == returned_query1.id  # Should return the same query as before
 
-    # Check that documents were loaded correctly
-    doc = ds2.get_document("d1")
-    assert doc is not None
-    assert doc.fields["title"] == "AI"
+def test_load_with_broken_references__expects__skips_dangling_ratings_and_warns(tmp_db_path, docA, queryQ, caplog):
+    # Simulate a corrupt file with a rating pointing to a non-existent doc
+    corrupt_data = {
+        "docs": [],  # docA is missing
+        "queries": [queryQ.model_dump()],
+        "ratings": [
+            {"id": "r1", "query_id": queryQ.id, "doc_id": docA.id, "score": 5}
+        ]
+    }
+    tmp_db_path.write_text(json.dumps(corrupt_data))
 
+    caplog.set_level(logging.WARNING)
+    ds = DataStore(path=tmp_db_path)
 
-def test_export_all_records_with_explanation_expect_stored_records_in_file(empty_store: DataStore, tmp_path: Path):
-    query_id1 = empty_store.add_query("test", doc_id="doc1")
-    empty_store.add_query("test", doc_id="doc2")
-
-    empty_store.add_rating_score(query_id1, "doc1", 1, "doc1 explanation")
-    empty_store.add_rating_score(query_id1, "doc2", 2, "doc2 explanation")
-
-    query_id2 = empty_store.add_query("test 2", doc_id="doc3")
-    empty_store.add_rating_score(query_id2, "doc3", 0)  # No explanation, won't be added to the file
-
-    output_path = tmp_path / "rating_explanation.json"
-    empty_store.export_all_records_with_explanation(output_path)
-
-    with output_path.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    expected_records = [
-        {
-            "query": "test",
-            "doc_id": "doc1",
-            "rating": 1,
-            "explanation": "doc1 explanation"
-        },
-        {
-            "query": "test",
-            "doc_id": "doc2",
-            "rating": 2,
-            "explanation": "doc2 explanation"
-        }
-    ]
-
-    assert data == expected_records
-
-
-# Ensure the temporary file is cleaned up after tests
-@pytest.fixture(autouse=True)
-def cleanup_tmp_file():
-    """Clean up the default tmp file before and after each test."""
-    tmp_file = Path(TMP_FILE)
-    if tmp_file.exists():
-        tmp_file.unlink()
-    yield
-    if tmp_file.exists():
-        tmp_file.unlink()
+    # The rating is skipped because the document is missing, and a warning is logged.
+    assert len(ds.get_ratings()) == 0
+    assert 'doc_not_found' in caplog.text
