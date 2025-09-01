@@ -37,7 +37,7 @@ def mock_dict(mock_doc):
         'fields': mock_doc["_source"]
     }
 
-def test_elasticsearch_search_engine_fetch_for_query_generation__expect__result_returned(monkeypatch, elasticsearch_config, mock_doc, mock_dict):
+def test_elasticsearch_search_engine_fetch_for_query_generation__expects__result_returned(monkeypatch, elasticsearch_config, mock_doc, mock_dict):
     url = "https://fakeurl"
     search_engine = ElasticsearchSearchEngine(url)
 
@@ -51,7 +51,7 @@ def test_elasticsearch_search_engine_fetch_for_query_generation__expect__result_
                                                       doc_fields=elasticsearch_config.doc_fields)
     assert result[0] == Document(**mock_dict)
 
-def test_elasticsearch_search_engine_fetch_for_evaluation__expect__result_returned(monkeypatch, elasticsearch_config, mock_doc, mock_dict):
+def test_elasticsearch_search_engine_fetch_for_evaluation__expects__result_returned(monkeypatch, elasticsearch_config, mock_doc, mock_dict):
     url = "https://fakeurl"
     search_engine = ElasticsearchSearchEngine(url)
 
@@ -65,7 +65,7 @@ def test_elasticsearch_search_engine_fetch_for_evaluation__expect__result_return
                                                 doc_fields=elasticsearch_config.doc_fields)
     assert result[0] == Document(**mock_dict)
 
-def test_elasticsearch_search_engine_negative_post_fetch_for_query_generation__expect__HttpError(monkeypatch, elasticsearch_config):
+def test_elasticsearch_search_engine_negative_post_fetch_for_query_generation__expects__raises_http_error(monkeypatch, elasticsearch_config):
     for status_code in [400, 401, 402, 403, 500]:
         monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseElasticsearchEngine([],
                                                                                                     status_code=status_code))
@@ -80,7 +80,7 @@ def test_elasticsearch_search_engine_negative_post_fetch_for_query_generation__e
             )
 
 
-def test_elasticsearch_search_engine_negative_post_fetch_for_evaluation__expect__HttpError(monkeypatch, elasticsearch_config):
+def test_elasticsearch_search_engine_negative_post_fetch_for_evaluation__expects__raises_http_error(monkeypatch, elasticsearch_config):
     for status_code in [400, 401, 402, 403, 500]:
         monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseElasticsearchEngine([],
                                                                                                     status_code=status_code))
@@ -94,6 +94,6 @@ def test_elasticsearch_search_engine_negative_post_fetch_for_evaluation__expect_
                 doc_fields=elasticsearch_config.doc_fields
             )
 
-def test_elasticsearch_search_engine_bad_url__expect__ValidationError():
+def test_elasticsearch_search_engine_bad_url__expects__raises_validation_error():
     with pytest.raises(ValidationError):
         _ = ElasticsearchSearchEngine("fake-NONurl")

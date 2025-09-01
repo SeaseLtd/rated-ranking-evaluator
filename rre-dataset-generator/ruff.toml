@@ -49,9 +49,6 @@ unfixable = []
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-[lint.per-file-ignores]
-"tests/**/*.py" = ["N"]
-
 
 [format]
 # Like Black, use double quotes for strings.
