@@ -100,7 +100,7 @@ if __name__ == "__main__":
     log: Logger = get_and_setup_logging(args.verbose)
 
     # setup
-    data_store: DataStore = DataStore(ignore_saved_data=True)
+    data_store: DataStore = DataStore()
     search_engine: BaseSearchEngine = SearchEngineFactory.build(
         search_engine_type=config.search_engine_type,
         endpoint=config.search_engine_collection_endpoint
