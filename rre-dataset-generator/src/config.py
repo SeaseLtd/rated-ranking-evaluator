@@ -37,6 +37,7 @@ class Config(BaseModel):
 
 
     @field_validator('doc_fields')
+    @classmethod
     def check_no_empty_fields(cls, value_field: List[str]) -> List[str]:
         if any(not f.strip() for f in value_field):
             log.error("docFields cannot contain empty strings.")
@@ -44,6 +45,7 @@ class Config(BaseModel):
         return value_field
 
     @field_validator('queries')
+    @classmethod
     def check_doc_type(cls, value_field: Optional[FilePath]) -> Optional[FilePath]:
         if value_field is not None and value_field.suffix[1:] != "txt" :
             log.error("queries' file must have .txt extension")
@@ -51,6 +53,7 @@ class Config(BaseModel):
         return value_field
 
     @field_validator('llm_configuration_file')
+    @classmethod
     def check_config_type(cls, value_field: Optional[FilePath]) -> Optional[FilePath]:
         if value_field is not None and value_field.suffix[1:] not in {"yaml", "yml"}:
             log.error("LLM_config file must have .yaml extension")
