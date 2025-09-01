@@ -150,3 +150,19 @@ This will start 2 services:
  - `elasticsearch`, available at http://localhost:9200
  - `elasticsearch-init`, loads documents from elasticsearch-init/data/dataset.jsonl only if Elasticsearch doesn't have 
 any documents in the index.
+
+## Running code checks
+
+### type checker with mypy
+
+To run mypy type checks inside the dataset generator environment use
+```bash
+uv run mypy
+```
+
+### code linter with ruff
+
+To run ruff linter inside the dataset generator environment use
+```bash
+uv run ruff check
+```

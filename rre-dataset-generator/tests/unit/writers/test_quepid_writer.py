@@ -1,9 +1,10 @@
-import pytest, csv
+import pytest
+import csv
 from pathlib import Path
 
 from src.data_store import DataStore
 from src.writers.quepid_writer import QuepidWriter, QUEPID_OUTPUT_FILENAME
-from src.model import Document, Query
+from src.model import Document
 
 
 # helper shared with other writer tests

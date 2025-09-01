@@ -87,7 +87,8 @@ def test_create_rating_score__expects__second_call_does_not_update_existing(ds, 
     assert "existing" in caplog.text
 
 def test_create_rating_score__expects__negative_value_is_none_and_logs_error(ds, docA, queryQ, caplog):
-    ds.add_document(docA); ds.add_query(queryQ.text)
+    ds.add_document(docA)
+    ds.add_query(queryQ.text)
     caplog.set_level(logging.DEBUG)
     ret = ds.create_rating_score(queryQ.id, docA.id, -1)
     assert ret is None

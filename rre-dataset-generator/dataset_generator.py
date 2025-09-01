@@ -9,7 +9,7 @@ from src.utils import parse_args
 from src.logger import configure_logging
 from src.llm import LLMConfig, LLMService, LLMServiceFactory
 from src.model import Document, Query,  LLMQueryResponse, LLMScoreResponse
-from src.writers import WriterFactory, AbstractWriter, MtebWriter, QuepidWriter
+from src.writers import WriterFactory, AbstractWriter
 from src.search_engine import SearchEngineFactory, BaseSearchEngine
 from src.data_store import DataStore
 

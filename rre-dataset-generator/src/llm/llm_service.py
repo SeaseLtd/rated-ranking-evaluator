@@ -70,16 +70,16 @@ class LLMService:
 
         if explanation:
             system_prompt += (
-                f"Return ONLY a **valid JSON** object with two keys:"
+                "Return ONLY a **valid JSON** object with two keys:"
                 " `score`: the related score as an integer value\n"
                 " `explanation`: your concise explanation for that score\n"
-                f"As an example, I expect a JSON response like the following: "
-                f"{{\"score\": \"integer value\",\"explanation\": \"I rated this score because...\" }}"
+                "As an example, I expect a JSON response like the following: "
+                "{\"score\": \"integer value\",\"explanation\": \"I rated this score because...\" }"
             )
         else:
             system_prompt += (
-                f"Return ONLY a **valid JSON** object with key 'score' and the related score as an integer value."
-                f"I expect a JSON response like the following: {{\"score\": \"integer value\"}}"
+                "Return ONLY a **valid JSON** object with key 'score' and the related score as an integer value."
+                "I expect a JSON response like the following: {\"score\": \"integer value\"}"
             )
 
         messages = [

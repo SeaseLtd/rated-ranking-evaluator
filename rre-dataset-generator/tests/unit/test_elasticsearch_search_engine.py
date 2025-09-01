@@ -1,5 +1,4 @@
 import pytest
-import json
 import requests
 from requests.exceptions import HTTPError
 from pydantic_core import ValidationError
@@ -42,8 +41,6 @@ def test_elasticsearch_search_engine_fetch_for_query_generation__expect__result_
     url = "https://fakeurl"
     search_engine = ElasticsearchSearchEngine(url)
 
-    payload = json.dumps({"match_all": {}})
-
     # apply the monkeypatch for requests.post to mock_post
     monkeypatch.setattr(requests, "post",
                         lambda *args, **kwargs: MockResponseElasticsearchEngine([mock_doc], status_code=200)
@@ -57,8 +54,6 @@ def test_elasticsearch_search_engine_fetch_for_query_generation__expect__result_
 def test_elasticsearch_search_engine_fetch_for_evaluation__expect__result_returned(monkeypatch, elasticsearch_config, mock_doc, mock_dict):
     url = "https://fakeurl"
     search_engine = ElasticsearchSearchEngine(url)
-
-    payload = json.dumps({"match_all": {}})
 
     # apply the monkeypatch for requests.post to mock_post
     monkeypatch.setattr(requests, "post",
