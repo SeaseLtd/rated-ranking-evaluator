@@ -11,7 +11,7 @@ def config():
     return Config.load("tests/unit/resources/good_config.yaml")
 
 
-def test_good_config_expect_all_parameters_read(config):
+def test_good_config__expects__all_parameters_read(config):
     assert config.query_template == 'q=#$query##&fq=genre:horror&wt=json'
     assert config.search_engine_type == "solr"
     assert config.search_engine_collection_endpoint == HttpUrl("http://localhost:8983/solr/testcore")
@@ -33,7 +33,7 @@ def test_good_config_expect_all_parameters_read(config):
     assert config.index_name == "testcore"
 
 
-def test_missing_optional_field_values():
+def test_missing_optional_field_values__expects__all_defaults_read():
     path = "tests/unit/resources/missing_optional.yaml"
     cfg = Config.load(path)
 
@@ -44,25 +44,25 @@ def test_missing_optional_field_values():
     assert cfg.query_template == 'q=#$query##'
 
 
-def test_missing_required_field_raises_error():
+def test_missing_required_field__expects__raises_validation_error():
     path = "tests/unit/resources/missing_required.yaml"
     with pytest.raises(ValidationError):
         _ = Config.load(path)
 
 
-def test_invalid_doc_number_type_raises_error():
+def test_invalid_doc_number_type__expects__raises_validation_error():
     path = "tests/unit/resources/invalid_type.yaml"
     with pytest.raises(ValidationError):
         _ = Config.load(path)
 
 
-def test_file_not_found_raises_exception():
+def test__expects__raises_file_not_found_error():
     path = "tests/unit/resources/file_does_not_exist.yaml"
     with pytest.raises(FileNotFoundError):
         _ = Config.load(path)
 
 
-def test_mteb_config_expect_successful_load():
+def test_mteb_config__expects__successful_load():
     path = "tests/unit/resources/mteb_config.yaml"
     mteb_config = Config.load(path)
     assert mteb_config.output_format == "mteb"

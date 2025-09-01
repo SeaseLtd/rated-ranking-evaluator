@@ -18,7 +18,7 @@ def example_doc():
     )
 
 
-def test_llm_service_generate_queries_expected_response(example_doc):
+def test_llm_service_generate_queries__expects__response(example_doc):
     # Test that the service can generate queries from a document
     fake_llm = FakeListChatModel(responses=['["Car"]'])
     service = LLMService(chat_model=fake_llm)
@@ -29,7 +29,7 @@ def test_llm_service_generate_queries_expected_response(example_doc):
     assert response.get_queries() == ["Car"]
 
 
-def test_llm_service_generate_score_expected_response(example_doc):
+def test_llm_service_generate_score__expects__response(example_doc):
     fake_llm = FakeListChatModel(responses=["{\"score\": 1}"])
     service = LLMService(chat_model=fake_llm)
 
@@ -45,7 +45,7 @@ def test_llm_service_generate_score_expected_response(example_doc):
     '{"score": "one"}',
     '{"score": 3}',
 ])
-def test_llm_service_generate_score_with_invalid_responses_expected_error(example_doc, invalid_response):
+def test_llm_service_generate_score_with_invalid_responses__expects__raises_value_error(example_doc, invalid_response):
     fake_llm = FakeListChatModel(responses=[invalid_response])
     service = LLMService(chat_model=fake_llm)
 
