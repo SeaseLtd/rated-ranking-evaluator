@@ -74,7 +74,7 @@ def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_serv
                 )
 
 
-def expand_docset_with_search_engine_topK(config: Config, data_store: DataStore,
+def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore,
                                  llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
     """Retrieve docs for each query and score the (q, doc) pairs."""
     for query_obj in data_store.get_queries():
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     log: Logger = get_and_setup_logging(args.verbose)
 
     # setup
-    data_store: DataStore = DataStore()
+    data_store: DataStore = DataStore(ignore_saved_data=True)
     search_engine: BaseSearchEngine = SearchEngineFactory.build(
         search_engine_type=config.search_engine_type,
         endpoint=config.search_engine_collection_endpoint
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     add_cartesian_product_scores(config, data_store, service)
 
     # expand the docset with search engine topK (adding direct ratings)
-    expand_docset_with_search_engine_topK(config, data_store, service, search_engine)
+    expand_docset_with_search_engine_top_k(config, data_store, service, search_engine)
 
     # write results
     output_destination = config.output_destination
