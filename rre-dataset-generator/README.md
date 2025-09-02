@@ -151,6 +151,30 @@ This will start 2 services:
  - `elasticsearch-init`, loads documents from elasticsearch-init/data/dataset.jsonl only if Elasticsearch doesn't have 
 any documents in the index.
 
+## Running the Quepid container
+
+```bash
+cd tests/integration/
+docker compose -f docker-compose.quepid.yml up -d
+
+# then go to http://localhost/sessions/new and sign up / sign in.
+```
+
+This will download the Quepid nightly image and start two containers:
+- `quepid_app` (HTTP available at http://localhost on port 80; internal port 5000)
+- `quepid_db` (MySQL exposed on port 3306)
+
+Data persists in the Docker volume `integration_quepid_mysql`.
+
+Notes about the nightly Docker Compose setup
+- Uses image `o19s/quepid:nightly` (no build step required).
+- Both services load environment from `tests/integration/quepid-init/corenv`. See `tests/integration/quepid-init/README.md` for variable details.
+- App requires `DATABASE_URL` and `SECRET_KEY_BASE`; optional: `QUEPID_DOMAIN`, `SIGNUP_ENABLED`, `QUEPID_DEFAULT_SCORER`.
+- MySQL healthcheck uses `CMD-SHELL` with `-p$$MYSQL_ROOT_PASSWORD` so the password expands inside the container.
+
+
+
+
 ## Running code checks
 
 ### type checker with mypy

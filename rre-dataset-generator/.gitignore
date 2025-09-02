@@ -18,4 +18,11 @@ uv.lock
 .output_dataset
 output/
 **/tmp
+
+# Docker
+**/volumes/
+
+# Environment variables
+**/.env
+**/.venv
 **/.mypy_cache
