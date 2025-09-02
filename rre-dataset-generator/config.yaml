@@ -61,7 +61,6 @@ llm_configuration_file: "llm_config.yaml"
 output_format: "quepid"
 
 # For rre output format, you need other fields, e.g.:
-#   corpora_file: "tests/integration/solr-init/data/dataset.json"
 #   id_field: "id"
 #   rre_query_template: "tests/unit/resources/only_q.json"
 #   rre_query_placeholder: "$query"

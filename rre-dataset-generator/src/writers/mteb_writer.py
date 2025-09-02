@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any
 
 from src.data_store import DataStore
 from src.utils import _to_string
@@ -20,10 +19,6 @@ class MtebWriter(AbstractWriter):
     Queries format: id,text
     Candidates format: query_id,doc_id,rating
     """
-
-    @classmethod
-    def build(cls, *args: Any, **kwargs: Any) -> "MtebWriter":
-        return cls()
 
     def _write_corpus(self, corpus_path: Path, datastore: DataStore) -> None:
         """

@@ -5,14 +5,19 @@ import pytest
 
 from src.config import Config
 from src.data_store import DataStore
-from src.model import Document
+from src.model import Document, WriterConfig
 from src.writers.mteb_writer import MtebWriter
 
 
 @pytest.fixture
-def config():
-    """Loads a valid config."""
-    return Config.load("tests/unit/resources/mteb_config.yaml")
+def writer_config():
+    """Loads a valid rre based config."""
+    params = {
+        'output_format': 'mteb',
+        'index': 'testcore'
+    }
+
+    return WriterConfig(**params)
 
 
 @pytest.fixture
@@ -41,9 +46,9 @@ def populated_datastore() -> DataStore:
 
 class TestMtebWriter:
 
-    def test_write_expect_written_to_jsonl(self, config, populated_datastore, tmp_path: Path):
+    def test_write_expect_written_to_jsonl(self, writer_config, populated_datastore, tmp_path: Path):
         output_dir = tmp_path
-        writer = MtebWriter()
+        writer = MtebWriter(writer_config)
         writer.write(output_dir, populated_datastore)
 
         corpus_file = output_dir / "corpus.jsonl"

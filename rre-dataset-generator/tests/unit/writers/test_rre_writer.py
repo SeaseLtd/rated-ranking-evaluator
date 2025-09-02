@@ -3,16 +3,23 @@ from pathlib import Path
 
 import pytest
 
-from src.config import Config
 from src.data_store import DataStore
-from src.model import Query, Document
+from src.model import Query, Document, WriterConfig
 from src.writers.rre_writer import RreWriter, RRE_OUTPUT_FILENAME
 
 
 @pytest.fixture
-def rre_config():
+def writer_config():
     """Loads a valid rre based config."""
-    return Config.load("tests/unit/resources/rre_config.yaml")
+    params = {
+        'output_format': 'rre',
+        'index': 'testcore',
+        'id_field': "id",
+        'query_template': "tests/unit/resources/only_q.json",
+        'query_placeholder': "$query"
+    }
+
+    return WriterConfig(**params)
 
 
 @pytest.fixture
@@ -41,13 +48,9 @@ def populated_datastore() -> DataStore:
 
 
 class TestRreWriter:
-    def test_rre_file_successfully_written(self, rre_config, populated_datastore, tmp_path: Path):
+    def test_rre_file_successfully_written(self, writer_config, populated_datastore, tmp_path: Path):
         output_file = tmp_path / RRE_OUTPUT_FILENAME
-        writer = RreWriter(index=rre_config.index_name,
-                         corpora_file=rre_config.corpora_file,
-                         id_field=rre_config.id_field,
-                         query_template=rre_config.rre_query_template,
-                         query_placeholder=rre_config.rre_query_placeholder)
+        writer = RreWriter(writer_config)
 
         writer.write(tmp_path, populated_datastore)
 
@@ -76,13 +79,9 @@ class TestRreWriter:
             relevant = group["relevant_documents"]
             assert "doc4" in relevant["2"]
 
-    def test_write_with_empty_datastore(self, rre_config, tmp_path: Path):
+    def test_write_with_empty_datastore(self, writer_config, tmp_path: Path):
         output_file = tmp_path / RRE_OUTPUT_FILENAME
-        writer = RreWriter(index=rre_config.index_name,
-                         corpora_file=rre_config.corpora_file,
-                         id_field=rre_config.id_field,
-                         query_template=rre_config.rre_query_template,
-                         query_placeholder=rre_config.rre_query_placeholder)
+        writer = RreWriter(writer_config)
 
         ds = DataStore(ignore_saved_data=True)
         writer.write(tmp_path, ds)
@@ -94,13 +93,9 @@ class TestRreWriter:
             assert data["id_field"] == "id"
             assert data["query_groups"] == []
 
-    def test_write_ignores_queries_without_ratings(self, rre_config, tmp_path: Path):
+    def test_write_ignores_queries_without_ratings(self, writer_config, tmp_path: Path):
         output_file = tmp_path / RRE_OUTPUT_FILENAME
-        writer = RreWriter(index=rre_config.index_name,
-                         corpora_file=rre_config.corpora_file,
-                         id_field=rre_config.id_field,
-                         query_template=rre_config.rre_query_template,
-                         query_placeholder=rre_config.rre_query_placeholder)
+        writer = RreWriter(writer_config)
 
         ds = DataStore(ignore_saved_data=True)
         doc = Document(id="doc1", fields={"title": "test title"})

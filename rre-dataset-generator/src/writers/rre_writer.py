@@ -4,7 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from src.config import Config
+from src.model.writer_config import WriterConfig
 from src.data_store import DataStore
 from src.writers.abstract_writer import AbstractWriter
 
@@ -17,24 +17,12 @@ class RreWriter(AbstractWriter):
     Writes query ratings in RRE format (ratings.json).
     """
 
-    @classmethod
-    def build(cls, config: Config) -> "RreWriter":
-        return cls(
-            index=config.index_name,
-            corpora_file=str(config.corpora_file),
-            id_field=config.id_field,
-            query_template=str(config.rre_query_template),
-            query_placeholder=config.rre_query_placeholder
-        )
-
-    def __init__(self, index: str, corpora_file: str, id_field: str | None,
-                 query_template: str, query_placeholder: str | None):
-        super().__init__()
-        self.index = index
-        self.corpora_file = corpora_file
-        self.id_field = id_field
-        self.query_template = query_template
-        self.query_placeholder = query_placeholder
+    def __init__(self, config: WriterConfig):
+        super().__init__(config)
+        self.index = self.config.index
+        self.id_field = self.config.id_field
+        self.query_template = self.config.query_template
+        self.query_placeholder = self.config.query_placeholder
 
     def _build_json_doc_records(self, datastore: DataStore) -> dict[str, Any]:
         query_text_to_doc_and_scores = defaultdict(list)
@@ -66,7 +54,6 @@ class RreWriter(AbstractWriter):
 
         rre_formatted = {
             "index": self.index,
-            "corpora_file": str(self.corpora_file),
             "id_field": self.id_field,
             "query_placeholder": self.query_placeholder,
             "query_groups": query_groups

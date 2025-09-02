@@ -1,10 +1,10 @@
-from __future__ import annotations
-
 from typing import List, Optional, Literal, Dict
 from pydantic import BaseModel, HttpUrl, Field, field_validator, FilePath, model_validator
 import yaml
 import logging
 from pathlib import Path
+
+from src.model import WriterConfig
 
 log = logging.getLogger(__name__)
 
@@ -29,12 +29,20 @@ class Config(BaseModel):
     output_destination: Path = Field(..., description="Path to save the output dataset.")
     save_llm_explanation: bool = False
     llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
-    corpora_file: Optional[FilePath] = Field(None, description="JSON formatted dataset file.")
     id_field: Optional[str] = Field(None, description="ID field for the unique key.")
     rre_query_template: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
     rre_query_placeholder: Optional[str] = Field(None, description="Key-value pair to substitute in the rre query template.")
     verbose: bool = False
 
+    def build_writer_config(self) -> WriterConfig:
+        fields = dict()
+        fields['output_format'] = self.output_format
+        fields['index'] = self.index_name
+        fields['id_field'] = self.id_field
+        fields['query_template'] = self.rre_query_template
+        fields['query_placeholder'] = self.rre_query_placeholder
+
+        return WriterConfig(**fields)
 
     @field_validator('doc_fields')
     @classmethod
@@ -82,9 +90,7 @@ class Config(BaseModel):
 
     @model_validator(mode="after")
     def check_rre_fields_required(self) -> "Config":
-        if self.output_format == "rre" and not self.corpora_file:
-            raise ValueError("corpora_file is required when output_format='rre'")
-        elif self.output_format == "rre" and not self.id_field:
+        if self.output_format == "rre" and not self.id_field:
             raise ValueError("id_field is required when output_format='rre'")
         elif self.output_format == "rre" and not self.rre_query_template:
             raise ValueError("rre_query_template is required when output_format='rre'")
