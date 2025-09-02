@@ -41,7 +41,7 @@ num_queries_needed: 10
 relevance_scale: "graded"
 llm_configuration_file: "llm_config.yaml"
 output_format: "quepid"
-output_destination: "output/generated_dataset.json"
+output_destination: "resources/generated_dataset.json"
 ```
 
 ### 3. Running the Generator
@@ -51,11 +51,11 @@ Before running the command below, you need to have running search engine instanc
 
 Execute the main script via the `argparse` CLI, pointing to your configuration file:
 ```bash
-uv run dataset_generator.py --config_file config.yaml
+uv run dataset-generator --config_file config.yaml
 ```
 To know more about all the possible CLI parameters, execute:
 ```bash
-uv run dataset_generator.py --help
+uv run dataset-generator --help
 ```
 
 ## Running tests
@@ -86,7 +86,7 @@ Follow the instructions to install Docker Compose on your system: https://docs.d
 
 To run a local Solr test environment using docker-compose:
 ```bash
-cd tests/integration/
+cd docker-services/
 ```
 
 Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
@@ -109,7 +109,7 @@ This will start 2 services:
 
 To run a local OpenSearch test environment using docker-compose:
 ```bash
-cd tests/integration/
+cd docker-services/
 ```
 
 Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
@@ -132,7 +132,7 @@ This will start 2 services:
 
 Similarly to Solr, to run a local Elasticsearch test environment using docker-compose:
 ```bash
-cd tests/integration/
+cd docker-services/
 ```
 
 Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
@@ -181,7 +181,7 @@ Notes about the nightly Docker Compose setup
 
 To run mypy type checks inside the dataset generator environment use
 ```bash
-uv run mypy
+uv run mypy .
 ```
 
 ### code linter with ruff

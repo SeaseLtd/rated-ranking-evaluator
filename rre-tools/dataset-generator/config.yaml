@@ -54,7 +54,7 @@ num_queries_needed: 4
 relevance_scale: "graded"
 
 # Path to the LLM configuration file (e.g., LangChain setup)
-llm_configuration_file: "llm_config.yaml"
+llm_configuration_file: "dataset-generator/llm_config.yaml"
 
 # Output format for the generated dataset
 # Accepted values: quepid, rre, mteb
@@ -72,7 +72,7 @@ output_format: "quepid"
 # corpus.jsonl contains <id,title,text> corpus records extracted from search engine.
 # queries.jsonl contains <id,text> query records LLM-generated and/or user-defined.
 # candidates.jsonl contains <query_id,doc_id,rating> candidate records.
-output_destination: "output"
+output_destination: "resources"
 
 # (Optional) Whether to save LLM rating score explanation to file
 # Default: false; set to true to save LLM rating explanation
@@ -80,5 +80,5 @@ save_llm_explanation: true
 
 # (Optional**) File path where it contains <query, doc_id, rating, explanation> records.
 # (**) When save_llm_explanation is set to True, this param needs to be present
-llm_explanation_destination: "output/rating_explanation.json"
+llm_explanation_destination: "resources/rating_explanation.json"
 
