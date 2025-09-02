@@ -1,0 +1,41 @@
+[project]
+name = "Dataset-Generator"
+version = "0.1.0"
+description = "Dataset Generator project"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+    "pytest>=8.4.1",
+    "pyyaml>=6.0.2",
+    "requests>=2.32.4",
+    "langchain-core>=0.3.68",
+    "langchain-openai>=0.3.27",
+    "langchain-google-genai>=2.1.7",
+    "python-dotenv>=1.1.1",
+]
+
+[project.scripts]
+dataset-generator = "dataset_generator.main:main"
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+
+# Silence libs without stubs
+[[tool.mypy.overrides]]
+module = [
+    "langchain.*",
+    "langchain_core.*",
+    "langchain_openai.*",
+    "langchain_google_genai.*",
+    "dotenv.*"
+]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[build-system]
+requires = ["uv_build>=0.8.13,<0.9.0"]
+build-backend = "uv_build"
