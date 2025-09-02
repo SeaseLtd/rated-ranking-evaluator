@@ -40,6 +40,7 @@ class DataStore:
         ### Proposal: refactor utils clean_text() and import / reuse here
 
         if not ignore_saved_data:
+            log.info(f"Loading data from {path}")
             self.load()
 
     # ────────────────────────────────────────────
