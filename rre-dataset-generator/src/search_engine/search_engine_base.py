@@ -16,7 +16,7 @@ class BaseSearchEngine(ABC):
                                    doc_fields: List[str]) \
             -> List[Document]:
         """Extract documents for generating queries."""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def fetch_for_evaluation(self,
@@ -25,9 +25,9 @@ class BaseSearchEngine(ABC):
                              keyword: str="*:*") \
             -> List[Document]:
         """Search for documents based on a keyword and a query template to evaluate the system."""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
-        pass
+        raise NotImplementedError

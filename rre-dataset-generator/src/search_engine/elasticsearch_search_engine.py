@@ -5,7 +5,7 @@ import requests
 from urllib.parse import urljoin
 from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 
 from src.search_engine.search_engine_base import BaseSearchEngine
 from src.model.document import Document
@@ -19,7 +19,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
     """
     Elasticsearch implementation to search into a given collection
     """
-    def __init__(self, endpoint: HttpUrl | str):
+    def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
         log.debug(f"Working on endpoint: {self.endpoint}")
@@ -42,7 +42,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
             List[Document]: A list of documents formatted as `Document` instances.
         """
         # Build base query
-        query = {"match_all": {}}
+        query: Dict[str, Any] = {"match_all": {}}
 
         # Add filters, if provided
         filter_clauses = []
@@ -71,7 +71,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str=None) -> List[Document]:
+    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: Optional[str] = None) -> List[Document]:
         """
         Executes a search for evaluation using a query template with an optional keyword substitution.
 

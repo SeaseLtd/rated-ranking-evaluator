@@ -38,8 +38,3 @@ class LLMScoreResponse:
         """
         return self.score
 
-    def get_explanation(self) -> str:
-        """
-        Returns explanation.
-        """
-        return self.explanation

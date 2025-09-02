@@ -1,3 +1,4 @@
+from typing import Dict, Type
 from pydantic import HttpUrl
 
 from .opensearch_engine import OpenSearchEngine
@@ -11,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class SearchEngineFactory:
-    SEARCH_ENGINE_REGISTRY = {
+    SEARCH_ENGINE_REGISTRY: Dict[str, Type[BaseSearchEngine]] = {
         "solr": SolrSearchEngine,
         "opensearch": OpenSearchEngine,
         "elasticsearch": ElasticsearchSearchEngine

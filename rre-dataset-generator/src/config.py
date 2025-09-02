@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class Config(BaseModel):
-    query_template: Optional[str] = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
+    query_template: str = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
     search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
     index_name: str = Field(..., description="Name of the index/collection of the search engine")
     search_engine_collection_endpoint: HttpUrl
@@ -27,36 +27,38 @@ class Config(BaseModel):
     llm_configuration_file: FilePath = Field(..., description="Path to the LLM configuration file.")
     output_format: Literal['quepid', 'rre', 'mteb']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
-    save_llm_explanation: Optional[bool] = False
+    save_llm_explanation: bool = False
     llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
-    corpora_file: FilePath = Field(None, description="JSON formatted dataset file.")
-    id_field: str = Field(None, description="ID field for the unique key.")
-    rre_query_template: FilePath = Field(None, description="Query template for rre evaluator.")
-    rre_query_placeholder: str = Field(None, description="Key-value pair to substitute in the rre query template.")
+    corpora_file: Optional[FilePath] = Field(None, description="JSON formatted dataset file.")
+    id_field: Optional[str] = Field(None, description="ID field for the unique key.")
+    rre_query_template: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
+    rre_query_placeholder: Optional[str] = Field(None, description="Key-value pair to substitute in the rre query template.")
+    verbose: bool = False
 
 
     @field_validator('doc_fields')
-    def check_no_empty_fields(cls, v):
-        if any(not f.strip() for f in v):
+    @classmethod
+    def check_no_empty_fields(cls, value_field: List[str]) -> List[str]:
+        if any(not f.strip() for f in value_field):
             log.error("docFields cannot contain empty strings.")
             raise ValueError("docFields cannot contain empty strings.")
-        return v
+        return value_field
 
     @field_validator('queries')
-    def check_doc_type(cls, v):
-        if v is not None:
-            if v.suffix[1:] != "txt":
-                log.error("queries' file must have .txt extension")
-                raise ValueError("queries' file must have .txt extension")
-        return v
+    @classmethod
+    def check_doc_type(cls, value_field: Optional[FilePath]) -> Optional[FilePath]:
+        if value_field is not None and value_field.suffix[1:] != "txt" :
+            log.error("queries' file must have .txt extension")
+            raise ValueError("queries' file must have .txt extension")
+        return value_field
 
     @field_validator('llm_configuration_file')
-    def check_config_type(cls, v):
-        if v is not None:
-            if v.suffix[1:] not in {"yaml", "yml"}:
-                log.error("LLM_config file must have .yaml extension")
-                raise ValueError("LLM_config file must have .yaml extension")
-        return v
+    @classmethod
+    def check_config_type(cls, value_field: Optional[FilePath]) -> Optional[FilePath]:
+        if value_field is not None and value_field.suffix[1:] not in {"yaml", "yml"}:
+            log.error("LLM_config file must have .yaml extension")
+            raise ValueError("LLM_config file must have .yaml extension")
+        return value_field
 
     @model_validator(mode="after")
     def validate_llm_explanation_fields(self) -> "Config":
@@ -79,19 +81,19 @@ class Config(BaseModel):
             raise ValueError(error_msg)
 
     @model_validator(mode="after")
-    def check_rre_fields_required(self):
+    def check_rre_fields_required(self) -> "Config":
         if self.output_format == "rre" and not self.corpora_file:
             raise ValueError("corpora_file is required when output_format='rre'")
-        if self.output_format == "rre" and not self.id_field:
+        elif self.output_format == "rre" and not self.id_field:
             raise ValueError("id_field is required when output_format='rre'")
-        if self.output_format == "rre" and not self.rre_query_template:
+        elif self.output_format == "rre" and not self.rre_query_template:
             raise ValueError("rre_query_template is required when output_format='rre'")
-        if self.output_format == "rre" and not self.rre_query_placeholder:
+        elif self.output_format == "rre" and not self.rre_query_placeholder:
             raise ValueError("rre_query_placeholder is required when output_format='rre'")
         return self
 
     @classmethod
-    def load(cls, config_path: str) -> Config:
+    def load(cls, config_path: str) -> "Config":
         """
         Load and validate configuration from a YAML file.
 

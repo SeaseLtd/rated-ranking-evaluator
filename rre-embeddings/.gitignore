@@ -206,3 +206,12 @@ __marimo__/
 # Raw files - MTEB / BEIR datasets
 *.tsv
 *.csv
+
+# uv file
+uv.lock
+
+# mteb cache embeddings
+cache/
+
+# mteb evaluation output
+output/
