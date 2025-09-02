@@ -14,7 +14,9 @@ def _write_jsonl(path: Path, rows: list[dict]) -> None:
         file.write_all(rows)
 
 
-def _create_dataset_and_load_config(tmp_path: Path, task_to_evaluate: Literal["retrieval", "reranking"]) -> Config:
+def _create_dataset_and_load_config(
+    tmp_path: Path, task_to_evaluate: Literal["retrieval", "reranking"]
+) -> Config:
     corpus_path = tmp_path / "corpus.jsonl"
     queries_path = tmp_path / "queries.jsonl"
     candidates_path = tmp_path / "candidates.jsonl"
@@ -24,7 +26,7 @@ def _create_dataset_and_load_config(tmp_path: Path, task_to_evaluate: Literal["r
         [
             {"id": "d1", "title": "title1", "text": "text1 test1"},
             {"id": "d2", "title": "title2", "text": "text1 test2"},
-            {"id": "d3", "title": "title3", "text": "text3 test3"}
+            {"id": "d3", "title": "title3", "text": "text3 test3"},
         ],
     )
     _write_jsonl(
@@ -36,7 +38,7 @@ def _create_dataset_and_load_config(tmp_path: Path, task_to_evaluate: Literal["r
         [
             {"query_id": "q1", "doc_id": "d1", "rating": 2},
             {"query_id": "q1", "doc_id": "d2", "rating": 1},
-            {"query_id": "q1", "doc_id": "d3", "rating": 0}
+            {"query_id": "q1", "doc_id": "d3", "rating": 0},
         ],
     )
 
@@ -57,9 +59,15 @@ def test_custom_retrieval_task_expect_valid_data_shape(tmp_path: Path) -> None:
     retrieval_task = CustomRetrievalTask()
     retrieval_task.load_data(config=config)
 
-    assert "test" in retrieval_task.corpus and isinstance(retrieval_task.corpus["test"], dict)
-    assert "test" in retrieval_task.queries and isinstance(retrieval_task.queries["test"], dict)
-    assert "test" in retrieval_task.relevant_docs and isinstance(retrieval_task.relevant_docs["test"], dict)
+    assert "test" in retrieval_task.corpus and isinstance(
+        retrieval_task.corpus["test"], dict
+    )
+    assert "test" in retrieval_task.queries and isinstance(
+        retrieval_task.queries["test"], dict
+    )
+    assert "test" in retrieval_task.relevant_docs and isinstance(
+        retrieval_task.relevant_docs["test"], dict
+    )
 
     relevant_docs = retrieval_task.relevant_docs["test"]
     assert set(relevant_docs.keys()) == {"q1"}

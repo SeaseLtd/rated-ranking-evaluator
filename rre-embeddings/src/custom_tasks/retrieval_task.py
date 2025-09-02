@@ -30,7 +30,7 @@ class CustomRetrievalTask(AbsTaskRetrieval):
             "name": "data",
             "path": "rre-embeddings/resources/data",
             "revision": "v1",
-            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data"
+            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data",
         },
     )
 
@@ -41,11 +41,21 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         self.relevant_docs: dict[str, dict[str, dict[str, int]]] = {}
 
     def load_data(self, config: Config, **kwargs: Any) -> None:
+        """
+        Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
+        In our case, we want to use local data files (paths defined in Config), so we override this method.
+        """
         if config is None:
-            log.error("No config is provided. Pass your internal Config via MTEB.run(..., config=Config).")
-            raise ValueError("No config is provided. Pass your internal Config via MTEB.run(..., config=Config).")
+            log.error(
+                "No config is provided. Pass your internal Config via MTEB.run(..., config=Config)."
+            )
+            raise ValueError(
+                "No config is provided. Pass your internal Config via MTEB.run(..., config=Config)."
+            )
 
         self.corpus = {"test": read_corpus(config.corpus_path)}
         self.queries = {"test": read_queries(config.queries_path)}
-        self.relevant_docs = {"test": read_candidates(config.candidates_path)["relevant_docs"]}
+        self.relevant_docs = {
+            "test": read_candidates(config.candidates_path)["relevant_docs"]
+        }
         self.data_loaded = True

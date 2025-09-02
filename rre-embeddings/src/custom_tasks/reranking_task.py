@@ -17,8 +17,12 @@ def _compose_text(title: Optional[str], description: Optional[str]) -> str:
     return title or description or ""
 
 
-def _build_dataset(corpus: Dict[str, Dict], queries: Dict[str, str], candidates: Dict[str, Dict[str, int]],
-                   relevance_scale: str) -> list[dict]:
+def _build_dataset(
+    corpus: Dict[str, Dict],
+    queries: Dict[str, str],
+    candidates: Dict[str, Dict[str, int]],
+    relevance_scale: str,
+) -> list[dict]:
     dataset = []
     for query_id, query in queries.items():
         candidate_map = candidates.get(query_id)
@@ -49,7 +53,9 @@ def _build_dataset(corpus: Dict[str, Dict], queries: Dict[str, str], candidates:
                     negative_text.append(composed_context)
 
         if positive_text and negative_text:
-            dataset.append({"query": query, "positive": positive_text, "negative": negative_text})
+            dataset.append(
+                {"query": query, "positive": positive_text, "negative": negative_text}
+            )
         else:
             log.warning("Empty positive_text and negative_text lists")
 
@@ -70,13 +76,20 @@ class CustomRerankingTask(AbsTaskReranking):
             "name": "data",
             "path": "rre-embeddings/resources/data",
             "revision": "v1",
-            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data"
+            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data",
         },
     )
 
     def load_data(self, config: Config, **kwargs: Any) -> None:
+        """
+        Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
+        In our case, we want to use local data files (paths defined in Config), so we override this method.
+        """
+
         if config is None:
-            raise ValueError("Pass your internal Config via MTEB.run(..., config=Config).")
+            raise ValueError(
+                "Pass your internal Config via MTEB.run(..., config=Config)."
+            )
 
         corpus = read_corpus(config.corpus_path)
         queries = read_queries(config.queries_path)
