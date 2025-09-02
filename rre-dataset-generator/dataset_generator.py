@@ -8,11 +8,10 @@ from src.config import Config
 from src.utils import parse_args
 from src.logger import configure_logging
 from src.llm import LLMConfig, LLMService, LLMServiceFactory
-from src.model import Document, Query,  LLMQueryResponse, LLMScoreResponse
+from src.model import Document, Query,  LLMQueryResponse, LLMScoreResponse, WriterConfig
 from src.writers import WriterFactory, AbstractWriter
 from src.search_engine import SearchEngineFactory, BaseSearchEngine
 from src.data_store import DataStore
-
 
 
 def get_and_setup_logging(verbose: bool = False) -> Logger:
@@ -97,6 +96,7 @@ if __name__ == "__main__":
     # configuration and logger definition
     args = parse_args()
     config: Config = Config.load(args.config_file)
+    writer_config: WriterConfig = config.build_writer_config()
     log: Logger = get_and_setup_logging(args.verbose)
 
     # setup
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     )
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
-    writer: AbstractWriter = WriterFactory.build(config.output_format) 
+    writer: AbstractWriter = WriterFactory.build(writer_config)
     
     # load user queries
     add_user_queries(config, data_store)
