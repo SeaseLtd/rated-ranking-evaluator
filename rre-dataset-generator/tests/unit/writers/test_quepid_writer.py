@@ -9,13 +9,10 @@ from src.model import Document, WriterConfig
 
 @pytest.fixture
 def writer_config():
-    """Loads a valid rre based config."""
-    params = {
-        'output_format': 'quepid',
-        'index': 'testcore'
-    }
-
-    return WriterConfig(**params)
+    return WriterConfig(
+        output_format='quepid',
+        index='testcore'
+    )
 
 # helper shared with other writer tests
 def _add_query_with_doc(ds: DataStore, qtext: str, doc_id: str) -> str:
