@@ -10,16 +10,13 @@ from src.writers.rre_writer import RreWriter, RRE_OUTPUT_FILENAME
 
 @pytest.fixture
 def writer_config():
-    """Loads a valid rre based config."""
-    params = {
-        'output_format': 'rre',
-        'index': 'testcore',
-        'id_field': "id",
-        'query_template': "tests/unit/resources/only_q.json",
-        'query_placeholder': "$query"
-    }
-
-    return WriterConfig(**params)
+    return WriterConfig(
+        output_format='rre',
+        index='testcore',
+        id_field='id',
+        query_template='tests/unit/resources/only_q.json',
+        query_placeholder='$query',
+    )
 
 
 @pytest.fixture

@@ -11,13 +11,10 @@ from src.writers.mteb_writer import MtebWriter
 
 @pytest.fixture
 def writer_config():
-    """Loads a valid rre based config."""
-    params = {
-        'output_format': 'mteb',
-        'index': 'testcore'
-    }
-
-    return WriterConfig(**params)
+    return WriterConfig(
+        output_format='mteb',
+        index='testcore'
+    )
 
 
 @pytest.fixture

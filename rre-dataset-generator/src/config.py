@@ -35,14 +35,13 @@ class Config(BaseModel):
     verbose: bool = False
 
     def build_writer_config(self) -> WriterConfig:
-        fields = dict()
-        fields['output_format'] = self.output_format
-        fields['index'] = self.index_name
-        fields['id_field'] = self.id_field
-        fields['query_template'] = self.rre_query_template
-        fields['query_placeholder'] = self.rre_query_placeholder
-
-        return WriterConfig(**fields)
+        return WriterConfig(
+            output_format = self.output_format,
+            index = self.index_name,
+            id_field = self.id_field,
+            query_template = self.rre_query_template,
+            query_placeholder = self.rre_query_placeholder
+        )
 
     @field_validator('doc_fields')
     @classmethod
