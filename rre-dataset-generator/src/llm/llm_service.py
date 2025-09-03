@@ -3,11 +3,8 @@ from json import JSONDecodeError
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
-from src.model.query_response import LLMQueryResponse
-from src.model.score_response import LLMScoreResponse
+from src.model import LLMQueryResponse, LLMScoreResponse, Document
 import logging
-
-from src.model.document import Document
 
 log = logging.getLogger(__name__)
 
@@ -37,9 +34,12 @@ class LLMService:
 
         # The response from invoke is an AIMessage object which contains all the needed info
         response = self.chat_model.invoke(messages)
+        response_content = response.content
+        if not isinstance(response_content, str):
+            response_content = json.dumps(response_content)
 
         try:
-            output = LLMQueryResponse(response_content=response.content)
+            output = LLMQueryResponse(response_content=response_content)
         except (KeyError, JSONDecodeError, ValueError) as e:
             log.warning(f"LLM unexpected response. Raw output: {response.content}")
             raise ValueError(f"Invalid LLM response: {e}")
@@ -70,16 +70,16 @@ class LLMService:
 
         if explanation:
             system_prompt += (
-                f"Return ONLY a **valid JSON** object with two keys:"
+                "Return ONLY a **valid JSON** object with two keys:"
                 " `score`: the related score as an integer value\n"
                 " `explanation`: your concise explanation for that score\n"
-                f"As an example, I expect a JSON response like the following: "
-                f"{{\"score\": \"integer value\",\"explanation\": \"I rated this score because...\" }}"
+                "As an example, I expect a JSON response like the following: "
+                "{\"score\": \"integer value\",\"explanation\": \"I rated this score because...\" }"
             )
         else:
             system_prompt += (
-                f"Return ONLY a **valid JSON** object with key 'score' and the related score as an integer value."
-                f"I expect a JSON response like the following: {{\"score\": \"integer value\"}}"
+                "Return ONLY a **valid JSON** object with key 'score' and the related score as an integer value."
+                "I expect a JSON response like the following: {\"score\": \"integer value\"}"
             )
 
         messages = [
@@ -92,7 +92,11 @@ class LLMService:
             )
         ]
 
-        raw = self.chat_model.invoke(messages).content.strip()
+        response_content = self.chat_model.invoke(messages).content
+        if isinstance(response_content, str):
+            raw = response_content.strip()
+        else:
+            raw = json.dumps(response_content)
 
         try:
             score = json.loads(raw)['score']

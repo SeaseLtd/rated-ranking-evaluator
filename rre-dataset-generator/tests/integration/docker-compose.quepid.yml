@@ -1,0 +1,43 @@
+
+
+services:
+  app:
+    image: o19s/quepid@sha256:b120b0ac64bf46675d322c3ea78e2442caaf5e9c0a18beddf20680f894756eb1
+    container_name: quepid_app
+    restart: unless-stopped
+    env_file:
+      - ./quepid/.env
+    environment:
+      - DOCKER_CONTAINER=true
+      - RAILS_ENV=production
+      - RACK_ENV=production
+      - RAILS_LOG_TO_STDOUT=true
+      - RAILS_SERVE_STATIC_FILES=true
+      # - DATABASE_URL=mysql2://root:${MYSQL_ROOT_PASSWORD}@mysql:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}
+    ports:
+      - "80:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./log:/log
+
+  mysql:
+    env_file:
+      - ./quepid/.env
+    image: mysql:8.4.3
+    container_name: quepid_db
+    restart: unless-stopped
+    ports:
+      - "${MYSQL_DATABASE_PORT}:3306"
+
+    volumes:
+      - quepid_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  quepid_mysql:

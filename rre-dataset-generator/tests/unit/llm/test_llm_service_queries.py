@@ -16,7 +16,7 @@ def example_doc():
     )
 
 
-def test_llm_service_generate_queries_EXPECTED_valid(example_doc):
+def test_llm_service_generate_queries__expects__valid(example_doc):
     fake_llm = FakeListChatModel(responses=['["Toyota", "Best Car"]'])
     service = LLMService(chat_model=fake_llm)
     response = service.generate_queries(example_doc, 2)
@@ -25,7 +25,7 @@ def test_llm_service_generate_queries_EXPECTED_valid(example_doc):
     assert response.get_queries() == ["Toyota", "Best Car"]
 
 
-def test_llm_service_generate_queries_EXPECTED_empty_list(example_doc):
+def test_llm_service_generate_queries__expects__empty_list(example_doc):
     fake_llm = FakeListChatModel(responses=['[]'])
     service = LLMService(chat_model=fake_llm)
     response = service.generate_queries(example_doc, 0)
@@ -37,14 +37,14 @@ def test_llm_service_generate_queries_EXPECTED_empty_list(example_doc):
     ('["", " ", "Valid"]', "must not be empty or only whitespace"),
     ('["Good", 123, null]', "must be strings"),
 ])
-def test_llm_service_generate_queries_with_invalid_responses_EXPECTED_error(invalid_response, expected_error, example_doc):
+def test_llm_service_generate_queries_with_invalid_responses__expects__error(invalid_response, expected_error, example_doc):
     fake_llm = FakeListChatModel(responses=[invalid_response])
     service = LLMService(chat_model=fake_llm)
     with pytest.raises(ValueError, match=expected_error):
         service.generate_queries(example_doc, 3)
 
 
-def test_generate_queries_with_unicode_strings_EXPECTED_list_of_unicode_strings(example_doc):
+def test_generate_queries_with_unicode_strings__expects__list_of_unicode_strings(example_doc):
     unicode_list = '["こんにちは", "你好", "¡Hola!"]'
     fake_llm = FakeListChatModel(responses=[unicode_list])
     service = LLMService(chat_model=fake_llm)
@@ -52,7 +52,7 @@ def test_generate_queries_with_unicode_strings_EXPECTED_list_of_unicode_strings(
     assert response.get_queries() == ["こんにちは", "你好", "¡Hola!"]
 
 
-def test_generate_queries_with_leading_trailing_whitespace_EXPECTED_strings_preserved(example_doc):
+def test_generate_queries_with_leading_trailing_whitespace__expects__strings_preserved(example_doc):
     list_with_whitespace = '["  hello  ", " world "]'
     fake_llm = FakeListChatModel(responses=[list_with_whitespace])
     service = LLMService(chat_model=fake_llm)

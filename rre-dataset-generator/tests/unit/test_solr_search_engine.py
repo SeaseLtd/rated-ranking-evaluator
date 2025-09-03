@@ -34,7 +34,7 @@ def mock_dict(mock_doc):
         'fields': {k: v for k, v in mock_doc.items() if k != 'mock_id'}
     }
 
-def test_solr_search_engine_fetch_for_query_generation__expect__result_returned(monkeypatch, solr_config, mock_doc, mock_dict):
+def test_solr_search_engine_fetch_for_query_generation__expects__result_returned(monkeypatch, solr_config, mock_doc, mock_dict):
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="mock_id"))
     search_engine = SolrSearchEngine("https://fakeurl")
 
@@ -49,7 +49,7 @@ def test_solr_search_engine_fetch_for_query_generation__expect__result_returned(
                                                       doc_fields=solr_config.doc_fields)
     assert result[0] == Document(**mock_dict)
 
-def test_solr_search_engine_fetch_for_evaluation__expect__result_returned(monkeypatch, solr_config, mock_doc, mock_dict):
+def test_solr_search_engine_fetch_for_evaluation__expects__result_returned(monkeypatch, solr_config, mock_doc, mock_dict):
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="mock_id"))
     search_engine = SolrSearchEngine("https://fakeurl")
 
@@ -64,7 +64,7 @@ def test_solr_search_engine_fetch_for_evaluation__expect__result_returned(monkey
                                                 doc_fields=solr_config.doc_fields)
     assert result[0] == Document(**mock_dict)
 
-def test_solr_search_engine_negative_post_fetch_for_query_generation__expect__HttpError(monkeypatch, solr_config):
+def test_solr_search_engine_negative_post_fetch_for_query_generation__expects__raises_http_error(monkeypatch, solr_config):
     for status_code in [400, 401, 402, 403, 500]:
         monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="identifier"))
         monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([], status_code=status_code))
@@ -79,7 +79,7 @@ def test_solr_search_engine_negative_post_fetch_for_query_generation__expect__Ht
             )
 
 
-def test_solr_search_engine_negative_post_fetch_for_evaluation__expect__HttpError(monkeypatch, solr_config):
+def test_solr_search_engine_negative_post_fetch_for_evaluation__expects__raises_http_error(monkeypatch, solr_config):
     for status_code in [400, 401, 402, 403, 500]:
         monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="identifier"))
         monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([], status_code=status_code))
@@ -137,6 +137,6 @@ def test_template_to_json_payload(monkeypatch):
     }
     assert solr_engine._template_to_json_payload(template) == expected_payload
 
-def test_solr_search_engine_bad_url__expect__ValidationError():
+def test_solr_search_engine_bad_url__expects__raises_validation_error():
     with pytest.raises(ValidationError):
         _ = SolrSearchEngine("fake-NONurl")

@@ -6,10 +6,22 @@ services:
       - "8983:8983"
     command: ["solr-precreate", "testcore"]
 
+  prepare-embeddings-dir:
+    build:
+      context: solr-init
+    command: ["sh", "-c", "mkdir", "-p", "/workspace/output/embeddings"]
+    volumes:
+      - ./:/workspace
+    restart: "no"
+
   solr-init:
     build:
       context: solr-init
     depends_on:
       - solr
+      - prepare-embeddings-dir
+    volumes:
+      - ./solr-init/data/dataset.json:/opt/rre-dataset-generator/data/dataset.json
+      - ../../output/embeddings:/opt/rre-dataset-generator/embeddings
+    working_dir: /opt/rre-dataset-generator
     command: ["sh", "-c", "/opt/rre-dataset-generator/solr-init.sh"]
-

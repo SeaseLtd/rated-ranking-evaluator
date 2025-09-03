@@ -1,4 +1,6 @@
-FROM curlimages/curl:8.14.1
+FROM alpine:3.22.1
 
-COPY data/dataset.json /opt/rre-dataset-generator/data/dataset.json
+RUN apk add --no-cache curl jq
+
 COPY --chmod=777 solr-init.sh /opt/rre-dataset-generator/solr-init.sh
+RUN mkdir -p /opt/rre-dataset-generator/embeddings

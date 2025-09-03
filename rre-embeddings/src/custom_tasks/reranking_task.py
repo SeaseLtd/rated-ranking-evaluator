@@ -81,6 +81,11 @@ class CustomRerankingTask(AbsTaskReranking):
     )
 
     def load_data(self, config: Config, **kwargs: Any) -> None:
+        """
+        Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
+        In our case, we want to use local data files (paths defined in Config), so we override this method.
+        """
+
         if config is None:
             raise ValueError(
                 "Pass your internal Config via MTEB.run(..., config=Config)."

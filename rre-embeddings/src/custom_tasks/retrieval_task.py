@@ -41,6 +41,10 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         self.relevant_docs: dict[str, dict[str, dict[str, int]]] = {}
 
     def load_data(self, config: Config | None, **kwargs: Any) -> None:
+        """
+        Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
+        In our case, we want to use local data files (paths defined in Config), so we override this method.
+        """
         if config is None:
             message = "No config is provided. Pass your internal Config via MTEB.run(..., config=Config)."
             log.error(message)

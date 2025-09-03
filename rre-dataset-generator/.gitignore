@@ -6,17 +6,23 @@ dist/
 wheels/
 *.egg-info
 
+# macOS metadata files
+.DS_Store
+
 # Virtual environments
+.env
 .venv
 uv.lock
 
 # Local Files and Directories
 .output_dataset
 output/
+**/tmp
 
-# macOS metadata files
-.DS_Store
+# Docker
+**/volumes/
 
 # Environment variables
-.env
-
+**/.env
+**/.venv
+**/.mypy_cache

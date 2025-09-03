@@ -1,26 +1,26 @@
 from .abstract_writer import AbstractWriter
 from .mteb_writer import MtebWriter
 from .quepid_writer import QuepidWriter
-import logging
-from src.search_engine.data_store import DataStore
 from .rre_writer import RreWriter
-from ..config import Config
+
+from typing import Mapping, Type, TypeAlias
+import logging
 
 log = logging.getLogger(__name__)
 
+WriterType: TypeAlias = Type[AbstractWriter]
 
 class WriterFactory:
-    OUTPUT_FORMAT_REGISTRY = {
+    OUTPUT_FORMAT_REGISTRY: Mapping[str, WriterType] = {
         "quepid": QuepidWriter,
         "rre": RreWriter,
         "mteb": MtebWriter,
     }
 
     @classmethod
-    def build(cls, config: Config, data_store: DataStore) -> AbstractWriter:
-        output_format = config.output_format
+    def build(cls, output_format: str) -> AbstractWriter:
         if output_format not in cls.OUTPUT_FORMAT_REGISTRY:
-            log.error("Unsupported output format requested: %s", output_format)
+            log.error(f"Unsupported output format requested: {output_format}")
             raise ValueError(f"Unsupported output format: {output_format}")
-        log.info("Selected output format: %s", output_format)
-        return cls.OUTPUT_FORMAT_REGISTRY[output_format].build(config, data_store)
+        log.info(f"Selected output format: {output_format}")
+        return cls.OUTPUT_FORMAT_REGISTRY[output_format]()

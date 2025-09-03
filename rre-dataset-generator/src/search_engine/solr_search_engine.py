@@ -49,7 +49,7 @@ class SolrSearchEngine(BaseSearchEngine):
                 json_body[key] = [default_value]
 
         return {
-            'query': json_body.get('q')[0],
+            'query': json_body['q'][0],
             'params': {k: v[0] for k, v in json_body.items() if k != 'q'}
         }
 
@@ -68,7 +68,7 @@ class SolrSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of retrieved documents as `Document` objects.
         """
-        payload = {
+        payload: Dict[str, Any] = {
             'query': '*:*',
             'params': {
                 'rows': doc_number,
