@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, Literal
 
 import yaml
 from pydantic import BaseModel, Field, field_validator, FilePath, model_validator
@@ -12,9 +12,11 @@ log = logging.getLogger(__name__)
 
 class Config(BaseModel):
     model_id: str = Field(..., description="Model id from HuggingFace models")
+    task_to_evaluate: Literal["retrieval", "reranking"]
     corpus_path: FilePath = Field(..., description="Corpus jsonl file path")
     queries_path: FilePath = Field(..., description="Queries jsonl file path")
     candidates_path: FilePath = Field(..., description="Candidates jsonl file path")
+    relevance_scale: Literal["binary", "graded"]
     output_dest: Optional[Path] = Field(
         None,
         description="Path to save mteb output, by default saved into <output> dir.",

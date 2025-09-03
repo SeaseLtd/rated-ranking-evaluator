@@ -63,15 +63,8 @@ uv sync --extra dev
 rre-embeddings
 ```
 
-## Proposed execution (Future Work)
 
-### 1. Run exact search evaluator with CLI arguments
-```bash
-rre-embeddings --embedding-model "model_name" --dataset "path_to_dataset" --task-to-evaluate "Retrieval" --output_path "path_to_output"
-```
-
-
-### 2. Run exact search evaluator with  yaml config file
+### Run exact search evaluator with  yaml config file
 ```bash
 rre-embeddings --config "path_to_config_yaml"
 ```

@@ -18,6 +18,8 @@ def test_valid_config_expect_all_params_read(config: Config) -> None:
         "tests/unit/resources/data/candidates.jsonl"
     )
     assert config.output_dest == FilePath("output")
+    assert config.task_to_evaluate == "retrieval"
+    assert config.relevance_scale == "binary"
 
 
 def test_invalid_config_expects_error_on_file_extension() -> None:
