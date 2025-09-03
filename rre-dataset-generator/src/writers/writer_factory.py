@@ -19,9 +19,10 @@ class WriterFactory:
     }
 
     @classmethod
-    def build(cls, config: WriterConfig) -> AbstractWriter:
-        if config.output_format not in cls.OUTPUT_FORMAT_REGISTRY:
-            log.error(f"Unsupported output format requested: {config.output_format}")
-            raise ValueError(f"Unsupported output format: {config.output_format}")
-        log.info(f"Selected output format: {config.output_format}")
-        return cls.OUTPUT_FORMAT_REGISTRY[config.output_format](config)
+    def build(cls, writer_config: WriterConfig) -> AbstractWriter:
+        output_format: str = writer_config.output_format
+        if output_format not in cls.OUTPUT_FORMAT_REGISTRY:
+            log.error(f"Unsupported output format requested: {output_format}")
+            raise ValueError(f"Unsupported output format: {output_format}")
+        log.info(f"Selected output format: {output_format}")
+        return cls.OUTPUT_FORMAT_REGISTRY[output_format](writer_config)

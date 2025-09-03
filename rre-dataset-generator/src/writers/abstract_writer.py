@@ -8,8 +8,8 @@ class AbstractWriter(ABC):
     Abstract base class for writers.
     """
 
-    def __init__(self, config: WriterConfig) -> None:
-        self.config = config
+    def __init__(self, writer_config: WriterConfig) -> None:
+        self.writer_config = writer_config
         pass
 
     @abstractmethod

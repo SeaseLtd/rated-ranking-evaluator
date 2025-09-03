@@ -17,9 +17,6 @@ class RreWriter(AbstractWriter):
     Writes query ratings in RRE format (ratings.json).
     """
 
-    def __init__(self, config: WriterConfig):
-        super().__init__(config)
-
     def _build_json_doc_records(self, datastore: DataStore) -> dict[str, Any]:
         query_text_to_doc_and_scores = defaultdict(list)
         ratings = datastore.get_ratings()
@@ -38,9 +35,9 @@ class RreWriter(AbstractWriter):
                 "name": query_text,
                 "queries": [
                     {
-                        "template": str(self.config.query_template),
+                        "template": str(self.writer_config.query_template),
                         "placeholders": {
-                            str(self.config.query_placeholder): query_text
+                            str(self.writer_config.query_placeholder): query_text
                         }
                     }
                 ],
@@ -49,9 +46,9 @@ class RreWriter(AbstractWriter):
             query_groups.append(query_group)
 
         rre_formatted = {
-            "index": self.config.index,
-            "id_field": self.config.id_field,
-            "query_placeholder": self.config.query_placeholder,
+            "index": self.writer_config.index,
+            "id_field": self.writer_config.id_field,
+            "query_placeholder": self.writer_config.query_placeholder,
             "query_groups": query_groups
         }
         return rre_formatted
