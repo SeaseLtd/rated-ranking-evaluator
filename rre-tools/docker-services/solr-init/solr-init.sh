@@ -4,7 +4,7 @@ set -euo pipefail
 COLLECTION_ENDPOINT="http://solr:8983/solr/testcore";
 DATASET_FILE="/opt/rre-dataset-generator/data/dataset.json";
 EMBEDDINGS_FOLDER="/opt/rre-dataset-generator/embeddings";
-EMBEDDINGS_FILE="$EMBEDDINGS_FOLDER/doc_embeddings.jsonl";
+EMBEDDINGS_FILE="$EMBEDDINGS_FOLDER/document_embeddings.jsonl";
 TMP_FILE="/tmp/merged_dataset.json";
 
 echo "[INFO] Waiting for Solr core \"testcore\" to be ready…";

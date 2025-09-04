@@ -128,11 +128,13 @@ def main() -> None:
     output_destination = config.output_destination
     writer.write(output_destination, data_store)
     log.info(f"Synthetic Dataset has been generated in: {output_destination}")
+    data_store.save()
 
     # save explanation  - forced to extract value before invoking export_all_records_with_explanation (mypy)
-    if llm_explanation_path := config.llm_explanation_destination:
-        data_store.export_all_records_with_explanation(llm_explanation_path)
-        log.info(f"Dataset with LLM explanation is saved into: {llm_explanation_path}")
+    if config.save_llm_explanation:
+        if llm_explanation_path := config.llm_explanation_destination:
+            data_store.export_all_records_with_explanation(llm_explanation_path)
+            log.info(f"Dataset with LLM explanation is saved into: {llm_explanation_path}")
 
 if __name__ == "__main__":
     main()

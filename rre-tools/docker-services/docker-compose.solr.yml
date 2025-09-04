@@ -9,9 +9,9 @@ services:
   prepare-embeddings-dir:
     build:
       context: solr-init
-    command: ["sh", "-c", "mkdir", "-p", "/workspace/output/embeddings"]
+    command: ["sh", "-c", "mkdir", "-p", "/workspace/resources/embeddings"]
     volumes:
-      - ./:/workspace
+      - ../resources:/workspace/resources
     restart: "no"
 
   solr-init:
@@ -22,6 +22,6 @@ services:
       - prepare-embeddings-dir
     volumes:
       - ./solr-init/data/dataset.json:/opt/rre-dataset-generator/data/dataset.json
-      - ../../output/embeddings:/opt/rre-dataset-generator/embeddings
+      - ../resources/embeddings:/opt/rre-dataset-generator/embeddings
     working_dir: /opt/rre-dataset-generator
     command: ["sh", "-c", "/opt/rre-dataset-generator/solr-init.sh"]

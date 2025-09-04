@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from dataset_generator.config import Config
 from commons.data_store import DataStore
 from commons.model import Document, WriterConfig
 from commons.writers.mteb_writer import MtebWriter
@@ -15,7 +14,6 @@ def writer_config():
         output_format='mteb',
         index='testcore'
     )
-
 
 @pytest.fixture
 def populated_datastore() -> DataStore:

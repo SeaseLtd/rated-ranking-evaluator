@@ -3,9 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from dataset_generator.config import Config
 from commons.data_store import DataStore
-from commons.model import Query, Document
+from commons.model import Query, Document, WriterConfig
 from commons.writers.rre_writer import RreWriter, RRE_OUTPUT_FILENAME
 
 
@@ -15,7 +14,7 @@ def writer_config():
         output_format='rre',
         index='testcore',
         id_field='id',
-        query_template='tests/unit/resources/only_q.json',
+        query_template='dataset-generator/tests/unit/resources/only_q.json',
         query_placeholder='$query',
     )
 

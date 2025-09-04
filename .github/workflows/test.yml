@@ -24,8 +24,8 @@ jobs:
 
     - name: Install dependencies
       run: uv sync
-      working-directory: rre-dataset-generator
+      working-directory: rre-tools
 
     - name: Run unit tests
       run: uv run pytest
-      working-directory: rre-dataset-generator
+      working-directory: rre-tools

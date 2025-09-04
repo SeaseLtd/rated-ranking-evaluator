@@ -2,7 +2,7 @@
 # dataset-generator module
 # Default: "q=#$query##"
 # Example (solr):
-query_template: "q=#$query##&df=description&rows=2&q.op=OR&wt=json"
+query_template: "q={!edismax qf=title^2 description mm=1}#$query##&rows=10&fl=id,title,description,score&wt=json"
 
 # The type of search engine to use
 # Accepted values: solr, elasticsearch, opensearch, vespa
@@ -61,9 +61,9 @@ llm_configuration_file: "dataset-generator/llm_config.yaml"
 output_format: "quepid"
 
 # For rre output format, you need other fields, e.g.:
-#   id_field: "id"
-#   rre_query_template: "tests/unit/resources/only_q.json"
-#   rre_query_placeholder: "$query"
+#id_field: "id"
+#rre_query_template: "tests/unit/resources/only_q.json"
+#rre_query_placeholder: "$query"
 
 # Path where the output dataset will be saved
 # For rre, output dataset will be saved into output_destination/"ratings.json"
@@ -76,9 +76,8 @@ output_destination: "resources"
 
 # (Optional) Whether to save LLM rating score explanation to file
 # Default: false; set to true to save LLM rating explanation
-save_llm_explanation: true
+#save_llm_explanation: true
 
 # (Optional**) File path where it contains <query, doc_id, rating, explanation> records.
 # (**) When save_llm_explanation is set to True, this param needs to be present
-llm_explanation_destination: "resources/rating_explanation.json"
-
+#llm_explanation_destination: "resources/rating_explanation.json"
