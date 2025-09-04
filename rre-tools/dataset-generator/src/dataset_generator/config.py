@@ -4,7 +4,7 @@ import yaml
 import logging
 from pathlib import Path
 
-from src.model import WriterConfig
+from commons.model import WriterConfig
 
 log = logging.getLogger(__name__)
 

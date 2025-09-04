@@ -1,6 +1,5 @@
 from typing import Optional, Literal
 import logging
-import yaml
 
 from pydantic import BaseModel, Field, FilePath
 
