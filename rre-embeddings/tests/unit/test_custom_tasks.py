@@ -42,7 +42,7 @@ def _create_dataset_and_load_config(
         ],
     )
 
-    config = Config(
+    config: Config = Config(
         model_id="dummy-model",
         task_to_evaluate=task_to_evaluate,
         corpus_path=corpus_path,
@@ -50,6 +50,7 @@ def _create_dataset_and_load_config(
         candidates_path=candidates_path,
         relevance_scale="graded",
         output_dest=tmp_path / "output",
+        embeddings_dest=tmp_path / "output/embeddings",
     )
     return config
 

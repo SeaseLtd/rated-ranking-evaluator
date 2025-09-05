@@ -11,7 +11,7 @@ from src.utilities.helper import read_corpus, read_queries, read_candidates
 log = logging.getLogger(__name__)
 
 
-def _compose_text(title: Optional[str], description: Optional[str]) -> str:
+def compose_text(title: Optional[str], description: Optional[str]) -> str:
     if title and description:
         return f"{title}\n\n{description}"
     return title or description or ""
@@ -39,7 +39,7 @@ def _build_dataset(
             if not title and not text:
                 log.warning(f"{doc_id} has no description and no title")
                 continue
-            composed_context = _compose_text(title, text)
+            composed_context = compose_text(title, text)
             if relevance_scale == "binary":
                 if rating > 0:
                     positive_text.append(composed_context)

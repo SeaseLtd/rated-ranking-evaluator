@@ -210,8 +210,9 @@ __marimo__/
 # uv file
 uv.lock
 
-# mteb cache embeddings
+# MTEB task evaluaton results
+output/
+
+# MTEB evaluation cache
 cache/
 
-# mteb evaluation output
-output/

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from pydantic import FilePath
 from pydantic_core import ValidationError
@@ -17,7 +19,7 @@ def test_valid_config_expect_all_params_read(config: Config) -> None:
     assert config.candidates_path == FilePath(
         "tests/unit/resources/data/candidates.jsonl"
     )
-    assert config.output_dest == FilePath("output")
+    assert config.output_dest == Path("output")
     assert config.task_to_evaluate == "retrieval"
     assert config.relevance_scale == "binary"
 
