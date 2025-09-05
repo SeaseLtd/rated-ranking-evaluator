@@ -9,7 +9,7 @@ services:
       - DISABLE_INSTALL_DEMO_CONFIG=true
       - DISABLE_SECURITY_PLUGIN=true
     ports:
-      - 9200:9200
+      - 9300:9200
       - 9600:9600
 
   opensearch-dashboards:

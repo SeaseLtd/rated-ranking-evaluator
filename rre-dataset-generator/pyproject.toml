@@ -13,6 +13,9 @@ dependencies = [
     "langchain-openai>=0.3.27",
     "langchain-google-genai>=2.1.7",
     "python-dotenv>=1.1.1",
+    "pytest-docker>=3.2.3",
+    "docker>=7.1.0",
+    "pytest-dependency>=0.6.0",
 ]
 
 [dependency-groups]
