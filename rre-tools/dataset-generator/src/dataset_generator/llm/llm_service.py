@@ -25,7 +25,7 @@ class LLMService:
             "Example format: [\"first query\", \"second query\"]"
         )
 
-        doc_json = document.model_dump_json()
+        doc_json = document.model_dump_json(exclude={"is_used_to_generate_queries"})
 
         messages = [
             SystemMessage(content=system_prompt),
@@ -87,7 +87,7 @@ class LLMService:
                 content=system_prompt
             ),
             HumanMessage(
-                content=f"Document: {document.model_dump_json()}\n"
+                content=f"Document: {document.model_dump_json(exclude={'is_used_to_generate_queries'})}\n"
                         f"Query:{query}\n"
             )
         ]
