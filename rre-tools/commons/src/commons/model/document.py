@@ -28,6 +28,8 @@ class Document(BaseModel):
         ...,
         description="Fields of the document."
     )
+    is_used_to_generate_queries: bool = Field(default=False,
+                                                description="Whether the document is used to generate queries.")
 
     @field_validator('fields')
     @classmethod
@@ -41,4 +43,3 @@ class Document(BaseModel):
         if not is_json_serializable(field_values):
             raise ValueError('Field values must be JSON-serializable (primitives, lists, or dicts).')
         return field_values
-

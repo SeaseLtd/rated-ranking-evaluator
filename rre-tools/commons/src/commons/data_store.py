@@ -65,9 +65,9 @@ class DataStore:
         """Gets a single document by its ID, or None if not found."""
         return self.docs.get(doc_id)
 
-    def get_documents(self) -> List[Document]:
+    def get_documents(self, only_cartesian_product_documents: bool = False) -> List[Document]:
         """Gets all documents."""
-        return list(self.docs.values())
+        return [doc for doc in self.docs.values() if not only_cartesian_product_documents or doc.is_used_to_generate_queries]
 
     def get_query(self, query_id: str) -> Optional[Query]:
         """Gets a single query by its ID, or None if not found."""
@@ -88,21 +88,22 @@ class DataStore:
     def add_document(self, doc: Document) -> None:
         """Adds a document."""
         if self.has_document(doc.id):
-            log.warning(f"[add_document] exists doc_id={doc.id}")
+            log.debug(f"[add_document] exists doc_id={doc.id}")
             return
         self.docs[doc.id] = doc
         log.debug(f"[add_document] added doc_id={doc.id}")
 
-    def add_query(self, query_text_str: str, id: Optional[str] = None) -> Query:
+    def add_query(self, query_text_str: str, query_id: Optional[str] = None) -> Query:
         """Adds a new query. If text is cached, returns existing Query. If id is given, it's used."""
-        if (existing_id := self.query_text_to_query_id.get(query_text_str)):
-            log.warning(f"[add_query] exists text='{query_text_str}' existing_id={existing_id}")
-            return self.queries[existing_id]
+        if existing_id := self.query_text_to_query_id.get(query_text_str):
+            log.debug(f"[add_query] exists text='{query_text_str}' existing_id={existing_id}")
+            query = self.queries[existing_id]
+        else:
+            query = Query(id=query_id, text=query_text_str) if query_id else Query(text=query_text_str)
+            self.queries[query.id] = query
+            self.query_text_to_query_id[query_text_str] = query.id
+            log.debug(f"[add_query] added query_id={query.id}")
 
-        query = Query(id=id, text=query_text_str) if id else Query(text=query_text_str)
-        self.queries[query.id] = query
-        self.query_text_to_query_id[query_text_str] = query.id
-        log.debug(f"[add_query] added query_id={query.id}")
         return query
 
     def _add_rating(self, rating: Rating) -> None:
@@ -178,7 +179,7 @@ class DataStore:
         for query_as_dict in data.get("queries", []):
             try:
                 tmp_query = Query.model_validate(query_as_dict)                # Create a new tmp query with loaded dict 
-                self.add_query(query_text_str=tmp_query.text, id=tmp_query.id) # Pass (text, ID) values to keep ID consistent
+                self.add_query(query_text_str=tmp_query.text, query_id=tmp_query.id) # Pass (text, ID) values to keep ID consistent
             except ValidationError as e:
                 log.warning(f"[load] skip_query_invalid data={query_as_dict} error={e}")
 
