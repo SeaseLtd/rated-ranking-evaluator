@@ -3,6 +3,7 @@ from typing import Any
 
 from mteb.abstasks.AbsTask import TaskMetadata
 from mteb.abstasks.AbsTaskRetrieval import AbsTaskRetrieval
+from mteb.overview import TASKS_REGISTRY
 
 from embedding_model_evaluator.config import Config
 from embedding_model_evaluator.utilities.helper import read_corpus, read_queries, read_candidates
@@ -56,3 +57,6 @@ class CustomRetrievalTask(AbsTaskRetrieval):
             "test": read_candidates(config.candidates_path)["relevant_docs"]
         }
         self.data_loaded = True
+
+# the tasks need to be added to the official registry, otherwise are not seen from CachedEmbeddingWrapper class
+TASKS_REGISTRY["CustomRetrievalTask"] = CustomRetrievalTask
