@@ -28,7 +28,7 @@ def setup_logging(verbose: bool = False) -> None:
 def add_user_queries(config: Config, data_store: DataStore) -> None:
     """Loads queries from file (if exists) and adds them as Query objects."""
     if config.queries is not None:
-        with open(config.queries, "r", encoding="utf-8") as file:
+        with config.queries.open("r", encoding="utf-8") as file:
             for line in file:
                 clean_line = line.strip()
                 if clean_line:

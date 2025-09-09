@@ -1,5 +1,4 @@
 import csv
-import os
 from pathlib import Path
 from typing import List, Tuple
 
@@ -28,7 +27,7 @@ class QuepidWriter(AbstractWriter):
     def write(self, output_path: str | Path, datastore: DataStore) -> None:
         """Writes queries and their scored documents to a CSV file in Quepid format."""
         output_path = Path(output_path) / QUEPID_OUTPUT_FILENAME
-        os.makedirs(output_path.parent, exist_ok=True)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(output_path, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)

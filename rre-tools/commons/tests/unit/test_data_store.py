@@ -1,6 +1,5 @@
 import pytest
 from pathlib import Path
-import os
 import json
 import logging
 
@@ -108,7 +107,7 @@ def test_persistence__expects__save_and_load_roundtrip(tmp_db_path, doc_a, query
     query = ds1.add_query(query_q.text)
     ds1.create_rating_score(query.id, doc_a.id, 5)
     ds1.save()
-    assert os.path.exists(tmp_db_path)
+    assert tmp_db_path.exists()
 
     ds2 = DataStore(path=tmp_db_path)  # load() is called in __init__
     assert len(ds2.get_documents()) == 1

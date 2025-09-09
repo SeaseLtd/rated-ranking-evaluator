@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from pathlib import Path
 
 from commons.data_store import DataStore
@@ -64,7 +63,7 @@ class MtebWriter(AbstractWriter):
             datastore: DataStore containing the data to write
         """
         path = Path(output_path)
-        os.makedirs(path, exist_ok=True)
+        path.mkdir(parents=True, exist_ok=True)
         try:
             self._write_corpus(path / "corpus.jsonl", datastore)
             log.info("Corpus written successfully")

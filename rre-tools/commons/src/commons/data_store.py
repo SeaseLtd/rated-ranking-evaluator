@@ -5,7 +5,6 @@ from typing import Dict, Optional, Tuple, List
 
 import json
 import logging
-import os
 from uuid import uuid4
 from pydantic import ValidationError
 from commons.model import Document, Query, Rating
@@ -152,7 +151,7 @@ class DataStore:
         }
         tmp_path = self.path.with_name(self.path.name + f".{uuid4().hex}.tmp")
         tmp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding=ENCODING)
-        os.replace(tmp_path, self.path)
+        tmp_path.replace(self.path)
         
     def load(self) -> None:
         if not self.path.exists():
