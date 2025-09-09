@@ -7,9 +7,9 @@ import numpy as np
 import jsonlines
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
-from src.config import Config
-from src.custom_tasks.reranking_task import compose_text
-from src.utilities.helper import read_corpus, read_queries
+from embedding_model_evaluator.config import Config
+from embedding_model_evaluator.custom_tasks.reranking_task import compose_text
+from embedding_model_evaluator.utilities.helper import read_corpus, read_queries
 
 log = logging.getLogger(__name__)
 

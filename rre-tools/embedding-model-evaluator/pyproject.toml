@@ -1,7 +1,7 @@
 [project]
-name = "Dataset-Generator"
+name = "embedding_model_evaluator"
 version = "0.1.0"
-description = "Dataset Generator - A tool to generate an evaluation dataset given a collection of document"
+description = "Embedding Model Evaluator - A tool for embeddings exact search benchmarking"
 readme = "README.md"
 authors = []
 license = {text = "Apache-2.0"}
@@ -14,14 +14,12 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "requests>=2.32.4",
-    "langchain-core>=0.3.68",
-    "langchain-openai>=0.3.27",
-    "langchain-google-genai>=2.1.7",
+    "jsonlines>=4.0.0",
+    "mteb>=0.1.0"
 ]
 
 [project.scripts]
-dataset-generator = "dataset_generator.main:main"
+embedding-model-evaluator = "embedding_model_evaluator.main:main"
 
 [build-system]
 requires = ["uv_build>=0.8.13,<0.9.0"]

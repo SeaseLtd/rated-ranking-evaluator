@@ -5,8 +5,8 @@ from datasets import Dataset, DatasetDict
 from mteb.abstasks.AbsTask import TaskMetadata
 from mteb.abstasks.AbsTaskReranking import AbsTaskReranking
 
-from src.config import Config
-from src.utilities.helper import read_corpus, read_queries, read_candidates
+from embedding_model_evaluator.config import Config
+from embedding_model_evaluator.utilities.helper import read_corpus, read_queries, read_candidates
 
 log = logging.getLogger(__name__)
 

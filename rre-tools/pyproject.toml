@@ -3,32 +3,28 @@ name = "rre-tools"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
+authors = []
+license = {text = "Apache-2.0"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+requires-python = ">=3.10"
 
-requires-python = ">=3.13"
+# Shared dependencies + import of workspace modules
 dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0.2",
+    "python-dotenv>=1.1.1",
     "dataset-generator",
-    "commons"
-]
-
-[project.scripts]
-rre-tools = "rre_tools:main"
-
-[tool.uv.workspace]
-members = [
     "commons",
-    "dataset-generator"
+    "embedding-model-evaluator"
 ]
 
-[tool.uv.sources]
-dataset-generator = { workspace = true }
-commons           = { workspace = true }
-
-[build-system]
-requires = ["uv_build>=0.8.13,<0.9.0"]
-build-backend = "uv_build"
-
-
-# mypy and ruff
+# mypy/ruff/pytest
 [dependency-groups]
 dev = [
     "mypy>=1.17.1",
@@ -45,19 +41,21 @@ dev = [
 [tool.pytest.ini_options]
 addopts = "-v --tb=short"
 
-[tool.mypy]
-python_version = "3.13"
-exclude = "tests/"
-# Strict but reasonable
-disallow_untyped_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_return_any = true
-show_error_codes = true
-pretty = true
+[project.scripts]
+rre-tools = "rre_tools:main"
 
-# Allow untyped functions in tests for speed
-[[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
-check_untyped_defs = false
+[tool.uv.workspace]
+members = [
+    "commons",
+    "dataset-generator",
+    "embedding-model-evaluator",
+]
+
+[tool.uv.sources]
+dataset-generator         = { workspace = true }
+commons                   = { workspace = true }
+embedding-model-evaluator = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8.13,<0.9.0"]
+build-backend = "uv_build"
