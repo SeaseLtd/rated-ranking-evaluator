@@ -3,6 +3,7 @@ from pydantic import BaseModel, HttpUrl, Field, field_validator, FilePath, model
 import yaml
 import logging
 from pathlib import Path
+from urllib.parse import urljoin
 
 from commons.model import WriterConfig
 
@@ -12,8 +13,8 @@ log = logging.getLogger(__name__)
 class Config(BaseModel):
     query_template: str = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
     search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
-    index_name: str = Field(..., description="Name of the index/collection of the search engine")
-    search_engine_collection_endpoint: HttpUrl
+    collection_name: str = Field(..., description="Name of the index/collection of the search engine")
+    search_engine_url: HttpUrl
     documents_filter: Optional[List[Dict[str, List[str]]]] = Field(
         None,
         description="Optional list of filter conditions for documents"
@@ -37,7 +38,7 @@ class Config(BaseModel):
     def build_writer_config(self) -> WriterConfig:
         return WriterConfig(
             output_format = self.output_format,
-            index = self.index_name,
+            index = self.collection_name,
             id_field = self.id_field,
             query_template = self.rre_query_template,
             query_placeholder = self.rre_query_placeholder
@@ -86,6 +87,13 @@ class Config(BaseModel):
             error_msg = f"Unknown relevance scale: {self.relevance_scale}"
             log.error(error_msg)
             raise ValueError(error_msg)
+
+    @property
+    def search_engine_collection_endpoint(self) -> HttpUrl:
+        """
+        Returns the set of valid labels based on the relevance scale.
+        """
+        return HttpUrl(urljoin(self.search_engine_url.encoded_string() + "/", self.collection_name + "/"))
 
     @model_validator(mode="after")
     def check_rre_fields_required(self) -> "Config":
