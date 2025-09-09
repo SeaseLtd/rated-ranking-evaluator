@@ -1,5 +1,6 @@
 import argparse
 import logging
+from pathlib import Path
 
 import mteb
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
@@ -10,6 +11,8 @@ from embedding_model_evaluator.writers import EmbeddingWriter
 from commons.logger import configure_logging
 
 log = logging.getLogger(__name__)
+
+CACHE_PATH = Path("resources/cache")
 
 
 def _parse_args() -> argparse.Namespace:
@@ -32,19 +35,23 @@ def main() -> None:
     args = _parse_args()
     config: Config = Config.load(args.config)
     task_map = {
-        "retrieval": CustomRetrievalTask(),
-        "reranking": CustomRerankingTask(),
+        "retrieval": CustomRetrievalTask,
+        "reranking": CustomRerankingTask,
     }
 
     model = mteb.get_model(config.model_id)
 
-    cached = CachedEmbeddingWrapper(model, cache_path="cache")
+    model_with_cached_emb = CachedEmbeddingWrapper(model, cache_path=CACHE_PATH)
     log.info(f"Started evaluating MTEB {config.task_to_evaluate} task")
     evaluation = mteb.MTEB(
-        tasks=[task_map.get(config.task_to_evaluate, CustomRetrievalTask())]
+        tasks=[task_map.get(config.task_to_evaluate, CustomRetrievalTask)()]
     )
+    log.info(f"Available tasks: {evaluation.available_tasks}")
     evaluation.run(
-        cached, output_folder=config.output_dest, overwrite_results=True, config=config
+        model=model_with_cached_emb,
+        output_folder=config.output_dest,
+        overwrite_results=True,
+        config=config
     )
     log.info(f"Finished evaluating MTEB {config.task_to_evaluate} task")
 
@@ -54,8 +61,8 @@ def main() -> None:
 
     writer: EmbeddingWriter = EmbeddingWriter(
         config=config,
-        cached=cached,
-        cache_path="cache",
+        cached=model_with_cached_emb,
+        cache_path=CACHE_PATH,
         task_name=task_name,
         normalize_embeddings=True,
         batch_size=256,
