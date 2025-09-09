@@ -105,7 +105,8 @@ class Config(BaseModel):
         :param config_path: Path to the YAML config file
         :return: Parsed and validated Config object
         """
-        with open(config_path, 'r') as f:
+        path = Path(config_path)
+        with path.open('r') as f:
             raw_config = yaml.safe_load(f)
 
         log.debug("Configuration file loaded successfully.")
