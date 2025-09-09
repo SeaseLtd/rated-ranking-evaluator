@@ -1,7 +1,7 @@
 # Missing: query_template
 search_engine_type: "solr"
-index_name: "testcore"
-# Missing: search_engine_collection_endpoint
+collection_name: "testcore"
+# Missing: search_engine_url
 doc_number: 100
 doc_fields: ["title"]
 num_queries_needed: 5

@@ -14,7 +14,9 @@ def config(resource_folder):
 def test_good_config__expects__all_parameters_read(config):
     assert config.query_template == 'q=#$query##&fq=genre:horror&wt=json'
     assert config.search_engine_type == "solr"
-    assert config.search_engine_collection_endpoint == HttpUrl("http://localhost:8983/solr/testcore")
+    assert config.collection_name == "testcore"
+    assert config.search_engine_url == HttpUrl("http://localhost:8983/solr/")
+    assert config.search_engine_collection_endpoint == HttpUrl("http://localhost:8983/solr/testcore/")
     assert config.documents_filter == [
         {"genre": ["horror", "fantasy"]},
         {"type": ["book"]}
@@ -30,7 +32,6 @@ def test_good_config__expects__all_parameters_read(config):
     assert config.output_destination == Path("output")
     assert config.save_llm_explanation is True
     assert config.llm_explanation_destination == Path("output/rating_explanation.json")
-    assert config.index_name == "testcore"
 
 
 def test_missing_optional_field_values__expects__all_defaults_read(resource_folder):
