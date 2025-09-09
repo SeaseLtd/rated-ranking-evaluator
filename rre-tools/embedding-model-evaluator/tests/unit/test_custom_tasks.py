@@ -1,11 +1,11 @@
 from pathlib import Path
 from typing import Literal
-
+import pytest
 import jsonlines
 
-from src.config import Config
-from src.custom_tasks.reranking_task import CustomRerankingTask
-from src.custom_tasks.retrieval_task import CustomRetrievalTask
+from embedding_model_evaluator.config import Config
+from embedding_model_evaluator.custom_tasks.reranking_task import CustomRerankingTask
+from embedding_model_evaluator.custom_tasks.retrieval_task import CustomRetrievalTask
 
 
 def _write_jsonl(path: Path, rows: list[dict]) -> None:
@@ -54,7 +54,7 @@ def _create_dataset_and_load_config(
     )
     return config
 
-
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_custom_retrieval_task_expect_valid_data_shape(tmp_path: Path) -> None:
     config = _create_dataset_and_load_config(tmp_path, "retrieval")
     retrieval_task = CustomRetrievalTask()
@@ -77,7 +77,7 @@ def test_custom_retrieval_task_expect_valid_data_shape(tmp_path: Path) -> None:
     assert "d3" not in relevant_docs["q1"]
     assert retrieval_task.data_loaded is True
 
-
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_custom_reranking_task_expect_valid_data_shape(tmp_path: Path) -> None:
     config = _create_dataset_and_load_config(tmp_path, "reranking")
     reranking_task = CustomRerankingTask()

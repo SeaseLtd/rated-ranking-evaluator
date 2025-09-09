@@ -4,10 +4,11 @@ import logging
 import mteb
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
-from src.config import Config
-from src.custom_tasks.reranking_task import CustomRerankingTask
-from src.custom_tasks.retrieval_task import CustomRetrievalTask
-from src.writers.embedding_writer import EmbeddingWriter
+from embedding_model_evaluator.config import Config
+from embedding_model_evaluator.custom_tasks.reranking_task import CustomRerankingTask
+from embedding_model_evaluator.custom_tasks.retrieval_task import CustomRetrievalTask
+from embedding_model_evaluator.writers.embedding_writer import EmbeddingWriter
+from commons.logger import configure_logging
 
 log = logging.getLogger(__name__)
 
@@ -27,11 +28,7 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(name)s:%(lineno)d | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    configure_logging()
 
     args = _parse_args()
     config: Config = Config.load(args.config)

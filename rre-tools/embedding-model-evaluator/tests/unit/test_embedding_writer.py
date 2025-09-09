@@ -7,13 +7,13 @@ import numpy as np
 import pytest
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
-from src.config import Config
-from src.writers.embedding_writer import EmbeddingWriter
+from embedding_model_evaluator.config import Config
+from embedding_model_evaluator.writers.embedding_writer import EmbeddingWriter
 
 
 @pytest.fixture
 def config() -> Config:
-    return Config.load("tests/unit/resources/valid_config.yaml")
+    return Config.load("embedding-model-evaluator/tests/unit/resources/valid_config.yaml")
 
 
 def _create_fake_cache_wrapper(
