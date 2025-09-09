@@ -5,23 +5,23 @@ model_id: "sentence-transformers/all-MiniLM-L6-v2"
 task_to_evaluate: "reranking"
 
 # Corpus jsonl file path with records - <id,title,text>.
-corpus_path: "resources/data/corpus.jsonl"
+corpus_path: "resources/corpus.jsonl"
 
 # Queries jsonl file path with records - <id,text>.
-queries_path: "resources/data/queries.jsonl"
+queries_path: "resources/queries.jsonl"
 
 # Candidates jsonl file path with records - <query_id,doc_id,rating>.
-candidates_path: "resources/data/candidates.jsonl"
+candidates_path: "resources/candidates.jsonl"
 
 # Relevance scale used in candidates dataset for rating field
 # Accepted values:
 #   - binary: 0 (not relevant), 1 (relevant)
 #   - graded: 0 (not relevant), 1 (maybe ok), 2 (that’s my result)
-relevance_scale: "binary"
+relevance_scale: "graded"
 
 # (Optional) Path to write mteb output, if not given it will be written to output dir in the root folder
-output_dest: "output"
+output_dest: "resources"
 
 # (Optional) Path to write mteb document and query embeddings, if not given it will be written to output/embeddings dir
-embeddings_dest: "output/embeddings"
+embeddings_dest: "resources/embeddings"
 

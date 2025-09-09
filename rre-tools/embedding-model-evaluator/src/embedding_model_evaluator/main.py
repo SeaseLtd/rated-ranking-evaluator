@@ -5,9 +5,8 @@ import mteb
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
 from embedding_model_evaluator.config import Config
-from embedding_model_evaluator.custom_tasks.reranking_task import CustomRerankingTask
-from embedding_model_evaluator.custom_tasks.retrieval_task import CustomRetrievalTask
-from embedding_model_evaluator.writers.embedding_writer import EmbeddingWriter
+from embedding_model_evaluator.custom_tasks import CustomRerankingTask, CustomRetrievalTask
+from embedding_model_evaluator.writers import EmbeddingWriter
 from commons.logger import configure_logging
 
 log = logging.getLogger(__name__)
