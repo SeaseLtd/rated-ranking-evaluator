@@ -42,19 +42,23 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
         doc_number=config.doc_number,
         doc_fields=config.doc_fields
     )
-    for doc in docs_to_generate_queries:
-        doc.is_used_to_generate_queries = True
-        data_store.add_document(doc)
 
     remaining = max(0, config.num_queries_needed - len(data_store.get_queries()))
     if remaining == 0:
+        for doc in docs_to_generate_queries:
+            doc.is_used_to_generate_queries = True
+            data_store.add_document(doc)
         return
+
     num_queries_per_doc: int = int((remaining // max(1, config.doc_number)) * 1.5)
     log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
     log.debug(f"Pending queries to generate: {remaining}")
     log.debug(f"Number of queries per document: {num_queries_per_doc}")
 
     for doc in docs_to_generate_queries:
+        doc.is_used_to_generate_queries = True
+        data_store.add_document(doc)
+
         query_response: LLMQueryResponse = llm_service.generate_queries(doc, num_queries_per_doc)
         for query_ in query_response.get_queries():
             if len(data_store.get_queries()) >= config.num_queries_needed:
@@ -69,7 +73,7 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
 def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_service: LLMService) -> None:
     """Complete the (query, doc) matrix with LLM scores."""
     for query_obj in data_store.get_queries():
-        for doc_obj in data_store.get_documents(only_cartesian_product_documents=True):
+        for doc_obj in data_store.get_cartesian_prod_docs():
             if not data_store.has_rating_score(query_obj.id, doc_obj.id):
                 score_resp: LLMScoreResponse = llm_service.generate_score(
                     doc_obj, query_obj.text, config.relevance_scale, config.save_llm_explanation
