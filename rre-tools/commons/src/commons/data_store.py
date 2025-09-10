@@ -64,9 +64,13 @@ class DataStore:
         """Gets a single document by its ID, or None if not found."""
         return self.docs.get(doc_id)
 
-    def get_documents(self, only_cartesian_product_documents: bool = False) -> List[Document]:
+    def get_documents(self) -> List[Document]:
         """Gets all documents."""
-        return [doc for doc in self.docs.values() if not only_cartesian_product_documents or doc.is_used_to_generate_queries]
+        return list(self.docs.values())
+
+    def get_cartesian_prod_docs(self) -> List[Document]:
+        """Gets only documents used to generate queries."""
+        return [doc for doc in self.docs.values() if doc.is_used_to_generate_queries]
 
     def get_query(self, query_id: str) -> Optional[Query]:
         """Gets a single query by its ID, or None if not found."""

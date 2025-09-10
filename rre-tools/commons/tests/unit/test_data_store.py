@@ -43,6 +43,13 @@ def test_add_and_get_doc__expects__datastore_returns_the_same_document(ds, doc_a
     assert len(ds.get_documents()) == 1
     assert ds.get_document("missing-doc") is None
 
+def test_add_and_get_cartesian_product_docs__expects__datastore_returns_the_same_document(ds, doc_a, doc_b):
+    doc_a.is_used_to_generate_queries = True
+    ds.add_document(doc_a)
+    ds.add_document(doc_b)
+    assert len(ds.get_documents()) == 2
+    assert len(ds.get_cartesian_prod_docs()) == 1
+
 def test_add_document_duplicate__expects__logs_debug_and_keeps_original(ds, doc_a, caplog):
     caplog.set_level(logging.DEBUG)  # Ensure logs are captured (warnings/debug)
     ds.add_document(doc_a)
