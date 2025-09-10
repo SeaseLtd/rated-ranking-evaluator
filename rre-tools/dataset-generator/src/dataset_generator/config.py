@@ -31,7 +31,7 @@ class Config(BaseModel):
     save_llm_explanation: bool = False
     llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
     id_field: Optional[str] = Field(None, description="ID field for the unique key.")
-    rre_query_template: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
+    rre_query_template: Optional[Path] = Field(None, description="Query template for rre evaluator.")
     rre_query_placeholder: Optional[str] = Field(None, description="Key-value pair to substitute in the rre query template.")
     verbose: bool = False
 
