@@ -3,7 +3,7 @@ name = "rre-tools"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-licence = {file = "LICENCE"}
+licence = {file = "LICENSE.md"}
 authors = []
 classifiers = [
     "Development Status :: 3 - Alpha",
