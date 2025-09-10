@@ -3,6 +3,7 @@ name = "embedding_model_evaluator"
 version = "0.1.0"
 description = "Embedding Model Evaluator - A tool for embeddings exact search benchmarking"
 readme = "README.md"
+licence = {file = "LICENCE"}
 authors = []
 classifiers = [
     "Development Status :: 3 - Alpha",
