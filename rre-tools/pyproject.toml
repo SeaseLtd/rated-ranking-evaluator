@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = []
-license = {text = "Apache-2.0"}
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
