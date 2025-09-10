@@ -1,0 +1,6 @@
+{
+  "q": "{!edismax qf=title^2 description mm=1}$query",
+  "rows": 2,
+  "fl": "id,title,description,score",
+  "wt": "json"
+}

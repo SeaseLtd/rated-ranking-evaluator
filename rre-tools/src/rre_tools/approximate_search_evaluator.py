@@ -12,9 +12,9 @@ from commons.model import WriterConfig
 
 logger = logging.getLogger(__name__)
 
-EMBEDDING_FILENAME = Path("resources/embeddings/queries_embeddings.jsonl")
+EMBEDDING_FILENAME = Path("resources/embeddings/query_embeddings.jsonl")
 RATING_FILENAME = Path("rre-evaluator-solr-external/src/ratings/ratings.json")
-TEMPLATE_FILENAME = Path("rre-evaluator-solr-external/src/templates/only_vector.json")
+TEMPLATE_FILENAME = Path("rre-evaluator-solr-external/src/templates/template_solr.json")
 DATASTORE_PATH = Path("resources/tmp/datastore.json")
 
 
@@ -78,7 +78,7 @@ def main() -> None:
     configure_logging(logging.INFO)
 
     TEMPLATE_FILENAME.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy(Path("resources/only_vector.json"), TEMPLATE_FILENAME)
+    shutil.copy(Path("resources") / TEMPLATE_FILENAME.name, TEMPLATE_FILENAME)
 
     logger.info("Initializing DataStore from %s", DATASTORE_PATH)
     data_store = DataStore(path=DATASTORE_PATH)

@@ -20,17 +20,14 @@ dependencies = [
     "pyyaml>=6.0.2",
     "python-dotenv>=1.1.1",
     "dataset-generator",
+    "embedding-model-evaluator",
     "commons"
 ]
 
 [project.scripts]
-approximate-search-evaluator = "rre_tools.main:main"
-
-[tool.uv.workspace]
-members = [
-    "commons",
-    "embedding-model-evaluator"
-]
+dataset-generator = "rre_tools.dataset_generator:main"
+embedding-model-evaluator = "rre_tools.embedding_model_evaluator:main"
+approximate-search-evaluator = "rre_tools.approximate_search_evaluator:main"
 
 # mypy/ruff/pytest
 [dependency-groups]
@@ -49,8 +46,6 @@ dev = [
 [tool.pytest.ini_options]
 addopts = "-v --tb=short"
 
-[project.scripts]
-rre-tools = "rre_tools:main"
 
 [tool.uv.workspace]
 members = [
