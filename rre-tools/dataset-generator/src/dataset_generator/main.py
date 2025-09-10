@@ -43,11 +43,12 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
         doc_fields=config.doc_fields
     )
 
+    for doc in docs_to_generate_queries:
+        doc.is_used_to_generate_queries = True
+        data_store.add_document(doc)
+
     remaining = max(0, config.num_queries_needed - len(data_store.get_queries()))
     if remaining == 0:
-        for doc in docs_to_generate_queries:
-            doc.is_used_to_generate_queries = True
-            data_store.add_document(doc)
         return
 
     num_queries_per_doc: int = int((remaining // max(1, config.doc_number)) * 1.5)
@@ -56,9 +57,6 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
     log.debug(f"Number of queries per document: {num_queries_per_doc}")
 
     for doc in docs_to_generate_queries:
-        doc.is_used_to_generate_queries = True
-        data_store.add_document(doc)
-
         query_response: LLMQueryResponse = llm_service.generate_queries(doc, num_queries_per_doc)
         for query_ in query_response.get_queries():
             if len(data_store.get_queries()) >= config.num_queries_needed:
