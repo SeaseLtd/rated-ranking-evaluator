@@ -167,6 +167,20 @@ wheels = [
 ]
 
 [[package]]
+name = "beir"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "datasets" },
+    { name = "pytrec-eval-terrier" },
+    { name = "sentence-transformers" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/14/23/10e19fa9601fe50c71f65408847e9eccdf3c32a5ed7e382d5bf51de16ebb/beir-2.2.0.tar.gz", hash = "sha256:3bef26652cf9fa209190c3b3b9e9ff684343d66cf39ec637998a6a57e523f786", size = 63959, upload-time = "2025-06-04T17:42:42.731Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8b/bc/fa7702f4d37e4821a55b26a87f95641ce12d09252bc4202025b34bef44a0/beir-2.2.0-py3-none-any.whl", hash = "sha256:46fe4d0a3a6e719090eabc0d1f8aa0c51c6c1379639e6381de5b49e445ab36d1", size = 77357, upload-time = "2025-06-04T17:42:41.252Z" },
+]
+
+[[package]]
 name = "cachetools"
 version = "5.5.2"
 source = { registry = "https://pypi.org/simple" }
@@ -437,12 +451,14 @@ name = "embedding-model-evaluator"
 version = "0.1.0"
 source = { editable = "embedding-model-evaluator" }
 dependencies = [
+    { name = "beir" },
     { name = "jsonlines" },
     { name = "mteb" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "beir", specifier = ">=1.0.0" },
     { name = "jsonlines", specifier = ">=4.0.0" },
     { name = "mteb", specifier = ">=0.1.0" },
 ]
@@ -461,7 +477,7 @@ name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [

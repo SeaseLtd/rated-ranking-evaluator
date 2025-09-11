@@ -15,7 +15,8 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "jsonlines>=4.0.0",
-    "mteb>=0.1.0"
+    "mteb>=0.1.0",
+    "beir>=1.0.0" # For build_dataset.py script
 ]
 
 [project.scripts]
