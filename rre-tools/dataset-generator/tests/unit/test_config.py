@@ -12,7 +12,7 @@ def config(resource_folder):
 
 
 def test_good_config__expects__all_parameters_read(config):
-    assert config.query_template_path == Path('dataset-generator/tests/unit/resources/template_solr.json')
+    assert config.query_template == Path('dataset-generator/tests/unit/resources/template_solr.json')
     assert config.search_engine_type == "solr"
     assert config.collection_name == "testcore"
     assert config.search_engine_url == HttpUrl("http://localhost:8983/solr/")
@@ -41,8 +41,8 @@ def test_missing_optional_field_values__expects__all_defaults_read(resource_fold
     assert hasattr(cfg, "queries")
     assert cfg.queries is None
 
-    assert hasattr(cfg, "query_template_path")
-    assert cfg.query_template_path is None
+    assert hasattr(cfg, "query_template")
+    assert cfg.query_template is None
 
 
 def test_missing_required_field__expects__raises_validation_error(resource_folder):
@@ -63,8 +63,13 @@ def test__expects__raises_file_not_found_error(resource_folder):
         _ = Config.load(resource_folder / file_name)
 
 
-def test_mteb_config__expects__successful_load():
-    path = "dataset-generator/tests/unit/resources/mteb_config.yaml"
-    mteb_config = Config.load(path)
+def test_mteb_config__expects__successful_load(resource_folder):
+    file_name = "mteb_config.yaml"
+    mteb_config = Config.load(resource_folder / file_name)
     assert mteb_config.output_format == "mteb"
     assert mteb_config.output_destination == Path("output")
+
+def test_missing_both_templates_with_rre__expects__raises_validation_error(resource_folder):
+    file_name = "missing_both_templates.yaml"
+    with pytest.raises(ValidationError):
+        _ = Config.load(resource_folder / file_name)

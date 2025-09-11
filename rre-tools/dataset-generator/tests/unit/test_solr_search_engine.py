@@ -60,7 +60,7 @@ def test_solr_search_engine_fetch_for_evaluation__expects__result_returned(monke
 
     # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_evaluation(keyword="and",
-                                                query_template_path=solr_config.query_template_path,
+                                                query_template=solr_config.query_template,
                                                 doc_fields=solr_config.doc_fields)
     assert result[0] == Document(**mock_dict)
 
@@ -90,7 +90,7 @@ def test_solr_search_engine_negative_post_fetch_for_evaluation__expects__raises_
         with pytest.raises(HTTPError):
             search_engine.fetch_for_evaluation(
                 keyword="and",
-                query_template_path=solr_config.query_template_path,
+                query_template=solr_config.query_template,
                 doc_fields=solr_config.doc_fields
             )
 

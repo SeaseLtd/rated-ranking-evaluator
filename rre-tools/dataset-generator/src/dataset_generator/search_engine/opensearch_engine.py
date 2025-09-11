@@ -1,6 +1,5 @@
 import json
 import logging
-from json import JSONDecodeError
 from pathlib import Path
 from typing import List, Dict, Any, Union
 
@@ -62,10 +61,10 @@ class OpenSearchEngine(BaseSearchEngine):
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template_path: Path, doc_fields: List[str], keyword: str = "*") -> List[Document]:
+    def fetch_for_evaluation(self, query_template: Path, doc_fields: List[str], keyword: str = "*") -> List[Document]:
         """Fetches documents for evaluation by executing a query built from a template."""
-        payload: Dict[str, Any] = self.parse_query_template(query_template_path)
-        payload = self.replace_placeholders(payload, self.QUERY_PLACEHOLDER, keyword)
+        payload: Dict[str, Any] = self._parse_query_template(query_template)
+        payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
 
         # query_string_obj = payload.get("query", {}).get("query_string", {})
         # if "query" in query_string_obj:
