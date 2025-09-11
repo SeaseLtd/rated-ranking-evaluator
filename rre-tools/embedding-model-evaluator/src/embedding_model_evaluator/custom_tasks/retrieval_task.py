@@ -51,23 +51,37 @@ class CustomRetrievalTask(AbsTaskRetrieval):
             log.error(message)
             raise ValueError(message)
 
+        # Orden recomendado: leer → castear → validar → construir relevant_docs
         corpus = read_corpus(config.corpus_path)
         queries = read_queries(config.queries_path)
         candidates_data = read_candidates(config.candidates_path)
         
-        # Validate data shapes and log missing IDs
-        _validate_shapes(corpus, queries, candidates_data["candidates"])
+        # Convertir candidates a formato iterable para validación
+        candidates_list = [
+            (qid, did, rating) 
+            for qid, docs in candidates_data["candidates"].items() 
+            for did, rating in docs.items()
+        ]
         
-        # Filter relevant_docs to only include ratings > 0
-        rels = candidates_data["relevant_docs"]
-        filtered_relevant_docs = {
-            qid: {did: r for did, r in dids.items() if r > 0}
-            for qid, dids in rels.items()
-        }
+        # Validate data shapes and log missing IDs
+        _validate_shapes(corpus, queries, candidates_list)
+        
+        # Construir relevancias (binary @ rating>0)
+        relevant_docs = {}
+        for qid, did, rating in candidates_list:
+            if rating and rating > 0:
+                if qid not in relevant_docs:
+                    relevant_docs[qid] = {}
+                relevant_docs[qid][did] = rating
+        
+        # Loggear cuántas queries pierden todos los positivos tras filtrar
+        dropped = sum(1 for qid in queries if qid not in relevant_docs or not relevant_docs[qid])
+        if dropped:
+            log.warning("Queries with no positives after filtering rating>0: %d", dropped)
         
         self.corpus = {"test": corpus}
         self.queries = {"test": queries}
-        self.relevant_docs = {"test": filtered_relevant_docs}
+        self.relevant_docs = {"test": relevant_docs}
         self.data_loaded = True
 
 # the tasks need to be added to the official registry, otherwise are not seen from CachedEmbeddingWrapper class
