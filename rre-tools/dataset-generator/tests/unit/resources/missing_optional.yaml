@@ -1,4 +1,4 @@
-# Missing: query_template_path (optional)
+# Missing: query_template (optional)
 search_engine_type: "solr"
 collection_name: "testcore"
 search_engine_url: "http://localhost"
@@ -11,5 +11,5 @@ output_format: "rre"
 output_destination: "output.json"
 llm_explanation_destination: "output/rating_explanation.json"
 id_field: "id"
-rre_query_template: "dataset-generator/tests/unit/resources/only_q.json"
+rre_query_template: "dataset-generator/tests/unit/resources/template_solr.json"
 rre_query_placeholder: "$query"

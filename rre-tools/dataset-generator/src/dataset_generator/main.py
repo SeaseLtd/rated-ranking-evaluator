@@ -85,11 +85,11 @@ def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_serv
 def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore,
                                  llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
     """Retrieve docs for each query and score the (q, doc) pairs."""
-    if config.query_template_path is not None:
-        log.debug(f"Searching for documents with query template in {config.query_template_path}")
+    if config.query_template is not None:
+        log.debug(f"Searching for documents with query template in {config.query_template}")
         for query_obj in data_store.get_queries():
             docs_eval: List[Document] = search_engine.fetch_for_evaluation(
-                keyword=query_obj.text, query_template_path=config.query_template_path, doc_fields=config.doc_fields
+                keyword=query_obj.text, query_template=config.query_template, doc_fields=config.doc_fields
             )
             for doc_obj in docs_eval:
                 data_store.add_document(doc_obj)
@@ -102,7 +102,7 @@ def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore
                         score_resp.explanation if config.save_llm_explanation else None
                     )
     else:
-        log.warning(f"Query template not found. Skipping retrieval.")
+        log.warning("Query template not found. Skipping retrieval.")
 
 
 

@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class Config(BaseModel):
-    query_template_path: Optional[FilePath] = Field(
+    query_template: Optional[FilePath] = Field(
         None,
         description="Path pointing to a template file for queries with a placeholder for keywords."
     )
@@ -34,18 +34,19 @@ class Config(BaseModel):
     save_llm_explanation: bool = False
     llm_explanation_destination: Optional[Path] = Field(None, description="Path to save the LLM rating explanation")
     id_field: Optional[str] = Field(None, description="ID field for the unique key.")
-    rre_query_template_path: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
+    rre_query_template: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
     rre_query_placeholder: Optional[str] = Field(None, description="Key-value pair to substitute in the rre query template.")
     verbose: bool = False
 
     def build_writer_config(self) -> WriterConfig:
-        if self.rre_query_template_path is None:
-            if self.query_template_path is None:
-                query_template = None
-            else:
-                query_template = self.query_template_path.name
+        if self.rre_query_template is not None:
+            query_template = self.rre_query_template.name
         else:
-            query_template = self.rre_query_template_path.name
+            if self.query_template is not None:
+                query_template = self.query_template.name
+            else:
+                query_template = None
+
 
         return WriterConfig(
             output_format = self.output_format,
@@ -112,7 +113,7 @@ class Config(BaseModel):
             raise ValueError("id_field is required when output_format='rre'")
         elif self.output_format == "rre" and not self.rre_query_placeholder:
             raise ValueError("rre_query_placeholder is required when output_format='rre'")
-        elif self.output_format == "rre" and not self.rre_query_template_path and not self.query_template_path:
+        elif self.output_format == "rre" and not self.rre_query_template and not self.query_template:
             raise ValueError("At least one query template is required when output_format='rre'")
         return self
 

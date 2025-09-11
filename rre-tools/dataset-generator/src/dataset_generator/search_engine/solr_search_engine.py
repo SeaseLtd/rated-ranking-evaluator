@@ -1,9 +1,9 @@
+from pathlib import Path
 from urllib.parse import urljoin
 import requests
 from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 from typing import List, Dict, Any, Union
-from urllib.parse import parse_qs
 
 from dataset_generator.search_engine.search_engine_base import BaseSearchEngine
 from commons.model.document import Document
@@ -63,20 +63,20 @@ class SolrSearchEngine(BaseSearchEngine):
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template_path: Path, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
+    def fetch_for_evaluation(self, query_template: Path, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
         """
         Executes a search using a query template for evaluation purposes.
 
         Args:
-            query_template_path (Path): Path variable pointing to the file with the payload a placeholder for the keyword.
+            query_template (Path): Path variable pointing to the file with the payload a placeholder for the keyword.
             doc_fields (List[str]): List of fields to include in the response.
             keyword (str, optional): Keyword to inject into the query template. Defaults to "*:*".
 
         Returns:
             List[Document]: A list of documents matching the query.
         """
-        payload: Dict[str, Any] = self.parse_query_template(query_template_path)
-        payload = self.replace_placeholders(payload, self.QUERY_PLACEHOLDER, keyword)
+        payload: Dict[str, Any] = self._parse_query_template(query_template)
+        payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
 
         payload = {
             "query": payload["q"],

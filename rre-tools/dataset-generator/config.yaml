@@ -2,7 +2,7 @@
 # dataset-generator module
 # Default: "q=#$query##"
 # Example (solr):
-query_template_path: "resources/template_solr.json"
+query_template: "resources/template_solr.json"
 
 # The type of search engine to use
 # Accepted values: solr, elasticsearch, opensearch, vespa
@@ -62,7 +62,7 @@ output_format: "quepid"
 
 # For rre output format, you need other fields, e.g.:
 #id_field: "id"
-#rre_query_template_path: "resources/only_vector.json" # optional, if not filled, is the same as query_template_path
+#rre_query_template: "resources/only_vector.json" # optional, if not filled, is the same as query_template_path
 #rre_query_placeholder: "$query"
 
 # Path where the output dataset will be saved
