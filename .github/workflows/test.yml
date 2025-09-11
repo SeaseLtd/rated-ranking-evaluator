@@ -2,9 +2,16 @@ name: CI Pipeline
 
 on:
   pull_request:
-    branches: [main, dataset-generator]
+    types: [opened, synchronize, reopened] # conditions on PR to apply checks 
+    # branches: [] -  ommited. Apply checks on all PRs against any branch when types are met
     paths:
       - 'rre-tools/**/*.py'
+      - 'rre-tools/pyproject.toml'
+      - 'rre-tools/uv.lock'
+      - 'rre-tools/ruff.toml'
+      - 'rre-tools/mypy.ini'
+      - 'rre-tools/pytest.ini'
+      - 'rre-tools/tests/**'
       - '.github/workflows/**'
 
 concurrency:
@@ -13,7 +20,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write # for annotations in the PR UI (e.g:mypy, ruff)
 
 jobs:
   lint:
