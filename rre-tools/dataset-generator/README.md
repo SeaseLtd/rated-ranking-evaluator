@@ -104,6 +104,10 @@ This will start 2 services:
  - `solr`, available at http://localhost:8983/solr
  - `solr-init`, loads documents from solr-init/data/dataset.json.
 
+**Note:** for hygiene reasons we recommend building the `Solr` container without cache first:
+```bash
+docker-compose -f docker-compose.solr.yml build --no-cache
+```
 
 ##### Running OpenSearch (Single Node)
 

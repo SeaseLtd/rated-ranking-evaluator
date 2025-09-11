@@ -9,7 +9,7 @@ services:
   prepare-embeddings-dir:
     build:
       context: solr-init
-    command: ["sh", "-c", "mkdir", "-p", "/workspace/resources/embeddings"]
+    command: ["sh","-c","mkdir -p /workspace/output/embeddings"]
     volumes:
       - ../resources:/workspace/resources
     restart: "no"
