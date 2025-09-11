@@ -6,7 +6,7 @@ from mteb.abstasks.AbsTaskRetrieval import AbsTaskRetrieval
 from mteb.overview import TASKS_REGISTRY
 
 from embedding_model_evaluator.config import Config
-from embedding_model_evaluator.utilities.helper import read_corpus, read_queries, read_candidates
+from embedding_model_evaluator.utilities.helper import read_corpus, read_queries, read_candidates, _validate_shapes
 
 log = logging.getLogger(__name__)
 
@@ -51,11 +51,23 @@ class CustomRetrievalTask(AbsTaskRetrieval):
             log.error(message)
             raise ValueError(message)
 
-        self.corpus = {"test": read_corpus(config.corpus_path)}
-        self.queries = {"test": read_queries(config.queries_path)}
-        self.relevant_docs = {
-            "test": read_candidates(config.candidates_path)["relevant_docs"]
+        corpus = read_corpus(config.corpus_path)
+        queries = read_queries(config.queries_path)
+        candidates_data = read_candidates(config.candidates_path)
+        
+        # Validate data shapes and log missing IDs
+        _validate_shapes(corpus, queries, candidates_data["candidates"])
+        
+        # Filter relevant_docs to only include ratings > 0
+        rels = candidates_data["relevant_docs"]
+        filtered_relevant_docs = {
+            qid: {did: r for did, r in dids.items() if r > 0}
+            for qid, dids in rels.items()
         }
+        
+        self.corpus = {"test": corpus}
+        self.queries = {"test": queries}
+        self.relevant_docs = {"test": filtered_relevant_docs}
         self.data_loaded = True
 
 # the tasks need to be added to the official registry, otherwise are not seen from CachedEmbeddingWrapper class
