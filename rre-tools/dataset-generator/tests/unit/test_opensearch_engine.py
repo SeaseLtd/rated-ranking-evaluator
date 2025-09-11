@@ -76,7 +76,7 @@ def test_fetch_for_evaluation(monkeypatch, opensearch_config, opensearch_hit):
     monkeypatch.setattr(requests, "post", mock_post)
 
     result = opensearch.fetch_for_evaluation(
-        query_template=opensearch_config.query_template,
+        query_template_path=opensearch_config.query_template_path,
         keyword="car",
         doc_fields=opensearch_config.doc_fields
     )

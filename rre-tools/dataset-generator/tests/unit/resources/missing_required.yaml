@@ -1,4 +1,4 @@
-# Missing: query_template
+# Missing: query_template_path
 search_engine_type: "solr"
 collection_name: "testcore"
 # Missing: search_engine_url

@@ -1,4 +1,4 @@
-# Missing: query_template (optional)
+# Missing: query_template_path (optional)
 search_engine_type: "solr"
 collection_name: "testcore"
 search_engine_url: "http://localhost"

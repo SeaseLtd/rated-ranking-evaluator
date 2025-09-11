@@ -1,5 +1,6 @@
 import json
 from json import JSONDecodeError
+from pathlib import Path
 
 import requests
 from urllib.parse import urljoin
@@ -71,13 +72,12 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: Optional[str] = None) -> List[Document]:
+    def fetch_for_evaluation(self, query_template_path: Path, doc_fields: List[str], keyword: Optional[str] = None) -> List[Document]:
         """
         Executes a search for evaluation using a query template with an optional keyword substitution.
 
         Args:
-            query_template (str): A JSON-formatted string representing the Elasticsearch query,
-                possibly containing a placeholder for a keyword.
+            query_template_path (Path): Path variable pointing to the file with the payload a placeholder for the keyword.
             doc_fields (List[str]): List of field names to include in the response.
             keyword (str, optional): A keyword to replace the placeholder in the query.
                 If not provided, a default match_all query is used.
@@ -85,14 +85,12 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents matching the query.
         """
-        try:
-            payload: Dict[str, Any] = json.loads(query_template)
-        except JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON query_template: {e}")
+        payload: Dict[str, Any] = self.parse_query_template(query_template_path)
+        payload = self.replace_placeholders(payload, self.QUERY_PLACEHOLDER, keyword)
 
-        query_string_obj = payload.get("query", {}).get("query_string", {})
-        if "query" in query_string_obj:
-            query_string_obj["query"] = query_string_obj["query"].replace(self.PLACEHOLDER, keyword)
+        # query_string_obj = payload.get("query", {}).get("query_string", {})
+        # if "query" in query_string_obj:
+        #     query_string_obj["query"] = query_string_obj["query"].replace(self.QUERY_PLACEHOLDER, keyword)
 
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
         payload["_source"] = fields

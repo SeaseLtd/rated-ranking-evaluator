@@ -62,7 +62,7 @@ class MtebWriter(AbstractWriter):
             output_path: Directory where the MTEB files will be written
             datastore: DataStore containing the data to write
         """
-        path = Path(output_path)
+        path = Path(output_path / "data")
         path.mkdir(parents=True, exist_ok=True)
         try:
             self._write_corpus(path / "corpus.jsonl", datastore)

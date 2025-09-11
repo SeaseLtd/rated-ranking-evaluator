@@ -8,11 +8,11 @@ from dataset_generator.config import Config
 
 @pytest.fixture
 def config(resource_folder):
-    return Config.load(resource_folder / "good_config.yaml")
+    return Config.load(resource_folder / "good_config_solr.yaml")
 
 
 def test_good_config__expects__all_parameters_read(config):
-    assert config.query_template == 'q=#$query##&fq=genre:horror&wt=json'
+    assert config.query_template_path == Path('dataset-generator/tests/unit/resources/template_solr.json')
     assert config.search_engine_type == "solr"
     assert config.collection_name == "testcore"
     assert config.search_engine_url == HttpUrl("http://localhost:8983/solr/")
@@ -41,8 +41,8 @@ def test_missing_optional_field_values__expects__all_defaults_read(resource_fold
     assert hasattr(cfg, "queries")
     assert cfg.queries is None
 
-    assert hasattr(cfg, "query_template")
-    assert cfg.query_template == 'q=#$query##'
+    assert hasattr(cfg, "query_template_path")
+    assert cfg.query_template_path is None
 
 
 def test_missing_required_field__expects__raises_validation_error(resource_folder):

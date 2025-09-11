@@ -24,33 +24,6 @@ class SolrSearchEngine(BaseSearchEngine):
         self.UNIQUE_KEY = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/uniquekey')).json()['uniqueKey']
         log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
 
-    def _template_to_json_payload(self, template_payload: str) -> Dict[str, Any]:
-        """
-        Converts a Solr query string into a structured JSON body.
-
-        Args:
-            template_payload (str): The Solr query string, e.g., 'q=ghosts&fq=genre:horror&wt=json'.
-
-        Returns:
-            dict: A dictionary representing the query parameters.
-        """
-        # Parse the query string into a dictionary
-        json_body: Dict[str, List[str]] = parse_qs(template_payload)
-
-        defaults = {
-            'q': '*:*',
-            'wt': 'json'
-        }
-
-        # Substitute missing parameters with default values
-        for key, default_value in defaults.items():
-            if key not in json_body or not json_body[key]:
-                json_body[key] = [default_value]
-
-        return {
-            'query': json_body['q'][0],
-            'params': {k: v[0] for k, v in json_body.items() if k != 'q'}
-        }
 
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
@@ -90,22 +63,29 @@ class SolrSearchEngine(BaseSearchEngine):
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
+    def fetch_for_evaluation(self, query_template_path: Path, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
         """
         Executes a search using a query template for evaluation purposes.
 
         Args:
-            query_template (str): A Solr query template string with a placeholder for the keyword.
+            query_template_path (Path): Path variable pointing to the file with the payload a placeholder for the keyword.
             doc_fields (List[str]): List of fields to include in the response.
             keyword (str, optional): Keyword to inject into the query template. Defaults to "*:*".
 
         Returns:
             List[Document]: A list of documents matching the query.
         """
-        template = query_template.replace(self.PLACEHOLDER, keyword)
-        payload = self._template_to_json_payload(template)
+        payload: Dict[str, Any] = self.parse_query_template(query_template_path)
+        payload = self.replace_placeholders(payload, self.QUERY_PLACEHOLDER, keyword)
+
+        payload = {
+            "query": payload["q"],
+            "params": {key: value for key, value in payload.items() if key != "q"}
+        }
+
         # here fl is overwritten, even if in the template there are other fields in the 'fl' key
-        payload['params']['fl'] = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
+        fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
+        payload["params"]['fl'] = fields
         return self._search(payload)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
