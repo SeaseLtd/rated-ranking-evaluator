@@ -35,7 +35,7 @@ class SolrSearchEngine(BaseSearchEngine):
             dict: A dictionary representing the query parameters.
         """
         # Parse the query string into a dictionary
-        json_body = parse_qs(template_payload)
+        json_body: Dict[str, List[str]] = parse_qs(template_payload)
 
         defaults = {
             'q': '*:*',
@@ -119,6 +119,9 @@ class SolrSearchEngine(BaseSearchEngine):
             List[Document]: A list of documents formatted as `Document` instances.
         """
         search_url = urljoin(self.endpoint.encoded_string(), 'select')
+
+        # Force Solr to return a JSON formatted response
+        payload['params']['wt'] = 'json'
 
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
