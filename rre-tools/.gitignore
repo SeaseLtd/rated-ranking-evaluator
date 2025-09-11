@@ -12,7 +12,6 @@ wheels/
 # Virtual environments
 .env
 .venv
-uv.lock
 
 # Local Files and Directories
 .output_dataset
