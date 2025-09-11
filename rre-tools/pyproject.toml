@@ -20,8 +20,8 @@ dependencies = [
     "pyyaml>=6.0.2",
     "python-dotenv>=1.1.1",
     "dataset-generator",
-    "embedding-model-evaluator",
-    "commons"
+    "commons",
+    "embedding-model-evaluator"
 ]
 
 [project.scripts]
