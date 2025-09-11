@@ -9,7 +9,7 @@ from mteb.overview import TASKS_REGISTRY
 from embedding_model_evaluator.config import Config
 from embedding_model_evaluator.custom_tasks import CustomRerankingTask, CustomRetrievalTask # noqa: F401
 from embedding_model_evaluator.writers import EmbeddingWriter
-from commons.logger import configure_logging
+from commons.logger import configure_logging # type: ignore[import]
 
 log = logging.getLogger(__name__)
 
