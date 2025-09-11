@@ -1,31 +1,104 @@
-name: Unit Tests
+name: CI Pipeline
 
 on:
   pull_request:
-    branches: [ main, dataset-generator ]
+    branches: [main, dataset-generator]
+    paths:
+      - 'rre-tools/**/*.py'
+      - '.github/workflows/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true # cancel older runs when pushing several times to the same PR
+
+permissions:
+  contents: read
+  pull-requests: write # for annotations in the PR UI (e.g:mypy, ruff)
 
 jobs:
-  test:
+  lint:
+    name: Linting (ruff)
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: rre-tools
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - name: Cache uv and venv
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            rre-tools/.venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('rre-tools/uv.lock') }} # Common cache: key = hash OS + deps
+          restore-keys: |
+            ${{ runner.os }}-uv-
+      - name: Install dependencies (locked)
+        run: uv sync --locked
+      - name: Run ruff check
+        run: uv run ruff check --output-format=github --force-exclude . # exclude routes contained in .gitignore / .ruffignore
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
+  type-check:
+    name: Type Checking (mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: rre-tools
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - name: Cache uv and venv
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            rre-tools/.venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('rre-tools/uv.lock') }} # Common cache: key = hash OS + deps
+          restore-keys: |
+            ${{ runner.os }}-uv-
+      - name: Install dependencies (locked)
+        run: uv sync --locked
+      - name: Run mypy
+        run: uv run mypy src/ --install-types --non-interactive # avoid missing stubs
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
-      with:
-        version: "latest"
-
-    - name: Install dependencies
-      run: uv sync
-      working-directory: rre-tools
-
-    - name: Run unit tests
-      run: uv run pytest
-      working-directory: rre-tools
+  test:
+    name: Unit Tests (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: rre-tools
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - name: Cache uv and venv
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            rre-tools/.venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('rre-tools/uv.lock') }} # Common cache: key = hash OS + deps
+          restore-keys: |
+            ${{ runner.os }}-uv-
+      - name: Install dependencies (locked)
+        run: uv sync --locked
+      - name: Run unit tests
+        run: uv run pytest -q
