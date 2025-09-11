@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Iterable, Tuple
+from collections import Counter
 
 from jsonlines import jsonlines
 
@@ -45,33 +46,49 @@ def read_candidates(path: Path) -> dict[str, dict[str, dict[str, int]]]:
     }
 
 
-def _validate_shapes(corpus: Dict[str, dict], queries: Dict[str, str], candidates: Dict[str, Dict[str, int]]) -> None:
-    """Validate data shapes and log missing IDs to detect mismatches early."""
-    n_docs = len(corpus)
-    n_q = len(queries)
-    n_pairs = sum(len(v) for v in candidates.values())
+def _validate_shapes(
+    corpus: Dict[str, dict], 
+    queries: Dict[str, str], 
+    candidates: Iterable[Tuple[str, str, int]]
+) -> None:
+    """Validate data shapes and log missing IDs, duplicates, empty texts, and rating distribution."""
+    # Conteos
+    n_docs, n_queries = len(corpus), len(queries)
+
+    # Conjuntos de IDs
+    doc_ids = set(corpus.keys())
+    query_ids = set(queries.keys())
+
+    # Pase sobre candidatos
+    miss_docs = 0
+    miss_queries = 0
+    label_hist = Counter()
+    seen_pairs = set()
+    dup_pairs = 0
     
-    log.info("Loaded corpus=%d, queries=%d, candidate_pairs=%d", n_docs, n_q, n_pairs)
-    
-    # Sample check for missing document IDs in candidates
-    missing = 0
-    for qid, cmap in candidates.items():
-        for did in cmap.keys():
-            if did not in corpus:
-                missing += 1
-                if missing <= 5:  # Log only first 5 to avoid spam
-                    log.warning("candidate doc_id %s not found in corpus", did)
-    
-    if missing:
-        log.error("Missing %d candidate doc ids in corpus", missing)
-    
-    # Check for queries in candidates that don't exist in queries dict
-    missing_queries = 0
-    for qid in candidates.keys():
-        if qid not in queries:
-            missing_queries += 1
-            if missing_queries <= 5:
-                log.warning("candidate query_id %s not found in queries", qid)
-    
-    if missing_queries:
-        log.error("Missing %d candidate query ids in queries", missing_queries)
+    for qid, did, rating in candidates:
+        label_hist[rating] += 1
+        if qid not in query_ids:
+            miss_queries += 1
+        if did not in doc_ids:
+            miss_docs += 1
+        key = (qid, did)
+        if key in seen_pairs:
+            dup_pairs += 1
+        else:
+            seen_pairs.add(key)
+
+    # Textos vacíos (muestra, no O(N) caro si ya lo tienes indexado)
+    empty_docs = sum(1 for d in corpus.values() if not (d.get("text") or "").strip())
+    empty_queries = sum(1 for q in queries.values() if not (q or "").strip())
+
+    log.info(
+        "Validate: docs=%d, queries=%d, candidates=%d, labels=%s, "
+        "missing_docs=%d, missing_queries=%d, empty_docs=%d, empty_queries=%d, dup_pairs=%d",
+        n_docs, n_queries, len(seen_pairs), dict(label_hist),
+        miss_docs, miss_queries, empty_docs, empty_queries, dup_pairs
+    )
+
+    # Fail-fast estrictos
+    if miss_docs or miss_queries:
+        raise ValueError(f"Missing references: docs={miss_docs}, queries={miss_queries}")
