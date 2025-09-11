@@ -1,0 +1,10 @@
+{
+    "query": {
+        "query_string": {
+            "query": "$query",
+            "default_field": "description",
+            "default_operator": "OR"
+        }
+    },
+    "size": 20
+}

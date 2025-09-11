@@ -1,13 +1,7 @@
-query_template: "q=#$query##&fq=genre:horror&wt=json"
-search_engine_type: "solr"
+query_template_path: "dataset-generator/tests/unit/resources/template_elasticsearch.json"
+search_engine_type: "elasticsearch"
 collection_name: "testcore"
-search_engine_url: "http://localhost:8983/solr/"
-documents_filter:
-  - genre:
-      - "horror"
-      - "fantasy"
-  - type:
-      - "book"
+search_engine_url: 'http://localhost:9200/'
 doc_number: 100
 doc_fields:
   - "title"
@@ -19,5 +13,4 @@ relevance_scale: "graded"
 llm_configuration_file: "dataset-generator/tests/unit/resources/llm_config.yaml"
 output_format: "quepid"
 output_destination: "output"
-save_llm_explanation: true
-llm_explanation_destination: "output/rating_explanation.json"
+

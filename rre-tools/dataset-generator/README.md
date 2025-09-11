@@ -21,7 +21,7 @@ uv sync
 
 Create a `config.yaml` file in the root directory. This file controls the entire generation process. E.g:
 ```yaml
-query_template: "q=#$query##&fq=genre:horror&wt=json"
+query_template_path: "resources/template_solr.json"
 search_engine_type: "solr"
 collection_name: "testcore"
 search_engine_endpoint: "http://localhost:8983/solr/"
