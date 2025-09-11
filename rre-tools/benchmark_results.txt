@@ -1,0 +1,3 @@
+Dataset: scifact, Time: 22.79 seconds
+Dataset: nfcorpus, Time: 10.62 seconds
+Dataset: msmarco, Time: 1227.8 seconds
