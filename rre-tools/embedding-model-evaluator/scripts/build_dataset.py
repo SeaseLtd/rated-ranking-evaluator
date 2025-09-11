@@ -14,11 +14,15 @@ Notes:
 """
 
 from __future__ import annotations
-import argparse, csv, json, logging
-from pathlib import Path
-from typing import Iterable, Optional, Set, Tuple
 
-import jsonlines  # pip install jsonlines
+import argparse
+import csv
+import json
+import logging
+from pathlib import Path
+from typing import Any, Iterable, Optional, Set, Tuple
+
+import jsonlines
 
 BEIR_DATASET_URL = "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{dataset}.zip"
 DEFAULT_OUT_ROOT = Path("resources/beir_datasets")
@@ -51,7 +55,7 @@ def setup_logging(level: str) -> None:
     )
 
 # ------------------------- BEIR download -------------------------
-def import_beir_util():
+def import_beir_util() -> Any:
     try:
         from beir import util  # type: ignore
     except Exception as e:
@@ -71,7 +75,7 @@ def download_dataset(dataset: str, cache_dir: Path) -> Path:
         raise SystemExit(1)
 
 # ------------------------- IO paths -------------------------
-def resolve_paths(dataset: str, split: str, out_root_arg: Optional[str], cache_dir_arg: Optional[str]):
+def resolve_paths(dataset: str, split: str, out_root_arg: Optional[str], cache_dir_arg: Optional[str]) -> tuple[Path, Path, Path, Path, Path, Path]:
     out_root = Path(out_root_arg) if out_root_arg else DEFAULT_OUT_ROOT
     out_dir = out_root / dataset / split
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -83,7 +87,7 @@ def resolve_paths(dataset: str, split: str, out_root_arg: Optional[str], cache_d
     cache_dir.mkdir(parents=True, exist_ok=True)
     return out_root, out_dir, corpus_out, queries_out, candidates_out, cache_dir
 
-def beir_inputs(data_path: Path, split: str):
+def beir_inputs(data_path: Path, split: str) -> tuple[Path, Path, Path]:
     corpus_in = data_path / "corpus.jsonl"
     queries_in = data_path / "queries.jsonl"
     qrels_in = data_path / "qrels" / f"{split}.tsv"
@@ -101,26 +105,42 @@ def pick(row: dict, keys: Iterable[str]) -> Optional[str]:
             return str(v)
     return None
 
+
 def norm_str(v: object) -> str:
-    if v is None: return ""
-    if isinstance(v, str): return v
-    if isinstance(v, list): return "\n".join(str(x) for x in v if x is not None)
+    if v is None:
+        return ""
+    if isinstance(v, str):
+        return v
+    if isinstance(v, list):
+        return "\n".join(str(x) for x in v if x is not None)
     return str(v)
+
 
 def normalize_doc(row: dict) -> Tuple[str, str]:
     title = norm_str(row.get("title", ""))
-    text = norm_str(row.get("text") or row.get("abstract") or row.get("contents") or row.get("body") or "")
+    text_fields = [
+        row.get("text"),
+        row.get("abstract"),
+        row.get("contents"),
+        row.get("body"),
+        ""
+    ]
+    text = next((str(field) for field in text_fields if field), "")
     return title, text
 
 def to_int(v: Optional[str]) -> int:
-    if v is None: return 0
-    try: return int(v)
-    except: 
-        try: return int(float(v))
-        except: return 0
+    if v is None:
+        return 0
+    try:
+        return int(v)
+    except (ValueError, TypeError):
+        try:
+            return int(float(v))
+        except (ValueError, TypeError):
+            return 0
 
 # ------------------------- Pass 1: decide caps -------------------------
-def collect_keep_sets(qrels_path: Path, max_q: int, max_d: int):
+def collect_keep_sets(qrels_path: Path, max_q: int, max_d: int) -> tuple[Optional[set[str]], Optional[set[str]], int, Optional[list[str]]]:
     keep_q: Optional[Set[str]] = set() if max_q > 0 else None
     doc_seen: Optional[Set[str]] = set() if max_d > 0 else None
     doc_order: Optional[list[str]] = [] if max_d > 0 else None
@@ -188,7 +208,7 @@ def write_corpus(corpus_in: Path, corpus_out: Path, max_docs: int,
 
 # ------------------------- Pass 2b: candidates -------------------------
 def write_candidates(qrels_path: Path, out_path: Path,
-                     keep_q: Optional[Set[str]], keep_docs: Optional[Set[str]]):
+                     keep_q: Optional[Set[str]], keep_docs: Optional[Set[str]]) -> tuple[int, int, set[str]]:
     """
     Write all qrels. Track queries with ≥1 positive pair for the next pass.
     """
@@ -248,9 +268,13 @@ def main() -> None:
         log.error("max-docs and max-queries must be >= 0")
         raise SystemExit(1)
 
-    out_root, out_dir, corpus_out, queries_out, candidates_out, cache_dir = resolve_paths(
-        args.dataset, args.split, args.out_root, args.cache_dir
+    paths = resolve_paths(
+        args.dataset,
+        args.split,
+        args.out_root,
+        args.cache_dir
     )
+    out_root, out_dir, corpus_out, queries_out, candidates_out, cache_dir = paths
     if not args.overwrite and any(p.exists() for p in (corpus_out, queries_out, candidates_out, out_dir / "manifest.json")):
         log.error("Outputs exist in %s. Use --overwrite to replace.", out_dir)
         raise SystemExit(1)
@@ -259,8 +283,10 @@ def main() -> None:
     corpus_in, queries_in, qrels_in = beir_inputs(data_path, args.split)
 
     keep_q, keep_docs, qrels_total, doc_order = collect_keep_sets(qrels_in, args.max_queries, args.max_docs)
-    if keep_q is not None: log.info("Capped queries to %d by qrels order", len(keep_q))
-    if keep_docs is not None: log.info("Capped docs to %d by first-encounter order", len(keep_docs))
+    if keep_q is not None:
+        log.info("Capped queries to %d by qrels order", len(keep_q))
+    if keep_docs is not None:
+        log.info("Capped docs to %d by first-encounter order", len(keep_docs))
 
     written_doc_ids, corpus_count = write_corpus(corpus_in, corpus_out, args.max_docs, keep_docs, doc_order)
     cand_total, cand_pos, qids_with_pos = write_candidates(qrels_in, candidates_out, keep_q, written_doc_ids)
