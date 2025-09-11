@@ -96,8 +96,15 @@ class CustomRerankingTask(AbsTaskReranking):
         queries = read_queries(config.queries_path)
         candidates = read_candidates(config.candidates_path)["candidates"]
         
+        # Convertir candidates a formato iterable para validación
+        candidates_list = [
+            (qid, did, rating) 
+            for qid, docs in candidates.items() 
+            for did, rating in docs.items()
+        ]
+        
         # Validate data shapes and log missing IDs
-        _validate_shapes(corpus, queries, candidates)
+        _validate_shapes(corpus, queries, candidates_list)
 
         dataset = _build_dataset(corpus, queries, candidates, config.relevance_scale)
 
