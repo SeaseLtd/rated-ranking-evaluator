@@ -52,14 +52,14 @@ def _validate_shapes(
     candidates: Iterable[Tuple[str, str, int]]
 ) -> None:
     """Validate data shapes and log missing IDs, duplicates, empty texts, and rating distribution."""
-    # Conteos
+    # Counts
     n_docs, n_queries = len(corpus), len(queries)
 
-    # Conjuntos de IDs
+    # ID sets
     doc_ids = set(corpus.keys())
     query_ids = set(queries.keys())
 
-    # Pase sobre candidatos
+    # Process candidates
     miss_docs = 0
     miss_queries = 0
     label_hist = Counter()
@@ -78,7 +78,7 @@ def _validate_shapes(
         else:
             seen_pairs.add(key)
 
-    # Textos vacíos (muestra, no O(N) caro si ya lo tienes indexado)
+    # Empty texts (sample, not O(N) expensive if already indexed)
     empty_docs = sum(1 for d in corpus.values() if not (d.get("text") or "").strip())
     empty_queries = sum(1 for q in queries.values() if not (q or "").strip())
 
@@ -89,6 +89,6 @@ def _validate_shapes(
         miss_docs, miss_queries, empty_docs, empty_queries, dup_pairs
     )
 
-    # Fail-fast estrictos
+    # Strict fail-fast
     if miss_docs or miss_queries:
         raise ValueError(f"Missing references: docs={miss_docs}, queries={miss_queries}")

@@ -51,12 +51,12 @@ class CustomRetrievalTask(AbsTaskRetrieval):
             log.error(message)
             raise ValueError(message)
 
-        # Orden recomendado: leer → castear → validar → construir relevant_docs
+        # Recommended order: read → cast → validate → build relevant_docs
         corpus = read_corpus(config.corpus_path)
         queries = read_queries(config.queries_path)
         candidates_data = read_candidates(config.candidates_path)
         
-        # Convertir candidates a formato iterable para validación
+        # Convert candidates to iterable format for validation
         candidates_list = [
             (qid, did, rating) 
             for qid, docs in candidates_data["candidates"].items() 
@@ -66,7 +66,7 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         # Validate data shapes and log missing IDs
         _validate_shapes(corpus, queries, candidates_list)
         
-        # Construir relevancias (binary @ rating>0)
+        # Build relevances (binary @ rating>0)
         relevant_docs = {}
         for qid, did, rating in candidates_list:
             if rating and rating > 0:
@@ -74,7 +74,7 @@ class CustomRetrievalTask(AbsTaskRetrieval):
                     relevant_docs[qid] = {}
                 relevant_docs[qid][did] = rating
         
-        # Loggear cuántas queries pierden todos los positivos tras filtrar
+        # Log how many queries lose all positives after filtering
         dropped = sum(1 for qid in queries if qid not in relevant_docs or not relevant_docs[qid])
         if dropped:
             log.warning("Queries with no positives after filtering rating>0: %d", dropped)

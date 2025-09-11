@@ -96,7 +96,7 @@ class CustomRerankingTask(AbsTaskReranking):
         queries = read_queries(config.queries_path)
         candidates = read_candidates(config.candidates_path)["candidates"]
         
-        # Convertir candidates a formato iterable para validación
+        # Convert candidates to iterable format for validation
         candidates_list = [
             (qid, did, rating) 
             for qid, docs in candidates.items() 
