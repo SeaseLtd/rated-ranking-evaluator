@@ -13,7 +13,7 @@ from commons.logger import configure_logging # type: ignore[import]
 
 log = logging.getLogger(__name__)
 
-CACHE_PATH = Path("resources/cache")
+CACHE_PATH = Path("resources") / "cache"
 
 TASKS_NAME_MAPPING = {
         "retrieval": "CustomRetrievalTask",
