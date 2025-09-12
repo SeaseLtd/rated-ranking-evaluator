@@ -27,7 +27,7 @@ class SolrSearchEngine(BaseSearchEngine):
 
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   doc_number: int, doc_fields: List[str], start: int =0) \
+                                   doc_number: int, doc_fields: List[str], start: int = 0) \
             -> List[Document]:
         """
         Fetches a set of documents from Solr for the purpose of query generation.
