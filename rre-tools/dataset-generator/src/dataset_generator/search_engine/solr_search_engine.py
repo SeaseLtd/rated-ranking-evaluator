@@ -27,7 +27,7 @@ class SolrSearchEngine(BaseSearchEngine):
 
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   doc_number: int, doc_fields: List[str]) \
+                                   doc_number: int, doc_fields: List[str], start: int =0) \
             -> List[Document]:
         """
         Fetches a set of documents from Solr for the purpose of query generation.
@@ -36,6 +36,7 @@ class SolrSearchEngine(BaseSearchEngine):
             documents_filter (Union[None, List[Dict[str, List[str]]]]): Optional filter constraints for fields and their allowed values.
             doc_number (int): Number of documents to retrieve.
             doc_fields (List[str]): List of field names to include in the output.
+            start (int, optional): Starting index of the query. Defaults to 0.
 
         Returns:
             List[Document]: A list of retrieved documents as `Document` objects.
@@ -44,6 +45,7 @@ class SolrSearchEngine(BaseSearchEngine):
             'query': '*:*',
             'params': {
                 'rows': doc_number,
+                'start': start,
                 'fl' : doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
             }
         }

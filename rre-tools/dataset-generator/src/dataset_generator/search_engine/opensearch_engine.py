@@ -27,7 +27,8 @@ class OpenSearchEngine(BaseSearchEngine):
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
-                                   doc_fields: List[str]) -> List[Document]:
+                                   doc_fields: List[str],
+                                   start: int = 0) -> List[Document]:
         """Fetches a list of documents for query generation based on optional filters."""
         filters: List[Dict[str, Any]] = []
         if documents_filter:
@@ -56,6 +57,7 @@ class OpenSearchEngine(BaseSearchEngine):
         payload = {
             "query": query,
             "_source": fields,
+            "from": start,
             "size": doc_number
         }
 

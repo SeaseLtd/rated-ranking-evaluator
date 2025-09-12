@@ -28,7 +28,8 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
-                                   doc_fields: List[str]) -> List[Document]:
+                                   doc_fields: List[str],
+                                   start: int = 0) -> List[Document]:
         """
         Fetches a set of documents from Elasticsearch for query generation purposes.
 
@@ -37,6 +38,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
                 Each filter is a dictionary mapping field names to allowed values.
             doc_number (int): Number of documents to retrieve.
             doc_fields (List[str]): List of field names to include in the output.
+            start (int, optional): Starting index. Defaults to 0.
 
         Returns:
             List[Document]: A list of documents formatted as `Document` instances.
@@ -66,6 +68,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         payload = {
             "size": doc_number,
             "query": query,
+            "from": start,
             "_source": doc_fields
         }
 
