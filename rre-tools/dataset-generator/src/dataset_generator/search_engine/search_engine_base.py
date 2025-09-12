@@ -6,11 +6,31 @@ from typing import List, Dict, Any, Union
 from pydantic import HttpUrl
 from commons.model.document import Document
 
+DOC_NUMBER_EACH_FETCH = 100
+
 class BaseSearchEngine(ABC):
     def __init__(self, endpoint: HttpUrl):
         self.endpoint = HttpUrl(endpoint)
         self.QUERY_PLACEHOLDER = "$query"
         self.UNIQUE_KEY = 'id'
+
+        def fetch_all(self, doc_fields: List[str]) -> List[Document]:
+            """Extract all documents from search engine."""
+            # Now this is relying on fetch_for_query_generation to avoid duplicate code. Might be changed in the future
+            all_doc: List[Document] = []
+            start = 0
+            while True:
+                all_doc.extend(self.fetch_for_query_generation(documents_filter=None,
+                                                               doc_number=DOC_NUMBER_EACH_FETCH,
+                                                               doc_fields=doc_fields,
+                                                               start=start
+                                                               )
+                               )
+                if start >= len(all_doc):
+                    break
+                start += DOC_NUMBER_EACH_FETCH
+
+            return all_doc
 
 
     def _parse_query_template(self, path: Path | str) -> Dict[str, Any]:
@@ -41,7 +61,8 @@ class BaseSearchEngine(ABC):
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
-                                   doc_fields: List[str]) \
+                                   doc_fields: List[str],
+                                   start: int = 0) \
             -> List[Document]:
         """Extract documents for generating queries."""
         raise NotImplementedError

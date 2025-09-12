@@ -139,7 +139,6 @@ def main() -> None:
 
     # write results
     output_destination = config.output_destination
-    writer.write(output_destination, data_store)
     log.info(f"Synthetic Dataset has been generated in: {output_destination}")
     data_store.save()
 
@@ -148,6 +147,15 @@ def main() -> None:
         if llm_explanation_path := config.llm_explanation_destination:
             data_store.export_all_records_with_explanation(llm_explanation_path)
             log.info(f"Dataset with LLM explanation is saved into: {llm_explanation_path}")
+
+    # TODO:
+    #  work on a better solution, instead of adding it directly into the datastore, and maybe modify the MtebWriter
+    #  with the fetch from the search engine
+    if config.output_format == "mteb":
+        all_doc: List[Document] = search_engine.fetch_all(doc_fields=config.doc_fields)
+        for doc in all_doc:
+            data_store.add_document(doc)
+    writer.write(output_destination, data_store)
 
 if __name__ == "__main__":
     main()
