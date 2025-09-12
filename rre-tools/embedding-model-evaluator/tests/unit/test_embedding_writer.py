@@ -13,7 +13,19 @@ from embedding_model_evaluator.writers.embedding_writer import EmbeddingWriter
 
 @pytest.fixture
 def config() -> Config:
-    return Config.load("embedding-model-evaluator/tests/unit/resources/valid_config.yaml")
+    # Create config with absolute paths to avoid validation issues
+    base_path = Path(__file__).parent / "resources" / "data"
+    
+    return Config(
+        model_id="sentence-transformers/all-MiniLM-L6-v2",
+        task_to_evaluate="retrieval",
+        corpus_path=base_path / "corpus.jsonl",
+        queries_path=base_path / "queries.jsonl",
+        candidates_path=base_path / "candidates.jsonl",
+        relevance_scale="binary",
+        output_dest=Path("output"),
+        embeddings_dest=Path("output/dummy_embeddings")
+    )
 
 
 def _create_fake_cache_wrapper(
