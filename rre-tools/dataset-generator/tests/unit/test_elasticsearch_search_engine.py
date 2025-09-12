@@ -5,6 +5,7 @@ from pydantic_core import ValidationError
 
 from commons.logger import configure_logging
 from dataset_generator.config import Config
+from dataset_generator.search_engine.search_engine_base import DOC_NUMBER_EACH_FETCH
 from mocks.elasticsearch import MockResponseElasticsearchEngine
 
 from dataset_generator.search_engine import ElasticsearchSearchEngine
@@ -63,6 +64,27 @@ def test_elasticsearch_search_engine_fetch_for_evaluation__expects__result_retur
                                                 query_template=elasticsearch_config.query_template,
                                                 doc_fields=elasticsearch_config.doc_fields)
     assert result[0] == Document(**mock_dict)
+
+def test_elasticsearch_engine_fetch_all__expects__results_returned(monkeypatch, elasticsearch_config, mock_doc, mock_dict):
+    search_engine = ElasticsearchSearchEngine("https://fakeurl")
+
+    call_counter = {"count": 0}
+
+    def mock_post(*args, **kwargs):
+        call_counter["count"] += 1
+        if call_counter["count"] == 1:
+            return MockResponseElasticsearchEngine([mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
+        elif call_counter["count"] == 2:
+            return MockResponseElasticsearchEngine([mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
+        else:
+            return MockResponseElasticsearchEngine([], status_code=200)
+
+    monkeypatch.setattr(requests, "post", mock_post)
+
+    # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
+    result = search_engine.fetch_all(doc_fields=elasticsearch_config.doc_fields)
+    assert result[0] == Document(**mock_dict)
+    assert len(result) == 2*DOC_NUMBER_EACH_FETCH
 
 def test_elasticsearch_search_engine_negative_post_fetch_for_query_generation__expects__raises_http_error(monkeypatch, elasticsearch_config):
     for status_code in [400, 401, 402, 403, 500]:

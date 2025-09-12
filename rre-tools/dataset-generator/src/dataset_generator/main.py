@@ -8,11 +8,10 @@ from dataset_generator.config import Config
 from dataset_generator.utils import parse_args
 from commons.logger import configure_logging
 from dataset_generator.llm import LLMConfig, LLMService, LLMServiceFactory
-from commons.model import Document, Query,  LLMQueryResponse, LLMScoreResponse, WriterConfig
+from commons.model import Document, Query, LLMQueryResponse, LLMScoreResponse, WriterConfig
 from commons.writers import WriterFactory, AbstractWriter
 from dataset_generator.search_engine import SearchEngineFactory, BaseSearchEngine
 from commons.data_store import DataStore
-
 
 log: Logger = getLogger(__name__)
 
@@ -35,7 +34,8 @@ def add_user_queries(config: Config, data_store: DataStore) -> None:
                     data_store.add_query(clean_line)
 
 
-def generate_and_add_queries(config: Config, data_store: DataStore, llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
+def generate_and_add_queries(config: Config, data_store: DataStore, llm_service: LLMService,
+                             search_engine: BaseSearchEngine) -> None:
     """Retrieve docs and generate queries with LLM Service. Adds docs, queries and ratings to the datastore."""
     docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
         documents_filter=config.documents_filter,
@@ -83,7 +83,7 @@ def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_serv
 
 
 def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore,
-                                 llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
+                                           llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
     """Retrieve docs for each query and score the (q, doc) pairs."""
     if config.query_template is not None:
         log.debug(f"Searching for documents with query template in {config.query_template}")
@@ -105,7 +105,6 @@ def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore
         log.warning("Query template not found. Skipping retrieval.")
 
 
-
 def main() -> None:
     # configuration and logger definition
     args = parse_args()
@@ -124,7 +123,7 @@ def main() -> None:
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
     writer: AbstractWriter = WriterFactory.build(writer_config)
-    
+
     # load user queries
     add_user_queries(config, data_store)
 
@@ -151,6 +150,7 @@ def main() -> None:
     # TODO:
     #  work on a better solution, instead of adding it directly into the datastore, and maybe modify the MtebWriter
     #  with the fetch from the search engine
+    data_store: DataStore = DataStore()    # init again, without autosave this time
     if config.output_format == "mteb":
         all_doc: List[Document] = search_engine.fetch_all(doc_fields=config.doc_fields)
         for doc in all_doc:

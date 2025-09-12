@@ -91,10 +91,6 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         payload: Dict[str, Any] = self._parse_query_template(query_template)
         payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
 
-        # query_string_obj = payload.get("query", {}).get("query_string", {})
-        # if "query" in query_string_obj:
-        #     query_string_obj["query"] = query_string_obj["query"].replace(self.QUERY_PLACEHOLDER, keyword)
-
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
         payload["_source"] = fields
         return self._search(payload)
