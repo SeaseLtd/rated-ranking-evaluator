@@ -7,7 +7,7 @@ from mteb.abstasks.AbsTaskReranking import AbsTaskReranking
 from mteb.overview import TASKS_REGISTRY
 
 from embedding_model_evaluator.config import Config
-from embedding_model_evaluator.utilities.helper import read_corpus, read_queries, read_candidates
+from embedding_model_evaluator.utilities.helper import read_corpus, read_queries, read_candidates, _validate_shapes
 
 log = logging.getLogger(__name__)
 
@@ -95,6 +95,16 @@ class CustomRerankingTask(AbsTaskReranking):
         corpus = read_corpus(config.corpus_path)
         queries = read_queries(config.queries_path)
         candidates = read_candidates(config.candidates_path)["candidates"]
+        
+        # Convert candidates to iterable format for validation
+        candidates_list = [
+            (qid, did, rating) 
+            for qid, docs in candidates.items() 
+            for did, rating in docs.items()
+        ]
+        
+        # Validate data shapes and log missing IDs
+        _validate_shapes(corpus, queries, candidates_list)
 
         dataset = _build_dataset(corpus, queries, candidates, config.relevance_scale)
 
