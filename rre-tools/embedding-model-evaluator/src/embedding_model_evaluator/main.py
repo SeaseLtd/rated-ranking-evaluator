@@ -32,7 +32,7 @@ log = logging.getLogger(__name__)
 CACHE_PATH = Path("resources/cache")
 CACHE_PATH.mkdir(parents=True, exist_ok=True)
 
-# Map our simple "task key" -> registered MTEB task class name
+# Map simple "task key" -> registered MTEB task class name
 TASKS_NAME_MAPPING = {
     "retrieval": "CustomRetrievalTask",
     "reranking": "CustomRerankingTask",
@@ -68,7 +68,7 @@ def _build_task(task_key: str, dataset_name: str, split: str) -> Any:
         task = task_cls(dataset_names=[dataset_name], eval_splits=[split])
         return task
     except TypeError:
-        # Fallback: default constructor + attribute injection (if supported)
+        # Fallback: default constructor + attribute injection
         task = task_cls()
         if hasattr(task, "dataset_names"):
             setattr(task, "dataset_names", [dataset_name])
@@ -108,7 +108,7 @@ def main() -> None:
         model=model_with_cache,
         output_folder=config.output_dest,
         overwrite_results=True,
-        config=config,   # preserve your custom config flow
+        config=config,   # preserve custom config flow
     )
     log.info("Finished MTEB evaluation.")
 
@@ -121,7 +121,7 @@ def main() -> None:
         normalize_embeddings=True,
         batch_size=256,
     )
-    log.info("Writing embeddings to %s ...", config.embeddings_dest)
+    log.info(f"Writing embeddings to {config.embeddings_dest} ...")
     writer.write(config.embeddings_dest)
     log.info("Done.")
 
