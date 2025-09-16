@@ -1,0 +1,14 @@
+model_id: "sentence-transformers/all-MiniLM-L6-v2"
+task_to_evaluate: "retrieval"
+
+# Paths are relative to the execution directory, which should be the project root.
+data_folder: "rre-tools/resources/beir_datasets/nfcorpus/test"
+corpus_path: "${data_folder}/corpus.jsonl"
+queries_path: "${data_folder}/queries.jsonl"
+candidates_path: "${data_folder}/candidates.jsonl"
+
+output_dest: "rre-tools/embedding-model-evaluator/results/nfcorpus"
+embeddings_dest: "rre-tools/embedding-model-evaluator/embeddings/nfcorpus"
+
+# Task-specific settings
+relevance_scale: "binary"
