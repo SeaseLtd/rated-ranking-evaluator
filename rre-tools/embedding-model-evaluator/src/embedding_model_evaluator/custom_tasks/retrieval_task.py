@@ -67,7 +67,7 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         _validate_shapes(corpus, queries, candidates_list)
         
         # Build relevances (binary @ rating>0)
-        relevant_docs = {}
+        relevant_docs: dict[str, dict[str, int]] = {}
         for qid, did, rating in candidates_list:
             if rating and rating > 0:
                 if qid not in relevant_docs:
@@ -75,7 +75,10 @@ class CustomRetrievalTask(AbsTaskRetrieval):
                 relevant_docs[qid][did] = rating
         
         # Log how many queries lose all positives after filtering
-        dropped = sum(1 for qid in queries if qid not in relevant_docs or not relevant_docs[qid])
+        dropped = len([
+            qid for qid in queries.keys()
+            if (qid not in relevant_docs) or (not relevant_docs.get(qid))
+        ])
         if dropped:
             log.warning("Queries with no positives after filtering rating>0: %d", dropped)
         
