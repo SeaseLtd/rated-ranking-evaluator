@@ -15,10 +15,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "jsonlines>=4.0.0",
-    "mteb>=0.1.0",
-    "datasets>=2.20.0",
-    "rank-bm25>=0.2.2",
-    "beir>=1.0.0" # exporter optional runtime
+    "mteb>=0.1.0"
 ]
 
 [project.scripts]
