@@ -46,6 +46,8 @@ def create_test_config(tmp_path: Path, task_to_evaluate: str = "retrieval") -> C
         queries_path=queries_path,
         candidates_path=candidates_path,
         relevance_scale="graded",
+        dataset_name="dummy-dataset",
+        split="test",
         output_dest=tmp_path / "output",
         embeddings_dest=tmp_path / "output/embeddings",
     )

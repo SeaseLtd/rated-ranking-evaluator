@@ -90,6 +90,8 @@ def mock_config(temp_dataset_files):
         queries_path=temp_dataset_files["queries_path"],
         candidates_path=temp_dataset_files["candidates_path"],
         relevance_scale="graded",
+        dataset_name="dummy-dataset",
+        split="test",
         output_dest=temp_dataset_files["tmp_path"] / "output",
         embeddings_dest=temp_dataset_files["tmp_path"] / "output/embeddings",
     )
@@ -127,6 +129,8 @@ def create_test_config(
         queries_path=queries_path,
         candidates_path=candidates_path,
         relevance_scale="graded",
+        dataset_name="dummy-dataset",
+        split="test",
         output_dest=tmp_path / "output",
         embeddings_dest=tmp_path / "output/embeddings",
     )

@@ -23,6 +23,8 @@ def config() -> Config:
         queries_path=base_path / "queries.jsonl",
         candidates_path=base_path / "candidates.jsonl",
         relevance_scale="binary",
+        dataset_name="dummy-dataset",
+        split="test",
         output_dest=Path("output"),
         embeddings_dest=Path("output/dummy_embeddings")
     )
