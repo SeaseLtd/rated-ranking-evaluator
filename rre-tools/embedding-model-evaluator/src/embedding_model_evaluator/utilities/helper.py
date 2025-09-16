@@ -62,8 +62,8 @@ def _validate_shapes(
     # Process candidates
     miss_docs = 0
     miss_queries = 0
-    label_hist = Counter()
-    seen_pairs = set()
+    label_hist: Counter[int] = Counter()
+    seen_pairs: set[tuple[str, str]] = set()
     dup_pairs = 0
     
     for qid, did, rating in candidates:
