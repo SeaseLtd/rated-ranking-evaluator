@@ -63,7 +63,7 @@ class SolrSearchEngine(BaseSearchEngine):
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template: Path, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
+    def fetch_for_evaluation(self, query_template: Path | str, doc_fields: List[str], keyword: str="*:*") -> List[Document]:
         """
         Executes a search using a query template for evaluation purposes.
 
@@ -75,6 +75,7 @@ class SolrSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents matching the query.
         """
+        query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)
         payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
 

@@ -21,7 +21,7 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "dataset-generator",
     "commons",
-    "embedding-model-evaluator"
+    "embedding-model-evaluator",
 ]
 
 # mypy/ruff/pytest
@@ -52,9 +52,9 @@ members = [
 ]
 
 [tool.uv.sources]
-dataset-generator         = { workspace = true }
 commons                   = { workspace = true }
 embedding-model-evaluator = { workspace = true }
+dataset-generator = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8.13,<0.9.0"]
