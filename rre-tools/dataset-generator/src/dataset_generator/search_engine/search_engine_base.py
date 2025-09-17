@@ -13,8 +13,9 @@ class BaseSearchEngine(ABC):
         self.UNIQUE_KEY = 'id'
 
 
-    def _parse_query_template(self, path: Path) -> Dict[str, Any]:
+    def _parse_query_template(self, path: Path | str) -> Dict[str, Any]:
         """Return the payload"""
+        path = Path(path)
         try:
             with path.open() as f:
                 data: Dict[str, Any] = json.load(f)
@@ -47,7 +48,7 @@ class BaseSearchEngine(ABC):
 
     @abstractmethod
     def fetch_for_evaluation(self,
-                             query_template: Path,
+                             query_template: Path | str,
                              doc_fields: List[str],
                              keyword: str="*:*") \
             -> List[Document]:
