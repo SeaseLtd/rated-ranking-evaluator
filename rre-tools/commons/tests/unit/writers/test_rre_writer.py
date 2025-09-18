@@ -14,7 +14,7 @@ def writer_config():
         output_format='rre',
         index='testcore',
         id_field='id',
-        query_template='dataset-generator/tests/unit/resources/only_q.json',
+        query_template='only_q.json',
         query_placeholder='$query',
     )
 
