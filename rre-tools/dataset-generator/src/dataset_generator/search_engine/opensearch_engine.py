@@ -80,11 +80,13 @@ class OpenSearchEngine(BaseSearchEngine):
         """Perform a search to OpenSearch and return matching documents based on the given payload."""
         search_url = f"{self.endpoint}/_search"
         log.debug(f"User-specified fields: {payload.get('_source')}")
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
         except (ConnectionError, Timeout, RequestException, HTTPError) as e:
-            log.error(f"OpenSearch query failed: {e}\nPayload: {payload}")
+            log.error(f"OpenSearch query failed: {e}")
             raise
 
         hits = response.json().get("hits", {}).get("hits", [])

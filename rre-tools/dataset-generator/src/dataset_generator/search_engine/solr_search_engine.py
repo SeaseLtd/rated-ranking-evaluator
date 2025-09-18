@@ -104,11 +104,14 @@ class SolrSearchEngine(BaseSearchEngine):
         # Force Solr to return a JSON formatted response
         payload['params']['wt'] = 'json'
 
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
+
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
         except (ConnectionError, Timeout, RequestException, HTTPError) as e:
-            log.error(f"Solr query failed: {e}\nPayload: {payload}")
+            log.error(f"Solr query failed: {e}\n")
             raise
 
         hits = response.json().get('response', {}).get('docs', [])
