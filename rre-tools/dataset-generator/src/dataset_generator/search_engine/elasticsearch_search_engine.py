@@ -108,11 +108,14 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         """
         search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
+
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
         except (ConnectionError, Timeout, RequestException, HTTPError) as e:
-            log.error(f"ElasticSearch query failed: {e}\nPayload: {payload}")
+            log.error(f"ElasticSearch query failed: {e}")
             raise
 
         hits = response.json().get('hits', {}).get('hits', [])
