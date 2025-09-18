@@ -40,7 +40,7 @@ class Config(BaseModel):
             output_format = self.output_format,
             index = self.collection_name,
             id_field = self.id_field,
-            query_template = self.rre_query_template,
+            query_template = self.rre_query_template.name if self.rre_query_template else None,
             query_placeholder = self.rre_query_placeholder
         )
 
