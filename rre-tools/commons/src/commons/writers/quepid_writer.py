@@ -29,7 +29,7 @@ class QuepidWriter(AbstractWriter):
         output_path = Path(output_path) / QUEPID_OUTPUT_FILENAME
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, 'w', newline='') as csvfile:
+        with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['query', 'docid', 'rating'])
             
