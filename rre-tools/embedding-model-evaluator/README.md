@@ -1,51 +1,96 @@
-# Exact Search Evaluator
+# Embedding Model Evaluator
 
-## Installing and Use
+## Installation and Usage
 
 ```bash
-# create env if don't exists
+# Create virtual environment (if it doesn’t exist)
 uv venv .venv
 
-# activate env
+# Activate virtual environment
 source .venv/bin/activate
 
-# install dependencies (editable mode - for devs)
-uv pip install -e . 
+# Install dependencies in editable mode (for development)
+uv pip install -e .
 
-# install dependencies (for users)
+# Install dependencies (for end users)
 uv sync
 
-# install optional dev dependencies such as mypy/ruff
+# Install optional development dependencies (mypy, ruff, etc.)
 uv sync --extra dev
+```
 
+### Generate an MTEB Dataset in IR Task Format
+
+```bash
 cd embedding-model-evaluator
 
-# Generate a mteb dataset in the ingestion format for BEIR
-# default output:  ./resources/mteb_datasets/arguana/train/
-uv run scripts/mteb_retrieval_dataset_generator.py --dataset "arguana" --split "train"
+# Generate an MTEB dataset in IR task format
+uv run scripts/mteb_retrieval_dataset_generator.py \
+    --dataset "arguana" \
+    --split "train"
 
-## arguana dataset is related to an IR task, so for running the main pipeline
-## in this case we need to set the task_to_evaluate to "retrieval" in the configuration file
+# Expected default output: ./resources/mteb_datasets/arguana/train/
+```
 
-# Run exact search evaluator with  yaml config file
+> **Note:** The *arguana* dataset is related to an Information Retrieval task.
+> Therefore, set `task_to_evaluate: "retrieval"` in the configuration file.
+
+### Run the Exact Search Evaluator with a YAML Config
+
+```bash
 uv run embedding-model-evaluator --config "config.yaml"
 ```
-> "mteb_retrieval_dataset_generator" CLI params:
-scripts/mteb_retrieval_dataset_generator.py
 
-> "embedding-model-evaluator" config parameters:
-- embedding model name (list)
-- dataset metadata (list - name, path or url)
-- task_to_evaluate (internal mapping (name-id)? EG: {"Retrieval:0, Rerank: 1..}, or flat. Eg: "Retrieval", "Rerank"..)
+---
 
+## `mteb_retrieval_dataset_generator` CLI Parameters - IR dataset
+
+**Required**
+
+* `--dataset`: MTEB dataset name (e.g. `"scifact"`)
+* `--split`: Dataset split to export (default `"test"`, others: `"train"`, `"dev"`)
+
+**Optional**
+
+* `--out-root`: Output directory (default `resources/mteb_datasets`)
+* `--overwrite`: Overwrite existing outputs (default `False`)
+* `--max-docs`: Maximum number of documents to export (0 = no limit)
+* `--max-queries`: Maximum number of queries to export (0 = no limit)
+* `--negatives-per-query`: Number of random negatives per query (0 = disabled)
+* `--seed`: Random seed (default 42)
+
+**Note:** by default the qrels.json of IR dataset **does not** include negative samples -> if we want to include them (simple negative-mining), we need to use the `--negatives-per-query` parameter.
+---
+
+## `embedding-model-evaluator` Config Parameters - IR dataset
+
+**Required**
+
+* `model_id`: Hugging Face Model ID (e.g. `"sentence-transformers/all-MiniLM-L6-v2"`)
+* `task_to_evaluate`: `"retrieval"` or `"reranking"`
+* `corpus_path`: path to `corpus.jsonl`
+* `queries_path`: path to `queries.jsonl`
+* `candidates_path`: path to `candidates.jsonl`
+* `relevance_scale`: `"binary"` or `"graded"`
+* `dataset_name`: custom dataset name
+
+**Optional**
+
+* `split`: dataset split (default `"test"`, others: `"train"`, `"dev"`)
+* `output_dest`: directory for evaluation results
+* `embeddings_dest`: directory to save embeddings
+
+---
 
 ## Code Quality Tools
 
-This project uses [Ruff](https://github.com/astral-sh/ruff) for linting and [Mypy](https://mypy.readthedocs.io/) for static type checking to maintain code quality and consistency.
+This project uses:
 
-### Running Code Quality Checks
+* [Ruff](https://github.com/astral-sh/ruff) for linting.
+* [Mypy](https://mypy.readthedocs.io/) for static type checking.
 
-#### Linting with Ruff
+### Linting with Ruff
+
 ```bash
 # Check for issues
 ruff check .
@@ -53,22 +98,34 @@ ruff check .
 # Auto-fix fixable issues
 ruff check --fix .
 
-# Format code (if formatter is enabled)
+# Format code (if enabled)
 ruff format .
 ```
 
-#### Type Checking with Mypy
+### Type Checking with Mypy
+
 ```bash
 # Run type checking
 mypy .
 ```
 
-### Configuration Files
-- `ruff.toml`: Configures Ruff's linting rules and settings
-- `mypy.ini`: Configures Mypy's type checking settings
+**Config Files**
 
-> **Theory Note: Exact Search vs. Approximate Search**
+* `ruff.toml`: Ruff linting rules and settings.
+* `mypy.ini`: Mypy type checking rules and settings.
 
-- **Approximate Search** uses a proxy to score a subset of documents considered *similar* via a pre-filtering stage. Techniques like ANN (Approximate Nearest Neighbors) rely on precomputed structures in the index (e.g., HNSW, IVF) to accelerate retrieval at the cost of some accuracy.
+---
 
-- **Exact Search**, by contrast here we compute the distance between every query and every document in the dataset (brute-force). This guarantees finding the "true" nearest neighbors (limited to the embedding model precision on the domain), but is computationally expensive and scales worse with dataset size.
+## Theory Note: Exact Search vs. Approximate Search
+
+* **Approximate Search**
+  Selects a subset of *potentially similar* documents using precomputed index structures (ANN, HNSW, IVF, etc.).
+
+  * **Advantage:** Faster retrieval.
+  * **Trade-off:** Some accuracy loss.
+
+* **Exact Search**
+  Computes the distance between each query and **all** documents in the dataset (brute-force).
+
+  * **Advantage:** Guaranteed to return the true nearest neighbors (limited only by embedding precision).
+  * **Drawback:** Computationally expensive and scales poorly for large datasets.
