@@ -45,7 +45,7 @@ def _create_fake_cache_wrapper(
     return cached
 
 
-def test_embeddings_writer_expect_jsonl_files_success(
+def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_correct_embeddings(
     config: Config, tmp_path: Path
 ) -> None:
     doc_vectors = [[0.1, 0.2, 0.3]]

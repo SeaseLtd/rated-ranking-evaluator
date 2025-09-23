@@ -12,7 +12,7 @@ def config() -> Config:
     return Config.load("embedding-model-evaluator/tests/unit/resources/valid_config.yaml")
 
 
-def test_valid_config_expect_all_params_read(config: Config) -> None:
+def test_config_with_valid_yaml_file__expects__loads_all_parameters_correctly(config: Config) -> None:
     assert config.model_id == "sentence-transformers/all-MiniLM-L6-v2"
     assert config.corpus_path == FilePath("embedding-model-evaluator/tests/unit/resources/data/corpus.jsonl")
     assert config.queries_path == FilePath("embedding-model-evaluator/tests/unit/resources/data/queries.jsonl")
@@ -24,7 +24,7 @@ def test_valid_config_expect_all_params_read(config: Config) -> None:
     assert config.relevance_scale == "binary"
 
 
-def test_invalid_config_expects_error_on_file_extension() -> None:
+def test_config_with_invalid_file_extension__expects__raises_validation_error() -> None:
     path = "embedding-model-evaluator/tests/unit/resources/invalid_config.yaml"
     with pytest.raises(ValidationError):
         _ = Config.load(path)
