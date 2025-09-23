@@ -27,10 +27,10 @@ from typing import Any, Dict, Iterator, Optional, Set, Tuple, List
 # Default out root aligned with embedding-model-evaluator/resources/mteb_datasets
 DEFAULT_OUT_ROOT = (Path(__file__).resolve().parents[1] / "resources" / "mteb_datasets")
 DEFAULT_DATASET = "scifact"
-DEFAULT_SPLIT = "test"  # "train" | "dev" | "test"
+DEFAULT_SPLIT = "test"    # "train" | "dev" | "test"
 DEFAULT_OVERWRITE = False
-DEFAULT_MAX_QUERIES = 0  # 0 = no cap
-DEFAULT_MAX_DOCS = 0     # 0 = no cap
+DEFAULT_MAX_QUERIES = 0   # 0 = no cap
+DEFAULT_MAX_DOCS = 0      # 0 = no cap
 
 # ---- Negative sampling (minimal) ----
 DEFAULT_NEGATIVE_PER_QUERY = 0   # 0 disables negatives
@@ -38,7 +38,7 @@ DEFAULT_RNG_SEED = 42
 
 # ===============================================
 
-# ---- dependencies ----
+# ---- dependencies (avoid circular imports) ----
 try:
     import jsonlines  # type: ignore
 except Exception:
@@ -52,7 +52,6 @@ except Exception:
     raise
 
 log = logging.getLogger("mteb_export_min")
-# Random seeding is applied in main() based on CLI args.
 
 # ------------------------- CLI -------------------------
 def parse_args() -> argparse.Namespace:
@@ -102,31 +101,36 @@ def setup_logging() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-def s(v: Any) -> str:
-    return "" if v is None else (v if isinstance(v, str) else str(v))
+def to_string(value: Any) -> str:
+    """Convert any value to string safely, returning empty string for None."""
+    return "" if value is None else (value if isinstance(value, str) else str(value))
 
-def s_norm(v: Any) -> str:
-    if v is None:
+def normalize_text(value: Any) -> str:
+    """Normalize text fields handling various data types including lists."""
+    if value is None:
         return ""
-    if isinstance(v, str):
-        return v
-    if isinstance(v, list):
-        return "\n".join(s(x) for x in v if x is not None)
-    return s(v)
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return "\n".join(to_string(x) for x in value if x is not None)
+    return to_string(value)
 
-def to_int(v: Any) -> int:
+def to_int(value: Any) -> int:
+    """Convert any value to integer safely, returning 0 for invalid values.
+    Tries direct int conversion first, then float->int, finally defaults to 0.
+    """
     try:
-        return int(v)
-    except Exception:
+        return int(value)
+    except (ValueError, TypeError):
         try:
-            return int(float(v))
-        except Exception:
+            return int(float(value))
+        except (ValueError, TypeError):
             return 0
 
 def normalize_doc(row: Dict[str, Any]) -> Tuple[str, str]:
     """Normalize common document fields into (title, text)."""
-    title = s_norm(row.get("title") or row.get("Title") or row.get("headline") or row.get("name"))
-    text  = s_norm(row.get("text")  or row.get("abstract") or row.get("contents") or row.get("body"))
+    title = normalize_text(row.get("title") or row.get("Title") or row.get("headline") or row.get("name"))
+    text  = normalize_text(row.get("text")  or row.get("abstract") or row.get("contents") or row.get("body"))
     return title, text
 
 def ensure_outputs(out_dir: Path, overwrite: bool) -> Tuple[Path, Path, Path, Path]:
@@ -156,6 +160,7 @@ class MtebLoader:
         self.hub_id = self._resolve_hub_id()
 
     def _resolve_hub_id(self) -> str:
+        """Resolve the dataset ID from the task name."""
         # Try exact then lowercase variant
         candidates = (f"mteb/{self.task_name}", f"mteb/{self.task_name.lower()}")
         last_err: Optional[Exception] = None
@@ -171,6 +176,7 @@ class MtebLoader:
         raise RuntimeError(f"Dataset not found for {candidates}")
 
     def _pick_split(self, config_name: str, preferred: List[str]) -> str:
+        """Pick a split from the dataset."""
         splits = get_dataset_split_names(self.hub_id, config_name)
         for p in preferred:
             if p in splits:
@@ -181,6 +187,7 @@ class MtebLoader:
         raise SystemExit(1)
 
     def load_three(self) -> Tuple[Any, Any, Any]:
+        """Load the three datasets."""
         # qrels (default)
         qrels_split = self._pick_split("default", [self.split, "test", "dev", "train"])
         qrels   = self._load_dataset(self.hub_id, split=qrels_split)
@@ -199,24 +206,27 @@ class MtebLoader:
 
     # Iterators robust to field name variants
     def iter_corpus(self, corpus_ds: Any) -> Iterator[Dict[str, Any]]:
+        """Iterate over the corpus."""
         for row in corpus_ds:
-            did = s(row.get("_id") or row.get("id"))
+            did = to_string(row.get("_id") or row.get("id"))
             if not did:  # skip malformed
                 continue
             title, text = normalize_doc(row)
             yield {"id": did, "title": title, "text": text}
 
     def iter_queries_ds(self, queries_ds: Any) -> Iterator[Tuple[str, str]]:
+        """Iterate over the queries."""
         for row in queries_ds:
-            qid = s(row.get("_id") or row.get("id") or row.get("query_id") or row.get("qid"))
+            qid = to_string(row.get("_id") or row.get("id") or row.get("query_id") or row.get("qid"))
             if not qid:
                 continue
-            yield qid, s_norm(row.get("text", ""))
+            yield qid, normalize_text(row.get("text", ""))
 
     def iter_qrels(self, qrels_ds: Any) -> Iterator[Dict[str, Any]]:
+        """Iterate over the qrels."""
         for row in qrels_ds:
-            qid = s(row.get("query-id") or row.get("query_id") or row.get("qid") or row.get("query"))
-            did = s(row.get("corpus-id") or row.get("doc_id") or row.get("document_id") or row.get("doc") or row.get("corpus_id"))
+            qid = to_string(row.get("query-id") or row.get("query_id") or row.get("qid") or row.get("query"))
+            did = to_string(row.get("corpus-id") or row.get("doc_id") or row.get("document_id") or row.get("doc") or row.get("corpus_id"))
             if not qid or not did:
                 continue
             rating = to_int(row.get("score") or row.get("label") or row.get("relevance") or 0)
@@ -224,7 +234,7 @@ class MtebLoader:
 
 # ---------- negative sampling helper (random only) ----------
 def _sample_random(universe: List[str], banned: Set[str], k: int) -> List[str]:
-    # universe minus banned
+    """Sample k random documents excluding banned documents."""
     avail = [d for d in universe if d not in banned]
     if k <= 0 or not avail:
         return []
@@ -258,7 +268,7 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
 
     with jsonlines.open(candidates_path, mode="w") as wr:
         for pair in loader.iter_qrels(qrels_ds):
-            qid, did = s(pair["query_id"]), s(pair["doc_id"])
+            qid, did = to_string(pair["query_id"]), to_string(pair["doc_id"])
             rating   = int(pair.get("rating", 0))
             qrels_total += 1
 
@@ -299,7 +309,7 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
 
     with jsonlines.open(corpus_path, mode="w") as wr:
         for row in loader.iter_corpus(corpus_ds):
-            did = s(row.get("id"))
+            did = to_string(row.get("id"))
             if not did or did in seen_docs:
                 continue
             if keep_d is not None and did not in keep_d:
@@ -356,15 +366,15 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
                     cand_total += 1
                     cand_neg += 1
 
-    # -------- Step 5: validations (YAGNI-level but useful) --------
+    # -------- Step 5: validations (minimal but useful) --------
     missing_docs = missing_queries = 0
     dup_pairs = 0
     # Quick referential integrity re-check by reading candidates once
     seen_pairs_check: Set[Tuple[str, str]] = set()
     with jsonlines.open(candidates_path, mode="r") as rd:
         for pair in rd:
-            qid = s(pair.get("query_id"))
-            did = s(pair.get("doc_id"))
+            qid = to_string(pair.get("query_id"))
+            did = to_string(pair.get("doc_id"))
             key = (qid, did)
             if key in seen_pairs_check:
                 dup_pairs += 1
@@ -377,7 +387,7 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
                 # which we didn’t generate in our pipeline; treat as missing
                 missing_queries += 1
 
-    # YAGNI checks: warn on suspicious outcomes
+    # minimal checks: warn on suspicious outcomes
     if wrote_q == 0:
         log.error("No queries with positive pairs were kept. Check split/dataset or caps.")
         raise SystemExit(1)
