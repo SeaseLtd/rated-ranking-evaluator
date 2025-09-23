@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 from typing import Iterable
 
@@ -58,7 +57,7 @@ class EmbeddingWriter:
             embedding_path = "output/embeddings"
 
         path = Path(embedding_path)
-        os.makedirs(path, exist_ok=True)
+        path.mkdir(parents=True, exist_ok=True)
 
         # documents
         documents_path = path / "documents_embeddings.jsonl"
