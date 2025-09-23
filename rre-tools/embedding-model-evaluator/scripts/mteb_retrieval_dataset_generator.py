@@ -264,7 +264,10 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
     pos_docs_by_q: Dict[str, Set[str]] = {}
     neg_count_by_q: Dict[str, int] = {}
     pairs_seen: Set[Tuple[str, str]] = set()
-    qrels_total = cand_total = cand_pos = cand_neg = 0
+    qrels_total: int = 0
+    cand_total: int = 0
+    cand_pos: int = 0
+    cand_neg: int = 0
 
     with jsonlines.open(candidates_path, mode="w") as wr:
         for pair in loader.iter_qrels(qrels_ds):
