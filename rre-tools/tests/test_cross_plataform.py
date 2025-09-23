@@ -13,7 +13,7 @@ from dataset_generator.config import Config as DGConfig
 
 # ---------------- commons ----------------
 
-def test_commons_cross_platform_nested_save(tmp_path: Path) -> None:
+def test_save_and_load_nested_paths__expects__data_persisted_correctly(tmp_path: Path) -> None:
     """
     Verifies that DataStore can save and load nested paths.
     """
@@ -55,7 +55,7 @@ class _FakeCache:
         pass
 
 
-def test_embedding_writer_creates_nested_dirs(tmp_path: Path) -> None:
+def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dirs(tmp_path: Path) -> None:
     """
     Verifies that EmbeddingWriter handles nested output directories.
     """
@@ -93,7 +93,7 @@ def test_embedding_writer_creates_nested_dirs(tmp_path: Path) -> None:
 
 # ---------------- dataset-generator ----------------
 
-def test_dataset_generator_paths_cross_platform(tmp_path: Path) -> None:
+def test_dataset_generator_with_nested_paths__expects__handles_paths_cross_platform(tmp_path: Path) -> None:
     """
     Verifies that DatasetGenerator handles nested output directories.
     """
@@ -127,7 +127,7 @@ def test_dataset_generator_paths_cross_platform(tmp_path: Path) -> None:
     assert target_dir.exists()
 
 # ---------------- commons (encoding) ----------------
-def test_commons_writer_handles_special_chars(tmp_path: Path) -> None:
+def test_writer_with_special_chars__expects__correctly_handles_specials(tmp_path: Path) -> None:
     """Verifies that writers correctly handle non-ASCII chars thanks to UTF-8 encoding."""
     ds = DataStore(ignore_saved_data=True)
     doc = Document(id="doc-ñ", fields={"title": "t"})
