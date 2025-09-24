@@ -8,6 +8,7 @@ import logging
 from uuid import uuid4
 from pydantic import ValidationError
 from commons.model import Document, Query, Rating
+from commons.utils import clean_text
 
 log = logging.getLogger(__name__)
 
@@ -35,8 +36,6 @@ class DataStore:
 
         # Text based deduplication for queries
         self.query_text_to_query_id: Dict[str, str] = {}           # query_text → query_id 
-        # TODO: add normalizing function for the text keys (strip, lower, etc).
-        ### Proposal: refactor utils clean_text() and import / reuse here
 
         if not ignore_saved_data:
             log.info(f"Loading data from {path}")
@@ -98,14 +97,15 @@ class DataStore:
 
     def add_query(self, query_text_str: str, query_id: Optional[str] = None) -> Query:
         """Adds a new query. If text is cached, returns existing Query. If id is given, it's used."""
-        if existing_id := self.query_text_to_query_id.get(query_text_str):
-            log.debug(f"[add_query] exists text='{query_text_str}' existing_id={existing_id}")
+        key = clean_text(query_text_str) # Apply general filtering
+        if existing_id := self.query_text_to_query_id.get(key):
+            log.debug(f"[add_query] exists text='{query_text_str}' key='{key}' existing_id={existing_id}")
             query = self.queries[existing_id]
         else:
             query = Query(id=query_id, text=query_text_str) if query_id else Query(text=query_text_str)
             self.queries[query.id] = query
-            self.query_text_to_query_id[query_text_str] = query.id
-            log.debug(f"[add_query] added query_id={query.id}")
+            self.query_text_to_query_id[key] = query.id
+            log.debug(f"[add_query] added query_id={query.id} key='{key}'")
 
         return query
 
