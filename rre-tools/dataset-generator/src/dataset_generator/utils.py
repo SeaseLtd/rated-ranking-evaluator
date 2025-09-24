@@ -1,5 +1,4 @@
 import argparse
-from commons.utils import clean_text
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')

@@ -2,7 +2,6 @@ from typing import Any
 import re
 import html
 import unicodedata
-import string
 
 def is_json_serializable(value: Any) -> bool:
     if isinstance(value, (str, int, float, bool)) or value is None:

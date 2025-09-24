@@ -1,5 +1,3 @@
-import pytest
-
 from commons.utils import clean_text
 
 
