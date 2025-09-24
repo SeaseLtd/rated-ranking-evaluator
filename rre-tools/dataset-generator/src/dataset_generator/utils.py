@@ -1,9 +1,5 @@
 import argparse
-import re
-import html
-
-
-_TAG_REGEX = re.compile('<.*?>')
+from commons.utils import clean_text
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
@@ -16,7 +12,3 @@ def parse_args() -> argparse.Namespace:
                         help='Activate debug mode for logging [default: False]')
 
     return parser.parse_args()
-
-def clean_text(text: str) -> str:
-    text_without_html = re.sub(_TAG_REGEX, '', text).strip()
-    return html.unescape(re.sub(r"\s{2,}", " ", text_without_html))
