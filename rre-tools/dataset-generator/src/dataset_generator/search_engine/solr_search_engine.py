@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Union
 
 from dataset_generator.search_engine.search_engine_base import BaseSearchEngine
 from commons.model.document import Document
-from dataset_generator.utils import clean_text
+from commons.utils import clean_text
 
 import logging
 import json
