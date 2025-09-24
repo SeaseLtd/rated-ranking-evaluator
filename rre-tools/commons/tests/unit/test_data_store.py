@@ -184,3 +184,25 @@ def test_load_with_broken_references__expects__skips_dangling_ratings_and_warns(
     # The rating is skipped because the document is missing, and a warning is logged.
     assert len(ds.get_ratings()) == 0
     assert 'doc_not_found' in caplog.text
+
+# - new test: QUERY DEDUPLICATION 
+def test_add_query__expects__dedup_by_whitespace_and_html():
+    ds = DataStore(ignore_saved_data=True)
+    q1 = ds.add_query("  Hello   World  ")
+    q2 = ds.add_query("Hello World")
+    q3 = ds.add_query("Hello <b>World</b>")
+    q4 = ds.add_query("Hello &lt;b&gt;World&lt;/b&gt;")
+
+    # All should resolve to the same underlying query id
+    assert q1.id == q2.id == q3.id == q4.id
+    assert len(ds.get_queries()) == 1
+
+
+def test_add_query__expects__case_sensitive_by_default():
+    ds = DataStore(ignore_saved_data=True)
+    q1 = ds.add_query("Hello World")
+    q2 = ds.add_query("hello world")  # different casing
+
+    # With lowercase=False default in normalize_query_text_key, these should be different
+    assert q1.id != q2.id
+    assert len(ds.get_queries()) == 2
