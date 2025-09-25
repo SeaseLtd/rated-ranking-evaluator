@@ -37,6 +37,9 @@ class Config(BaseModel):
     rre_query_template: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
     rre_query_placeholder: Optional[str] = Field(None, description="Key-value pair to substitute in the rre query template.")
     verbose: bool = False
+    datastore_autosave_every_n_updates: Optional[int] = Field(None, gt=0,
+        description="If set, periodically persist datastore every N successful updates (adds/ratings)."
+    )
 
     def build_writer_config(self) -> WriterConfig:
         if self.rre_query_template is not None:
