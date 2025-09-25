@@ -184,3 +184,42 @@ def test_load_with_broken_references__expects__skips_dangling_ratings_and_warns(
     # The rating is skipped because the document is missing, and a warning is logged.
     assert len(ds.get_ratings()) == 0
     assert 'doc_not_found' in caplog.text
+
+
+# --- autosave tests ---
+def test_autosave_every_n_updates__expects__saves_on_threshold(tmp_db_path: Path, doc_a: Document):
+    ds = DataStore(path=tmp_db_path, ignore_saved_data=True, autosave_every_n_updates=2)
+
+    assert not tmp_db_path.exists()
+    ds.add_document(doc_a)  # 1 update
+    assert not tmp_db_path.exists()
+
+    ds.add_query("q1")  # 2nd update -> triggers autosave
+    assert tmp_db_path.exists()
+
+    # Verify roundtrip
+    ds2 = DataStore(path=tmp_db_path)
+    assert len(ds2.get_documents()) == 1
+    assert len(ds2.get_queries()) == 1
+
+
+def test_autosave_ignores_duplicates__expects__does_not_save_until_real_update(tmp_db_path: Path, doc_a: Document):
+    ds = DataStore(path=tmp_db_path, ignore_saved_data=True, autosave_every_n_updates=2)
+
+    ds.add_document(doc_a)  # 1 update
+    ds.add_document(doc_a)  # duplicate, should not count
+    assert not tmp_db_path.exists()
+
+    ds.add_query("q1")  # 2nd real update -> triggers autosave
+    assert tmp_db_path.exists()
+
+
+def test_autosave_counts_rating_add__expects__saves_on_threshold(tmp_db_path: Path, doc_a: Document):
+    ds = DataStore(path=tmp_db_path, ignore_saved_data=True, autosave_every_n_updates=3)
+
+    q = ds.add_query("q1")      # 1
+    ds.add_document(doc_a)       # 2
+    assert not tmp_db_path.exists()
+
+    ds.create_rating_score(q.id, doc_a.id, 1)  # 3 -> triggers autosave
+    assert tmp_db_path.exists()
