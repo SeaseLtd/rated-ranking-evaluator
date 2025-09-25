@@ -1,32 +1,7 @@
 # Exact Search Evaluator
 
-## Code Quality Tools
-
-This project uses [Ruff](https://github.com/astral-sh/ruff) for linting and [Mypy](https://mypy.readthedocs.io/) for static type checking to maintain code quality and consistency.
-
-### Running Code Quality Checks
-
-#### Linting with Ruff
-```bash
-# Check for issues
-ruff check .
-
-# Auto-fix fixable issues
-ruff check --fix .
-
-# Format code (if formatter is enabled)
-ruff format .
-```
-
-#### Type Checking with Mypy
-```bash
-# Run type checking
-mypy .
-```
-
-### Configuration Files
-- `ruff.toml`: Configures Ruff's linting rules and settings
-- `mypy.ini`: Configures Mypy's type checking settings
+This tool provide a flexible tool to test a HuggingFace embedding model to ensure that works as expected with exact
+vector search.
 
 > **Exact Search vs. Approximate Search**
 
@@ -39,32 +14,3 @@ mypy .
 - embedding model name (list)
 - dataset metadata (list - name, path or url)
 - task_to_evaluate (internal mapping (name-id)? EG: {"Retrieval:0, Rerank: 1..}, or flat. Eg: "Retrieval", "Rerank"..)
-
-## Installing and Use
-
-```bash
-# create env if don't exists
-uv venv .venv
-
-# activate env
-source .venv/bin/activate
-
-# install dependencies (editable mode - for devs)
-uv pip install -e . 
-
-# install dependencies (for users)
-uv sync
-
-# install optional dev dependencies such as mypy/ruff
-uv sync --extra dev
-
-# now we can run the package entry point with our alias
-## ( Check the pyproject.toml line: [project.scripts] rre-embeddings = "main:main")
-rre-embeddings
-```
-
-
-### Run exact search evaluator with  yaml config file
-```bash
-rre-embeddings --config "path_to_config_yaml"
-```

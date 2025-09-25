@@ -16,5 +16,5 @@ def test_parse_args_with_default(monkeypatch):
 
     args = parse_args()
 
-    assert args.config_file == 'config.yaml'
+    assert args.config_file == 'dataset-generator/config.yaml'
     assert args.verbose is False
