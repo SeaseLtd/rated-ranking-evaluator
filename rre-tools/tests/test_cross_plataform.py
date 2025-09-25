@@ -78,8 +78,8 @@ def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dir
 
     writer.write(dest)
 
-    docs_file = dest / "document_embeddings.jsonl"
-    queries_file = dest / "query_embeddings.jsonl"
+    docs_file = dest / "documents_embeddings.jsonl"
+    queries_file = dest / "queries_embeddings.jsonl"
 
     assert docs_file.exists()
     assert queries_file.exists()
@@ -101,10 +101,13 @@ def test_dataset_generator_with_nested_paths__expects__handles_paths_cross_platf
     llm_cfg_path = tmp_path / "llm.yaml"
     llm_cfg_path.write_text("name: openai\napi_key_env: OPENAI_API_KEY\nmodel: gpt-4o-mini\nmax_tokens: 32\n")
 
+    template_path = tmp_path / "template.json"
+    template_path.write_text("{'q': '*:*'}")
+
     # create dynamic config yaml with nested output paths
     cfg_path = tmp_path / "dg_config.yaml"
     cfg_content = f"""
-    query_template: "q=#$query##"
+    query_template: "{template_path.as_posix()}"
     search_engine_type: "solr"
     collection_name: "testcore"
     search_engine_url: "http://localhost:8983/solr/"
