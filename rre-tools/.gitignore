@@ -16,7 +16,7 @@ wheels/
 # Local Files and Directories
 .output_dataset
 output/
-resources/
+/resources/
 **/tmp
 
 # Docker
