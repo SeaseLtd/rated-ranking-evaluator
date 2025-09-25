@@ -44,8 +44,6 @@ output_format: "quepid"
 output_destination: "resources/generated_dataset.json"
 ```
 
-> **Note:** `title` and `description` fields are indexed in Solr as type `text_general` by default. If you want to index them differently, modify the schema of the collection.
-
 ### 3. Running the Generator
 
 Before running the command below, you need to have running search engine instance (`solr`/`opensearch`/`elasticsearch`/`vespa`).
