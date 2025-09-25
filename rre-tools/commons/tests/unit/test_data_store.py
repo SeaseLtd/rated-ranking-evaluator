@@ -185,7 +185,6 @@ def test_load_with_broken_references__expects__skips_dangling_ratings_and_warns(
     assert len(ds.get_ratings()) == 0
     assert 'doc_not_found' in caplog.text
 
-
 # --- autosave tests ---
 def test_autosave_every_n_updates__expects__saves_on_threshold(tmp_db_path: Path, doc_a: Document):
     ds = DataStore(path=tmp_db_path, ignore_saved_data=True, autosave_every_n_updates=2)
