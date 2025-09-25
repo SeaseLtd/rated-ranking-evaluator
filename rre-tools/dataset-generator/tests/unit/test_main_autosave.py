@@ -1,7 +1,6 @@
 import types
 from pathlib import Path
 
-import pytest
 
 from dataset_generator import main as main_mod
 from dataset_generator.config import Config
