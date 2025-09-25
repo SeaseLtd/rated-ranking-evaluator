@@ -61,7 +61,7 @@ class EmbeddingWriter:
         os.makedirs(path, exist_ok=True)
 
         # documents
-        documents_path = path / "document_embeddings.jsonl"
+        documents_path = path / "documents_embeddings.jsonl"
         doc_dict = read_corpus(Path(self.config.corpus_path))
         doc_ids = list(doc_dict.keys())
         doc_texts = [
@@ -79,7 +79,7 @@ class EmbeddingWriter:
         _write_embeddings_jsonl(documents_path, zip(doc_ids, doc_vectors))
 
         # queries
-        queries_path = path / "query_embeddings.jsonl"
+        queries_path = path / "queries_embeddings.jsonl"
         query_dict = read_queries(Path(self.config.queries_path))
         query_ids = list(query_dict.keys())
         query_texts = [query_dict[qid] for qid in query_ids]
