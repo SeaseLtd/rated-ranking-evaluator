@@ -2,7 +2,7 @@
 # dataset-generator module
 # Default: no template is being used
 # Example (solr):
-query_template: "resources/template_solr.json"
+query_template: "tests/unit/resources/template_solr.json"
 
 # The type of search engine to use
 # Accepted values: solr, elasticsearch, opensearch, vespa
@@ -54,7 +54,7 @@ num_queries_needed: 4
 relevance_scale: "graded"
 
 # Path to the LLM configuration file (e.g., LangChain setup)
-llm_configuration_file: "dataset-generator/llm_config.yaml"
+llm_configuration_file: "llm_config.yaml"
 
 # Output format for the generated dataset
 # Accepted values: quepid, rre, mteb
