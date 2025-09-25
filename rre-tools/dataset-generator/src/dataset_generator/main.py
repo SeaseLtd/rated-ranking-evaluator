@@ -114,7 +114,9 @@ def main() -> None:
     setup_logging(args.verbose)
 
     # setup
-    data_store: DataStore = DataStore()
+    data_store: DataStore = DataStore(
+        autosave_every_n_updates=config.datastore_autosave_every_n_updates
+    )
     search_engine: BaseSearchEngine = SearchEngineFactory.build(
         search_engine_type=config.search_engine_type,
         endpoint=config.search_engine_collection_endpoint

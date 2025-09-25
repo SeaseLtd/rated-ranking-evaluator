@@ -81,3 +81,7 @@ output_destination: "resources"
 # (Optional**) File path where it contains <query, doc_id, rating, explanation> records.
 # (**) When save_llm_explanation is set to True, this param needs to be present
 #llm_explanation_destination: "resources/rating_explanation.json"
+
+# (Optional) Periodically persist in-memory datastore every N successful updates
+# Lower values persist more frequently (safer) but can be slower; higher values persist less often (faster)
+#datastore_autosave_every_n_updates: 50
