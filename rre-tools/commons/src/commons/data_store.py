@@ -110,7 +110,7 @@ class DataStore:
         else:
             query = Query(id=query_id, text=query_text_str) if query_id else Query(text=query_text_str)
             self.queries[query.id] = query
-            self.query_text_to_query_id[query_text_str] = query.id
+            self.query_text_to_query_id[key] = query.id
             log.debug(f"[add_query] added query_id={query.id}")
             self._count_update_and_maybe_autosave()
 
