@@ -21,7 +21,7 @@ This tool provide a flexible tool to deply RRE and extract metrics to test your 
 
 - [uv](https://github.com/astral-sh/uv): A fast Python package installer and resolver. To install uv follow the 
 instructions [here](https://docs.astral.sh/uv/getting-started/installation/)
-- Python >=3.10
+- Python=3.10 version is fixed and widely used in the project, see [.python-version file](.python-version)
 
 First, create a virtual environment using `uv` following the file `pyproject.toml`. To do so, just execute:
 ```bash

@@ -21,7 +21,7 @@ A detailed description of the parameter that you must provide in the configurati
 > - **model_id**: Model ID for [HuggingFace embedding model](https://huggingface.co/models?other=embeddings)
 > - **task_to_evaluate**: Task name that you need to evaluate
 >   - accepted values: 
->     - "reranking" (main metric: `m`) 
+>     - "reranking" (main metric: `MAP`) 
 >     - "retrieval" (main metric: `nDCG@10`)
 > - **corpus_path**: Path of the `corpus.jsonl` file (e.g., "resources/data/corpus.jsonl"). Format: <id,title,text>.
 > - **queries_path**: Path of the `queries.jsonl` file (e.g., "resources/data/queries.jsonl"). Format: <id,text>.
