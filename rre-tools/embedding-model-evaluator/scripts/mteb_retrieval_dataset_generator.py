@@ -26,7 +26,7 @@ from typing import Any, Dict, Iterator, Optional, Set, Tuple, List
 # ========= DEFAULTS / PATHS =========
 # Default out root aligned with embedding-model-evaluator/resources/mteb_datasets
 DEFAULT_OUT_ROOT = (Path(__file__).resolve().parents[1] / "resources" / "mteb_datasets")
-DEFAULT_DATASET = "scifact"
+DEFAULT_DATASET = "nfcorpus"
 DEFAULT_SPLIT = "test"    # "train" | "dev" | "test"
 DEFAULT_OVERWRITE = False
 DEFAULT_MAX_QUERIES = 0   # 0 = no cap

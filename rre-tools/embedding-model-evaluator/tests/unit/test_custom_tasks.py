@@ -55,7 +55,7 @@ def _create_dataset_and_load_config(
     return config
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def test_retrieval_task_with_valid_data__expects__loads_corpus_queries_and_relevant_docs_correctly(tmp_path: Path) -> None:
+def test_custom_retrieval_task_with_valid_data__expects__loads_corpus_queries_and_relevant_docs_correctly(tmp_path: Path) -> None:
     config = _create_dataset_and_load_config(tmp_path, "retrieval")
     retrieval_task = CustomRetrievalTask()
     retrieval_task.load_data(config=config)
@@ -78,7 +78,7 @@ def test_retrieval_task_with_valid_data__expects__loads_corpus_queries_and_relev
     assert retrieval_task.data_loaded is True
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def test_reranking_task_with_valid_data__expects__loads_dataset_with_positive_and_negative_examples(tmp_path: Path) -> None:
+def test_custom_reranking_task_with_valid_data__expects__loads_dataset_with_positive_and_negative_examples(tmp_path: Path) -> None:
     config = _create_dataset_and_load_config(tmp_path, "reranking")
     reranking_task = CustomRerankingTask()
     reranking_task.load_data(config=config)

@@ -25,15 +25,13 @@ uv sync --extra dev
 cd embedding-model-evaluator
 
 # Generate an MTEB dataset in IR task format
-uv run scripts/mteb_retrieval_dataset_generator.py \
-    --dataset "arguana" \
-    --split "train"
+uv run scripts/mteb_retrieval_dataset_generator.py --dataset "nfcorpus" --split "test"
 
-# Expected default output: ./resources/mteb_datasets/arguana/train/
+# Expected default output: ./resources/mteb_datasets/nfcorpus/test/
 ```
 
-> **Note:** The *arguana* dataset is related to an Information Retrieval task.
-> Therefore, set `task_to_evaluate: "retrieval"` in the configuration file.
+> **Note:** The *nfcorpus* dataset is related to an Information Retrieval task.
+> Therefore, we must set `task_to_evaluate: "retrieval"` in the configuration file.
 
 ### Run the Exact Search Evaluator with a YAML Config
 
