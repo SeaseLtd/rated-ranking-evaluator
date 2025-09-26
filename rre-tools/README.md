@@ -1,21 +1,32 @@
 # RRE tools features
 
+## Overview
+
+### DAGE: [Dataset Generator](dataset-generator/README.md)
+
+This tool provides a flexible command-line tool to generate relevance datasets for search evaluation. It can retrieve
+documents from a search engine, generate synthetic queries, and score the relevance of document-query pairs using LLMs.
+
+### ESE: [Exact Search Evaluator](embedding-model-evaluator/README.md)
+
+This tool provide a flexible tool to test a HuggingFace embedding model to ensure that works as expected with exact
+vector search.
+
+### ASE: Approximate Search Evaluator
+
+This tool provide a flexible tool to deply RRE and extract metrics to test your search engine collection given a 
+[template](https://github.com/SeaseLtd/rated-ranking-evaluator/wiki/What%20We%20Need%20To%20Provide#query-templates).
+
 ## Quickstart: tools installation
 
-- [uv](https://github.com/astral-sh/uv): A fast Python package installer and resolver. To installation follow instruction 
-  [here](https://docs.astral.sh/uv/getting-started/installation/)
+- [uv](https://github.com/astral-sh/uv): A fast Python package installer and resolver. To install uv follow the 
+instructions [here](https://docs.astral.sh/uv/getting-started/installation/)
 - Python >=3.10
 
 First, create a virtual environment using `uv` following the file `pyproject.toml`. To do so, just execute:
 ```bash
-# create env if don't exists
-uv venv .venv
-
-# activate env
-source .venv/bin/activate
-
-# install dependencies (editable mode - for devs)
-uv pip install -e . 
+# place yourself in the rre-tools folder
+cd rre-tools
 
 # install dependencies (for users)
 uv sync
@@ -26,7 +37,9 @@ uv sync --extra dev
 
 ## Running Dataset Generator (DAGE)
 
-Before running the command below, you need to have running search engine instance (`solr`/`opensearch`/`elasticsearch`/`vespa`).
+Before running the command below, you need to have running search engine instance 
+(`solr`/`opensearch`/`elasticsearch`/`vespa`). This can be done even with the test collections in folder 
+[docker-services](docker-services). 
 
 For a detailed description to fill your configuration file (e.g., [Config](dataset-generator/config.yaml)) you can look 
 at the Dataset Generator [README](dataset-generator/README.md).

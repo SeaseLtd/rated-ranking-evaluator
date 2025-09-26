@@ -13,6 +13,11 @@ To run a local Solr test environment using docker-compose:
 cd docker-services/
 ```
 
+> This environment comes with the default Solr configuration. All text field are preprocessed as seen in the [Schemaless 
+mode](https://solr.apache.org/guide/solr/latest/indexing-guide/schemaless-mode.html) from Solr. For further info, run 
+the [Solr Admin UI](https://solr.apache.org/guide/solr/latest/getting-started/solr-admin-ui.html) and check the schema 
+of your collection.
+
 Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
 If you have Docker Compose v1 installed, use:
 
