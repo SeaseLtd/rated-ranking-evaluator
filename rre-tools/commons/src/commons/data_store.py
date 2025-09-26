@@ -156,18 +156,28 @@ class DataStore:
     # Autosave helper
     # ────────────────────────────────────────────
     def _count_update_and_maybe_autosave(self) -> None:
-        """Increment mutation counter and autosave if threshold reached."""
+        """Increment mutation counter and autosave if threshold reached.
+        
+        If autosave fails, the counter is not reset to allow retrying on next update.
+        """
         if self._autosave_every_n_updates is None:
             return
+        
         self._updates_since_last_save += 1
+        
         if self._updates_since_last_save >= self._autosave_every_n_updates:
             try:
                 self.save()
                 log.debug(f"[autosave] ok path={self.path} updates={self._updates_since_last_save}")
+                # OK -> reset counter
+                self._updates_since_last_save = 0  
             except Exception as e:
-                log.warning(f"[autosave] fail err={e}")
-            finally:
-                self._updates_since_last_save = 0
+                # Error logged but not raised -> main execution continues without saving
+                log.error(
+                    f"[autosave] failed to save {self.path}."
+                    f"Will retry. Error: {str(e)}",
+                    exc_info=True
+                )
 
     # ────────────────────────────────────────────
     # Persistence
