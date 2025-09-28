@@ -80,7 +80,13 @@ directory:
 ### LLM configuration file
 
 Fill [LLM configuration file](llm_config.yaml) with your information and create the `.env` file in dataset-generator 
-folder with your own API key. An example of the `.env` file can be found at [.env.example](.env.example).
+folder with your own API key.
+
+Place yourself in the main directory (`rre-tools/`) and create a `.env` file to store the API key:
+
+```bash
+echo "OPENAI_API_KEY=<your-key-here>" > dataset-generator/.env
+```
 
 The parameters needed are:
 > - **name**: The name of the provider
