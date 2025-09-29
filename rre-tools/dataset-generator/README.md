@@ -3,7 +3,6 @@
 This tool provides a flexible command-line tool to generate relevance datasets for search evaluation. It can retrieve
 documents from a search engine, generate synthetic queries, and score the relevance of document-query pairs using LLMs.
 
-
 ## Setup configuration files
 
 ### DAGE configuration file
