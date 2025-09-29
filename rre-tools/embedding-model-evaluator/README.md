@@ -1,70 +1,34 @@
-# Exact Search Evaluator
+# Embedding Model Evaluator
 
-## Code Quality Tools
+This tool provide a flexible tool to test a HuggingFace embedding model to ensure that works as expected with exact
+vector search.
 
-This project uses [Ruff](https://github.com/astral-sh/ruff) for linting and [Mypy](https://mypy.readthedocs.io/) for static type checking to maintain code quality and consistency.
+### Exact Vector Search vs. Approximate Vector Search
 
-### Running Code Quality Checks
-
-#### Linting with Ruff
-```bash
-# Check for issues
-ruff check .
-
-# Auto-fix fixable issues
-ruff check --fix .
-
-# Format code (if formatter is enabled)
-ruff format .
-```
-
-#### Type Checking with Mypy
-```bash
-# Run type checking
-mypy .
-```
-
-### Configuration Files
-- `ruff.toml`: Configures Ruff's linting rules and settings
-- `mypy.ini`: Configures Mypy's type checking settings
-
-> **Exact Search vs. Approximate Search**
-
-- **Approximate Search** uses a proxy to score a subset of documents considered *similar* via a pre-filtering stage. Techniques like ANN (Approximate Nearest Neighbors) rely on precomputed structures in the index (e.g., HNSW, IVF) to accelerate retrieval at the cost of some accuracy.
-
-- **Exact Search**, by contrast here we compute the distance between every query and every document in the dataset (brute-force). This guarantees finding the "true" nearest neighbors (limited to the embedding model precision on the domain), but is computationally expensive and scales worse with dataset size.
+- **Exact Vector Search**, by contrast here we compute the distance between every query and every document in the dataset (brute-force). This guarantees finding the "true" nearest neighbors (limited to the embedding model precision on the domain), but is computationally expensive and scales worse with dataset size.
+- **Approximate Vector Search** uses a proxy to score a subset of documents considered *similar* via a pre-filtering stage. Techniques like ANN (Approximate Nearest Neighbors) rely on precomputed structures in the index (e.g., HNSW, IVF) to accelerate retrieval at the cost of some accuracy.
 
 
-> **Input parameters:**
-- embedding model name (list)
-- dataset metadata (list - name, path or url)
-- task_to_evaluate (internal mapping (name-id)? EG: {"Retrieval:0, Rerank: 1..}, or flat. Eg: "Retrieval", "Rerank"..)
+### **Input parameters** for configuration file
 
-## Installing and Use
+To be able to run the Embedding Model Evaluator, a configuration file must be provided. The go-to way we suggest to take is 
+to modify the [configuration file](config.yaml).
 
-```bash
-# create env if don't exists
-uv venv .venv
+A detailed description of the parameter that you must provide in the configuration file is the following:
 
-# activate env
-source .venv/bin/activate
-
-# install dependencies (editable mode - for devs)
-uv pip install -e . 
-
-# install dependencies (for users)
-uv sync
-
-# install optional dev dependencies such as mypy/ruff
-uv sync --extra dev
-
-# now we can run the package entry point with our alias
-## ( Check the pyproject.toml line: [project.scripts] rre-embeddings = "main:main")
-rre-embeddings
-```
-
-
-### Run exact search evaluator with  yaml config file
-```bash
-rre-embeddings --config "path_to_config_yaml"
-```
+> - **model_id**: Model ID for [HuggingFace embedding model](https://huggingface.co/models?other=embeddings)
+> - **task_to_evaluate**: Task name that you need to evaluate
+>   - accepted values: 
+>     - "reranking" (main metric: `MAP`) 
+>     - "retrieval" (main metric: `nDCG@10`)
+> - **corpus_path**: Path of the `corpus.jsonl` file (e.g., "resources/data/corpus.jsonl"). Format: <id,title,text>.
+> - **queries_path**: Path of the `queries.jsonl` file (e.g., "resources/data/queries.jsonl"). Format: <id,text>.
+> - **candidates_path**: Path of the `conadidates.jsonl` file (e.g., "resources/data/candidates.jsonl") Format: <query_id,doc_id,rating>.
+> - **relevance_scale**: Relevance scale used in candidates dataset for rating field
+>   - accepted values: "binary" or "graded", where
+>     - binary: 0 (not relevant), 1 (relevant)
+>     - graded: 0 (not relevant), 1 (maybe ok), 2 (that’s my result)
+> - **output_dest** (Optional): Path to write mteb output, if not given it will be written to resource directory in 
+the root folder (e.g., "resources")
+> - **embeddings_dest** (Optional): Path to write mteb document and query embeddings, if not given it will be written 
+to resources/embeddings directory (e.g., "resources/embeddings")
