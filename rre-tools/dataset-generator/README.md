@@ -17,7 +17,6 @@ process. The parameters needed are:
 >     - "solr"
 >     - "elasticsearch"
 >     - "opensearch"
->     - "vespa"
 > - **collection_name**: Name of the search engine index/collection (e.g., "testcore", the one used in Docker containers)
 > - **search_engine_url**: URL of the search engine (e.g., "http://localhost:8983/solr/")
 > - **documents_filter**: Filter query to restrict the set of documents used to generate queries. If a field has more 

@@ -39,7 +39,7 @@ uv sync --extra dev
 
 Before running the command below, you need to have running search engine instance 
 (`solr`/`opensearch`/`elasticsearch`/`vespa`). This can be done even with the test collections in folder 
-[docker-services](docker-services). 
+[docker-services](docker-services/README.md). 
 
 For a detailed description to fill your configuration file (e.g., [Config](dataset-generator/config.yaml)) you can look 
 at the Dataset Generator [README](dataset-generator/README.md).

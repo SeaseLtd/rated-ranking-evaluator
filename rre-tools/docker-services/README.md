@@ -10,7 +10,7 @@ Follow the instructions to install Docker Compose on your system: https://docs.d
 
 To run a local Solr test environment using docker-compose:
 ```bash
-cd docker-services/
+cd rre-tools/docker-services/
 ```
 
 > This environment comes with the default Solr configuration. All text field are preprocessed as seen in the [Schemaless 
@@ -41,7 +41,7 @@ docker-compose -f docker-compose.solr.yml build --no-cache
 
 To run a local OpenSearch test environment using docker-compose:
 ```bash
-cd docker-services/
+cd rre-tools/docker-services/
 ```
 
 Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`, i.e., 
@@ -62,7 +62,7 @@ This will start 2 services:
 
 Similarly to Solr, to run a local Elasticsearch test environment using docker-compose:
 ```bash
-cd docker-services/
+cd rre-tools/docker-services/
 ```
 
 Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`, i.e.,
