@@ -150,11 +150,13 @@ def main() -> None:
     # TODO:
     #  work on a better solution, instead of adding it directly into the datastore, and maybe modify the MtebWriter
     #  with the fetch from the search engine
-    data_store: DataStore = DataStore()    # init again, without autosave this time
     if config.output_format == "mteb":
+        new_data_store: DataStore = DataStore()     # init again, without autosave this time (this is loading the file
+                                                    # saved in the assigned tmp folder)
         all_doc: List[Document] = search_engine.fetch_all(doc_fields=config.doc_fields)
         for doc in all_doc:
             data_store.add_document(doc)
+        data_store = new_data_store
     writer.write(output_destination, data_store)
 
 if __name__ == "__main__":
