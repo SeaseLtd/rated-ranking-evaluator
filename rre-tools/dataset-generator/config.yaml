@@ -2,7 +2,7 @@
 # dataset-generator module
 # Default: no template is being used
 # Example (solr):
-query_template: "resources/template_solr.json"
+query_template: "templates/template_solr.json"
 
 # Type of search engine to use
 # Accepted values: solr, elasticsearch, opensearch, vespa
