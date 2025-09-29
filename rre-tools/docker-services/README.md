@@ -20,7 +20,6 @@ of your collection.
 
 Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
 If you have Docker Compose v1 installed, use:
-
 ```bash
 docker-compose -f docker-compose.solr.yml up --build
 ```
@@ -45,13 +44,11 @@ To run a local OpenSearch test environment using docker-compose:
 cd docker-services/
 ```
 
-Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
-If you have Docker Compose v1 installed, use:
-
+Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`, i.e., 
 ```bash
 docker-compose -f docker-compose.opensearch.yml up --build
 ```
-If you have Docker Compose v2 installed, use:
+or
 ```bash
 docker compose -f docker-compose.opensearch.yml up --build
 ```
@@ -68,13 +65,11 @@ Similarly to Solr, to run a local Elasticsearch test environment using docker-co
 cd docker-services/
 ```
 
-Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
-If you have Docker Compose v1 installed, use:
-
+Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`, i.e.,
 ```bash
 docker-compose -f docker-compose.elasticsearch.yml up --build 
 ```
-If you have Docker Compose v2 installed, use:
+or
 ```bash
 docker compose -f docker-compose.elasticsearch.yml up --build
 ```
@@ -87,7 +82,7 @@ any documents in the index.
 ## Running the Quepid container
 
 ```bash
-cd tests/integration/
+cd docker-services/
 docker compose -f docker-compose.quepid.yml up -d
 
 # then go to http://localhost/sessions/new and sign up / sign in.
