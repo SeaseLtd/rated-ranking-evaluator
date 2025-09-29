@@ -1,0 +1,3 @@
+{
+  "q": "{!knn f=vector topK=10}$vector"
+}
