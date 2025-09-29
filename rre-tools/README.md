@@ -63,12 +63,6 @@ Execute the main script via CLI, pointing to your ESE configuration file:
 uv run embedding-model-evaluator --config <path-to-ESE-config-yaml>
 ```
 
-## [INCOMING] Running Approximate Search Evaluator (ASE) 
-Execute the main script via CLI, pointing to your ASE template file (used by RRE to compute desired evaluation metrics):
-```bash
-uv run approximate-search-evaluator --template <path-to-template-json>
-```
-
 ## Running tests
 
 ### 1. Unit Tests
@@ -85,11 +79,6 @@ The script will then:
 4.  (Future) Save the output to the specified destination.
 
 
-### 2. Integration Tests
-
-> INCOMING
-
-
 ## Code Quality Tools
 
 ### Configuration Files
@@ -98,14 +87,14 @@ The script will then:
 
 ### Type checker with mypy
 
-To run mypy type checks inside the dataset generator environment use
+To run mypy type checks inside the environment use
 ```bash
 uv run mypy .
 ```
 
 ### Code linter with ruff
 
-To run ruff linter inside the dataset generator environment use
+To run ruff linter inside the environment use
 ```bash
 uv run ruff check
 ```
