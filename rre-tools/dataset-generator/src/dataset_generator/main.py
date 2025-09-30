@@ -155,7 +155,7 @@ def main() -> None:
                                                     # saved in the assigned tmp folder)
         all_doc: List[Document] = search_engine.fetch_all(doc_fields=config.doc_fields)
         for doc in all_doc:
-            data_store.add_document(doc)
+            new_data_store.add_document(doc)
         data_store = new_data_store
     writer.write(output_destination, data_store)
 
