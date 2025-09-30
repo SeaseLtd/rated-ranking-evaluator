@@ -17,20 +17,20 @@ class BaseSearchEngine(ABC):
     def fetch_all(self, doc_fields: List[str]) -> List[Document]:
         """Extract all documents from search engine."""
         # Now this is relying on fetch_for_query_generation to avoid duplicate code. Might be changed in the future
-        all_doc: List[Document] = []
-        start = 0
+        all_docs: List[Document] = []
+        start: int = 0
         while True:
-            all_doc.extend(self.fetch_for_query_generation(documents_filter=None,
-                                                           doc_number=DOC_NUMBER_EACH_FETCH,
-                                                           doc_fields=doc_fields,
-                                                           start=start
-                                                           )
-                           )
-            if start >= len(all_doc):
+            batch = self.fetch_for_query_generation(
+                documents_filter=None,
+                doc_number=DOC_NUMBER_EACH_FETCH,
+                doc_fields=doc_fields,
+                start=start
+                )
+            if not batch:
                 break
-            start += DOC_NUMBER_EACH_FETCH
-
-        return all_doc
+            all_docs.extend(batch)
+            start += len(batch)
+        return all_docs
 
 
     def _parse_query_template(self, path: Path | str) -> Dict[str, Any]:
