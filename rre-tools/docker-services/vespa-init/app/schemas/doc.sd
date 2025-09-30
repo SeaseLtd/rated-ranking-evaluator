@@ -1,0 +1,21 @@
+schema doc {
+    document doc {
+        field id type string {
+            indexing: summary | attribute
+        }
+        field title type string {
+            indexing: summary | index
+        }
+        field description type string {
+            indexing: summary | index
+        }
+    }
+    fieldset default {
+        fields: title, description
+    }
+    rank-profile default inherits default {
+        first-phase {
+            expression: bm25(title) + bm25(description)
+        }
+    }
+}
