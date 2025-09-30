@@ -15,15 +15,12 @@ log = logging.getLogger(__name__)
 
 
 def _write_embeddings_jsonl(
-    path: Path, items: Iterable[tuple[str, np.ndarray | list[float]]],
-        precision: int = 12 # it has been chosen since Solr seems to stick to 9 numbers after the comma
+    path: Path, items: Iterable[tuple[str, np.ndarray | list[float]]]
 ) -> None:
     with jsonlines.open(path, mode="w") as jsonl:
         for _id, vector in items:
             if isinstance(vector, np.ndarray):
-                vector = np.round(vector, precision).tolist()
-            vector = [float(f"{x:.{precision}e}") for x in vector]
-            # format each float to a fixed precision string, then convert back to float
+                vector = vector.tolist()
             jsonl.write({"id": _id, "vector": vector})
     log.info(f"Embeddings are saved into {path}")
 
