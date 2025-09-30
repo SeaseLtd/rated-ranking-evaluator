@@ -153,11 +153,12 @@ def main() -> None:
     if config.output_format == "mteb":
         new_data_store: DataStore = DataStore()     # init again, without autosave this time (this is loading the file
                                                     # saved in the assigned tmp folder)
-        all_doc: List[Document] = search_engine.fetch_all(doc_fields=config.doc_fields)
-        for doc in all_doc:
+        all_docs: List[Document] = search_engine.fetch_all(doc_fields=config.doc_fields)
+        for doc in all_docs:
             new_data_store.add_document(doc)
-        data_store = new_data_store
-    writer.write(output_destination, data_store)
+        writer.write(output_destination, new_data_store)
+    else:
+        writer.write(output_destination, data_store)
 
 if __name__ == "__main__":
     main()
