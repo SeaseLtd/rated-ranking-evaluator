@@ -1,0 +1,1 @@
+select * from doc where true and {allowEmpty:true}userInput(@kw)

@@ -17,6 +17,7 @@ class Config(BaseModel):
     )
     search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
     collection_name: str = Field(..., description="Name of the index/collection of the search engine")
+    vespa_schema: Optional[str] = Field(None, description="Schema name for Vespa search engine")
     search_engine_url: HttpUrl
     documents_filter: Optional[List[Dict[str, List[str]]]] = Field(
         None,
@@ -106,9 +107,16 @@ class Config(BaseModel):
     @property
     def search_engine_collection_endpoint(self) -> HttpUrl:
         """
-        Returns the set of valid labels based on the relevance scale.
+        Returns the collection endpoint URL for the search engine.
+        For Vespa: uses vespa_schema instead of collection_name in the endpoint.
         """
-        return HttpUrl(urljoin(self.search_engine_url.encoded_string() + "/", self.collection_name + "/"))
+        if self.search_engine_type == "vespa":
+            # For Vespa: use vespa_schema in the endpoint path
+            schema_name = self.vespa_schema or "doc"
+            return HttpUrl(urljoin(self.search_engine_url.encoded_string() + "/", schema_name + "/"))
+        else:
+            # For other engines: use collection_name
+            return HttpUrl(urljoin(self.search_engine_url.encoded_string() + "/", self.collection_name + "/"))
 
     @model_validator(mode="after")
     def check_rre_fields_required(self) -> "Config":
@@ -118,6 +126,12 @@ class Config(BaseModel):
             raise ValueError("rre_query_placeholder is required when output_format='rre'")
         elif self.output_format == "rre" and not self.rre_query_template and not self.query_template:
             raise ValueError("At least one query template is required when output_format='rre'")
+        return self
+
+    @model_validator(mode="after")
+    def check_vespa_fields_required(self) -> "Config":
+        if self.search_engine_type == "vespa" and not self.vespa_schema:
+            raise ValueError("vespa_schema is required when search_engine_type='vespa'")
         return self
 
     @classmethod

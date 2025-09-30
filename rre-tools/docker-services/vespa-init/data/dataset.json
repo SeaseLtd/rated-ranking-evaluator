@@ -1,0 +1,14 @@
+[
+  {
+    "put": "id:doc:doc::1",
+    "fields": { "id": "1", "title": "Helicopter Crashes in Colombian Drug War, Kills 20",
+      "description": "BOGOTA, Colombia - A U.S.-made helicopter on an anti-drugs mission crashed in the Colombian jungle on Thursday, killing all 20 Colombian soldiers aboard, the army said."
+    }
+  },
+  {
+    "put": "id:doc:doc::2",
+    "fields": { "id": "2", "title": "Police Use Taser on Python to Free Man",
+      "description": "UNIONTOWN, Pa. - A police officer used a Taser to subdue a python that had wrapped itself around a man's arm and would not let go."
+    }
+  }
+]

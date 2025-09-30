@@ -79,6 +79,33 @@ This will start 2 services:
  - `elasticsearch-init`, loads documents from elasticsearch-init/data/dataset.jsonl only if Elasticsearch doesn't have 
 any documents in the index.
 
+
+
+### Running Vespa (Standalone)
+
+To run a local Vespa test environment using docker-compose:
+```bash
+cd docker-services/
+```
+
+Depending on your Docker version, you may need to use `docker compose` instead of `docker-compose`.
+If you have Docker Compose v1 installed, use:
+
+```bash
+docker-compose -f docker-compose.vespa.yml up --build
+```
+
+If you have Docker Compose v2 installed, use:
+```bash
+docker compose -f docker-compose.vespa.yml build --no-cache
+ && docker compose -f docker-compose.vespa.yml up --force-recreate --remove-orphans 
+```
+
+This will start 2 services:
+ - `vespa`, available at http://localhost:8080/
+ - `vespa-init`, loads documents from vespa-init/data/dataset.json.
+
+
 ## Running the Quepid container
 
 ```bash

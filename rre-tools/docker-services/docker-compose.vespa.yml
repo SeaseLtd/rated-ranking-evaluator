@@ -1,0 +1,27 @@
+services:
+  vespa:
+    image: vespaengine/vespa:8
+    container_name: vespa
+    hostname: vespa-container
+    ports: ["8080:8080","19071:19071"]
+    volumes:
+      - ./vespa-init/app:/app
+      - ./vespa-init/data:/data
+      - ./vespa-init/vespa-init.sh:/app/vespa-init.sh
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:19071/state/v1/health"]
+      interval: 2s
+      timeout: 10s
+      retries: 60
+
+  vespa-init:
+    build: ./vespa-init
+    depends_on:
+      vespa:
+        condition: service_healthy
+    volumes:
+      - ./vespa-init/app:/app
+      - ./vespa-init/data:/data
+      - ./vespa-init/vespa-init.sh:/app/vespa-init.sh
+    entrypoint: ["/usr/bin/env","bash","-lc","/app/vespa-init.sh"]
+    restart: "no"
