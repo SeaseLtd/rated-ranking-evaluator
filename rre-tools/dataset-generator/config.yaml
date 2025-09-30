@@ -58,7 +58,7 @@ llm_configuration_file: "dataset-generator/llm_config.yaml"
 
 # Output format for the generated dataset
 # Accepted values: quepid, rre, mteb
-output_format: "mteb"
+output_format: "quepid"
 
 # For rre output format, you need other fields, e.g.:
 #id_field: "id"
