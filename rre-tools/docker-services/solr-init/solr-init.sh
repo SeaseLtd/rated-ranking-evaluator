@@ -39,7 +39,9 @@ if [ -f "$EMBEDDINGS_FILE" ] && command -v jq >/dev/null 2>&1; then
     . as $doc                                                  # save each line of the document in the var `doc`
     | (first($emb[] | select(.id == $doc.id)) // null) as $e   # assign to the var `e` the line of the emb file if it has the same id
     | if $e != null
-      then $doc + {vector: $e.vector}                          # appends the embedding to the document
+      then $doc + {
+        vector: ($e.vector | map((. * 1e12 | round) / 1e12))   # appends the embedding to the document rounding each number to 12 decimals
+      }
       else $doc                                                # otherwise it keeps just the fields
       end
   )
