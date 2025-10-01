@@ -1,4 +1,11 @@
 from __future__ import annotations
+
+# ------ temporary import for corpus.json bug workaround ------
+import json
+from pathlib import Path
+from commons.utils import _to_string
+# -------------------------------------------------------------
+
 from typing import List
 from langchain_core.language_models import BaseChatModel
 from logging import Logger, getLogger, DEBUG, INFO
@@ -140,6 +147,7 @@ def main() -> None:
     output_destination = config.output_destination
     log.info(f"Synthetic Dataset has been generated in: {output_destination}")
     data_store.save()
+    writer.write(output_destination, data_store)
 
     # save explanation  - forced to extract value before invoking export_all_records_with_explanation (mypy)
     if config.save_llm_explanation:
@@ -148,17 +156,22 @@ def main() -> None:
             log.info(f"Dataset with LLM explanation is saved into: {llm_explanation_path}")
 
     # TODO:
-    #  work on a better solution, instead of adding it directly into the datastore, and maybe modify the MtebWriter
-    #  with the fetch from the search engine
+    #  work on a better solution, instead of overwriting the corpus.json file, and maybe modify the MtebWriter with the
+    #  fetch from the search engine
     if config.output_format == "mteb":
-        new_data_store: DataStore = DataStore()     # init again, without autosave this time (this is loading the file
-                                                    # saved in the assigned tmp folder)
         all_docs: List[Document] = search_engine.fetch_all(doc_fields=config.doc_fields)
-        for doc in all_docs:
-            new_data_store.add_document(doc)
-        writer.write(output_destination, new_data_store)
-    else:
-        writer.write(output_destination, data_store)
+
+        # copy pasted from MtebWriter
+        corpus_path = Path(output_destination) / "corpus.jsonl"
+        with corpus_path.open("w", encoding="utf-8") as file:
+            for doc in all_docs:
+                doc_id = str(doc.id)
+                fields = doc.fields
+                title = _to_string(fields.get("title"))
+                text = _to_string(fields.get("description"))
+
+                row = {"id": doc_id, "title": title, "text": text}
+                file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 if __name__ == "__main__":
     main()
