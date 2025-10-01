@@ -17,6 +17,8 @@ class Config(BaseModel):
     queries_path: FilePath = Field(..., description="Queries jsonl file path")
     candidates_path: FilePath = Field(..., description="Candidates jsonl file path")
     relevance_scale: Literal["binary", "graded"]
+    dataset_name: str = Field("custom-dataset", description="Dataset name for MTEB task")
+    split: str = Field("test", description="Dataset split (train/dev/test)")
     output_dest: Optional[Path] = Field(
         None, description="Path to save mteb output, by default saved in output dir."
     )
