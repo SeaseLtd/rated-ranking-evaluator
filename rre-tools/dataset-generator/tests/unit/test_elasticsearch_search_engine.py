@@ -17,7 +17,7 @@ configure_logging(level=logging.DEBUG)
 @pytest.fixture
 def elasticsearch_config(resource_folder):
     """Fixture that loads a valid OpenSearch config for unit tests."""
-    return Config.load(resource_folder / "elasticsearch_good_config.yaml")
+    return Config.load(resource_folder / "good_config_elasticsearch.yaml")
 
 @pytest.fixture
 def mock_doc():

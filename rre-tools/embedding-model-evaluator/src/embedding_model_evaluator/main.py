@@ -44,8 +44,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=str,
-        default="config.yaml",
-        help='Config file path [default: "config.yaml"]',
+        help='Config file path to use for the application [default: "embedding-model-evaluator/config.yaml"]',
+        required=False,
+        default="embedding-model-evaluator/config.yaml",
     )
     return parser.parse_args()
 

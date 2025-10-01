@@ -27,6 +27,7 @@ class Config(BaseModel):
         description="Path to save mteb embeddings, by default saved in <output/embeddings> folder.",
     )
 
+    @classmethod
     @field_validator("corpus_path", "queries_path", "candidates_path", mode="before")
     def check_jsonl_extension(cls, val: Any) -> Any:
         if val is None:

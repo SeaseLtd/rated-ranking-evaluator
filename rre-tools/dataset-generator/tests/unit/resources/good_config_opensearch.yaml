@@ -1,14 +1,4 @@
-query_template: >
-  {
-    "query": {
-      "query_string": {
-        "query": "#$query##",
-        "default_field": "description",
-        "default_operator": "OR"
-      }
-    },
-    "size": 20
-  }
+query_template: "dataset-generator/tests/unit/resources/template_opensearch.json"
 search_engine_type: "opensearch"
 collection_name: "testcore"
 search_engine_url: "http://localhost:9200/"

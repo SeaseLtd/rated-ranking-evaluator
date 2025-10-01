@@ -67,8 +67,8 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
     writer.write(config.embeddings_dest)
 
     embedding_dir = config.embeddings_dest
-    docs_file = embedding_dir / "document_embeddings.jsonl"
-    queries_file = embedding_dir / "query_embeddings.jsonl"
+    docs_file = embedding_dir / "documents_embeddings.jsonl"
+    queries_file = embedding_dir / "queries_embeddings.jsonl"
     assert docs_file.exists()
     assert queries_file.exists()
 

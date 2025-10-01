@@ -4,7 +4,7 @@ set -euo pipefail
 COLLECTION_ENDPOINT="http://solr:8983/solr/testcore";
 DATASET_FILE="/opt/rre-dataset-generator/data/dataset.json";
 EMBEDDINGS_FOLDER="/opt/rre-dataset-generator/embeddings";
-EMBEDDINGS_FILE="$EMBEDDINGS_FOLDER/document_embeddings.jsonl";
+EMBEDDINGS_FILE="$EMBEDDINGS_FOLDER/documents_embeddings.jsonl";
 TMP_FILE="/tmp/merged_dataset.json";
 
 echo "[INFO] Waiting for Solr core \"testcore\" to be ready…";
@@ -34,13 +34,13 @@ if [ -f "$EMBEDDINGS_FILE" ] && command -v jq >/dev/null 2>&1; then
   VECTOR_DIM=$(head -n 1 "$EMBEDDINGS_FILE" | jq '.vector | length')
   echo "[INFO] Embeddings file found -> detected embedding dimension: $VECTOR_DIM"
   echo "[INFO] jq available → merging…"
-  jq --slurpfile emb "$EMBEDDINGS_FILE" '       # parse the $EMBEDDINGS_FILE into the var `emb` and execute the following script
+  jq --slurpfile emb "$EMBEDDINGS_FILE" '                      # parse the $EMBEDDINGS_FILE into the var `emb` and execute the following script
   map(
-    . as $doc                                   # save each line of the document in the var `doc`
-    | ($emb[] | select(.id == $doc.id)) as $e   # assign to the var `e` the line of the emb file if it has the same id
+    . as $doc                                                  # save each line of the document in the var `doc`
+    | (first($emb[] | select(.id == $doc.id)) // null) as $e   # assign to the var `e` the line of the emb file if it has the same id
     | if $e != null
-      then $doc + {vector: $e.vector}           # appends the embedding to the document
-      else $doc                                 # otherwise it keeps just the fields
+      then $doc + {vector: $e.vector}                          # appends the embedding to the document
+      else $doc                                                # otherwise it keeps just the fields
       end
   )
 ' "$DATASET_FILE" > "$TMP_FILE"

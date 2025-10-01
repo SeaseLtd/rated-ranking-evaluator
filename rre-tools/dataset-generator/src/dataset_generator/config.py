@@ -11,7 +11,10 @@ log = logging.getLogger(__name__)
 
 
 class Config(BaseModel):
-    query_template: str = Field("q=#$query##", description="Template string for queries with a placeholder for keywords.")
+    query_template: Optional[FilePath] = Field(
+        None,
+        description="Path pointing to a template file for queries with a placeholder for keywords."
+    )
     search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
     collection_name: str = Field(..., description="Name of the index/collection of the search engine")
     search_engine_url: HttpUrl
@@ -34,13 +37,25 @@ class Config(BaseModel):
     rre_query_template: Optional[FilePath] = Field(None, description="Query template for rre evaluator.")
     rre_query_placeholder: Optional[str] = Field(None, description="Key-value pair to substitute in the rre query template.")
     verbose: bool = False
+    datastore_autosave_every_n_updates: Optional[int] = Field(None, gt=0,
+        description="If set, periodically persist datastore every N successful updates (adds/ratings)."
+    )
 
     def build_writer_config(self) -> WriterConfig:
+        if self.rre_query_template is not None:
+            query_template = self.rre_query_template.name
+        else:
+            if self.query_template is not None:
+                query_template = self.query_template.name
+            else:
+                query_template = None
+
+
         return WriterConfig(
             output_format = self.output_format,
             index = self.collection_name,
             id_field = self.id_field,
-            query_template = self.rre_query_template,
+            query_template = query_template,
             query_placeholder = self.rre_query_placeholder
         )
 
@@ -99,10 +114,10 @@ class Config(BaseModel):
     def check_rre_fields_required(self) -> "Config":
         if self.output_format == "rre" and not self.id_field:
             raise ValueError("id_field is required when output_format='rre'")
-        elif self.output_format == "rre" and not self.rre_query_template:
-            raise ValueError("rre_query_template is required when output_format='rre'")
         elif self.output_format == "rre" and not self.rre_query_placeholder:
             raise ValueError("rre_query_placeholder is required when output_format='rre'")
+        elif self.output_format == "rre" and not self.rre_query_template and not self.query_template:
+            raise ValueError("At least one query template is required when output_format='rre'")
         return self
 
     @classmethod

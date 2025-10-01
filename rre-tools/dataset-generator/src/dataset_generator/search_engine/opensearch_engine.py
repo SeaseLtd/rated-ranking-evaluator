@@ -1,6 +1,6 @@
 import json
 import logging
-from json import JSONDecodeError
+from pathlib import Path
 from typing import List, Dict, Any, Union
 
 import requests
@@ -9,7 +9,7 @@ from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestExce
 
 from commons.model.document import Document
 from dataset_generator.search_engine.search_engine_base import BaseSearchEngine
-from dataset_generator.utils import clean_text
+from commons.utils import clean_text
 
 log = logging.getLogger(__name__)
 
@@ -61,16 +61,15 @@ class OpenSearchEngine(BaseSearchEngine):
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: str = "*") -> List[Document]:
+    def fetch_for_evaluation(self, query_template: Path | str, doc_fields: List[str], keyword: str = "*") -> List[Document]:
         """Fetches documents for evaluation by executing a query built from a template."""
-        try:
-            payload: Dict[str, Any] = json.loads(query_template)
-        except JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON query_template: {e}")
+        query_template = Path(query_template)
+        payload: Dict[str, Any] = self._parse_query_template(query_template)
+        payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
 
-        query_string_obj = payload.get("query", {}).get("query_string", {})
-        if "query" in query_string_obj:
-            query_string_obj["query"] = query_string_obj["query"].replace(self.PLACEHOLDER, keyword)
+        # query_string_obj = payload.get("query", {}).get("query_string", {})
+        # if "query" in query_string_obj:
+        #     query_string_obj["query"] = query_string_obj["query"].replace(self.QUERY_PLACEHOLDER, keyword)
 
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
         payload["_source"] = fields
@@ -81,11 +80,13 @@ class OpenSearchEngine(BaseSearchEngine):
         """Perform a search to OpenSearch and return matching documents based on the given payload."""
         search_url = f"{self.endpoint}/_search"
         log.debug(f"User-specified fields: {payload.get('_source')}")
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
         except (ConnectionError, Timeout, RequestException, HTTPError) as e:
-            log.error(f"OpenSearch query failed: {e}\nPayload: {payload}")
+            log.error(f"OpenSearch query failed: {e}")
             raise
 
         hits = response.json().get("hits", {}).get("hits", [])

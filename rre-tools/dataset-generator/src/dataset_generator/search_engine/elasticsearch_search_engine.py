@@ -1,5 +1,5 @@
 import json
-from json import JSONDecodeError
+from pathlib import Path
 
 import requests
 from urllib.parse import urljoin
@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Union, Optional
 
 from dataset_generator.search_engine.search_engine_base import BaseSearchEngine
 from commons.model.document import Document
-from dataset_generator.utils import clean_text
+from commons.utils import clean_text
 
 import logging
 log = logging.getLogger(__name__)
@@ -71,13 +71,12 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
 
         return self._search(payload)
 
-    def fetch_for_evaluation(self, query_template: str, doc_fields: List[str], keyword: Optional[str] = None) -> List[Document]:
+    def fetch_for_evaluation(self, query_template: Path | str, doc_fields: List[str], keyword: Optional[str] = None) -> List[Document]:
         """
         Executes a search for evaluation using a query template with an optional keyword substitution.
 
         Args:
-            query_template (str): A JSON-formatted string representing the Elasticsearch query,
-                possibly containing a placeholder for a keyword.
+            query_template (Path): Path variable pointing to the file with the payload a placeholder for the keyword.
             doc_fields (List[str]): List of field names to include in the response.
             keyword (str, optional): A keyword to replace the placeholder in the query.
                 If not provided, a default match_all query is used.
@@ -85,14 +84,13 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents matching the query.
         """
-        try:
-            payload: Dict[str, Any] = json.loads(query_template)
-        except JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON query_template: {e}")
+        query_template = Path(query_template)
+        payload: Dict[str, Any] = self._parse_query_template(query_template)
+        payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
 
-        query_string_obj = payload.get("query", {}).get("query_string", {})
-        if "query" in query_string_obj:
-            query_string_obj["query"] = query_string_obj["query"].replace(self.PLACEHOLDER, keyword)
+        # query_string_obj = payload.get("query", {}).get("query_string", {})
+        # if "query" in query_string_obj:
+        #     query_string_obj["query"] = query_string_obj["query"].replace(self.QUERY_PLACEHOLDER, keyword)
 
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
         payload["_source"] = fields
@@ -110,11 +108,14 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         """
         search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
+
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
         except (ConnectionError, Timeout, RequestException, HTTPError) as e:
-            log.error(f"ElasticSearch query failed: {e}\nPayload: {payload}")
+            log.error(f"ElasticSearch query failed: {e}")
             raise
 
         hits = response.json().get('hits', {}).get('hits', [])

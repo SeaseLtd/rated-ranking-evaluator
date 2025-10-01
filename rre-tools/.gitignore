@@ -7,7 +7,7 @@ wheels/
 *.egg-info
 
 # macOS metadata files
-.DS_Store
+../.DS_Store
 
 # Virtual environments
 .env

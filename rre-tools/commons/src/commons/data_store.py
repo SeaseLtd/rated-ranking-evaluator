@@ -8,6 +8,7 @@ import logging
 from uuid import uuid4
 from pydantic import ValidationError
 from commons.model import Document, Query, Rating
+from commons.utils import clean_text
 
 log = logging.getLogger(__name__)
 
@@ -23,8 +24,13 @@ class DataStore:
     - `has_rating_score` is True only if a `Rating` object exists for the pair (query_id, document_id).
     """
 
-    def __init__(self, path: Path = TMP_FILE, ignore_saved_data: bool = False):
+    def __init__(self, path: Path = TMP_FILE, ignore_saved_data: bool = False, autosave_every_n_updates: Optional[int] = None):
         self.path = path
+        # Autosave configuration: when >0, save to disk every N successful mutations
+        self._autosave_every_n_updates: Optional[int] = (
+            autosave_every_n_updates if isinstance(autosave_every_n_updates, int) and autosave_every_n_updates > 0 else None
+        )
+        self._updates_since_last_save: int = 0
 
         # Primary (id → object)
         self.docs: Dict[str, Document] = {}
@@ -35,8 +41,6 @@ class DataStore:
 
         # Text based deduplication for queries
         self.query_text_to_query_id: Dict[str, str] = {}           # query_text → query_id 
-        # TODO: add normalizing function for the text keys (strip, lower, etc).
-        ### Proposal: refactor utils clean_text() and import / reuse here
 
         if not ignore_saved_data:
             log.info(f"Loading data from {path}")
@@ -95,17 +99,20 @@ class DataStore:
             return
         self.docs[doc.id] = doc
         log.debug(f"[add_document] added doc_id={doc.id}")
+        self._count_update_and_maybe_autosave()
 
     def add_query(self, query_text_str: str, query_id: Optional[str] = None) -> Query:
         """Adds a new query. If text is cached, returns existing Query. If id is given, it's used."""
-        if existing_id := self.query_text_to_query_id.get(query_text_str):
-            log.debug(f"[add_query] exists text='{query_text_str}' existing_id={existing_id}")
+        key = clean_text(query_text_str) # Apply general filtering
+        if existing_id := self.query_text_to_query_id.get(key):
+            log.debug(f"[add_query] exists text='{query_text_str}' key='{key}' existing_id={existing_id}")
             query = self.queries[existing_id]
         else:
             query = Query(id=query_id, text=query_text_str) if query_id else Query(text=query_text_str)
             self.queries[query.id] = query
-            self.query_text_to_query_id[query_text_str] = query.id
+            self.query_text_to_query_id[key] = query.id
             log.debug(f"[add_query] added query_id={query.id}")
+            self._count_update_and_maybe_autosave()
 
         return query
 
@@ -125,6 +132,7 @@ class DataStore:
 
         self.rating_by_pair[key] = rating 
         log.debug(f"[add_rating] added q={rating.query_id} d={rating.doc_id}")
+        self._count_update_and_maybe_autosave()
 
     def create_rating_score(
         self, query_id: str, doc_id: str, score: int, explanation: Optional[str] = None
@@ -145,6 +153,33 @@ class DataStore:
             return None
 
     # ────────────────────────────────────────────
+    # Autosave helper
+    # ────────────────────────────────────────────
+    def _count_update_and_maybe_autosave(self) -> None:
+        """Increment mutation counter and autosave if threshold reached.
+        
+        If autosave fails, the counter is not reset to allow retrying on next update.
+        """
+        if self._autosave_every_n_updates is None:
+            return
+        
+        self._updates_since_last_save += 1
+        
+        if self._updates_since_last_save >= self._autosave_every_n_updates:
+            try:
+                self.save()
+                log.debug(f"[autosave] ok path={self.path} updates={self._updates_since_last_save}")
+                # OK -> reset counter
+                self._updates_since_last_save = 0  
+            except Exception as e:
+                # Error logged but not raised -> main execution continues without saving
+                log.error(
+                    f"[autosave] failed to save {self.path}."
+                    f"Will retry. Error: {str(e)}",
+                    exc_info=True
+                )
+
+    # ────────────────────────────────────────────
     # Persistence
     # ────────────────────────────────────────────
     def save(self) -> None:
@@ -156,6 +191,7 @@ class DataStore:
         }
         tmp_path = self.path.with_name(self.path.name + f".{uuid4().hex}.tmp")
         tmp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding=ENCODING)
+        # override previous
         tmp_path.replace(self.path)
         
     def load(self) -> None:

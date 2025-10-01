@@ -17,7 +17,7 @@ configure_logging(level=logging.DEBUG)
 @pytest.fixture
 def solr_config(resource_folder):
     """Fixture that loads a valid OpenSearch config for unit tests."""
-    return Config.load(resource_folder / "solr_good_config.yaml")
+    return Config.load(resource_folder / "good_config_solr.yaml")
 
 @pytest.fixture
 def mock_doc():
@@ -93,49 +93,6 @@ def test_solr_search_engine_negative_post_fetch_for_evaluation__expects__raises_
                 query_template=solr_config.query_template,
                 doc_fields=solr_config.doc_fields
             )
-
-def test_template_to_json_payload(monkeypatch):
-    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="id"))
-    solr_engine = SolrSearchEngine("https://fakeurl")
-    template = 'q=ghosts&fq=genre:horror&wt=json'
-    expected_payload = {
-        'query': 'ghosts',
-        'params': {
-            'fq' : 'genre:horror',
-            'wt': 'json'
-        }
-    }
-    assert solr_engine._template_to_json_payload(template) == expected_payload
-
-    template = 'q=do we have ghosts&fq=genre:horror&wt=json'
-    expected_payload = {
-        'query': 'do we have ghosts',
-        'params': {
-            'fq': 'genre:horror',
-            'wt': 'json'
-        }
-    }
-    assert solr_engine._template_to_json_payload(template) == expected_payload
-
-    template = 'q="ghosts"&fq=genre:horror&wt=json'
-    expected_payload = {
-        'query': '"ghosts"',
-        'params': {
-            'fq': 'genre:horror',
-            'wt': 'json'
-        }
-    }
-    assert solr_engine._template_to_json_payload(template) == expected_payload
-
-    template = 'q=ghosts?&fq=genre:horror&wt=json'
-    expected_payload = {
-        'query': 'ghosts?',
-        'params': {
-            'fq': 'genre:horror',
-            'wt': 'json'
-        }
-    }
-    assert solr_engine._template_to_json_payload(template) == expected_payload
 
 def test_solr_search_engine_bad_url__expects__raises_validation_error():
     with pytest.raises(ValidationError):
