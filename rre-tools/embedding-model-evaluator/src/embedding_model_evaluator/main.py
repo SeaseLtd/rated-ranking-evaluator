@@ -119,7 +119,6 @@ def main() -> None:
         cached=model_with_cache,
         cache_path=CACHE_PATH,
         task_name=TASKS_NAME_MAPPING.get(config.task_to_evaluate, "CustomRetrievalTask"),
-        normalize_embeddings=True,
         batch_size=256,
     )
     log.info(f"Writing embeddings to {config.embeddings_dest} ...")
