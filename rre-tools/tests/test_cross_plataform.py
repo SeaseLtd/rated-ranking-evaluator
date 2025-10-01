@@ -44,12 +44,12 @@ class _FakeCache:
         self._doc_vectors = doc_vectors
         self._query_vectors = query_vectors
 
-    def encode(self, texts, *, task_name: str, name: str, normalize_embeddings: bool, batch_size: int):
-        if name.endswith("-corpus"):
+    def encode(self, texts, *, task_name: str, batch_size: int):
+        if task_name.endswith("-corpus"):
             return self._doc_vectors
-        if name.endswith("-queries"):
+        if task_name.endswith("-queries"):
             return self._query_vectors
-        raise AssertionError(f"Unexpected encode name: {name}")
+        raise AssertionError(f"Unexpected encode name: {task_name}")
 
     def close(self) -> None:
         pass
@@ -71,22 +71,30 @@ def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dir
         config=cfg,
         cached=cached,
         cache_path=tmp_path / "cache",
-        task_name="test_custom_task",
-        normalize_embeddings=True,
+        task_name="test_custom_task-corpus",
         batch_size=32,
     )
 
     writer.write(dest)
 
     docs_file = dest / "documents_embeddings.jsonl"
-    queries_file = dest / "queries_embeddings.jsonl"
-
     assert docs_file.exists()
-    assert queries_file.exists()
-
     # sanity read
     with jsonlines.open(docs_file) as r:
         _ = list(r)
+
+    writer = EmbeddingWriter(
+        config=cfg,
+        cached=cached,
+        cache_path=tmp_path / "cache",
+        task_name="test_custom_task-queries",
+        batch_size=32,
+    )
+
+    writer.write(dest)
+
+    queries_file = dest / "queries_embeddings.jsonl"
+    assert queries_file.exists()
     with jsonlines.open(queries_file) as r:
         _ = list(r)
 

@@ -28,18 +28,14 @@ def _create_fake_cache_wrapper(
         texts: list[str],
         *,
         task_name: str,
-        name: str,
-        normalize_embeddings: bool,
         batch_size: int,
     ) -> np.ndarray:
-        assert task_name == "test_custom_task"
-        assert normalize_embeddings is True
         assert batch_size == 32
-        if name.endswith("-corpus"):
+        if task_name.endswith("-corpus"):
             return np.vstack([np.asarray(vector) for vector in doc_vectors])
-        if name.endswith("-queries"):
+        if task_name.endswith("-queries"):
             return np.vstack([np.asarray(vector) for vector in query_vectors])
-        raise AssertionError(f"Unexpected encode name: {name}")
+        raise AssertionError(f"Unexpected encode name: {task_name}")
 
     cached.encode.side_effect = _encode
     return cached
@@ -59,8 +55,7 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
         config=config,
         cached=cached,
         cache_path=tmp_path / "cache",
-        task_name="test_custom_task",
-        normalize_embeddings=True,
+        task_name="test_custom_task-corpus",
         batch_size=32,
     )
 
@@ -68,14 +63,26 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
 
     embedding_dir = config.embeddings_dest
     docs_file = embedding_dir / "documents_embeddings.jsonl"
-    queries_file = embedding_dir / "queries_embeddings.jsonl"
-    assert docs_file.exists()
-    assert queries_file.exists()
 
+    assert docs_file.exists()
     with jsonlines.open(docs_file) as r:
         docs = list(r)
+    assert docs == [{"id": "doc1", "vector": [0.1, 0.2, 0.3]}]
+
+    # recreating again because of fake cached embedding wrapper for queries and corpus vectors
+    writer = EmbeddingWriter(
+        config=config,
+        cached=cached,
+        cache_path=tmp_path / "cache",
+        task_name="test_custom_task-queries",
+        batch_size=32,
+    )
+
+    writer.write(config.embeddings_dest)
+    queries_file = embedding_dir / "queries_embeddings.jsonl"
+    assert queries_file.exists()
+
     with jsonlines.open(queries_file) as r:
         queries = list(r)
-
-    assert docs == [{"id": "doc1", "vector": [0.1, 0.2, 0.3]}]
     assert queries == [{"id": "query1", "vector": [1.0, 1.1, 1.2]}]
+
