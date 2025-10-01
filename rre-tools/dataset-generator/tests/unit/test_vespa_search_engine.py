@@ -8,8 +8,8 @@ from requests.exceptions import HTTPError
 from commons.logger import configure_logging
 from dataset_generator.config import Config
 from dataset_generator.search_engine import VespaSearchEngine
-from commons.model.document import Document  # <- usa el mismo import que en la implementación
-from commons.utils import clean_text  # para expectations del normalizador
+from commons.model.document import Document
+from commons.utils import clean_text
 
 configure_logging(level="DEBUG")
 

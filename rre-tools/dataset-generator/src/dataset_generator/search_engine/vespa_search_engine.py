@@ -130,7 +130,7 @@ class VespaSearchEngine(BaseSearchEngine):
             "hits": int(doc_number),
             "presentation.format": "json",
         }
-        log.debug(f"Vespa payload (generation): {str(payload)[:1000]}")
+        log.debug(f"Vespa payload (showing payload 1000 first chars): {str(payload)[:1000]}")
         return self._search(payload)
 
     def fetch_for_evaluation(
