@@ -35,7 +35,8 @@ dev = [
     "ruff>=0.12.10",
     "typing-extensions>=4.14.1",
     "types-PyYAML>=6.0.2",
-    "types-requests>=2.32.4"
+    "types-requests>=2.32.4",
+    "setuptools>=80.9.0"
 ]
 
 [tool.pytest.ini_options]

@@ -38,14 +38,12 @@ class EmbeddingWriter:
         cached: CachedEmbeddingWrapper,
         cache_path: str | Path,
         task_name: str,
-        normalize_embeddings: bool,
         batch_size: int,
     ):
         self.config = config
         self.cached = cached
         self.cache_path = Path(cache_path)
         self.task_name = task_name
-        self.normalize_embeddings = normalize_embeddings
         self.batch_size = batch_size
 
     def write(self, embedding_path: str | Path | None) -> None:
@@ -69,10 +67,8 @@ class EmbeddingWriter:
         ]
 
         doc_vectors = self.cached.encode(
-            doc_texts,
+            texts=doc_texts,
             task_name=self.task_name,
-            name=f"{self.task_name}-corpus",
-            normalize_embeddings=self.normalize_embeddings,
             batch_size=self.batch_size,
         )
         _write_embeddings_jsonl(documents_path, zip(doc_ids, doc_vectors))
@@ -84,10 +80,8 @@ class EmbeddingWriter:
         query_texts = [query_dict[qid] for qid in query_ids]
 
         query_vectors = self.cached.encode(
-            query_texts,
+            texts=query_texts,
             task_name=self.task_name,
-            name=f"{self.task_name}-queries",
-            normalize_embeddings=self.normalize_embeddings,
             batch_size=self.batch_size,
         )
         _write_embeddings_jsonl(queries_path, zip(query_ids, query_vectors))
