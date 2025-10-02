@@ -8,7 +8,7 @@ from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
 from embedding_model_evaluator.config import Config
 from embedding_model_evaluator.custom_tasks.reranking_task import compose_text
-from embedding_model_evaluator.utilities.helper import read_corpus, read_queries
+from embedding_model_evaluator.utilities.helper import read_corpus_retrieval, read_corpus_reranking, read_queries
 
 log = logging.getLogger(__name__)
 
@@ -59,12 +59,20 @@ class EmbeddingWriter:
 
         # documents
         documents_path = path / "documents_embeddings.jsonl"
-        doc_dict = read_corpus(Path(self.config.corpus_path))
-        doc_ids = list(doc_dict.keys())
-        doc_texts = [
-            compose_text(doc_dict[_id].get("title"), doc_dict[_id].get("text"))
-            for _id in doc_ids
-        ]
+        if self.task_name == "CustomRetrievalTask":
+            doc_dict = read_corpus_retrieval(Path(self.config.corpus_path))
+            doc_ids = list(doc_dict.keys())
+            doc_texts = list(doc_dict.values())
+        elif self.task_name == "CustomRerankingTask":
+            doc_dict = read_corpus_reranking(Path(self.config.corpus_path))
+            doc_ids = list(doc_dict.keys())
+            doc_texts = [
+                compose_text(doc_dict[_id].get("title"), doc_dict[_id].get("text"))
+                for _id in doc_ids
+            ]
+        else:
+            raise ValueError(f"Unknown task: {self.task_name}")
+
 
         doc_vectors = self.cached.encode(
             texts=doc_texts,

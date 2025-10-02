@@ -48,7 +48,17 @@ def _parse_args() -> argparse.Namespace:
         required=False,
         default="embedding-model-evaluator/config.yaml",
     )
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Activate debug mode for logging [default: False]')
+
     return parser.parse_args()
+
+def setup_logging(verbose: bool = False) -> None:
+    if verbose:
+        configure_logging(logging.DEBUG)
+    else:
+        configure_logging(logging.INFO)
+    return
 
 
 def _build_task(task_key: str, dataset_name: str, split: str) -> Any:
@@ -79,8 +89,8 @@ def _build_task(task_key: str, dataset_name: str, split: str) -> Any:
 
 
 def main() -> None:
-    configure_logging()
     args = _parse_args()
+    setup_logging(args.verbose)
     config: Config = Config.load(args.config)
 
     # --- Sanity logs (explicit & helpful) ---
