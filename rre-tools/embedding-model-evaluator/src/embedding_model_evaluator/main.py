@@ -25,18 +25,13 @@ from embedding_model_evaluator.custom_tasks import (  # noqa: F401 (tasks must b
     CustomRetrievalTask,
 )
 from embedding_model_evaluator.writers import EmbeddingWriter
+from embedding_model_evaluator.utilities import TASKS_NAME_MAPPING
 from commons.logger import configure_logging  # type: ignore[import]
 
 log = logging.getLogger(__name__)
 
 CACHE_PATH = Path("resources/cache")
 CACHE_PATH.mkdir(parents=True, exist_ok=True)
-
-# Map simple "task key" -> registered MTEB task class name
-TASKS_NAME_MAPPING = {
-    "retrieval": "CustomRetrievalTask",
-    "reranking": "CustomRerankingTask",
-}
 
 
 def _parse_args() -> argparse.Namespace:
@@ -99,7 +94,9 @@ def main() -> None:
 
     # --- Model + caching wrapper ---
     model = mteb.get_model(config.model_id)
-    model_with_cache = CachedEmbeddingWrapper(model, cache_path=CACHE_PATH)
+    model_name_additional_path = config.model_id.replace("/", "__").replace(" ", "_")
+    model_with_cache_path = CACHE_PATH / model_name_additional_path
+    model_with_cache = CachedEmbeddingWrapper(model, cache_path=model_with_cache_path)
 
     # --- Task instance (in-memory) ---
     try:
@@ -127,7 +124,7 @@ def main() -> None:
     writer = EmbeddingWriter(
         config=config,
         cached=model_with_cache,
-        cache_path=CACHE_PATH,
+        cache_path=model_with_cache_path,
         task_name=TASKS_NAME_MAPPING.get(config.task_to_evaluate, "CustomRetrievalTask"),
         batch_size=256,
     )

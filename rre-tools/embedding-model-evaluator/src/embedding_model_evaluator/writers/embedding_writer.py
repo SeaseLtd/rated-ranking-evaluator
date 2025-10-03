@@ -9,6 +9,7 @@ from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 from embedding_model_evaluator.config import Config
 from embedding_model_evaluator.custom_tasks.reranking_task import compose_text
 from embedding_model_evaluator.utilities.helper import read_corpus_retrieval, read_corpus_reranking, read_queries
+from embedding_model_evaluator.utilities import TASKS_NAME_MAPPING
 
 log = logging.getLogger(__name__)
 
@@ -50,24 +51,24 @@ class EmbeddingWriter:
         """
         Write embeddings to <embedding_path>.
         """
-        # by default embeddings will be written into <output/embeddings>
+        # by default embeddings will be written into <resources/embeddings>
         if embedding_path is None:
-            embedding_path = "output/embeddings"
+            embedding_path = "resources/embeddings"
 
         path = Path(embedding_path)
         path.mkdir(parents=True, exist_ok=True)
 
         # documents
         documents_path = path / "documents_embeddings.jsonl"
-        if self.task_name == "CustomRetrievalTask":
-            doc_dict = read_corpus_retrieval(Path(self.config.corpus_path))
-            doc_ids = list(doc_dict.keys())
-            doc_texts = list(doc_dict.values())
-        elif self.task_name == "CustomRerankingTask":
-            doc_dict = read_corpus_reranking(Path(self.config.corpus_path))
-            doc_ids = list(doc_dict.keys())
+        if self.task_name == TASKS_NAME_MAPPING["retrieval"]:
+            doc_dict_retrieval= read_corpus_retrieval(Path(self.config.corpus_path))
+            doc_ids = list(doc_dict_retrieval.keys())
+            doc_texts = list(doc_dict_retrieval.values())
+        elif self.task_name == TASKS_NAME_MAPPING["reranking"]:
+            doc_dict_reranking = read_corpus_reranking(Path(self.config.corpus_path))
+            doc_ids = list(doc_dict_reranking.keys())
             doc_texts = [
-                compose_text(doc_dict[_id].get("title"), doc_dict[_id].get("text"))
+                compose_text(doc_dict_reranking[_id].get("title"), doc_dict_reranking[_id].get("text"))
                 for _id in doc_ids
             ]
         else:

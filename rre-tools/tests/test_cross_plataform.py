@@ -8,6 +8,7 @@ from commons.model import Document, WriterConfig
 from commons.writers.quepid_writer import QuepidWriter
 from embedding_model_evaluator.config import Config as MTEBConfig
 from embedding_model_evaluator.writers.embedding_writer import EmbeddingWriter
+from embedding_model_evaluator.utilities.helper import TASKS_NAME_MAPPING
 from dataset_generator.config import Config as DGConfig
 
 
@@ -40,16 +41,11 @@ def test_save_and_load_nested_paths__expects__data_persisted_correctly(tmp_path:
 # ---------------- embedding-model-evaluator ----------------
 
 class _FakeCache:
-    def __init__(self, doc_vectors: Sequence[Sequence[float]], query_vectors: Sequence[Sequence[float]]):
-        self._doc_vectors = doc_vectors
-        self._query_vectors = query_vectors
+    def __init__(self, vectors: Sequence[Sequence[float]]):
+        self._vectors = vectors
 
     def encode(self, texts, *, task_name: str, batch_size: int):
-        if task_name.endswith("-corpus"):
-            return self._doc_vectors
-        if task_name.endswith("-queries"):
-            return self._query_vectors
-        raise AssertionError(f"Unexpected encode name: {task_name}")
+        return self._vectors
 
     def close(self) -> None:
         pass
@@ -65,13 +61,14 @@ def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dir
 
     dest = tmp_path / "out" / "embeddings"
 
-    cached = _FakeCache(doc_vectors=[[0.1, 0.2, 0.3]], query_vectors=[[1.0, 1.1, 1.2]])
+    cached_doc = _FakeCache(vectors=[[0.1, 0.2, 0.3]])
+    cached_query = _FakeCache(vectors=[[1.0, 1.1, 1.2]])
 
     writer = EmbeddingWriter(
         config=cfg,
-        cached=cached,
+        cached=cached_doc,
         cache_path=tmp_path / "cache",
-        task_name="test_custom_task-corpus",
+        task_name=TASKS_NAME_MAPPING["retrieval"],
         batch_size=32,
     )
 
@@ -85,9 +82,9 @@ def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dir
 
     writer = EmbeddingWriter(
         config=cfg,
-        cached=cached,
+        cached=cached_query,
         cache_path=tmp_path / "cache",
-        task_name="test_custom_task-queries",
+        task_name=TASKS_NAME_MAPPING["retrieval"],
         batch_size=32,
     )
 

@@ -9,6 +9,7 @@ from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
 from embedding_model_evaluator.config import Config
 from embedding_model_evaluator.writers.embedding_writer import EmbeddingWriter
+from embedding_model_evaluator.utilities.helper import TASKS_NAME_MAPPING
 
 
 @pytest.fixture
@@ -17,8 +18,7 @@ def config() -> Config:
 
 
 def _create_fake_cache_wrapper(
-    doc_vectors: Sequence[Sequence[float] | np.ndarray],
-    query_vectors: Sequence[Sequence[float] | np.ndarray],
+    vectors: Sequence[Sequence[float] | np.ndarray]
 ) -> CachedEmbeddingWrapper:
     cached: CachedEmbeddingWrapper = create_autospec(
         CachedEmbeddingWrapper, instance=True
@@ -31,11 +31,8 @@ def _create_fake_cache_wrapper(
         batch_size: int,
     ) -> np.ndarray:
         assert batch_size == 32
-        if task_name.endswith("-corpus"):
-            return np.vstack([np.asarray(vector) for vector in doc_vectors])
-        if task_name.endswith("-queries"):
-            return np.vstack([np.asarray(vector) for vector in query_vectors])
-        raise AssertionError(f"Unexpected encode name: {task_name}")
+        assert task_name == TASKS_NAME_MAPPING["retrieval"]
+        return np.vstack([np.asarray(vector) for vector in vectors])
 
     cached.encode.side_effect = _encode
     return cached
@@ -45,17 +42,21 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
     config: Config, tmp_path: Path
 ) -> None:
     doc_vectors = [[0.1, 0.2, 0.3]]
-    query_vectors = [[1.0, 1.1, 1.2]]
-    cached = _create_fake_cache_wrapper(
-        doc_vectors=doc_vectors, query_vectors=query_vectors
+    cached_doc = _create_fake_cache_wrapper(
+        vectors=doc_vectors
     )
+    query_vectors = [[1.0, 1.1, 1.2]]
+    cached_query = _create_fake_cache_wrapper(
+        vectors=query_vectors
+    )
+
     config.embeddings_dest = tmp_path / "output" / "embeddings"
 
     writer = EmbeddingWriter(
         config=config,
-        cached=cached,
+        cached=cached_doc,
         cache_path=tmp_path / "cache",
-        task_name="test_custom_task-corpus",
+        task_name=TASKS_NAME_MAPPING["retrieval"],
         batch_size=32,
     )
 
@@ -72,9 +73,9 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
     # recreating again because of fake cached embedding wrapper for queries and corpus vectors
     writer = EmbeddingWriter(
         config=config,
-        cached=cached,
+        cached=cached_query,
         cache_path=tmp_path / "cache",
-        task_name="test_custom_task-queries",
+        task_name=TASKS_NAME_MAPPING["retrieval"],
         batch_size=32,
     )
 
