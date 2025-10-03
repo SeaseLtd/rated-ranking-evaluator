@@ -9,7 +9,7 @@ from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
 from embedding_model_evaluator.config import Config
 from embedding_model_evaluator.writers.embedding_writer import EmbeddingWriter
-from embedding_model_evaluator.utilities.helper import TASKS_NAME_MAPPING
+from embedding_model_evaluator import TASKS_NAME_MAPPING
 
 
 @pytest.fixture

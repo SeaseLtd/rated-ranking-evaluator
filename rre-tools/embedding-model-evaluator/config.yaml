@@ -19,7 +19,7 @@ candidates_path: "resources/mteb_datasets/nfcorpus/test/candidates.jsonl"
 #   - graded: 0 (not relevant), 1 (maybe ok), 2 (that’s my result)
 relevance_scale: "graded"
 
-# (Optional) Path to write mteb resources, if not given it will be written to resources/model_name dir in the root folder
+# (Optional) Path to write mteb resources, if not given it will be written to resources dir in the root folder
 output_dest: "resources"
 
 # (Optional) Path to write mteb document and query embeddings, if not given it will be written to resources/embeddings dir

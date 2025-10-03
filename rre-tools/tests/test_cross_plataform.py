@@ -8,7 +8,7 @@ from commons.model import Document, WriterConfig
 from commons.writers.quepid_writer import QuepidWriter
 from embedding_model_evaluator.config import Config as MTEBConfig
 from embedding_model_evaluator.writers.embedding_writer import EmbeddingWriter
-from embedding_model_evaluator.utilities.helper import TASKS_NAME_MAPPING
+from embedding_model_evaluator import TASKS_NAME_MAPPING
 from dataset_generator.config import Config as DGConfig
 
 

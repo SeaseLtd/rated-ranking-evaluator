@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-from pathlib import Path
 from typing import Any
 
 import mteb
@@ -25,12 +24,11 @@ from embedding_model_evaluator.custom_tasks import (  # noqa: F401 (tasks must b
     CustomRetrievalTask,
 )
 from embedding_model_evaluator.writers import EmbeddingWriter
-from embedding_model_evaluator.utilities import TASKS_NAME_MAPPING
+from embedding_model_evaluator import TASKS_NAME_MAPPING, CACHE_PATH
 from commons.logger import configure_logging  # type: ignore[import]
 
 log = logging.getLogger(__name__)
 
-CACHE_PATH = Path("resources/cache")
 CACHE_PATH.mkdir(parents=True, exist_ok=True)
 
 
