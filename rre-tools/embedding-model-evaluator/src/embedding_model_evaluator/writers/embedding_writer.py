@@ -9,7 +9,7 @@ from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 from embedding_model_evaluator.config import Config
 from embedding_model_evaluator.custom_tasks.reranking_task import compose_text
 from embedding_model_evaluator.utilities.helper import read_corpus_retrieval, read_corpus_reranking, read_queries
-from embedding_model_evaluator.utilities import TASKS_NAME_MAPPING
+from embedding_model_evaluator import TASKS_NAME_MAPPING
 
 log = logging.getLogger(__name__)
 
