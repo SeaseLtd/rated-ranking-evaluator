@@ -37,7 +37,7 @@ class CustomRetrievalTask(AbsTaskRetrieval):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.corpus: dict[str, dict[str, dict[str, str]]] = {}
+        self.corpus: dict[str, dict[str, str]] = {}
         self.queries: dict[str, dict[str, str]] = {}
         self.relevant_docs: dict[str, dict[str, dict[str, int]]] = {}
 

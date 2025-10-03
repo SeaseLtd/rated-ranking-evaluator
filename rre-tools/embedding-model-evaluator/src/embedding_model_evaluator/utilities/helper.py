@@ -2,6 +2,11 @@ from pathlib import Path
 
 from jsonlines import jsonlines
 
+# Map simple "task key" -> registered MTEB task class name
+TASKS_NAME_MAPPING = {
+    "retrieval": "CustomRetrievalTask",
+    "reranking": "CustomRerankingTask",
+}
 
 def read_corpus_reranking(path: Path) -> dict[str, dict[str, str]]:
     corpus_dict: dict[str, dict[str, str]] = {}
