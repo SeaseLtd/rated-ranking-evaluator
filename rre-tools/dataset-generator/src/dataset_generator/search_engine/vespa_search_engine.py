@@ -107,7 +107,8 @@ class VespaSearchEngine(BaseSearchEngine):
         self,
         documents_filter: Union[None, List[Dict[str, List[str]]]],
         doc_number: int,
-        doc_fields: Optional[List[str]]
+        doc_fields: Optional[List[str]],
+        start: int  = 0,
     ) -> List[Document]:
         """
         Fetch documents from Vespa for the purpose of query generation.
@@ -116,6 +117,7 @@ class VespaSearchEngine(BaseSearchEngine):
             documents_filter: Optional list of filter dictionaries for query restriction.
             doc_number: Number of documents to retrieve.
             doc_fields: Optional list of fields to include in the response.
+            start: Optional start index to retrieve documents from.
 
         Returns:
             A list of `Document` instances parsed from the response.
@@ -129,6 +131,7 @@ class VespaSearchEngine(BaseSearchEngine):
             "yql": yql,
             "hits": int(doc_number),
             "presentation.format": "json",
+            'offset': start,
         }
         log.debug(f"Vespa payload (showing payload 1000 first chars): {str(payload)[:1000]}")
         return self._search(payload)
