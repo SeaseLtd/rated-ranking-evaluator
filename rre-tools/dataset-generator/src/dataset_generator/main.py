@@ -8,12 +8,12 @@ from commons.utils import _to_string
 
 from typing import List
 from langchain_core.language_models import BaseChatModel
-from logging import Logger, getLogger, DEBUG, INFO
+from logging import Logger, getLogger
 
 # project imports
 from dataset_generator.config import Config
 from dataset_generator.utils import parse_args
-from commons.logger import configure_logging
+from commons.logger import setup_logging
 from dataset_generator.llm import LLMConfig, LLMService, LLMServiceFactory
 from commons.model import Document, Query, LLMQueryResponse, LLMScoreResponse, WriterConfig
 from commons.writers import WriterFactory, AbstractWriter
@@ -22,13 +22,6 @@ from commons.data_store import DataStore
 
 log: Logger = getLogger(__name__)
 
-
-def setup_logging(verbose: bool = False) -> None:
-    if verbose:
-        configure_logging(DEBUG)
-    else:
-        configure_logging(INFO)
-    return
 
 
 def add_user_queries(config: Config, data_store: DataStore) -> None:
