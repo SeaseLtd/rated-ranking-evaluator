@@ -3,7 +3,7 @@ import argparse
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
 
-    parser.add_argument('-c', '--config_file', type=str,
+    parser.add_argument('-c', '--config', type=str,
                         help='Config file path to use for the application [default: "dataset-generator/config.yaml"]',
                         required=False, default="dataset-generator/config.yaml")
 
