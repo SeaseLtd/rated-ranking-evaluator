@@ -49,7 +49,7 @@ at the Dataset Generator [README](dataset-generator/README.md).
 
 Execute the main script via CLI, pointing to your DAGE configuration file:
 ```bash
-uv run dataset-generator --config_file <path-to-DAGE-config-yaml>
+uv run dataset-generator --config <path-to-DAGE-config-yaml>
 ```
 To know more about all the possible CLI parameters, execute:
 ```bash
