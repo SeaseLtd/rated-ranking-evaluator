@@ -24,6 +24,13 @@ def configure_logging(level: Union[str, int] = logging.INFO) -> None:
         datefmt='%H:%M:%S'
     )
 
+def setup_logging(verbose: bool = False) -> None:
+    if verbose:
+        configure_logging(logging.DEBUG)
+    else:
+        configure_logging(logging.INFO)
+    return
+
 # EXAMPLE:
 if __name__ == "__main__":
     # 1. Configure logging

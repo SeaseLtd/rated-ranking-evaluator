@@ -138,7 +138,7 @@ class VespaSearchEngine(BaseSearchEngine):
 
     def fetch_for_evaluation(
         self,
-        query_template: Path,
+        query_template: Path | str,
         doc_fields: Optional[List[str]],
         keyword: str = "*"
     ) -> List[Document]:
@@ -155,7 +155,10 @@ class VespaSearchEngine(BaseSearchEngine):
         """
 
         # Read the YQL template from file (following the same pattern as other engines)
-        template_str = query_template.read_text(encoding='utf-8').strip()
+        if isinstance(query_template, Path):
+            template_str = query_template.read_text(encoding='utf-8').strip()
+        else:
+            template_str = query_template.strip()
 
         # Use parameter substitution instead of string replacement for security
         # Template should contain userInput(@kw) with {allowEmpty:true} for empty queries
