@@ -1,0 +1,6 @@
+query_template: "templates/template_solr.json"
+search_engine_type: "solr"
+collection_name: "testcore"
+search_engine_url: "http://localhost:8983/solr/"
+search_engine_version: "8.3.0"
+ratings_path: "resources/ratings.json"
