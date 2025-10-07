@@ -2,6 +2,7 @@ import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from dataset_generator.llm import LLMService
 from commons.model import Document, LLMQueryResponse
+from llm_mock import ChatModelAdapter
 
 
 @pytest.fixture
@@ -16,8 +17,8 @@ def example_doc():
 
 
 def test_llm_service_generate_queries__expects__valid(example_doc):
-    fake_llm = FakeListChatModel(responses=['["Toyota", "Best Car"]'])
-    service = LLMService(chat_model=fake_llm)
+    fake_llm = FakeListChatModel(responses=['{"queries": ["Toyota", "Best Car"]}'])
+    service = LLMService(chat_model=ChatModelAdapter(fake_llm))
     response = service.generate_queries(example_doc, 2)
 
     assert isinstance(response, LLMQueryResponse)
@@ -25,35 +26,33 @@ def test_llm_service_generate_queries__expects__valid(example_doc):
 
 
 def test_llm_service_generate_queries__expects__empty_list(example_doc):
-    fake_llm = FakeListChatModel(responses=['[]'])
-    service = LLMService(chat_model=fake_llm)
+    fake_llm = FakeListChatModel(responses=['{"queries":[]}'])
+    service = LLMService(chat_model=ChatModelAdapter(fake_llm))
     response = service.generate_queries(example_doc, 0)
     assert response.get_queries() == []
 
 
 @pytest.mark.parametrize("invalid_response, expected_error", [
-    ('not a json', "Invalid JSON in `response_content`"),
-    ('["", " ", "Valid"]', "must not be empty or only whitespace"),
-    ('["Good", 123, null]', "must be strings"),
+    ('not a json', r"Invalid JSON"),
+    ('{"queries":["", " ", "Valid"]}', r"(at least 1 character|min_length|String should have at least 1)"),
+    ('{"queries":["Good", 123, null]}', r"(valid string|string_type)"),
 ])
 def test_llm_service_generate_queries_with_invalid_responses__expects__error(invalid_response, expected_error, example_doc):
     fake_llm = FakeListChatModel(responses=[invalid_response])
-    service = LLMService(chat_model=fake_llm)
+    service = LLMService(chat_model=ChatModelAdapter(fake_llm))
     with pytest.raises(ValueError, match=expected_error):
         service.generate_queries(example_doc, 3)
 
 
 def test_generate_queries_with_unicode_strings__expects__list_of_unicode_strings(example_doc):
-    unicode_list = '["こんにちは", "你好", "¡Hola!"]'
-    fake_llm = FakeListChatModel(responses=[unicode_list])
-    service = LLMService(chat_model=fake_llm)
+    fake_llm = FakeListChatModel(responses=['{"queries":["こんにちは", "你好", "¡Hola!"]}'])
+    service = LLMService(chat_model=ChatModelAdapter(fake_llm))
     response = service.generate_queries(example_doc, 3)
     assert response.get_queries() == ["こんにちは", "你好", "¡Hola!"]
 
 
-def test_generate_queries_with_leading_trailing_whitespace__expects__strings_preserved(example_doc):
-    list_with_whitespace = '["  hello  ", " world "]'
-    fake_llm = FakeListChatModel(responses=[list_with_whitespace])
-    service = LLMService(chat_model=fake_llm)
+def test_generate_queries_with_leading_trailing_whitespace__expects__whitespace_stripped(example_doc):
+    fake_llm = FakeListChatModel(responses=['{"queries":["  hello  ", " world "]}'])
+    service = LLMService(chat_model=ChatModelAdapter(fake_llm))
     response = service.generate_queries(example_doc, 2)
-    assert response.get_queries() == ["  hello  ", " world "]
+    assert response.get_queries() == ["hello", "world"]
