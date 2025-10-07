@@ -108,7 +108,7 @@ def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore
 def main() -> None:
     # configuration and logger definition
     args = parse_args()
-    config: Config = Config.load(args.config_file)
+    config: Config = Config.load(args.config)
     writer_config: WriterConfig = config.build_writer_config()
     setup_logging(args.verbose)
 
@@ -152,19 +152,23 @@ def main() -> None:
     #  work on a better solution, instead of overwriting the corpus.json file, and maybe modify the MtebWriter with the
     #  fetch from the search engine
     if config.output_format == "mteb":
-        all_docs: List[Document] = search_engine.fetch_all(doc_fields=config.doc_fields)
-
         # copy pasted from MtebWriter
         corpus_path = Path(output_destination) / "corpus.jsonl"
-        with corpus_path.open("w", encoding="utf-8") as file:
-            for doc in all_docs:
-                doc_id = str(doc.id)
-                fields = doc.fields
-                title = _to_string(fields.get("title"))
-                text = _to_string(fields.get("description"))
+        corpus_path.unlink(missing_ok=True)
+        for docs_batch in search_engine.fetch_all(doc_fields=config.doc_fields):
+            with corpus_path.open("a", encoding="utf-8") as file:
+                for doc in docs_batch:
+                    doc_id = str(doc.id)
+                    fields = doc.fields
+                    title = _to_string(fields.get("title"))
+                    text = " ".join(
+                        _to_string(value)
+                        for key, value in fields.items()
+                        if key != "title"
+                    )
 
-                row = {"id": doc_id, "title": title, "text": text}
-                file.write(json.dumps(row, ensure_ascii=False) + "\n")
+                    row = {"id": doc_id, "title": title, "text": text}
+                    file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 if __name__ == "__main__":
     main()
