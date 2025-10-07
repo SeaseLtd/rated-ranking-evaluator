@@ -87,11 +87,11 @@ def test_opensearch_engine_fetch_all__expects__results_returned(monkeypatch, ope
     def mock_post(*args, **kwargs):
         call_counter["count"] += 1
         if call_counter["count"] == 1:
-            return MockResponseOpenSearchEngine([opensearch_hit] * DOC_NUMBER_EACH_FETCH, status_code=200)
-        elif call_counter["count"] == 2:
-            return MockResponseOpenSearchEngine([opensearch_hit] * DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseOpenSearchEngine(hits_data=[], total_hits =2 * DOC_NUMBER_EACH_FETCH, status_code=200)
+        elif call_counter["count"] == 2 or call_counter["count"] == 3:
+            return MockResponseOpenSearchEngine(hits_data=[opensearch_hit] * DOC_NUMBER_EACH_FETCH, status_code=200)
         else:
-            return MockResponseOpenSearchEngine([], status_code=200)
+            return MockResponseOpenSearchEngine(hits_data=[], status_code=200)
 
     monkeypatch.setattr(requests, "post", mock_post)
 

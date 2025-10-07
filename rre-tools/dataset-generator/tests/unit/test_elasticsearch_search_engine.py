@@ -73,11 +73,11 @@ def test_elasticsearch_engine_fetch_all__expects__results_returned(monkeypatch, 
     def mock_post(*args, **kwargs):
         call_counter["count"] += 1
         if call_counter["count"] == 1:
-            return MockResponseElasticsearchEngine([mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
-        elif call_counter["count"] == 2:
-            return MockResponseElasticsearchEngine([mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseElasticsearchEngine(json_data=[], total_hits=2* DOC_NUMBER_EACH_FETCH, status_code=200)
+        elif call_counter["count"] == 2 or call_counter["count"] == 3:
+            return MockResponseElasticsearchEngine(json_data=[mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
         else:
-            return MockResponseElasticsearchEngine([], status_code=200)
+            return MockResponseElasticsearchEngine(json_data=[], status_code=200)
 
     monkeypatch.setattr(requests, "post", mock_post)
 

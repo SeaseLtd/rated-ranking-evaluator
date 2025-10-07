@@ -24,6 +24,24 @@ class OpenSearchEngine(BaseSearchEngine):
         self.HEADERS = {'Content-Type': 'application/json'}
         self.UNIQUE_KEY = "id"
 
+    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+        search_url = f"{self.endpoint}/_search"
+        log.debug(f"User-specified fields: {payload.get('_source')}")
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
+        try:
+            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException, HTTPError) as e:
+            log.error(f"OpenSearch query failed: {e}")
+            raise
+
+        return int(response.json().get('hits', {}).get('total', {}).get('value', 0))
+
+    @property
+    def _fetch_all_payload(self) -> Dict[str, Any]:
+        return {"match_all": {}}
+
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
@@ -44,15 +62,13 @@ class OpenSearchEngine(BaseSearchEngine):
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
 
         if filters:
-            query = {
+            query: Dict[str, Any] = {
                 "bool": {
                     "filter": filters
                 }
             }
         else:
-            query = {
-                "match_all": {}
-            }
+            query: Dict[str, Any] = self._fetch_all_payload
 
         payload = {
             "query": query,

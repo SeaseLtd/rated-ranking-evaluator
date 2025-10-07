@@ -26,16 +26,15 @@ class BaseSearchEngine(ABC):
             List[Document]: Batch of documents
         """
         # Now this is relying on fetch_for_query_generation to avoid duplicate code. Might be changed in the future
-        start: int = 0
-        while True:
+        start: int = - DOC_NUMBER_EACH_FETCH
+        total_hits: int = self._get_total_hits(self._fetch_all_payload)
+        while start + DOC_NUMBER_EACH_FETCH < total_hits:
             batch = self.fetch_for_query_generation(
                 documents_filter=None,
                 doc_number=DOC_NUMBER_EACH_FETCH,
                 doc_fields=doc_fields,
                 start=start
                 )
-            if not batch:
-                break
             yield batch
             start += len(batch)
 
@@ -72,7 +71,7 @@ class BaseSearchEngine(ABC):
                                    start: int = 0) \
             -> List[Document]:
         """Extract documents for generating queries."""
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def fetch_for_evaluation(self,
@@ -81,9 +80,21 @@ class BaseSearchEngine(ABC):
                              keyword: str="*:*") \
             -> List[Document]:
         """Search for documents based on a keyword and a query template to evaluate the system."""
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Search for documents using a query."""
-        raise NotImplementedError
+        pass
+
+    @abstractmethod
+    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+        """Get the total number of documents returned by a query."""
+        pass
+
+    @property
+    @abstractmethod
+    def _fetch_all_payload(self) -> Dict[str, Any]:
+        """Payload to fetch all documents from the search engine."""
+        pass
+

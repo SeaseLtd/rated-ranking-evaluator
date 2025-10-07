@@ -2,14 +2,16 @@ from typing import List
 import requests
 
 class MockResponseSolrEngine:
-    def __init__(self, json_data: List, status_code: int =200):
+    def __init__(self, json_data: List, total_hits: int = 100, status_code: int =200):
         self._json_data = json_data
         self.status_code = status_code
+        self.total_hits = total_hits
 
     def json(self):
         return {
             "response": {
-                "docs": self._json_data
+                "docs": self._json_data,
+                "numFound": self.total_hits,
             }
         }
 

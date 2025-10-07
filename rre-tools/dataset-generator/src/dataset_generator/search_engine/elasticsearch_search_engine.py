@@ -25,6 +25,25 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         log.debug(f"Working on endpoint: {self.endpoint}")
         self.UNIQUE_KEY = "_id"
 
+    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+        search_url = urljoin(self.endpoint.encoded_string(), '_search')
+
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
+
+        try:
+            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException, HTTPError) as e:
+            log.error(f"ElasticSearch query failed: {e}")
+            raise
+
+        return int(response.json().get('hits', {}).get('total', {}).get('value', 0))
+
+    @property
+    def _fetch_all_payload(self) -> Dict[str, Any]:
+        return {"match_all": {}}
+
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
@@ -44,7 +63,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
             List[Document]: A list of documents formatted as `Document` instances.
         """
         # Build base query
-        query: Dict[str, Any] = {"match_all": {}}
+        query: Dict[str, Any] = self._fetch_all_payload
 
         # Add filters, if provided
         filter_clauses = []
