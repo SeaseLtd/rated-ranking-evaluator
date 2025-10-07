@@ -51,26 +51,13 @@ def test_missing_optional_solr_field_values__expects__all_defaults_read(resource
     assert config.embeddings_folder is None
 
 
-def test_missing_query_template__expects__raises_validation_error(resource_folder):
-    file_name = "missing_query_template.yaml"
-    with pytest.raises(ValidationError):
-        _ = Config.load(resource_folder / file_name)
-
-
-def test_missing_search_engine_type__expects__raises_validation_error(resource_folder):
-    file_name = "missing_search_engine_type.yaml"
-    with pytest.raises(ValidationError):
-        _ = Config.load(resource_folder / file_name)
-
-
-def test_missing_collection_name__expects__raises_validation_error(resource_folder):
-    file_name = "missing_collection_name.yaml"
-    with pytest.raises(ValidationError):
-        _ = Config.load(resource_folder / file_name)
-
-
-def test_missing_search_engine_url__expects__raises_validation_error(resource_folder):
-    file_name = "missing_search_engine_url.yaml"
+@pytest.mark.parametrize("file_name", [
+    "missing_query_template.yaml",
+    "missing_search_engine_type.yaml",
+    "missing_collection_name.yaml",
+    "missing_search_engine_url.yaml"
+])
+def test_missing_non_optional_field__expects__raises_validation_error(resource_folder, file_name):
     with pytest.raises(ValidationError):
         _ = Config.load(resource_folder / file_name)
 
