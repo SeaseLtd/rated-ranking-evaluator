@@ -7,7 +7,7 @@ from rre_tools.approximate_search_evaluator.config import Config
 
 # --------------- solr ---------------
 def test_good_config_solr__expects__all_parameters_read(resource_folder):
-    file_name = resource_folder / Path("solr.json")
+    file_name = resource_folder / "good_config_solr.yaml"
     config = Config.load(resource_folder / file_name)
 
     assert config.query_template == Path('tests/resources/approximate_search_evaluator/template_solr.json')
