@@ -1,0 +1,3 @@
+search_engine_type: "solr"
+collection_name: "testcore"
+search_engine_url: "http://localhost:8983/solr/"

@@ -1,0 +1,4 @@
+query_template: "tests/resources/approximate_search_evaluator/template_elasticsearch.json"
+search_engine_type: "elasticsearch"
+collection_name: "testcore"
+search_engine_url: "http://localhost:9200/"
