@@ -97,8 +97,11 @@ def test_opensearch_engine_fetch_all__expects__results_returned(monkeypatch, ope
 
     # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_all(doc_fields=opensearch_config.doc_fields)
-    assert result[0] == expected_doc
-    assert len(result) == 2*DOC_NUMBER_EACH_FETCH
+    first = next(result)
+    second = next(result)
+    assert first[0] == expected_doc
+    assert len(first) == DOC_NUMBER_EACH_FETCH
+    assert len(second) == DOC_NUMBER_EACH_FETCH
 
 
 def test_normalize():

@@ -84,8 +84,11 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, so
 
     # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_all(doc_fields=solr_config.doc_fields)
-    assert result[0] == Document(**mock_dict)
-    assert len(result) == 2*DOC_NUMBER_EACH_FETCH
+    first = next(result)
+    second = next(result)
+    assert first[0] == Document(**mock_dict)
+    assert len(first) == DOC_NUMBER_EACH_FETCH
+    assert len(second) == DOC_NUMBER_EACH_FETCH
 
 def test_solr_search_engine_negative_post_fetch_for_query_generation__expects__raises_http_error(monkeypatch, solr_config):
     for status_code in [400, 401, 402, 403, 500]:

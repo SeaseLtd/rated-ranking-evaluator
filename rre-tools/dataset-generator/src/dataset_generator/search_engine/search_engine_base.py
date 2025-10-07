@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
 from pathlib import Path
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Iterator
 from pydantic import HttpUrl
 from commons.model.document import Document
 
@@ -14,10 +14,18 @@ class BaseSearchEngine(ABC):
         self.QUERY_PLACEHOLDER = "$query"
         self.UNIQUE_KEY = 'id'
 
-    def fetch_all(self, doc_fields: List[str]) -> List[Document]:
-        """Extract all documents from search engine."""
+    def fetch_all(self, doc_fields: List[str]) -> Iterator[List[Document]]:
+        """Extract all documents from search engine in batches.
+
+        Yields batches of documents instead of loading everything in memory.
+
+        Args:
+            doc_fields: Fields to extract from documents
+
+        Yields:
+            List[Document]: Batch of documents
+        """
         # Now this is relying on fetch_for_query_generation to avoid duplicate code. Might be changed in the future
-        all_docs: List[Document] = []
         start: int = 0
         while True:
             batch = self.fetch_for_query_generation(
@@ -28,9 +36,8 @@ class BaseSearchEngine(ABC):
                 )
             if not batch:
                 break
-            all_docs.extend(batch)
+            yield batch
             start += len(batch)
-        return all_docs
 
 
     def _parse_query_template(self, path: Path | str) -> Dict[str, Any]:
