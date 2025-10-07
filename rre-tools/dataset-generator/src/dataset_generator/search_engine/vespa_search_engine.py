@@ -42,6 +42,31 @@ class VespaSearchEngine(BaseSearchEngine):
     # Helpers / internal utils
     # ------------------------------------------------------------------
 
+    @property
+    def _fetch_all_payload(self) -> Dict[str, Any]:
+        return {
+            'yql': f"select * from {self.schema} where true"
+        }
+
+    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+        base = str(self.endpoint).rstrip("/")
+        search_url = f"{base}/search/"
+
+        try:
+            response = requests.post(
+                search_url,
+                headers=self.HEADERS,
+                json=payload,
+                timeout=DEFAULT_TIMEOUT,  # added timeout to avoid blocking calls
+                allow_redirects=False,  # added allow_redirects
+            )
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException) as e:
+            log.error(f"Request to {search_url} failed: {e}")
+            raise
+
+        return int(response.json().get("root", {}).get("fields", {}).get("totalCount", 0))
+
     def _build_yql(self, select_fields: List[str], where_clause: str = "true") -> str:
         fields = ", ".join(select_fields) if select_fields else "*"
         return f"select {fields} from {self.schema} where {where_clause}"
@@ -123,16 +148,17 @@ class VespaSearchEngine(BaseSearchEngine):
             A list of `Document` instances parsed from the response.
         """
 
+        payload: Dict[str, Any] = self._fetch_all_payload
+
         self._validate_filters(documents_filter)
         where = self._filter_to_where(documents_filter)
         yql = self._build_yql(doc_fields or [], where)
 
-        payload = {
-            "yql": yql,
-            "hits": int(doc_number),
-            "presentation.format": "json",
-            'offset': start,
-        }
+        payload["yql"] = yql
+        payload["hits"] = int(doc_number)
+        payload["presentation.format"] =  "json"
+        payload['offset'] = start
+
         log.debug(f"Vespa payload (showing payload 1000 first chars): {str(payload)[:1000]}")
         return self._search(payload)
 
