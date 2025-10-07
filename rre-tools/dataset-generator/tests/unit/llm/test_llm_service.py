@@ -3,7 +3,7 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from commons.model import Document, LLMQueryResponse, LLMScoreResponse
 from dataset_generator.llm import LLMService
-from llm_mock import ChatModelAdapter
+from llm_mock import FakeChatModelAdapter
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def example_doc():
 def test_llm_service_generate_queries__expects__response(example_doc):
     # Test that the service can generate queries from a document
     fake_llm = FakeListChatModel(responses=['{"queries": ["Car","Auto","Vehicle","Sedan","Toyota"]}'])
-    service = LLMService(chat_model=ChatModelAdapter(fake_llm))
+    service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
 
     response = service.generate_queries(example_doc, 5)
 
@@ -31,7 +31,7 @@ def test_llm_service_generate_queries__expects__response(example_doc):
 
 def test_llm_service_generate_score__expects__response(example_doc):
     fake_llm = FakeListChatModel(responses=['{"score": 1}'])
-    service = LLMService(chat_model=ChatModelAdapter(fake_llm))
+    service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
 
     query = "Is a Toyota the car of the year?"
 
@@ -47,7 +47,7 @@ def test_llm_service_generate_score__expects__response(example_doc):
 ])
 def test_llm_service_generate_score_with_invalid_responses__expects__raises_value_error(example_doc, invalid_response):
     fake_llm = FakeListChatModel(responses=[invalid_response])
-    service = LLMService(chat_model=ChatModelAdapter(fake_llm))
+    service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
 
     query = "Is a Toyota the car of the year?"
     with pytest.raises(ValueError):

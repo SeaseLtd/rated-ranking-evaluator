@@ -25,7 +25,7 @@ class _StructuredOutputMockLLM:
         raise TypeError(f"Unexpected fake payload type: {type(payload)}")
 
 
-class ChatModelAdapter(BaseChatModel):
+class FakeChatModelAdapter(BaseChatModel):
     """Fake adapter for with_structured_output, as the FakeListChatModel doesn't support"""
 
     def __init__(self, fake_chat_model):
