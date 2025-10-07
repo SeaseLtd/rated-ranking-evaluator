@@ -161,8 +161,8 @@ def main() -> None:
         log.info("Adding vectors to ratings file...")
         add_vector(config.query_template, config.embeddings_folder / "queries_embeddings.jsonl", data_store)
     else:
-        log.warning("No embeddings folder was specified. If the specified templates has a $vector placeholder, this will"
-                    " break RRE evaluation.")
+        log.warning("No embeddings folder was specified. If the specified templates has a '$vector' placeholder, this "
+                    "will break RRE evaluation.")
 
     log.info("Running Maven RRE evaluation...")
     run_rre_evaluate(eval_folder)
