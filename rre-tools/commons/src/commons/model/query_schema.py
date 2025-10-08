@@ -1,9 +1,7 @@
-from typing import Type
-
 from pydantic import BaseModel, Field, create_model, conlist, constr
 
 
-def create_queries_schema(num_queries_generate: int) -> Type[BaseModel]:
+def create_queries_schema(num_queries_generate: int) -> type[BaseModel]:
     """
     Returns a Pydantic model that enforces `queries` to be a list of exactly
     `num_queries_generate` and non-empty strings. Used to validate LLM output.
