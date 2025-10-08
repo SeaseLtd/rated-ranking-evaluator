@@ -35,6 +35,8 @@ class BaseSearchEngine(ABC):
                 doc_fields=doc_fields,
                 start=start
                 )
+            if not batch:
+                break
             yield batch
             # if we didn't reach the end of the docs, then len(batch) == DOC_NUMBER_EACH_FETCH
             # if we reached the end of the docs. then len(batch) <= DOC_NUMBER_EACH_FETCH -> next iteration we exit the
