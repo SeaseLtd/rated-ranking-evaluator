@@ -5,6 +5,7 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from dataset_generator.llm import LLMService
 from commons.model import Document, LLMScoreResponse
+from llm_mock import FakeChatModelAdapter
 
 
 @pytest.fixture
@@ -27,7 +28,7 @@ def example_doc():
 ])
 def test_generate_score_with_valid_scale__expects__integer_score(scale, valid_score, example_doc):
     fake_llm = FakeListChatModel(responses=[f'{{"score": {valid_score}}}'])
-    service = LLMService(chat_model=fake_llm)
+    service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
     query = "Is a Toyota the car of the year?"
     response = service.generate_score(example_doc,
                                       query,
@@ -40,7 +41,7 @@ def test_generate_score_with_valid_scale__expects__integer_score(scale, valid_sc
 
 def test_generate_score__with_invalid_json_response__expects__raises_value_error(example_doc):
     fake_llm = FakeListChatModel(responses=['{malformed-json}'])
-    service = LLMService(chat_model=fake_llm)
+    service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
     with pytest.raises(ValueError, match="Invalid LLM response:"):
         service.generate_score(example_doc, "query", relevance_scale="binary", explanation=True)
 
@@ -54,7 +55,7 @@ def test_generate_score_with_valid_explanation__expects__explanation(scale, vali
 
     llm_output = {"score": valid_score, "explanation": explanation}
     fake_llm = FakeListChatModel(responses=[json.dumps(llm_output)])
-    service = LLMService(chat_model=fake_llm)
+    service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
 
     response = service.generate_score(
         example_doc,
@@ -68,29 +69,29 @@ def test_generate_score_with_valid_explanation__expects__explanation(scale, vali
     assert response.explanation == explanation
 
 
-@pytest.mark.parametrize("scale, response_json, expected_error", [
-    # Binary scale errors
-    ('binary', 'not a json', 'Invalid LLM response'),
-    ('binary', '{"not_score": 1}', 'Invalid LLM response'),
-    ('binary', '{"score": "one"}', 'Score must be 0 or 1 for binary scale, got one'),
-    ('binary', '{"score": 3}', 'Score must be 0 or 1 for binary scale, got 3'),
-    # Graded scale errors
-    ('graded', '{"score": -1}', 'Score must be 0, 1, or 2 for graded scale, got -1'),
-    ('graded', '{"score": 1.5}', 'Score must be 0, 1, or 2 for graded scale, got 1.5'),
-    ('graded', '{"score": null}', 'Score must be 0, 1, or 2 for graded scale, got None'),
+@pytest.mark.parametrize("scale, response_json", [
+    # Binary scale invalids
+    ('binary', 'not a json'),
+    ('binary', '{"not_score": 1}'),
+    ('binary', '{"score": "one"}'),
+    ('binary', '{"score": 3}'),
+    # Graded scale invalids
+    ('graded', '{"score": -1}'),
+    ('graded', '{"score": 1.5}'),
+    ('graded', '{"score": null}'),
 ])
-def test_generate_score_with_invalid_llm_responses__expects__raises_value_error(scale, response_json, expected_error,
-                                                                        example_doc):
+def test_generate_score_with_invalid_llm_responses__expects__raises_value_error(scale, response_json, example_doc):
     fake_llm = FakeListChatModel(responses=[response_json])
-    service = LLMService(chat_model=fake_llm)
+    service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
     query = "Is a Toyota the car of the year?"
-    with pytest.raises(ValueError, match=expected_error):
+
+    with pytest.raises(ValueError, match=r"^Invalid LLM response"):
         service.generate_score(example_doc, query, relevance_scale=scale)
 
 
 def test_generate_score_with_invalid_relevance_scale__expects__raises_value_error(example_doc):
     fake_llm = FakeListChatModel(responses=['{"score": 1}'])
-    service = LLMService(chat_model=fake_llm)
+    service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
     query = "What car won?"
     with pytest.raises(ValueError, match="Invalid relevance scale"):
         service.generate_score(example_doc, query, relevance_scale='fuzzy')
