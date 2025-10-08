@@ -10,6 +10,8 @@ from dataset_generator.config import Config
 from dataset_generator.search_engine import VespaSearchEngine
 from commons.model.document import Document
 from commons.utils import clean_text
+from dataset_generator.search_engine.search_engine_base import DOC_NUMBER_EACH_FETCH
+from mocks.vespa import MockResponseVespaSearch
 
 configure_logging(level="DEBUG")
 
@@ -22,7 +24,7 @@ Magic Fixtures:
 @pytest.fixture
 def vespa_config(resource_folder):
     """Fixture that loads a valid Vespa config for unit tests."""
-    return Config.load(resource_folder / "vespa_good_config.yaml")
+    return Config.load(resource_folder / "good_config_vespa.yaml")
 
 # -----------------------
 # Helpers / monkeypatches
@@ -249,3 +251,47 @@ def test_workflow_with_mocks_and_config__expects__work_with_existing(monkeypatch
     )
     expected_fields_eval = {k: VespaSearchEngine._normalize_field_value(v) for k, v in mock_doc["fields"].items()}
     assert res_eval[0] == Document(id=mock_doc["id"], fields=expected_fields_eval)
+
+@pytest.mark.parametrize(
+    "mock_doc",
+    [
+        {
+            "id": "id:news:news::1",
+            "fields": {
+                "sddocname": "news",
+                "documentid": "id:news:news::1",
+                "id": "1",
+                "title": "Helicopter Crashes in Colombian Drug War, Kills 20",
+                "description": "BOGOTA, Colombia  - A U.S.-made helicopter on an anti-drugs mission crashed in the Colombian jungle on Thursday, killing all 20 Colombian soldiers aboard, the army said.",
+            }
+        }
+    ]
+)
+def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, vespa_config, mock_doc):
+    search_engine = VespaSearchEngine("https://fakeurl")
+
+    mock_dict = {
+        "id": mock_doc["id"],
+        "fields": {k: VespaSearchEngine._normalize_field_value(v) for k, v in mock_doc["fields"].items()}
+    }
+
+    call_counter = {"count": 0}
+
+    def mock_post(*args, **kwargs):
+        call_counter["count"] += 1
+        if call_counter["count"] == 1: # first call is to just get the number of hits, in this case
+            return MockResponseVespaSearch(json_data=[], total_hits=2*DOC_NUMBER_EACH_FETCH, status_code=200)
+        elif call_counter["count"] == 2 or call_counter["count"] == 3:  # second and third are to catch actual docs call is to just get the number of hits, in this case
+            return MockResponseVespaSearch(json_data=[mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
+        else:
+            return MockResponseVespaSearch(json_data=[], status_code=200)
+
+    monkeypatch.setattr(requests, "post", mock_post)
+
+    # search_engine.fetch_all, which contains requests.post, uses the monkeypatch
+    result = search_engine.fetch_all(doc_fields=vespa_config.doc_fields)
+    first = next(result)
+    assert first[0] == Document(**mock_dict)
+    assert len(first) == DOC_NUMBER_EACH_FETCH
+    second = next(result)
+    assert len(second) == DOC_NUMBER_EACH_FETCH

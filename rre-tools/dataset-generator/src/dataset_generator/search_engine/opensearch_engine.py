@@ -61,14 +61,15 @@ class OpenSearchEngine(BaseSearchEngine):
 
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
 
+        query: Dict[str, Any] = {}
         if filters:
-            query: Dict[str, Any] = {
+            query = {
                 "bool": {
                     "filter": filters
                 }
             }
         else:
-            query: Dict[str, Any] = self._fetch_all_payload
+            query = self._fetch_all_payload
 
         payload = {
             "query": query,

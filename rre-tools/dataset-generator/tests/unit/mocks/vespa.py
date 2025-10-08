@@ -1,5 +1,4 @@
-from typing import List, Dict, Any, Union
-from commons.model.document import Document
+from typing import List, Dict, Any
 
 
 class MockResponseHealth:
@@ -18,10 +17,10 @@ class MockResponseVespaSearch:
     The payload structure mirrors the real Vespa JSON structure that the
     VespaSearchEngine expects: {"root": {"children": [...]}}
     """
-    def __init__(self, docs: Union[Document, List[Document]], status_code: int = 200):
-        # `docs` could be a list of Docs or a single Doc
-        self._docs = docs if isinstance(docs, list) else [docs]
+    def __init__(self, json_data: List, total_hits: int = 100, status_code: int = 200):
+        self.json_data = json_data
         self.status_code = status_code
+        self.total_hits = total_hits
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -31,6 +30,9 @@ class MockResponseVespaSearch:
     def json(self) -> Dict[str, Any]:
         return {
             "root": {
-                "children": self._docs,
+                "children": self.json_data,
+                "fields": {
+                    "totalCount": self.total_hits,
+                }
             }
         }
