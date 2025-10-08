@@ -26,9 +26,9 @@ class BaseSearchEngine(ABC):
             List[Document]: Batch of documents
         """
         # Now this is relying on fetch_for_query_generation to avoid duplicate code. Might be changed in the future
-        start: int = - DOC_NUMBER_EACH_FETCH
+        start: int = 0
         total_hits: int = self._get_total_hits(self._fetch_all_payload)
-        while start + DOC_NUMBER_EACH_FETCH < total_hits:
+        while start < total_hits:
             batch = self.fetch_for_query_generation(
                 documents_filter=None,
                 doc_number=DOC_NUMBER_EACH_FETCH,
@@ -36,7 +36,10 @@ class BaseSearchEngine(ABC):
                 start=start
                 )
             yield batch
-            start += len(batch)
+            # if we didn't reach the end of the docs, then len(batch) == DOC_NUMBER_EACH_FETCH
+            # if we reached the end of the docs. then len(batch) <= DOC_NUMBER_EACH_FETCH -> next iteration we exit the
+            # loop since we are adding DOC_NUMBER_EACH_FETCH (not len(batch)) and start becomes greater than total_hits
+            start += DOC_NUMBER_EACH_FETCH
 
 
     def _parse_query_template(self, path: Path | str) -> Dict[str, Any]:
