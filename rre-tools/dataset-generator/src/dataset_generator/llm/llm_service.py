@@ -53,7 +53,7 @@ class LLMService:
                 unique_queries.append(query)
         unique_queries_len = len(unique_queries)
         if unique_queries_len != num_queries_generate_per_doc:
-            log.info(f"Expected {num_queries_generate_per_doc} unique queries, got {unique_queries_len}")
+            log.warning(f"Expected {num_queries_generate_per_doc} unique queries, got {unique_queries_len}")
 
         return LLMQueryResponse(response_content=json.dumps(unique_queries))
 
