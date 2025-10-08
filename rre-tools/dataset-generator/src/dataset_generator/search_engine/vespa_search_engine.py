@@ -45,7 +45,7 @@ class VespaSearchEngine(BaseSearchEngine):
     @property
     def _fetch_all_payload(self) -> Dict[str, Any]:
         return {
-            'yql': f"select * from {self.schema} where true"
+            'yql': f"select * from {self.schema}"
         }
 
     def _get_total_hits(self, payload: Dict[str, Any]) -> int:
