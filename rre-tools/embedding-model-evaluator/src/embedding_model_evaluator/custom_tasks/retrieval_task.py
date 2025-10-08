@@ -6,7 +6,7 @@ from mteb.abstasks.AbsTaskRetrieval import AbsTaskRetrieval
 from mteb.overview import TASKS_REGISTRY
 
 from embedding_model_evaluator.config import Config
-from embedding_model_evaluator.utilities.helper import read_corpus, read_queries, read_candidates
+from embedding_model_evaluator.utilities.helper import read_corpus_retrieval, read_queries, read_candidates
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class CustomRetrievalTask(AbsTaskRetrieval):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.corpus: dict[str, dict[str, dict[str, str]]] = {}
+        self.corpus: dict[str, dict[str, str]] = {}
         self.queries: dict[str, dict[str, str]] = {}
         self.relevant_docs: dict[str, dict[str, dict[str, int]]] = {}
 
@@ -51,7 +51,7 @@ class CustomRetrievalTask(AbsTaskRetrieval):
             log.error(message)
             raise ValueError(message)
 
-        self.corpus = {"test": read_corpus(config.corpus_path)}
+        self.corpus = {"test": read_corpus_retrieval(config.corpus_path)}
         self.queries = {"test": read_queries(config.queries_path)}
         self.relevant_docs = {
             "test": read_candidates(config.candidates_path)["relevant_docs"]

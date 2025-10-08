@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-from pathlib import Path
 from typing import Any
 
 import mteb
@@ -25,18 +24,12 @@ from embedding_model_evaluator.custom_tasks import (  # noqa: F401 (tasks must b
     CustomRetrievalTask,
 )
 from embedding_model_evaluator.writers import EmbeddingWriter
+from embedding_model_evaluator import TASKS_NAME_MAPPING, CACHE_PATH
 from commons.logger import configure_logging  # type: ignore[import]
 
 log = logging.getLogger(__name__)
 
-CACHE_PATH = Path("resources/cache")
 CACHE_PATH.mkdir(parents=True, exist_ok=True)
-
-# Map simple "task key" -> registered MTEB task class name
-TASKS_NAME_MAPPING = {
-    "retrieval": "CustomRetrievalTask",
-    "reranking": "CustomRerankingTask",
-}
 
 
 def _parse_args() -> argparse.Namespace:
@@ -48,7 +41,17 @@ def _parse_args() -> argparse.Namespace:
         required=False,
         default="embedding-model-evaluator/config.yaml",
     )
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Activate debug mode for logging [default: False]')
+
     return parser.parse_args()
+
+def setup_logging(verbose: bool = False) -> None:
+    if verbose:
+        configure_logging(logging.DEBUG)
+    else:
+        configure_logging(logging.INFO)
+    return
 
 
 def _build_task(task_key: str, dataset_name: str, split: str) -> Any:
@@ -79,8 +82,8 @@ def _build_task(task_key: str, dataset_name: str, split: str) -> Any:
 
 
 def main() -> None:
-    configure_logging()
     args = _parse_args()
+    setup_logging(args.verbose)
     config: Config = Config.load(args.config)
 
     # --- Sanity logs (explicit & helpful) ---
@@ -89,7 +92,9 @@ def main() -> None:
 
     # --- Model + caching wrapper ---
     model = mteb.get_model(config.model_id)
-    model_with_cache = CachedEmbeddingWrapper(model, cache_path=CACHE_PATH)
+    model_name_additional_path = config.model_id.replace("/", "__").replace(" ", "_")
+    model_with_cache_path = CACHE_PATH / model_name_additional_path
+    model_with_cache = CachedEmbeddingWrapper(model, cache_path=model_with_cache_path)
 
     # --- Task instance (in-memory) ---
     try:
@@ -117,7 +122,7 @@ def main() -> None:
     writer = EmbeddingWriter(
         config=config,
         cached=model_with_cache,
-        cache_path=CACHE_PATH,
+        cache_path=model_with_cache_path,
         task_name=TASKS_NAME_MAPPING.get(config.task_to_evaluate, "CustomRetrievalTask"),
         batch_size=256,
     )

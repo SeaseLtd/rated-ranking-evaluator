@@ -2,12 +2,18 @@ from pathlib import Path
 
 from jsonlines import jsonlines
 
-
-def read_corpus(path: Path) -> dict[str, dict[str, str]]:
+def read_corpus_reranking(path: Path) -> dict[str, dict[str, str]]:
     corpus_dict: dict[str, dict[str, str]] = {}
     with jsonlines.open(path) as rows:
         for row in rows:
             corpus_dict[row["id"]] = {"title": row["title"], "text": row["text"]}
+    return corpus_dict
+
+def read_corpus_retrieval(path: Path) -> dict[str, str]:
+    corpus_dict: dict[str, str] = {}
+    with jsonlines.open(path) as rows:
+        for row in rows:
+            corpus_dict[row["id"]] = row.get("title", "") + " " + row["text"]
     return corpus_dict
 
 

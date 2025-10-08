@@ -7,7 +7,7 @@ from mteb.abstasks.AbsTaskReranking import AbsTaskReranking
 from mteb.overview import TASKS_REGISTRY
 
 from embedding_model_evaluator.config import Config
-from embedding_model_evaluator.utilities.helper import read_corpus, read_queries, read_candidates
+from embedding_model_evaluator.utilities.helper import read_corpus_reranking, read_queries, read_candidates
 
 log = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class CustomRerankingTask(AbsTaskReranking):
                 "Pass your internal Config via MTEB.run(..., config=Config)."
             )
 
-        corpus = read_corpus(config.corpus_path)
+        corpus = read_corpus_reranking(config.corpus_path)
         queries = read_queries(config.queries_path)
         candidates = read_candidates(config.candidates_path)["candidates"]
 
