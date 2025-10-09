@@ -2,13 +2,13 @@
 solr_init.py
 """
 
+import json
+import logging
 import os
 import sys
 import time
-import json
-import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Optional
 
 import requests
 
@@ -93,11 +93,11 @@ def load_embeddings_jsonl(path: str) -> dict[str, list[float]]:
             if not line:
                 continue
             try:
-                object = json.loads(line)
-                _id = object.get("id")
-                vec = object.get("vector")
-                if _id and isinstance(vec, list):
-                    vectors[str(_id)] = vec
+                row = json.loads(line)
+                _id = row.get("id")
+                vector = row.get("vector")
+                if _id and isinstance(vector, list):
+                    vectors[str(_id)] = vector
                 else:
                     log.debug("Skipping embeddings line %d: missing id or vector", i)
             except json.JSONDecodeError:
@@ -106,33 +106,33 @@ def load_embeddings_jsonl(path: str) -> dict[str, list[float]]:
     return vectors
 
 
-def round_vector(vector: List[float], ndigits: int = 12) -> List[float]:
-    """Rounds each value in the vector to ndigits=12 decimals"""
-    return [round(float(x), ndigits) for x in vector]
+def round_vector(vector: list[float], digits: int = 12) -> list[float]:
+    """Rounds each value in the vector to digits=12 decimals"""
+    return [round(float(x), digits) for x in vector]
 
 
-def merge_docs_with_embeddings(docs: List[Dict[str, Any]], embeddings: Dict[str, List[float]],
-                               out_path: Optional[str] = None) -> List[Dict[str, Any]]:
+def merge_docs_with_embeddings(docs: list[dict[str, any]], embeddings: dict[str, list[float]],
+                               output_path: Optional[str] = None) -> list[dict[str, any]]:
     merged = []
     for d in docs:
         doc = dict(d)
-        doc_id = str(doc.get("id") or doc.get("uid") or doc.get("_id") or "")
+        doc_id = str(doc.get("id"))
         if not doc_id:
             log.debug("Document missing id")
 
-        vec = embeddings.get(doc_id)
-        if vec is not None:
-            doc["vector"] = round_vector(vec, ndigits=12)
+        vector = embeddings.get(doc_id)
+        if vector is not None:
+            doc["vector"] = round_vector(vector, digits=12)
         merged.append(doc)
-    if out_path:
-        with open(out_path, "w", encoding="utf-8") as fh:
-            json.dump(merged, fh, ensure_ascii=False)
-        log.info("Wrote merged dataset to %s", out_path)
+    if output_path:
+        with open(output_path, "w", encoding="utf-8") as file:
+            json.dump(merged, file, ensure_ascii=False)
+        log.info("Wrote merged dataset to %s", output_path)
     return merged
 
 
-def get_embedding_dimension_size(embeddings: Dict[str, List[float]]) -> Optional[int]:
-    """Returns Embedding dimension size or None"""
+def get_embedding_dimension_size(embeddings: dict[str, list[float]]) -> Optional[int]:
+    """Returns embedding dimension size or None"""
     if not embeddings:
         return None
     # pick first vector
@@ -212,7 +212,7 @@ def main():
             log.error("No valid embeddings detected; aborting embedding merge")
             sys.exit(1)
         log.info("Detected embedding dimension = %d", embedding_dimension_size)
-        merged_docs = merge_docs_with_embeddings(docs, embeddings, out_path=TMP_FILE)
+        merged_docs = merge_docs_with_embeddings(docs, embeddings, output_path=TMP_FILE)
         try:
             create_vector_field(COLLECTION_ENDPOINT, embedding_dimension_size)
         except requests.RequestException:
