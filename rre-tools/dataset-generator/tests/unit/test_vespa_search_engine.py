@@ -291,7 +291,9 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, ve
     # search_engine.fetch_all, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_all(doc_fields=vespa_config.doc_fields)
     first = next(result)
-    assert first[0] == Document(**mock_dict)
-    assert len(first) == DOC_NUMBER_EACH_FETCH
-    second = next(result)
-    assert len(second) == DOC_NUMBER_EACH_FETCH
+    assert first == Document(**mock_dict)
+
+    doc_list = [first]
+    for doc in result:
+        doc_list.append(doc)
+    assert len(doc_list) == 2 * DOC_NUMBER_EACH_FETCH
