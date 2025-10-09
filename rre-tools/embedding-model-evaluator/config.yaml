@@ -5,13 +5,13 @@ model_id: "sentence-transformers/all-MiniLM-L6-v2"
 task_to_evaluate: "retrieval"
 
 # Corpus jsonl file path with records - <id,title,text>.
-corpus_path: "resources/mteb_datasets/nfcorpus/test/corpus.jsonl"
+corpus_path: "resources/corpus.jsonl"
 
 # Queries jsonl file path with records - <id,text>.
-queries_path: "resources/mteb_datasets/nfcorpus/test/queries.jsonl"
+queries_path: "resources/queries.jsonl"
 
 # Candidates jsonl file path with records - <query_id,doc_id,rating>.
-candidates_path: "resources/mteb_datasets/nfcorpus/test/candidates.jsonl"
+candidates_path: "resources/candidates.jsonl"
 
 # Relevance scale used in candidates dataset for rating field
 # Accepted values:

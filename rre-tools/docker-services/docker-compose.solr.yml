@@ -20,8 +20,10 @@ services:
     depends_on:
       - solr
       - prepare-embeddings-dir
+    environment:
+      - FORCE_REINDEX=false
     volumes:
       - ./solr-init/data/dataset.json:/opt/rre-dataset-generator/data/dataset.json
       - ../resources/embeddings:/opt/rre-dataset-generator/embeddings
     working_dir: /opt/rre-dataset-generator
-    command: ["sh", "-c", "/opt/rre-dataset-generator/solr-init.sh"]
+    command: ["python", "/opt/rre-dataset-generator/solr_init.py"]

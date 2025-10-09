@@ -1,5 +1,17 @@
-FROM alpine:3.22.1
+FROM python:3.10-slim
 
-RUN apk add --no-cache curl jq
+RUN pip install --no-cache-dir requests
 
-COPY --chmod=777 solr-init.sh /opt/rre-dataset-generator/solr-init.sh
+WORKDIR /opt/rre-dataset-generator
+
+COPY solr_init.py /opt/rre-dataset-generator/solr_init.py
+COPY data/ /opt/rre-dataset-generator/data/
+
+# create embeddings dir inside the image
+RUN mkdir -p /opt/rre-dataset-generator/embeddings \
+ && chmod 755 /opt/rre-dataset-generator/embeddings
+
+
+RUN chmod +x /opt/rre-dataset-generator/solr_init.py
+
+CMD ["python", "/opt/rre-dataset-generator/solr_init.py"]
