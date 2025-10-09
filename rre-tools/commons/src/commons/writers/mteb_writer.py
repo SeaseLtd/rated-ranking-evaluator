@@ -22,14 +22,19 @@ class MtebWriter(AbstractWriter):
     def _write_corpus(self, corpus_path: Path, datastore: DataStore) -> None:
         """
         Writes corpus records extracted from search engine to JSONL file:
-        {"id": <doc_id>, "title": <title>, "text": <description>}
+        {"id": <doc_id>, "title": <title>, "text": <doc_fields>}
         """
         with corpus_path.open("w", encoding="utf-8") as file:
             for doc in datastore.get_documents():
                 doc_id = str(doc.id)
                 fields = doc.fields
                 title = _to_string(fields.get("title"))
-                text = _to_string(fields.get("description"))
+                text_parts = []
+                for k, v in fields.items():
+                    if k.lower() != "id" and v is not None:
+                        text_parts.append(_to_string(v))
+
+                text = " ".join(text_parts).strip()
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
