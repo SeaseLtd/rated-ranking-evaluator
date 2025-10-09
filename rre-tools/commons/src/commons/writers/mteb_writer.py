@@ -33,7 +33,6 @@ class MtebWriter(AbstractWriter):
                 for k, v in fields.items():
                     if k.lower() != "id" and k.lower() != "title" and v is not None:
                         text_parts.append(_to_string(v))
-
                 text = " ".join(text_parts).strip()
 
                 row = {"id": doc_id, "title": title, "text": text}
