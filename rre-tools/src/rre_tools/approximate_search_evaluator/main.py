@@ -8,7 +8,7 @@ from pathlib import Path
 
 from commons.writers import RreWriter
 from commons.data_store import DataStore
-from commons.logger import configure_logging
+from commons.logger import setup_logging
 from commons.model import WriterConfig
 from rre_tools.approximate_search_evaluator.config import Config
 
@@ -105,7 +105,7 @@ def main() -> None:
     enriches it with embeddings, and prepares and execute RRE evaluation.
     """
     args = _parse_args()
-    configure_logging(args.verbose)
+    setup_logging(args.verbose)
     config: Config = Config.load(args.config)
 
     eval_folder = Path(f"{config.search_engine_type}-evaluator")
@@ -167,6 +167,12 @@ def main() -> None:
     log.info("Running Maven RRE evaluation...")
     run_rre_evaluate(eval_folder)
     log.info("Evaluation finished.")
+
+    shutil.copy(eval_folder / "target" / "rre" / "evaluation.json", config.output_destination / "rre_evaluation_results.json")
+    log.info(f"Evaluation file saved to `{config.output_destination}/` directory.")
+
+    shutil.rmtree(eval_folder)
+    log.debug("RRE evaluation folder cleaned up.")
 
 
 if __name__ == "__main__":

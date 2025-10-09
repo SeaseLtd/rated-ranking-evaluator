@@ -33,6 +33,7 @@ class Config(BaseModel):
         None,
         description="Path to collect embeddings. If not given, embeddings are not collected.",
     )
+    output_destination: Path = Field(Path("resources"), description="Path to save the output dataset.")
 
     @property
     def conf_sets_filename(self) -> str:

@@ -20,6 +20,7 @@ def test_good_config_solr__expects__all_parameters_read(resource_folder):
     assert config.search_engine_version == "4.10.4"
     assert config.ratings_path == Path("tests/resources/approximate_search_evaluator/ratings.json")
     assert config.embeddings_folder == Path("tests/resources/approximate_search_evaluator/embeddings")
+    assert config.output_destination == Path("solr_resources")
 
     assert hasattr(config, "conf_sets_filename")
     assert config.conf_sets_filename == "solr-settings.json"
@@ -49,6 +50,9 @@ def test_missing_optional_solr_field_values__expects__all_defaults_read(resource
 
     assert hasattr(config, "embeddings_folder")
     assert config.embeddings_folder is None
+
+    assert hasattr(config, "output_destination")
+    assert config.output_destination == Path("resources")
 
 
 @pytest.mark.parametrize("file_name", [
@@ -82,6 +86,7 @@ def test_good_config_elasticsearch__expects__all_parameters_read(resource_folder
     assert config.search_engine_version == "6.5.4"
     assert config.ratings_path == Path("tests/resources/approximate_search_evaluator/ratings.json")
     assert config.embeddings_folder == Path("tests/resources/approximate_search_evaluator/embeddings")
+    assert config.output_destination == Path("elastic_resources")
 
     assert hasattr(config, "conf_sets_filename")
     assert config.conf_sets_filename == "index-settings.json"
@@ -111,3 +116,6 @@ def test_missing_optional_elasticsearch_field_values__expects__all_defaults_read
 
     assert hasattr(config, "embeddings_folder")
     assert config.embeddings_folder is None
+
+    assert hasattr(config, "output_destination")
+    assert config.output_destination == Path("resources")
