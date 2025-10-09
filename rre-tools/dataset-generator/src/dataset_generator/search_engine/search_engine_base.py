@@ -14,7 +14,7 @@ class BaseSearchEngine(ABC):
         self.QUERY_PLACEHOLDER = "$query"
         self.UNIQUE_KEY = 'id'
 
-    def fetch_all(self, doc_fields: List[str]) -> Iterator[List[Document]]:
+    def fetch_all(self, doc_fields: List[str]) -> Iterator[Document]:
         """Extract all documents from search engine in batches.
 
         Yields batches of documents instead of loading everything in memory.
@@ -37,7 +37,8 @@ class BaseSearchEngine(ABC):
                 )
             if not batch:
                 break
-            yield batch
+            for doc in batch:
+                yield doc
             # if we didn't reach the end of the docs, then len(batch) == DOC_NUMBER_EACH_FETCH
             # if we reached the end of the docs. then len(batch) <= DOC_NUMBER_EACH_FETCH -> next iteration we exit the
             # loop since we are adding DOC_NUMBER_EACH_FETCH (not len(batch)) and start becomes greater than total_hits
