@@ -160,11 +160,11 @@ def main() -> None:
                 doc_id = str(doc.id)
                 fields = doc.fields
                 title = _to_string(fields.get("title"))
-                text = " ".join(
-                    _to_string(value)
-                    for key, value in fields.items()
-                    if key != "title"
-                )
+                text_parts = []
+                for k, v in fields.items():
+                    if k.lower() != "id" and k.lower() != "title" and v is not None:
+                        text_parts.append(_to_string(v))
+                text = " ".join(text_parts).strip()
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
