@@ -20,9 +20,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=str,
-        help='Config file path to use for the application [default: "config.yaml"]',
+        help='Config file path to use for the application [default: "configs/approx_search_config.yaml"]',
         required=False,
-        default="config.yaml",
+        default="configs/approx_search_config.yaml",
     )
 
     parser.add_argument('-v', '--verbose', action='store_true',
