@@ -35,6 +35,7 @@ doc_number: 2
 doc_fields:
   - "title"
   - "description"
+  - "content"
 
 # (Optional) File containing predefined queries to use instead of or alongside generated ones
 # If available, must be in a txt format.
