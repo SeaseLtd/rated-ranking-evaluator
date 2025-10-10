@@ -1,0 +1,8 @@
+query_template: "templates/only_vector.json"
+search_engine_type: "solr"
+collection_name: "testcore"
+search_engine_url: "http://localhost:8983/solr/"
+search_engine_version: "8.3.0"
+#ratings_path: "resources/ratings.json"
+embeddings_folder: "resources/embeddings"
+output_destination: "resources"
