@@ -27,22 +27,25 @@ class SolrSearchEngine(BaseSearchEngine):
     @property
     def _fetch_all_payload(self) -> Dict[str, Any]:
         return {
-            'query': '*:*',
-            'params': {}
+            'q': '*:*',
         }
+
+    def _unify_fields(self, doc_fields: List[str]) -> str:
+        fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
+        return ','.join(fields)
 
     def _get_total_hits(self, payload: Dict[str, Any]) -> int:
         search_url = urljoin(self.endpoint.encoded_string(), 'select')
 
         # Force Solr to return a JSON formatted response
-        payload['params']['wt'] = 'json'
+        payload['wt'] = 'json'
 
         log.debug("Retrieving all docs to count them")
         log.debug(f"Search url: {search_url}")
         log.debug(f"Payload: {payload}")
 
         try:
-            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response = requests.get(search_url, headers=self.HEADERS, params=payload)
             response.raise_for_status()
         except (ConnectionError, Timeout, RequestException, HTTPError) as e:
             log.error(f"Solr query failed: {e}\n")
@@ -68,15 +71,13 @@ class SolrSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of retrieved documents as `Document` objects.
         """
-        payload: Dict[str, Any] = self._fetch_all_payload.copy()
-        payload['params'] = {
-                'rows': doc_number,
-                'start': start,
-                'fl' : doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
-            }
+        payload: Dict[str, Any] = self._fetch_all_payload
+        payload['rows'] = doc_number
+        payload['start'] = start
+        payload['fl'] = self._unify_fields(doc_fields)
 
         if documents_filter is not None:
-            payload['params']['fq'] = []
+            payload['fq'] = []
             for dict_field in documents_filter:
                 for field, values in dict_field.items():
                     if not values:
@@ -86,7 +87,7 @@ class SolrSearchEngine(BaseSearchEngine):
                     else:
                         or_values = ' OR '.join(f'{v}' for v in values)
                         clause = f'{field}:({or_values})'
-                    payload['params']['fq'].append(clause)
+                    payload['fq'].append(clause)
 
         return self._search(payload)
 
@@ -105,15 +106,8 @@ class SolrSearchEngine(BaseSearchEngine):
         query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)
         payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
+        payload['fl'] = self._unify_fields(doc_fields)
 
-        payload = {
-            "query": payload["q"],
-            "params": {key: value for key, value in payload.items() if key != "q"}
-        }
-
-        # here fl is overwritten, even if in the template there are other fields in the 'fl' key
-        fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
-        payload["params"]['fl'] = fields
         return self._search(payload)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
@@ -129,13 +123,14 @@ class SolrSearchEngine(BaseSearchEngine):
         search_url = urljoin(self.endpoint.encoded_string(), 'select')
 
         # Force Solr to return a JSON formatted response
-        payload['params']['wt'] = 'json'
+        payload['wt'] = 'json'
 
         log.debug(f"Search url: {search_url}")
         log.debug(f"Payload: {payload}")
 
         try:
-            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response = requests.get(search_url, headers=self.HEADERS, params=payload)
+            log.debug(f"URL: {response.request.url}")
             response.raise_for_status()
         except (ConnectionError, Timeout, RequestException, HTTPError) as e:
             log.error(f"Solr query failed: {e}\n")
