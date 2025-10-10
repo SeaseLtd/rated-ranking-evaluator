@@ -42,7 +42,7 @@ def test_solr_search_engine_fetch_for_query_generation__expects__result_returned
     assert search_engine.UNIQUE_KEY == "mock_id"
 
     # apply the monkeypatch for requests.post to mock_post
-    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([mock_doc], status_code=200))
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseSolrEngine([mock_doc], status_code=200))
 
     # search_engine.extract_documents_to_generate_queries, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_query_generation(documents_filter=solr_config.documents_filter,
@@ -57,7 +57,7 @@ def test_solr_search_engine_fetch_for_evaluation__expects__result_returned(monke
     assert search_engine.UNIQUE_KEY == "mock_id"
 
     # apply the monkeypatch for requests.post to mock_post
-    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([mock_doc], status_code=200))
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseSolrEngine([mock_doc], status_code=200))
 
     # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_evaluation(keyword="and",
@@ -71,7 +71,7 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, so
 
     call_counter = {"count": 0}
 
-    def mock_post(*args, **kwargs):
+    def mock_get(*args, **kwargs):
         call_counter["count"] += 1
         if call_counter["count"] == 1: # first call is to just get the number of hits, in this case
             return MockResponseSolrEngine(json_data=[], total_hits=2*DOC_NUMBER_EACH_FETCH, status_code=200)
@@ -80,7 +80,7 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, so
         else:
             return MockResponseSolrEngine(json_data=[], status_code=200)
 
-    monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(requests, "get", mock_get)
 
     # search_engine.fetch_all, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_all(doc_fields=solr_config.doc_fields)
@@ -95,9 +95,11 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, so
 def test_solr_search_engine_negative_post_fetch_for_query_generation__expects__raises_http_error(monkeypatch, solr_config):
     for status_code in [400, 401, 402, 403, 500]:
         monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="identifier"))
-        monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([], status_code=status_code))
 
         search_engine = SolrSearchEngine("https://fakeurl")
+
+        monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseSolrEngine([], status_code=status_code))
+
 
         with pytest.raises(HTTPError):
             search_engine.fetch_for_query_generation(
@@ -110,10 +112,10 @@ def test_solr_search_engine_negative_post_fetch_for_query_generation__expects__r
 def test_solr_search_engine_negative_post_fetch_for_evaluation__expects__raises_http_error(monkeypatch, solr_config):
     for status_code in [400, 401, 402, 403, 500]:
         monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseUniqueKey(ident="identifier"))
-        monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponseSolrEngine([], status_code=status_code))
 
         search_engine = SolrSearchEngine("https://fakeurl")
 
+        monkeypatch.setattr(requests, "get", lambda *args, **kwargs: MockResponseSolrEngine([], status_code=status_code))
 
         with pytest.raises(HTTPError):
             search_engine.fetch_for_evaluation(
