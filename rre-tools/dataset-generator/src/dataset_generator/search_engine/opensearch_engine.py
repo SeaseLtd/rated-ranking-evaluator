@@ -24,10 +24,29 @@ class OpenSearchEngine(BaseSearchEngine):
         self.HEADERS = {'Content-Type': 'application/json'}
         self.UNIQUE_KEY = "id"
 
+    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+        search_url = f"{self.endpoint}/_search"
+        log.debug(f"User-specified fields: {payload.get('_source')}")
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
+        try:
+            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException, HTTPError) as e:
+            log.error(f"OpenSearch query failed: {e}")
+            raise
+
+        return int(response.json().get('hits', {}).get('total', {}).get('value', 0))
+
+    @property
+    def _fetch_all_payload(self) -> Dict[str, Any]:
+        return {"match_all": {}}
+
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
-                                   doc_fields: List[str]) -> List[Document]:
+                                   doc_fields: List[str],
+                                   start: int = 0) -> List[Document]:
         """Fetches a list of documents for query generation based on optional filters."""
         filters: List[Dict[str, Any]] = []
         if documents_filter:
@@ -42,6 +61,7 @@ class OpenSearchEngine(BaseSearchEngine):
 
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
 
+        query: Dict[str, Any] = {}
         if filters:
             query = {
                 "bool": {
@@ -49,13 +69,12 @@ class OpenSearchEngine(BaseSearchEngine):
                 }
             }
         else:
-            query = {
-                "match_all": {}
-            }
+            query = self._fetch_all_payload
 
         payload = {
             "query": query,
             "_source": fields,
+            "from": start,
             "size": doc_number
         }
 
@@ -66,10 +85,6 @@ class OpenSearchEngine(BaseSearchEngine):
         query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)
         payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
-
-        # query_string_obj = payload.get("query", {}).get("query_string", {})
-        # if "query" in query_string_obj:
-        #     query_string_obj["query"] = query_string_obj["query"].replace(self.QUERY_PLACEHOLDER, keyword)
 
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
         payload["_source"] = fields

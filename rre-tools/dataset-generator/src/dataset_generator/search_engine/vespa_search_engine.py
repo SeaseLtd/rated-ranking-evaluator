@@ -42,6 +42,31 @@ class VespaSearchEngine(BaseSearchEngine):
     # Helpers / internal utils
     # ------------------------------------------------------------------
 
+    @property
+    def _fetch_all_payload(self) -> Dict[str, Any]:
+        return {
+            'yql': f"select * from {self.schema}"
+        }
+
+    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+        base = str(self.endpoint).rstrip("/")
+        search_url = f"{base}/search/"
+
+        try:
+            response = requests.post(
+                search_url,
+                headers=self.HEADERS,
+                json=payload,
+                timeout=DEFAULT_TIMEOUT,  # added timeout to avoid blocking calls
+                allow_redirects=False,  # added allow_redirects
+            )
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException) as e:
+            log.error(f"Request to {search_url} failed: {e}")
+            raise
+
+        return int(response.json().get("root", {}).get("fields", {}).get("totalCount", 0))
+
     def _build_yql(self, select_fields: List[str], where_clause: str = "true") -> str:
         fields = ", ".join(select_fields) if select_fields else "*"
         return f"select {fields} from {self.schema} where {where_clause}"
@@ -107,7 +132,8 @@ class VespaSearchEngine(BaseSearchEngine):
         self,
         documents_filter: Union[None, List[Dict[str, List[str]]]],
         doc_number: int,
-        doc_fields: Optional[List[str]]
+        doc_fields: Optional[List[str]],
+        start: int  = 0,
     ) -> List[Document]:
         """
         Fetch documents from Vespa for the purpose of query generation.
@@ -116,26 +142,29 @@ class VespaSearchEngine(BaseSearchEngine):
             documents_filter: Optional list of filter dictionaries for query restriction.
             doc_number: Number of documents to retrieve.
             doc_fields: Optional list of fields to include in the response.
+            start: Optional start index to retrieve documents from.
 
         Returns:
             A list of `Document` instances parsed from the response.
         """
 
+        payload: Dict[str, Any] = self._fetch_all_payload
+
         self._validate_filters(documents_filter)
         where = self._filter_to_where(documents_filter)
         yql = self._build_yql(doc_fields or [], where)
 
-        payload = {
-            "yql": yql,
-            "hits": int(doc_number),
-            "presentation.format": "json",
-        }
+        payload["yql"] = yql
+        payload["hits"] = int(doc_number)
+        payload["presentation.format"] =  "json"
+        payload['offset'] = start
+
         log.debug(f"Vespa payload (showing payload 1000 first chars): {str(payload)[:1000]}")
         return self._search(payload)
 
     def fetch_for_evaluation(
         self,
-        query_template: Path,
+        query_template: Path | str,
         doc_fields: Optional[List[str]],
         keyword: str = "*"
     ) -> List[Document]:
@@ -152,7 +181,10 @@ class VespaSearchEngine(BaseSearchEngine):
         """
 
         # Read the YQL template from file (following the same pattern as other engines)
-        template_str = query_template.read_text(encoding='utf-8').strip()
+        if isinstance(query_template, Path):
+            template_str = query_template.read_text(encoding='utf-8').strip()
+        else:
+            template_str = query_template.strip()
 
         # Use parameter substitution instead of string replacement for security
         # Template should contain userInput(@kw) with {allowEmpty:true} for empty queries

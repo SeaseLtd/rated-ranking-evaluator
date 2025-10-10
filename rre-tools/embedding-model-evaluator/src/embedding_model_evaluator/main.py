@@ -25,7 +25,7 @@ from embedding_model_evaluator.custom_tasks import (  # noqa: F401 (tasks must b
 )
 from embedding_model_evaluator.writers import EmbeddingWriter
 from embedding_model_evaluator import TASKS_NAME_MAPPING, CACHE_PATH
-from commons.logger import configure_logging  # type: ignore[import]
+from commons.logger import setup_logging  # type: ignore[import]
 
 log = logging.getLogger(__name__)
 
@@ -45,13 +45,6 @@ def _parse_args() -> argparse.Namespace:
                         help='Activate debug mode for logging [default: False]')
 
     return parser.parse_args()
-
-def setup_logging(verbose: bool = False) -> None:
-    if verbose:
-        configure_logging(logging.DEBUG)
-    else:
-        configure_logging(logging.INFO)
-    return
 
 
 def _build_task(task_key: str, dataset_name: str, split: str) -> Any:

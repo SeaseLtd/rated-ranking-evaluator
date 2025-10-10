@@ -8,6 +8,7 @@ from dataset_generator.config import Config
 from commons.logger import configure_logging
 from commons.model import Document
 from dataset_generator.search_engine import OpenSearchEngine
+from dataset_generator.search_engine.search_engine_base import DOC_NUMBER_EACH_FETCH
 from mocks.opensearch import MockResponseOpenSearchEngine
 
 configure_logging(level=logging.DEBUG)
@@ -18,6 +19,16 @@ def opensearch_config(resource_folder):
     """Fixture that loads a valid OpenSearch config for unit tests."""
     return Config.load(resource_folder / "good_config_opensearch.yaml")
 
+@pytest.fixture
+def expected_doc():
+    opensearch = OpenSearchEngine("http://testurl/testcore")
+    return Document(
+        id="1",
+        fields={
+            "title": opensearch._normalize("test title"),
+            "description": opensearch._normalize("test description")
+        }
+    )
 
 @pytest.fixture
 def opensearch_hit():
@@ -33,16 +44,8 @@ def opensearch_hit():
     }
 
 
-def test_fetch_for_query_generation(monkeypatch, opensearch_config, opensearch_hit):
+def test_opensearch_engine_fetch_for_query_generation__expects__result_returned(monkeypatch, opensearch_config, opensearch_hit, expected_doc):
     opensearch = OpenSearchEngine("http://testurl/testcore")
-
-    expected_doc = Document(
-        id="1",
-        fields={
-            "title": opensearch._normalize("test title"),
-            "description": opensearch._normalize("test description")
-        }
-    )
 
     def mock_post(*args, **kwargs):
         return MockResponseOpenSearchEngine([opensearch_hit], status_code=200)
@@ -59,16 +62,8 @@ def test_fetch_for_query_generation(monkeypatch, opensearch_config, opensearch_h
     assert result[0] == expected_doc, "Mismatch in query generated doc"
 
 
-def test_fetch_for_evaluation(monkeypatch, opensearch_config, opensearch_hit):
+def test_opensearch_engine_fetch_for_evaluation__expects__result_returned(monkeypatch, opensearch_config, opensearch_hit, expected_doc):
     opensearch = OpenSearchEngine("http://testurl/testcore")
-
-    expected_doc = Document(
-        id="1",
-        fields={
-            "title": opensearch._normalize("test title"),
-            "description": opensearch._normalize("test description")
-        }
-    )
 
     def mock_post(*args, **kwargs):
         return MockResponseOpenSearchEngine([opensearch_hit], status_code=200)
@@ -83,6 +78,32 @@ def test_fetch_for_evaluation(monkeypatch, opensearch_config, opensearch_hit):
 
     assert len(result) == 1, "Expected one document"
     assert result[0] == expected_doc, "Mismatch in doc evaluation"
+
+def test_opensearch_engine_fetch_all__expects__results_returned(monkeypatch, opensearch_config, opensearch_hit, expected_doc):
+    search_engine = OpenSearchEngine("https://fakeurl")
+
+    call_counter = {"count": 0}
+
+    def mock_post(*args, **kwargs):
+        call_counter["count"] += 1
+        if call_counter["count"] == 1:
+            return MockResponseOpenSearchEngine(hits_data=[], total_hits =2 * DOC_NUMBER_EACH_FETCH, status_code=200)
+        elif call_counter["count"] == 2 or call_counter["count"] == 3:
+            return MockResponseOpenSearchEngine(hits_data=[opensearch_hit] * DOC_NUMBER_EACH_FETCH, status_code=200)
+        else:
+            return MockResponseOpenSearchEngine(hits_data=[], status_code=200)
+
+    monkeypatch.setattr(requests, "post", mock_post)
+
+    # search_engine.extract_documents_to_evaluate_system, which contains requests.post, uses the monkeypatch
+    result = search_engine.fetch_all(doc_fields=opensearch_config.doc_fields)
+    first = next(result)
+    assert first == expected_doc
+
+    doc_list = [first]
+    for doc in result:
+        doc_list.append(doc)
+    assert len(doc_list) == 2 * DOC_NUMBER_EACH_FETCH
 
 
 def test_normalize():

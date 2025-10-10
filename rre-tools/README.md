@@ -34,8 +34,8 @@ cd rre-tools
 # install dependencies (for users)
 uv sync
 
-# install optional dev dependencies such as mypy/ruff
-uv sync --extra dev
+# install development dependencies as well (e.g., mypy and ruff)
+uv sync --group dev
 ```
 
 ## Running Dataset Generator (DAGE)
@@ -49,7 +49,7 @@ at the Dataset Generator [README](dataset-generator/README.md).
 
 Execute the main script via CLI, pointing to your DAGE configuration file:
 ```bash
-uv run dataset-generator --config_file <path-to-DAGE-config-yaml>
+uv run dataset-generator --config <path-to-DAGE-config-yaml>
 ```
 To know more about all the possible CLI parameters, execute:
 ```bash

@@ -25,10 +25,30 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         log.debug(f"Working on endpoint: {self.endpoint}")
         self.UNIQUE_KEY = "_id"
 
+    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+        search_url = urljoin(self.endpoint.encoded_string(), '_search')
+
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
+
+        try:
+            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException, HTTPError) as e:
+            log.error(f"ElasticSearch query failed: {e}")
+            raise
+
+        return int(response.json().get('hits', {}).get('total', {}).get('value', 0))
+
+    @property
+    def _fetch_all_payload(self) -> Dict[str, Any]:
+        return {"match_all": {}}
+
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
                                    doc_number: int,
-                                   doc_fields: List[str]) -> List[Document]:
+                                   doc_fields: List[str],
+                                   start: int = 0) -> List[Document]:
         """
         Fetches a set of documents from Elasticsearch for query generation purposes.
 
@@ -37,12 +57,13 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
                 Each filter is a dictionary mapping field names to allowed values.
             doc_number (int): Number of documents to retrieve.
             doc_fields (List[str]): List of field names to include in the output.
+            start (int, optional): Starting index. Defaults to 0.
 
         Returns:
             List[Document]: A list of documents formatted as `Document` instances.
         """
         # Build base query
-        query: Dict[str, Any] = {"match_all": {}}
+        query: Dict[str, Any] = self._fetch_all_payload
 
         # Add filters, if provided
         filter_clauses = []
@@ -66,6 +87,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         payload = {
             "size": doc_number,
             "query": query,
+            "from": start,
             "_source": doc_fields
         }
 
@@ -87,10 +109,6 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)
         payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
-
-        # query_string_obj = payload.get("query", {}).get("query_string", {})
-        # if "query" in query_string_obj:
-        #     query_string_obj["query"] = query_string_obj["query"].replace(self.QUERY_PLACEHOLDER, keyword)
 
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
         payload["_source"] = fields

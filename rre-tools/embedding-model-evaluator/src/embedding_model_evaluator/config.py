@@ -20,11 +20,11 @@ class Config(BaseModel):
     dataset_name: str = Field("custom-dataset", description="Dataset name for MTEB task")
     split: str = Field("test", description="Dataset split (train/dev/test)")
     output_dest: Optional[Path] = Field(
-        None, description="Path to save mteb output, by default saved in resource dir."
+        None, description="Path to save mteb output, by default saved in resources dir."
     )
     embeddings_dest: Optional[Path] = Field(
         None,
-        description="Path to save mteb embeddings, by default saved in <resource/embeddings> folder.",
+        description="Path to save mteb embeddings, by default saved in <resources/embeddings> folder.",
     )
 
     @classmethod

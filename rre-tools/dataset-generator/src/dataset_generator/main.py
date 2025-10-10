@@ -1,28 +1,27 @@
 from __future__ import annotations
+
+# ------ temporary import for corpus.json bug workaround ------
+import json
+from pathlib import Path
+from commons.utils import _to_string
+# -------------------------------------------------------------
+
 from typing import List
 from langchain_core.language_models import BaseChatModel
-from logging import Logger, getLogger, DEBUG, INFO
+from logging import Logger, getLogger
 
 # project imports
 from dataset_generator.config import Config
 from dataset_generator.utils import parse_args
-from commons.logger import configure_logging
+from commons.logger import setup_logging
 from dataset_generator.llm import LLMConfig, LLMService, LLMServiceFactory
-from commons.model import Document, Query,  LLMQueryResponse, LLMScoreResponse, WriterConfig
+from commons.model import Document, Query, LLMQueryResponse, LLMScoreResponse, WriterConfig
 from commons.writers import WriterFactory, AbstractWriter
 from dataset_generator.search_engine import SearchEngineFactory, BaseSearchEngine
 from commons.data_store import DataStore
 
-
 log: Logger = getLogger(__name__)
 
-
-def setup_logging(verbose: bool = False) -> None:
-    if verbose:
-        configure_logging(DEBUG)
-    else:
-        configure_logging(INFO)
-    return
 
 
 def add_user_queries(config: Config, data_store: DataStore) -> None:
@@ -35,7 +34,8 @@ def add_user_queries(config: Config, data_store: DataStore) -> None:
                     data_store.add_query(clean_line)
 
 
-def generate_and_add_queries(config: Config, data_store: DataStore, llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
+def generate_and_add_queries(config: Config, data_store: DataStore, llm_service: LLMService,
+                             search_engine: BaseSearchEngine) -> None:
     """Retrieve docs and generate queries with LLM Service. Adds docs, queries and ratings to the datastore."""
     docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
         documents_filter=config.documents_filter,
@@ -83,7 +83,7 @@ def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_serv
 
 
 def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore,
-                                 llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
+                                           llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
     """Retrieve docs for each query and score the (q, doc) pairs."""
     if config.query_template is not None:
         log.debug(f"Searching for documents with query template in {config.query_template}")
@@ -105,11 +105,10 @@ def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore
         log.warning("Query template not found. Skipping retrieval.")
 
 
-
 def main() -> None:
     # configuration and logger definition
     args = parse_args()
-    config: Config = Config.load(args.config_file)
+    config: Config = Config.load(args.config)
     writer_config: WriterConfig = config.build_writer_config()
     setup_logging(args.verbose)
 
@@ -124,7 +123,7 @@ def main() -> None:
     llm: BaseChatModel = LLMServiceFactory.build(LLMConfig.load(config.llm_configuration_file))
     service: LLMService = LLMService(chat_model=llm)
     writer: AbstractWriter = WriterFactory.build(writer_config)
-    
+
     # load user queries
     add_user_queries(config, data_store)
 
@@ -139,15 +138,36 @@ def main() -> None:
 
     # write results
     output_destination = config.output_destination
-    writer.write(output_destination, data_store)
     log.info(f"Synthetic Dataset has been generated in: {output_destination}")
     data_store.save()
+    writer.write(output_destination, data_store)
 
     # save explanation  - forced to extract value before invoking export_all_records_with_explanation (mypy)
     if config.save_llm_explanation:
         if llm_explanation_path := config.llm_explanation_destination:
             data_store.export_all_records_with_explanation(llm_explanation_path)
             log.info(f"Dataset with LLM explanation is saved into: {llm_explanation_path}")
+
+    # TODO:
+    #  work on a better solution, instead of overwriting the corpus.json file, and maybe modify the MtebWriter with the
+    #  fetch from the search engine
+    if config.output_format == "mteb":
+        # copy pasted from MtebWriter
+        corpus_path = Path(output_destination) / "corpus.jsonl"
+        corpus_path.unlink(missing_ok=True)
+        with corpus_path.open("a", encoding="utf-8") as file:
+            for doc in search_engine.fetch_all(doc_fields=config.doc_fields):
+                doc_id = str(doc.id)
+                fields = doc.fields
+                title = _to_string(fields.get("title"))
+                text_parts = []
+                for k, v in fields.items():
+                    if k.lower() != "id" and k.lower() != "title" and v is not None:
+                        text_parts.append(_to_string(v))
+                text = " ".join(text_parts).strip()
+
+                row = {"id": doc_id, "title": title, "text": text}
+                file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 if __name__ == "__main__":
     main()

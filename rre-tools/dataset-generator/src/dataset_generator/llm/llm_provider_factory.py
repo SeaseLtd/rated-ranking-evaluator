@@ -29,7 +29,7 @@ def build_openai(config: LLMConfig) -> BaseChatModel:
     log.debug("Building OpenAI ChatModel using model=%s", config.model)
     return ChatOpenAI(
         model=config.model,
-        # max_tokens=config.max_tokens, # commented due to the fact that ruff is saying there is no max_tokens param
+        max_tokens=config.max_tokens, # type: ignore[arg-type]
         api_key=SecretStr(key),
     )
 

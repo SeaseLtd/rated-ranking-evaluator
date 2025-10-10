@@ -24,10 +24,37 @@ class SolrSearchEngine(BaseSearchEngine):
         self.UNIQUE_KEY = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/uniquekey')).json()['uniqueKey']
         log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
 
+    @property
+    def _fetch_all_payload(self) -> Dict[str, Any]:
+        return {
+            'query': '*:*',
+            'params': {}
+        }
+
+    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+        search_url = urljoin(self.endpoint.encoded_string(), 'select')
+
+        # Force Solr to return a JSON formatted response
+        payload['params']['wt'] = 'json'
+
+        log.debug("Retrieving all docs to count them")
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Payload: {payload}")
+
+        try:
+            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException, HTTPError) as e:
+            log.error(f"Solr query failed: {e}\n")
+            raise
+
+        return int(response.json().get('response', {}).get('numFound', 0))
+
+
 
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   doc_number: int, doc_fields: List[str]) \
+                                   doc_number: int, doc_fields: List[str], start: int = 0) \
             -> List[Document]:
         """
         Fetches a set of documents from Solr for the purpose of query generation.
@@ -36,17 +63,17 @@ class SolrSearchEngine(BaseSearchEngine):
             documents_filter (Union[None, List[Dict[str, List[str]]]]): Optional filter constraints for fields and their allowed values.
             doc_number (int): Number of documents to retrieve.
             doc_fields (List[str]): List of field names to include in the output.
+            start (int, optional): Starting index of the query. Defaults to 0.
 
         Returns:
             List[Document]: A list of retrieved documents as `Document` objects.
         """
-        payload: Dict[str, Any] = {
-            'query': '*:*',
-            'params': {
+        payload: Dict[str, Any] = self._fetch_all_payload.copy()
+        payload['params'] = {
                 'rows': doc_number,
+                'start': start,
                 'fl' : doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
             }
-        }
 
         if documents_filter is not None:
             payload['params']['fq'] = []

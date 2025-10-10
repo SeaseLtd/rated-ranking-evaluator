@@ -50,7 +50,7 @@ max_tokens: 16
     monkeypatch.setattr(main_mod, "Config", types.SimpleNamespace(load=lambda _path: cfg))
 
     # Patch parse_args to avoid CLI dependency
-    monkeypatch.setattr(main_mod, "parse_args", lambda: types.SimpleNamespace(config_file="ignored.yaml", verbose=False))
+    monkeypatch.setattr(main_mod, "parse_args", lambda: types.SimpleNamespace(config="ignored.yaml", verbose=False))
 
     # Patch factories to avoid network / heavy dependencies
     monkeypatch.setattr(main_mod, "SearchEngineFactory", types.SimpleNamespace(build=lambda **kwargs: object()))
