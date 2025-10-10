@@ -18,7 +18,7 @@ class Config(BaseModel):
     )
     search_engine_type: Literal['solr', 'elasticsearch']
     collection_name: str = Field(..., description="Name of the index/collection of the search engine")
-    search_engine_url: HttpUrl
+    search_engine_url: HttpUrl = Field(..., description="Search engine URL")
     search_engine_version: str = Field(default="latest", description="Search engine version.")
     id_field: Optional[str] = Field(None, description="ID field for the unique key.")
     query_placeholder: str = Field(
@@ -33,7 +33,8 @@ class Config(BaseModel):
         None,
         description="Path to collect embeddings. If not given, embeddings are not collected.",
     )
-    output_destination: Path = Field(Path("resources"), description="Path to save the output dataset.")
+    output_destination: Path = Field(Path("resources"), description="Path to save the output dataset. By default, the "
+                                                                    "dataset will be saved into the `resources` folder.")
 
     @property
     def conf_sets_filename(self) -> str:

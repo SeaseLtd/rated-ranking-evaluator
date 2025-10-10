@@ -18,7 +18,7 @@ class Config(BaseModel):
     search_engine_type: Literal['solr', 'elasticsearch', 'opensearch', 'vespa']
     collection_name: str = Field(..., description="Name of the index/collection of the search engine")
     vespa_schema: Optional[str] = Field(None, description="Schema name for Vespa search engine")
-    search_engine_url: HttpUrl
+    search_engine_url: HttpUrl = Field(..., description="Search engine URL")
     documents_filter: Optional[List[Dict[str, List[str]]]] = Field(
         None,
         description="Optional list of filter conditions for documents"
