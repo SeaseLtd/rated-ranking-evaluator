@@ -1,0 +1,14 @@
+# Missing: query_template (optional)
+search_engine_type: "solr"
+collection_name: "testcore"
+search_engine_url: "http://localhost"
+doc_number: 10
+doc_fields: ["title"]
+num_queries_needed: 5
+relevance_scale: "binary"
+llm_configuration_file: "tests/resources/llm_config.yaml"
+output_format: "rre"
+output_destination: "output.json"
+llm_explanation_destination: "output/rating_explanation.json"
+id_field: "id"
+rre_query_placeholder: "$query"

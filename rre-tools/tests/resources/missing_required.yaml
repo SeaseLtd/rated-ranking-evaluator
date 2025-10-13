@@ -1,0 +1,11 @@
+# Missing: query_template
+search_engine_type: "solr"
+collection_name: "testcore"
+# Missing: search_engine_url
+doc_number: 100
+doc_fields: ["title"]
+num_queries_needed: 5
+relevance_scale: "binary"
+llm_configuration_file: "tests/resources/llm_config.yaml"
+output_format: "rre"
+output_destination: "output.json"
