@@ -1,19 +1,11 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
     "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
-]
-
-[manifest]
-members = [
-    "commons",
-    "dataset-generator",
-    "embedding-model-evaluator",
-    "rre-tools",
 ]
 
 [[package]]
@@ -267,11 +259,6 @@ wheels = [
 ]
 
 [[package]]
-name = "commons"
-version = "0.1.0"
-source = { editable = "commons" }
-
-[[package]]
 name = "coverage"
 version = "7.10.7"
 source = { registry = "https://pypi.org/simple" }
@@ -376,29 +363,6 @@ toml = [
 ]
 
 [[package]]
-name = "dataset-generator"
-version = "0.1.0"
-source = { editable = "dataset-generator" }
-dependencies = [
-    { name = "commons" },
-    { name = "langchain-core" },
-    { name = "langchain-google-genai" },
-    { name = "langchain-openai" },
-    { name = "python-dotenv" },
-    { name = "requests" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "commons", editable = "commons" },
-    { name = "langchain-core", specifier = ">=0.3.68" },
-    { name = "langchain-google-genai", specifier = ">=2.1.7" },
-    { name = "langchain-openai", specifier = ">=0.3.27" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "requests", specifier = ">=2.32.4" },
-]
-
-[[package]]
 name = "datasets"
 version = "3.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -448,21 +412,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527f8a2e8885fc8015d3e6f5775df186e443e0964a11c3/distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed", size = 60722, upload-time = "2023-12-24T09:54:32.31Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277, upload-time = "2023-12-24T09:54:30.421Z" },
-]
-
-[[package]]
-name = "embedding-model-evaluator"
-version = "0.1.0"
-source = { editable = "embedding-model-evaluator" }
-dependencies = [
-    { name = "jsonlines" },
-    { name = "mteb" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "jsonlines", specifier = ">=4.0.0" },
-    { name = "mteb", specifier = ">=0.1.0" },
 ]
 
 [[package]]
@@ -2546,12 +2495,15 @@ name = "rre-tools"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "commons" },
-    { name = "dataset-generator" },
-    { name = "embedding-model-evaluator" },
+    { name = "jsonlines" },
+    { name = "langchain-core" },
+    { name = "langchain-google-genai" },
+    { name = "langchain-openai" },
+    { name = "mteb" },
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
+    { name = "requests" },
 ]
 
 [package.dev-dependencies]
@@ -2570,12 +2522,15 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "commons", editable = "commons" },
-    { name = "dataset-generator", editable = "dataset-generator" },
-    { name = "embedding-model-evaluator", editable = "embedding-model-evaluator" },
+    { name = "jsonlines", specifier = ">=4.0.0" },
+    { name = "langchain-core", specifier = ">=0.3.68" },
+    { name = "langchain-google-genai", specifier = ">=2.1.7" },
+    { name = "langchain-openai", specifier = ">=0.3.27" },
+    { name = "mteb", specifier = ">=0.1.0" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "requests", specifier = ">=2.32.4" },
 ]
 
 [package.metadata.requires-dev]

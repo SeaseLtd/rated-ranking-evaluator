@@ -6,7 +6,7 @@ from pydantic_core import ValidationError
 from rre_tools.core.logger import configure_logging
 from rre_tools.dataset_generator.config import Config
 from rre_tools.core.search_engines.search_engine_base import DOC_NUMBER_EACH_FETCH
-from ...mocks.elasticsearch import MockResponseElasticsearchEngine
+from mocks.elasticsearch import MockResponseElasticsearchEngine
 
 from rre_tools.core.search_engines import ElasticsearchSearchEngine
 from rre_tools.core.models import Document

@@ -2,7 +2,7 @@ from rre_tools.core.writers.abstract_writer import AbstractWriter
 from rre_tools.core.writers.mteb_writer import MtebWriter
 from rre_tools.core.writers.quepid_writer import QuepidWriter
 from rre_tools.core.writers.rre_writer import RreWriter
-from rre_tools.core.model.writer_config import WriterConfig
+from rre_tools.core.models.writer_config import WriterConfig
 
 from typing import Mapping, Type, TypeAlias
 import logging

@@ -5,7 +5,7 @@ from pydantic_core import ValidationError
 
 from rre_tools.core.logger import configure_logging
 from rre_tools.dataset_generator.config import Config
-from ...mocks.solr import MockResponseSolrEngine, MockResponseUniqueKey
+from mocks.solr import MockResponseSolrEngine, MockResponseUniqueKey
 
 
 from rre_tools.core.search_engines import SolrSearchEngine

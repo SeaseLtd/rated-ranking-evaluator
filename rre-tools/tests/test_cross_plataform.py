@@ -6,7 +6,6 @@ import jsonlines
 from rre_tools.core.data_store import DataStore
 from rre_tools.core.models import Document, WriterConfig
 from rre_tools.core.writers.quepid_writer import QuepidWriter
-from rre_tools.embedding_model_evaluator.config import Config as MTEBConfig
 from rre_tools.embedding_model_evaluator.embedding_writer import EmbeddingWriter
 from rre_tools.embedding_model_evaluator.constants import TASKS_NAME_MAPPING
 from rre_tools.dataset_generator.config import Config as DGConfig
@@ -51,21 +50,18 @@ class _FakeCache:
         pass
 
 
-def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dirs(tmp_path: Path) -> None:
+def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dirs(tmp_path: Path, resource_folder) -> None:
     """
     Verifies that EmbeddingWriter handles nested output directories.
     """
-    cfg: MTEBConfig = MTEBConfig.load(
-        "embedding-model-evaluator/tests/unit/resources/valid_config.yaml"
-    )
-
     dest = tmp_path / "out" / "embeddings"
 
     cached_doc = _FakeCache(vectors=[[0.1, 0.2, 0.3]])
     cached_query = _FakeCache(vectors=[[1.0, 1.1, 1.2]])
 
     writer = EmbeddingWriter(
-        config=cfg,
+        corpus_path=resource_folder / "data" / "corpus.jsonl",
+        queries_path=resource_folder / "data" / "queries.jsonl",
         cached=cached_doc,
         cache_path=tmp_path / "cache",
         task_name=TASKS_NAME_MAPPING["retrieval"],
@@ -81,7 +77,8 @@ def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dir
         _ = list(r)
 
     writer = EmbeddingWriter(
-        config=cfg,
+        corpus_path=resource_folder / "data" / "corpus.jsonl",
+        queries_path=resource_folder / "data" / "queries.jsonl",
         cached=cached_query,
         cache_path=tmp_path / "cache",
         task_name=TASKS_NAME_MAPPING["retrieval"],
