@@ -37,15 +37,14 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=str,
-        help='Config file path to use for the application [default: "embedding-model-evaluator/config.yaml"]',
+        help='Config file path to use for the application [default: "configs/embedding_model_evaluator/default.yaml"]',
         required=False,
-        default="embedding-model-evaluator/config.yaml",
+        default="configs/embedding_model_evaluator/default.yaml",
     )
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Activate debug mode for logging [default: False]')
 
     return parser.parse_args()
-
 
 def _build_task(task_key: str, dataset_name: str, split: str) -> Any:
     """
@@ -107,13 +106,17 @@ def main() -> None:
         model=model_with_cache,
         output_folder=config.output_dest,
         overwrite_results=True,
-        config=config,   # preserve custom config flow
+        corpus_path=config.corpus_path,
+        queries_path=config.queries_path,
+        candidates_path=config.candidates_path,
+        relevance_scale=config.relevance_scale,
     )
     log.info("Finished MTEB evaluation.")
 
     # --- Optional: write embeddings (kept for parity with previous behavior) ---
     writer = EmbeddingWriter(
-        config=config,
+        corpus_path=config.corpus_path,
+        queries_path=config.queries_path,
         cached=model_with_cache,
         cache_path=model_with_cache_path,
         task_name=TASKS_NAME_MAPPING.get(config.task_to_evaluate, "CustomRetrievalTask"),

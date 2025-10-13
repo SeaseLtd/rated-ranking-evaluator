@@ -11,7 +11,7 @@ from rre_tools.core.search_engines import VespaSearchEngine
 from rre_tools.core.models import Document
 from rre_tools.core.utils import clean_text
 from rre_tools.core.search_engines.search_engine_base import DOC_NUMBER_EACH_FETCH
-from ...mocks.vespa import MockResponseVespaSearch
+from mocks.vespa import MockResponseVespaSearch
 
 configure_logging(level="DEBUG")
 

@@ -9,7 +9,7 @@ from rre_tools.core.logger import configure_logging
 from rre_tools.core.models import Document
 from rre_tools.core.search_engines import OpenSearchEngine
 from rre_tools.core.search_engines.search_engine_base import DOC_NUMBER_EACH_FETCH
-from ...mocks.opensearch import MockResponseOpenSearchEngine
+from mocks.opensearch import MockResponseOpenSearchEngine
 
 configure_logging(level=logging.DEBUG)
 
