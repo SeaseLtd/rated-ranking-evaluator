@@ -1,0 +1,22 @@
+search_engine_type: "vespa"
+collection_name: "doc"
+vespa_schema: "doc"
+query_template: "tests/resources/template_vespa.yql"
+search_engine_url: "http://localhost:8080"
+documents_filter:
+  - genre:
+      - "horror"
+      - "fantasy"
+  - type:
+      - "news"
+doc_number: 100
+doc_fields:
+  - "title"
+  - "description"
+queries: "tests/resources/queries.txt"
+generate_queries_from_documents: true
+num_queries_needed: 10
+relevance_scale: "graded"
+llm_configuration_file: "tests/resources/llm_config.yaml"
+output_format: "quepid"
+output_destination: "output"

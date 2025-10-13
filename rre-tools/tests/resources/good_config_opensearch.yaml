@@ -1,0 +1,15 @@
+query_template: "tests/resources/template_opensearch.json"
+search_engine_type: "opensearch"
+collection_name: "testcore"
+search_engine_url: "http://localhost:9200/"
+doc_number: 20
+doc_fields:
+  - "title"
+  - "description"
+queries: "tests/resources/queries.txt"
+generate_queries_from_documents: true
+num_queries_needed: 10
+relevance_scale: "graded"
+llm_configuration_file: "tests/resources/llm_config.yaml"
+output_format: "quepid"
+output_destination: "output"

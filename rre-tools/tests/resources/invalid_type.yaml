@@ -1,0 +1,9 @@
+search_engine_type: "solr"
+search_engine_url: "http://localhost"
+doc_number: "one hundred"  # Invalid type
+doc_fields: ["title"]
+num_queries_needed: 5
+relevance_scale: "binary"
+llm_configuration_file: "tests/resources/llm_config.yaml"
+output_format: "quepid"
+output_destination: "output.json"
