@@ -18,23 +18,10 @@ if ! curl -sf "$CLUSTER"; then
   echo "[ERROR] Elasticsearch not reachable"; exit 1
 fi
 
-# Create index with mappings if it doesn't exist
+# Create index if it doesn't exist
 if ! curl -sf -XGET "$ENDPOINT"; then
-  echo "[INFO] Creating index '$INDEX' with mappings"
-  curl -sf -XPUT "$ENDPOINT" -H 'Content-Type: application/json' -d '{
-    "mappings": {
-      "properties": {
-        "title": {"type": "text"},
-        "description": {"type": "text"},
-        "content": {"type": "text"},
-        "section": {"type": "text"},
-        "published_date": {"type": "text"},
-        "authors": {"type": "text"},
-        "link": {"type": "text"},
-        "top_image": {"type": "text"}
-      }
-    }
-  }'
+  echo "[INFO] Creating index '$INDEX'"
+  curl -XPUT "$ENDPOINT" -H "Content-Type: application/json" -d '{}'
 fi
 
 # Check document count in the index
