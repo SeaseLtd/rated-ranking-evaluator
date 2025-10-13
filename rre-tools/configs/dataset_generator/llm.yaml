@@ -1,0 +1,14 @@
+# llm model configuration
+
+# OpenAI LLM
+name: openai
+
+# Chat model name
+model: gpt-4o
+
+# Maximum number of tokens the model may return
+max_tokens: 512
+
+# Environment variable where LLM API key is stored
+api_key_env: OPENAI_API_KEY
+
