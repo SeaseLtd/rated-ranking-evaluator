@@ -3,7 +3,7 @@ import requests
 
 
 class MockRequest:
-    """Mock per l'oggetto request di requests.Response"""
+    """Mock for the requests.Response object"""
     def __init__(self, url: str, method: str = "GET", body: str = None):
         self.url = url
         self.method = method

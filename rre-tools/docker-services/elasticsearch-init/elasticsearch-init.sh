@@ -17,14 +17,17 @@ if ! curl -sf "$CLUSTER"; then
   echo "[ERROR] Elasticsearch not reachable"; exit 1
 fi
 
-# create 'testcore' index if it doesn't exist
-http_code=$(curl --max-time 5 -s -o /dev/null -w "%{http_code}" -XHEAD "$ENDPOINT" || echo "000")
-
-if [ "$http_code" -eq 200 ]; then
-  echo "[INFO] Index '$INDEX' already exists"
-else
-  echo "[INFO] Creating index '$INDEX'"
-  curl -XPUT "$ENDPOINT" -H "Content-Type: application/json" -d '{}'
+# Create index with mappings if it doesn't exist
+if ! curl -sf -XGET "$ENDPOINT"; then
+  echo "[INFO] Creating index '$INDEX' with mappings"
+  curl -sf -XPUT "$ENDPOINT" -H 'Content-Type: application/json' -d '{
+    "mappings": {
+      "properties": {
+        "title": {"type": "text"},
+        "description": {"type": "text"}
+      }
+    }
+  }'
 fi
 
 # Check document count in the index
