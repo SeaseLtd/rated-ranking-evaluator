@@ -4,6 +4,7 @@ set -euo pipefail
 CLUSTER="http://elasticsearch:9200"
 INDEX="testcore"
 ENDPOINT="$CLUSTER/$INDEX"
+DATASET_PATH="/opt/rre-dataset-generator/data/dataset.jsonl"
 
 echo "[INFO] Waiting for Elasticsearch..."
 # Wait until Elasticsearch responds (up to 30s)
@@ -24,7 +25,13 @@ if ! curl -sf -XGET "$ENDPOINT"; then
     "mappings": {
       "properties": {
         "title": {"type": "text"},
-        "description": {"type": "text"}
+        "description": {"type": "text"},
+        "content": {"type": "text"},
+        "section": {"type": "text"},
+        "published_date": {"type": "text"},
+        "authors": {"type": "text"},
+        "link": {"type": "text"},
+        "top_image": {"type": "text"}
       }
     }
   }'
@@ -36,9 +43,17 @@ echo "[INFO] Document count in '$INDEX': $COUNT"
 
 if [ "$COUNT" -eq 0 ]; then
   echo "[INFO] Indexing dataset into '$INDEX'..."
-  curl -sf -XPOST "$ENDPOINT/_bulk?refresh=true" \
-       -H "Content-Type: application/x-ndjson" \
-       --data-binary @/opt/rre-dataset-generator/data/dataset.jsonl
+
+  bulk_response=$(jq -c '. as $doc | {"index":{"_id":$doc.id}}, $doc' "$DATASET_PATH" \
+    | curl --max-time 120 --silent --show-error -XPOST "$ENDPOINT/_bulk?refresh=true" \
+        -H "Content-Type: application/x-ndjson" --data-binary @- )
+
+  if [ "$(echo "$bulk_response" | jq -r '.errors')" = "true" ]; then
+    echo "[ERROR] Bulk indexing reported errors. Full response:" >&2
+    echo "$bulk_response" | jq '.' >&2
+    exit 1
+  fi
+
   echo "[INFO] Done indexing."
 else
   echo "[INFO] Data already present in '$INDEX'; skipping indexing."

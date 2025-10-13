@@ -45,10 +45,18 @@ echo "[INFO] Document count in '$INDEX_NAME': $doc_count"
 # index dataset or skip if exists
 if [ "$doc_count" -eq 0 ]; then
   echo "[INFO] Starting bulk indexing"
-  curl --max-time 10 --silent --show-error -XPOST "$INDEX_URL/_bulk?refresh=true" \
-     -H "Content-Type: application/x-ndjson" \
-     --data-binary @"$DATASET_PATH"
-  echo "[INFO] Done indexing."
+
+  bulk_response=$(jq -c '. as $doc | {"index":{"_id":$doc.id}}, $doc' "$DATASET_PATH" \
+    | curl --max-time 120 --silent --show-error -XPOST "$INDEX_URL/_bulk?refresh=true" \
+        -H "Content-Type: application/x-ndjson" --data-binary @- )
+
+  if [ "$(echo "$bulk_response" | jq -r '.errors')" = "true" ]; then
+    echo "[ERROR] Bulk indexing reported errors. Full response:" >&2
+    echo "$bulk_response" | jq '.' >&2
+    exit 1
+  fi
+
+  echo "[INFO] Done bulk indexing."
 else
   echo "[INFO] Index already contains documents. Skipping bulk indexing."
 fi
