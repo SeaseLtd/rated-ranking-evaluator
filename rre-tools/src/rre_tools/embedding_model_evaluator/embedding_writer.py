@@ -34,13 +34,15 @@ class EmbeddingWriter:
 
     def __init__(
         self,
-        config: Config,
+        corpus_path: str | Path,
+        queries_path: str | Path,
         cached: CachedEmbeddingWrapper,
         cache_path: str | Path,
         task_name: str,
         batch_size: int,
     ):
-        self.config = config
+        self.corpus_path = corpus_path
+        self.queries_path = queries_path
         self.cached = cached
         self.cache_path = Path(cache_path)
         self.task_name = task_name
@@ -60,11 +62,11 @@ class EmbeddingWriter:
         # documents
         documents_path = path / "documents_embeddings.jsonl"
         if self.task_name == TASKS_NAME_MAPPING["retrieval"]:
-            doc_dict_retrieval= read_corpus_retrieval(Path(self.config.corpus_path))
+            doc_dict_retrieval= read_corpus_retrieval(Path(self.corpus_path))
             doc_ids = list(doc_dict_retrieval.keys())
             doc_texts = list(doc_dict_retrieval.values())
         elif self.task_name == TASKS_NAME_MAPPING["reranking"]:
-            doc_dict_reranking = read_corpus_reranking(Path(self.config.corpus_path))
+            doc_dict_reranking = read_corpus_reranking(Path(self.corpus_path))
             doc_ids = list(doc_dict_reranking.keys())
             doc_texts = [
                 compose_text(doc_dict_reranking[_id].get("title"), doc_dict_reranking[_id].get("text"))
@@ -83,7 +85,7 @@ class EmbeddingWriter:
 
         # queries
         queries_path = path / "queries_embeddings.jsonl"
-        query_dict = read_queries(Path(self.config.queries_path))
+        query_dict = read_queries(Path(self.queries_path))
         query_ids = list(query_dict.keys())
         query_texts = [query_dict[qid] for qid in query_ids]
 

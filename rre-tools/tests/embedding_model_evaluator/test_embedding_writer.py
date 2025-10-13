@@ -32,7 +32,8 @@ def _create_fake_cache_wrapper(
 
 
 def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_correct_embeddings(
-    config: Config, tmp_path: Path
+        tmp_path: Path,
+        resource_folder
 ) -> None:
     doc_vectors = [[0.1, 0.2, 0.3]]
     cached_doc = _create_fake_cache_wrapper(
@@ -43,20 +44,20 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
         vectors=query_vectors
     )
 
-    config.embeddings_dest = tmp_path / "output" / "embeddings"
+    embeddings_dir = tmp_path / "output" / "embeddings"
 
     writer = EmbeddingWriter(
-        config=config,
+        corpus_path= resource_folder / "data" / "corpus.jsonl",
+        queries_path= resource_folder / "data" / "queries.jsonl",
         cached=cached_doc,
         cache_path=tmp_path / "cache",
         task_name=TASKS_NAME_MAPPING["retrieval"],
         batch_size=32,
     )
 
-    writer.write(config.embeddings_dest)
+    writer.write(embeddings_dir)
 
-    embedding_dir = config.embeddings_dest
-    docs_file = embedding_dir / "documents_embeddings.jsonl"
+    docs_file = embeddings_dir / "documents_embeddings.jsonl"
 
     assert docs_file.exists()
     with jsonlines.open(docs_file) as r:
@@ -65,15 +66,16 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
 
     # recreating again because of fake cached embedding wrapper for queries and corpus vectors
     writer = EmbeddingWriter(
-        config=config,
+        corpus_path= resource_folder / "data" / "corpus.jsonl",
+        queries_path= resource_folder / "data" / "queries.jsonl",
         cached=cached_query,
         cache_path=tmp_path / "cache",
         task_name=TASKS_NAME_MAPPING["retrieval"],
         batch_size=32,
     )
 
-    writer.write(config.embeddings_dest)
-    queries_file = embedding_dir / "queries_embeddings.jsonl"
+    writer.write(embeddings_dir)
+    queries_file = embeddings_dir / "queries_embeddings.jsonl"
     assert queries_file.exists()
 
     with jsonlines.open(queries_file) as r:

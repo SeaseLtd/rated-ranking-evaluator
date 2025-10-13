@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Any
 
 from mteb.abstasks.AbsTask import TaskMetadata
@@ -40,20 +41,28 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         self.queries: dict[str, dict[str, str]] = {}
         self.relevant_docs: dict[str, dict[str, dict[str, int]]] = {}
 
-    def load_data(self, config: Config | None, **kwargs: Any) -> None:
+    def load_data(
+            self,
+            corpus_path: Path,
+            queries_path: Path,
+            candidates_path: Path,
+            **kwargs: Any
+    ) -> None:
         """
         Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
         In our case, we want to use local data files (paths defined in Config), so we override this method.
         """
-        if config is None:
-            message = "No config is provided. Pass your internal Config via MTEB.run(..., config=Config)."
-            log.error(message)
-            raise ValueError(message)
+        if corpus_path is None:
+            raise ValueError("`corpus_path` is missing in MTEB.run(..., config=Config).")
+        if queries_path is None:
+            raise ValueError("`queries_path` is missing in MTEB.run(..., config=Config).")
+        if candidates_path is None:
+            raise ValueError("`candidates_path` is missing in MTEB.run(..., config=Config).")
 
-        self.corpus = {"test": read_corpus_retrieval(config.corpus_path)}
-        self.queries = {"test": read_queries(config.queries_path)}
+        self.corpus = {"test": read_corpus_retrieval(corpus_path)}
+        self.queries = {"test": read_queries(queries_path)}
         self.relevant_docs = {
-            "test": read_candidates(config.candidates_path)["relevant_docs"]
+            "test": read_candidates(candidates_path)["relevant_docs"]
         }
         self.data_loaded = True
 
