@@ -3,7 +3,7 @@ name = "rre-tools"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-licence = {file = "LICENSE.md"}
+license = {file = "LICENSE.md"}
 authors = []
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -16,12 +16,15 @@ requires-python = ">=3.10"
 
 # Shared dependencies + import of workspace modules
 dependencies = [
+    "requests>=2.32.4",
+    "langchain-core>=0.3.68",
+    "langchain-openai>=0.3.27",
+    "langchain-google-genai>=2.1.7",
     "pydantic>=2.0",
     "pyyaml>=6.0.2",
     "python-dotenv>=1.1.1",
-    "dataset-generator",
-    "commons",
-    "embedding-model-evaluator"
+    "jsonlines>=4.0.0",
+    "mteb>=0.1.0"
 ]
 
 # mypy/ruff/pytest
@@ -43,19 +46,9 @@ dev = [
 addopts = "-v --tb=short"
 
 [project.scripts]
+dataset-generator = "rre_tools.dataset_generator.main:main"
+embedding-model-evaluator = "rre_tools.embedding_model_evaluator.main:main"
 rre-tools = "rre_tools:main"
-
-[tool.uv.workspace]
-members = [
-    "commons",
-    "dataset-generator",
-    "embedding-model-evaluator",
-]
-
-[tool.uv.sources]
-dataset-generator         = { workspace = true }
-commons                   = { workspace = true }
-embedding-model-evaluator = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8.13,<0.9.0"]
