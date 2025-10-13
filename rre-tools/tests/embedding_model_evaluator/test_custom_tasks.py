@@ -1,10 +1,6 @@
 from pathlib import Path
-from typing import Literal
 import pytest
 import jsonlines
-
-from rre_tools.embedding_model_evaluator.custom_mteb_tasks.reranking_task import CustomRerankingTask
-from rre_tools.embedding_model_evaluator.custom_mteb_tasks.retrieval_task import CustomRetrievalTask
 
 
 def _write_jsonl(path: Path, rows: list[dict]) -> None:
@@ -13,9 +9,7 @@ def _write_jsonl(path: Path, rows: list[dict]) -> None:
         file.write_all(rows)
 
 
-def _create_dataset_and_load_config(
-    tmp_path: Path, task_to_evaluate: Literal["retrieval", "reranking"]
-) -> Config:
+def _create_dataset_and_load_paths(tmp_path: Path) -> tuple[Path, Path, Path]:
     corpus_path = tmp_path / "corpus.jsonl"
     queries_path = tmp_path / "queries.jsonl"
     candidates_path = tmp_path / "candidates.jsonl"
@@ -41,23 +35,14 @@ def _create_dataset_and_load_config(
         ],
     )
 
-    config: Config = Config(
-        model_id="dummy-model",
-        task_to_evaluate=task_to_evaluate,
-        corpus_path=corpus_path,
-        queries_path=queries_path,
-        candidates_path=candidates_path,
-        relevance_scale="graded",
-        output_dest=tmp_path / "output",
-        embeddings_dest=tmp_path / "output/embeddings",
-    )
-    return config
+    return corpus_path, queries_path, candidates_path
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_custom_retrieval_task_with_valid_data__expects__loads_corpus_queries_and_relevant_docs_correctly(tmp_path: Path) -> None:
-    config = _create_dataset_and_load_config(tmp_path, "retrieval")
+    from rre_tools.embedding_model_evaluator.custom_mteb_tasks.retrieval_task import CustomRetrievalTask
+    corpus_path, queries_path, candidates_path = _create_dataset_and_load_paths(tmp_path)
     retrieval_task = CustomRetrievalTask()
-    retrieval_task.load_data(config=config)
+    retrieval_task.load_data(corpus_path=corpus_path, queries_path=queries_path, candidates_path=candidates_path)
 
     assert "test" in retrieval_task.corpus and isinstance(
         retrieval_task.corpus["test"], dict
@@ -78,9 +63,13 @@ def test_custom_retrieval_task_with_valid_data__expects__loads_corpus_queries_an
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_custom_reranking_task_with_valid_data__expects__loads_dataset_with_positive_and_negative_examples(tmp_path: Path) -> None:
-    config = _create_dataset_and_load_config(tmp_path, "reranking")
+    from rre_tools.embedding_model_evaluator.custom_mteb_tasks.reranking_task import CustomRerankingTask
+    corpus_path, queries_path, candidates_path = _create_dataset_and_load_paths(tmp_path)
     reranking_task = CustomRerankingTask()
-    reranking_task.load_data(config=config)
+    reranking_task.load_data(corpus_path=corpus_path,
+                             queries_path=queries_path,
+                             candidates_path=candidates_path,
+                             relevance_scale="binary")
 
     assert hasattr(reranking_task, "dataset")
     assert "test" in reranking_task.dataset
