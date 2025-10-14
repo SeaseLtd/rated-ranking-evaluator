@@ -3,7 +3,7 @@ from __future__ import annotations
 # ------ temporary import for corpus.json bug workaround ------
 import json
 from pathlib import Path
-from rre_tools.core.utils import _to_string
+from rre_tools.shared.utils import _to_string
 import argparse
 # -------------------------------------------------------------
 
@@ -12,13 +12,13 @@ from langchain_core.language_models import BaseChatModel
 from logging import Logger, getLogger
 
 # project imports
-from rre_tools.core.logger import setup_logging
+from rre_tools.shared.logger import setup_logging
 from rre_tools.dataset_generator.llm import LLMConfig, LLMService, LLMServiceFactory
-from rre_tools.core.models import Document, Query, WriterConfig
-from rre_tools.core.writers import WriterFactory, AbstractWriter
-from rre_tools.core.search_engines import SearchEngineFactory, BaseSearchEngine
-from rre_tools.core.data_store import DataStore
-from rre_tools.core.utils import join_fields_as_text
+from rre_tools.shared.models import Document, Query, WriterConfig
+from rre_tools.shared.writers import WriterFactory, AbstractWriter
+from rre_tools.shared.search_engines import SearchEngineFactory, BaseSearchEngine
+from rre_tools.shared.data_store import DataStore
+from rre_tools.shared.utils import join_fields_as_text
 
 from rre_tools.dataset_generator.models import LLMQueryResponse, LLMScoreResponse
 from rre_tools.dataset_generator.config import Config

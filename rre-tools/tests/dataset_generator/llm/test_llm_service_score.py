@@ -4,7 +4,7 @@ import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from rre_tools.dataset_generator.llm import LLMService
-from rre_tools.core.models import Document
+from rre_tools.shared.models import Document
 from rre_tools.dataset_generator.models import LLMScoreResponse
 from llm_mock import FakeChatModelAdapter
 

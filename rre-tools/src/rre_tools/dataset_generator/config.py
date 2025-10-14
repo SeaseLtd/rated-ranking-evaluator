@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from urllib.parse import urljoin
 
-from rre_tools.core.models import WriterConfig
+from rre_tools.shared.models import WriterConfig
 
 log = logging.getLogger(__name__)
 
