@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 from rre_tools.core.data_store import DataStore
-from rre_tools.core.utils import _to_string
+from rre_tools.core.utils import _to_string, join_fields_as_text
 from rre_tools.core.writers.abstract_writer import AbstractWriter
 
 log = logging.getLogger(__name__)
@@ -29,11 +29,7 @@ class MtebWriter(AbstractWriter):
                 doc_id = str(doc.id)
                 fields = doc.fields
                 title = _to_string(fields.get("title"))
-                text_parts = []
-                for k, v in fields.items():
-                    if k.lower() != "id" and k.lower() != "title" and v is not None:
-                        text_parts.append(_to_string(v))
-                text = " ".join(text_parts).strip()
+                text = join_fields_as_text(fields=fields, exclude=['id', 'title'])
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")

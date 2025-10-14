@@ -52,3 +52,13 @@ def clean_text(text: str) -> str:
     # Normalize whitespace
     t = _WS_REGEX.sub(" ", t).strip()
     return t
+
+def join_fields_as_text(fields: dict[str, Any], exclude: list[str] | str) -> str:
+    if isinstance(exclude, str):
+        exclude = [exclude]
+
+    text_parts = []
+    for k, v in fields.items():
+        if k.lower() not in exclude and v is not None:
+            text_parts.append(_to_string(v))
+    return " ".join(text_parts).strip()
