@@ -63,7 +63,7 @@ output_format: "quepid"
 
 # For rre output format, you need other fields, e.g.:
 #id_field: "id"
-#rre_query_template: "resources/only_vector.json" # optional, if not filled, is the same as query_template
+#rre_query_template: "templates/only_vector.json" # optional, if not filled, is the same as query_template
 #rre_query_placeholder: "$query"
 
 # Path where the output dataset will be saved
