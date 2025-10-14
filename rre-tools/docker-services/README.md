@@ -37,6 +37,12 @@ This will start 2 services:
 docker-compose -f docker-compose.solr.yml build --no-cache
 ```
 
+### Re-indexing dataset to Solr
+With a flag `FORCE_REINDEX`,  Solr reruns and re-indexes dataset without stopping Solr
+```bash
+docker-compose -f docker-compose.solr.yml run --rm -e FORCE_REINDEX=true solr-init
+```
+
 ### Running OpenSearch (Single Node)
 
 To run a local OpenSearch test environment using docker-compose:
