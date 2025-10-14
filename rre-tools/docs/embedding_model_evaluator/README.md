@@ -107,7 +107,7 @@ vector search.
 ### **Input parameters** for configuration file
 
 To be able to run the Embedding Model Evaluator, a configuration file must be provided. The go-to way we suggest to take is 
-to modify the [configuration file](../../configs/embedding_model_evaluator/default.yaml).
+to modify the [configuration file](../../configs/embedding_model_evaluator/embedding_model_evaluator_config.yaml).
 
 A detailed description of the parameter that you must provide in the configuration file is the following:
 

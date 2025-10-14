@@ -93,16 +93,6 @@ class CustomRerankingTask(AbsTaskReranking):
         Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
         In our case, we want to use local data files (paths defined in Config), so we override this method.
         """
-
-        if corpus_path is None:
-            raise ValueError("`corpus_path` is missing in MTEB.run(..., config=Config).")
-        if queries_path is None:
-            raise ValueError("`queries_path` is missing in MTEB.run(..., config=Config).")
-        if candidates_path is None:
-            raise ValueError("`candidates_path` is missing in MTEB.run(..., config=Config).")
-        if relevance_scale is None:
-            raise ValueError("`relevance_scale` is missing in MTEB.run(..., config=Config).")
-
         corpus = read_corpus_reranking(corpus_path)
         queries = read_queries(queries_path)
         candidates = read_candidates(candidates_path)["candidates"]

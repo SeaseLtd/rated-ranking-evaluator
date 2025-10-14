@@ -1,14 +1,12 @@
 [project]
 name = "rre-tools"
 version = "0.1.0"
-description = "Add your description here"
+description = "RRE tools - a suite of tools for search quality evaluation!"
 readme = "README.md"
 license = {file = "LICENSE.md"}
 authors = []
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
@@ -46,9 +44,9 @@ dev = [
 addopts = "-v --tb=short"
 
 [project.scripts]
-dataset-generator = "rre_tools.dataset_generator.main:main"
-embedding-model-evaluator = "rre_tools.embedding_model_evaluator.main:main"
-rre-tools = "rre_tools:main"
+dataset_generator = "rre_tools.dataset_generator.main:main"
+embedding_model_evaluator = "rre_tools.embedding_model_evaluator.main:main"
+rre_tools = "rre_tools:main"
 
 [build-system]
 requires = ["uv_build>=0.8.13,<0.9.0"]

@@ -5,12 +5,12 @@
 - Embedding Model Evaluator
 - Approximate Search Evaluator
 
-### [Dataset Generator](dataset-generator/README.md) (DAGE)
+### [Dataset Generator](docs/dataset_generator/README.md) (DAGE)
 
 This tool provides a flexible command-line tool to generate relevance datasets for search evaluation. It can retrieve
 documents from a search engine, generate synthetic queries, and score the relevance of document-query pairs using LLMs.
 
-### [Embedding Model Evaluator](embedding-model-evaluator/README.md)
+### [Embedding Model Evaluator](docs/embedding_model_evaluator/README.md)
 
 This tool provide a flexible tool to test a HuggingFace embedding model to ensure that works as expected with exact
 vector search.
@@ -34,8 +34,8 @@ cd rre-tools
 # install dependencies (for users)
 uv sync
 
-# install development dependencies as well (e.g., mypy and ruff)
-uv sync --group dev
+# install optional dev dependencies such as mypy/ruff
+uv sync --extra dev
 ```
 
 ## Running Dataset Generator (DAGE)
@@ -44,8 +44,8 @@ Before running the command below, you need to have running search engine instanc
 (`solr`/`opensearch`/`elasticsearch`/`vespa`). This can be done even with the test collections in folder 
 [docker-services](docker-services/README.md). 
 
-For a detailed description to fill your configuration file (e.g., [Config](dataset-generator/config.yaml)) you can look 
-at the Dataset Generator [README](dataset-generator/README.md).
+For a detailed description to fill your configuration file (e.g., [Config](configs/dataset_generator/dataset_generator_config.yaml)) you can look 
+at the Dataset Generator [README](docs/dataset_generator/README.md).
 
 Execute the main script via CLI, pointing to your DAGE configuration file:
 ```bash
@@ -58,8 +58,8 @@ uv run dataset-generator --help
 
 ## Running Embedding Model Evaluator
 
-For a detailed description to fill in configuration file (e.g., [Config](embedding-model-evaluator/config.yaml)) you can look 
-at the [README](embedding-model-evaluator/README.md).
+For a detailed description to fill in configuration file (e.g., [Config](configs/embedding_model_evaluator/embedding_model_evaluator_config.yaml)) you can look 
+at the [README](docs/embedding_model_evaluator/README.md).
 
 Execute the main script via CLI, pointing to configuration file:
 ```bash
@@ -81,23 +81,36 @@ The script will then:
 3.  Score the relevance for each (document, query) pair.
 4.  Save the output to the destination (specified in the config file).
 
-
 ## Code Quality Tools
 
-### Configuration Files
-- `ruff.toml`: Configures Ruff's linting rules and settings
-- `mypy.ini`: Configures Mypy's type checking settings
+This project uses:
 
-### Type checker with mypy
+* [Ruff](https://github.com/astral-sh/ruff) for linting.
+* [Mypy](https://mypy.readthedocs.io/) for static type checking.
 
-To run mypy type checks inside the environment use
+### Linting with Ruff
+
 ```bash
+# Check for issues
+uv run ruff check .
+
+# Auto-fix fixable issues
+uv run ruff check --fix .
+
+# Format code (if enabled)
+uv run ruff format .
+```
+
+### Type Checking with Mypy
+
+```bash
+# Run type checking
 uv run mypy .
 ```
 
-### Code linter with ruff
+**Config Files**
 
-To run ruff linter inside the environment use
-```bash
-uv run ruff check
-```
+* `ruff.toml`: Ruff linting rules and settings.
+* `mypy.ini`: Mypy type checking rules and settings.
+
+---
