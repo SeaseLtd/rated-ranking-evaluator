@@ -3,9 +3,9 @@ from typing import Sequence
 
 import jsonlines
 
-from rre_tools.core.data_store import DataStore
-from rre_tools.core.models import Document, WriterConfig
-from rre_tools.core.writers.quepid_writer import QuepidWriter
+from rre_tools.shared.data_store import DataStore
+from rre_tools.shared.models import Document, WriterConfig
+from rre_tools.shared.writers.quepid_writer import QuepidWriter
 from rre_tools.embedding_model_evaluator.embedding_writer import EmbeddingWriter
 from rre_tools.embedding_model_evaluator.constants import TASKS_NAME_MAPPING
 from rre_tools.dataset_generator.config import Config as DGConfig

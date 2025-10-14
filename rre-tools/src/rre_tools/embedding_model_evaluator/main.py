@@ -25,7 +25,7 @@ from rre_tools.embedding_model_evaluator.custom_mteb_tasks import (  # noqa: F40
 )
 from rre_tools.embedding_model_evaluator.embedding_writer import EmbeddingWriter
 from rre_tools.embedding_model_evaluator.constants import TASKS_NAME_MAPPING, CACHE_PATH
-from rre_tools.core.logger import setup_logging  # type: ignore[import]
+from rre_tools.shared.logger import setup_logging  # type: ignore[import]
 
 log = logging.getLogger(__name__)
 
