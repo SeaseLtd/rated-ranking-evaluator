@@ -49,7 +49,7 @@ class LLMService:
         # Remove duplicate generated-queries
         seen = set()
         unique_queries: list[str] = []
-        for query in model_response.queries:
+        for query in model_response.queries: # type: ignore[union-attr]
             if query not in seen:
                 seen.add(query)
                 unique_queries.append(query)
@@ -102,7 +102,7 @@ class LLMService:
             raise ValueError(f"Invalid LLM response: {e}")
 
         return LLMScoreResponse(
-            score=model_response.score,
+            score=model_response.score, # type: ignore[union-attr]
             scale=relevance_scale,
-            explanation=(model_response.explanation if explanation else None)
+            explanation=(model_response.explanation if explanation else None) # type: ignore[union-attr]
         )
