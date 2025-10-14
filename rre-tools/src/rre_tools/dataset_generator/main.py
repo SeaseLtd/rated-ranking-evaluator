@@ -18,6 +18,7 @@ from rre_tools.core.models import Document, Query, WriterConfig
 from rre_tools.core.writers import WriterFactory, AbstractWriter
 from rre_tools.core.search_engines import SearchEngineFactory, BaseSearchEngine
 from rre_tools.core.data_store import DataStore
+from rre_tools.core.utils import join_fields_as_text
 
 from rre_tools.dataset_generator.models import LLMQueryResponse, LLMScoreResponse
 from rre_tools.dataset_generator.config import Config
@@ -176,11 +177,7 @@ def main() -> None:
                 doc_id = str(doc.id)
                 fields = doc.fields
                 title = _to_string(fields.get("title"))
-                text_parts = []
-                for k, v in fields.items():
-                    if k.lower() != "id" and k.lower() != "title" and v is not None:
-                        text_parts.append(_to_string(v))
-                text = " ".join(text_parts).strip()
+                text = join_fields_as_text(fields=fields, exclude=['id', 'title'])
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
