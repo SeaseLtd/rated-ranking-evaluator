@@ -52,13 +52,6 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
         In our case, we want to use local data files (paths defined in Config), so we override this method.
         """
-        if corpus_path is None:
-            raise ValueError("`corpus_path` is missing in MTEB.run(..., config=Config).")
-        if queries_path is None:
-            raise ValueError("`queries_path` is missing in MTEB.run(..., config=Config).")
-        if candidates_path is None:
-            raise ValueError("`candidates_path` is missing in MTEB.run(..., config=Config).")
-
         self.corpus = {"test": read_corpus_retrieval(corpus_path)}
         self.queries = {"test": read_queries(queries_path)}
         self.relevant_docs = {
