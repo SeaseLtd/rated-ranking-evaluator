@@ -37,9 +37,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=str,
-        help='Config file path to use for the application [default: "configs/embedding_model_evaluator/default.yaml"]',
+        help='Config file path to use for the application [default: "configs/embedding_model_evaluator/embedding_model_evaluator_config.yaml"]',
         required=False,
-        default="configs/embedding_model_evaluator/default.yaml",
+        default="configs/embedding_model_evaluator/embedding_model_evaluator_config.yaml",
     )
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Activate debug mode for logging [default: False]')
