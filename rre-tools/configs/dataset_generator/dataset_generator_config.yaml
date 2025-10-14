@@ -55,7 +55,7 @@ num_queries_needed: 4
 relevance_scale: "graded"
 
 # Path to the LLM configuration file (e.g., LangChain setup)
-llm_configuration_file: "configs/dataset_generator/llm.yaml"
+llm_configuration_file: "configs/dataset_generator/llm_config.yaml"
 
 # Output format for the generated dataset
 # Accepted values: quepid, rre, mteb

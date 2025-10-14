@@ -31,8 +31,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
 
     parser.add_argument('-c', '--config', type=str,
-                        help='Config file path to use for the application [default: "configs/dataset_generator/default.yaml"]',
-                        required=False, default="configs/dataset_generator/default.yaml")
+                        help='Config file path to use for the application [default: "configs/dataset_generator/dataset_generator_config.yaml"]',
+                        required=False, default="configs/dataset_generator/dataset_generator_config.yaml")
 
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Activate debug mode for logging [default: False]')
