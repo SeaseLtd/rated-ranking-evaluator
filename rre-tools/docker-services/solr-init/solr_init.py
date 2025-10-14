@@ -199,10 +199,10 @@ def main():
     num_found = get_num_found(COLLECTION_ENDPOINT)
     log.info("Solr reports numFound = %d", num_found)
 
-    docs = load_dataset_to_dict(DATASET)
-    embeddings = load_embeddings_to_dict(EMBEDDINGS_FILE)
-
     if num_found == 0 or FORCE_REINDEX:
+        docs = load_dataset_to_dict(DATASET)
+        embeddings = load_embeddings_to_dict(EMBEDDINGS_FILE)
+
         if embeddings:
             embedding_dimension_size = get_embedding_dimension_size(embeddings)
             if embedding_dimension_size is None:
