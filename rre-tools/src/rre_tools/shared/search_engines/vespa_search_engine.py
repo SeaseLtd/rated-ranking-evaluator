@@ -303,9 +303,12 @@ class VespaSearchEngine(BaseSearchEngine):
         # 2. Build YQL clauses per field
         clauses: List[str] = []
         for field, values in aggregated.items():
-            # Deduplicate while preserving original order (Python 3.7+ dicts are ordered)
             seen = set()
-            unique_vals = [v for v in values if not (v in seen or seen.add(v))]
+            unique_vals = []
+            for v in values:
+                if v not in seen:
+                    seen.add(v)
+                    unique_vals.append(v)
 
             if not unique_vals:
                 continue
