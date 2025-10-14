@@ -37,9 +37,8 @@ This will start 2 services:
 docker-compose -f docker-compose.solr.yml build --no-cache
 ```
 
-### Re-indexing dataset with embeddings to Solr
-With a flag `FORCE_REINDEX`,  Solr reruns and re-indexes dataset with embeddings from 
-`resources/embeddings/documents_embeddings.jsonl` without stopping Solr
+### Re-indexing dataset to Solr
+With a flag `FORCE_REINDEX`,  Solr reruns and re-indexes dataset without stopping Solr
 ```bash
 docker-compose -f docker-compose.solr.yml run --rm -e FORCE_REINDEX=true solr-init
 ```

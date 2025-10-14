@@ -64,7 +64,7 @@ def get_num_found(endpoint: str) -> int:
         return 0
 
 
-def load_dataset(path: str) -> list[dict[str, any]]:
+def load_dataset_to_dict(path: str) -> list[dict[str, any]]:
     """Loads dataset (no embeddings) """
     p = Path(path)
     if not p.exists():
@@ -77,7 +77,7 @@ def load_dataset(path: str) -> list[dict[str, any]]:
             raise ValueError("Expected dataset JSON file to be an array of documents")
 
 
-def load_embeddings_jsonl(path: str) -> dict[str, list[float]]:
+def load_embeddings_to_dict(path: str) -> dict[str, list[float]]:
     """
     Loads embeddings from a jsonl file. Each line: {"id":"...","vector":[...] }
     Returns dict of (id, [vector])
@@ -199,51 +199,27 @@ def main():
     num_found = get_num_found(COLLECTION_ENDPOINT)
     log.info("Solr reports numFound = %d", num_found)
 
-    try:
-        docs = load_dataset(DATASET)
-    except Exception as e:
-        log.error("Failed to load dataset: %s", e)
-        sys.exit(1)
+    docs = load_dataset_to_dict(DATASET)
+    embeddings = load_embeddings_to_dict(EMBEDDINGS_FILE)
 
-    embeddings = load_embeddings_jsonl(EMBEDDINGS_FILE)
-    if embeddings and FORCE_REINDEX:
-        embedding_dimension_size = get_embedding_dimension_size(embeddings)
-        if embedding_dimension_size is None:
-            log.error("No valid embeddings detected; aborting embedding merge")
-            sys.exit(1)
-        log.info("Detected embedding dimension = %d", embedding_dimension_size)
-        merged_docs = merge_docs_with_embeddings(docs, embeddings, output_path=TMP_FILE)
-        try:
+    if num_found == 0 or FORCE_REINDEX:
+        if embeddings:
+            embedding_dimension_size = get_embedding_dimension_size(embeddings)
+            if embedding_dimension_size is None:
+                log.error("No valid embeddings detected; aborting embedding merge")
+                sys.exit(1)
+            log.info("Detected embedding dimension = %d", embedding_dimension_size)
+
+            merged_docs = merge_docs_with_embeddings(docs, embeddings, output_path=TMP_FILE)
             create_vector_field(COLLECTION_ENDPOINT, embedding_dimension_size)
-        except requests.RequestException:
-            log.error("Failed to create vector field; aborting")
-            sys.exit(1)
-    else:
-        log.info("Using plain dataset, use FORCE_REINDEX flag to index embeddings")
-        merged_docs = docs
-        Path(TMP_FILE).unlink(missing_ok=True)
 
-    if num_found == 0:
-        try:
             index_documents(COLLECTION_ENDPOINT, merged_docs)
-        except Exception as e:
-            log.error("Indexing failed: %s", e)
-            sys.exit(1)
+        else:
+            log.info("Using plain dataset without embeddings")
+            index_documents(COLLECTION_ENDPOINT, docs)
+            Path(TMP_FILE).unlink(missing_ok=True)
     else:
-        if embeddings and FORCE_REINDEX:
-            # Reindex only docs that have embeddings
-            docs_with_vectors = [d for d in merged_docs if "vector" in d]
-            if not docs_with_vectors:
-                log.info("FORCE_REINDEX set but no documents contain vectors -> nothing to index")
-            else:
-                try:
-                    log.info("FORCE_REINDEX set -> reindexing %d documents (single POST)", len(docs_with_vectors))
-                    index_documents(COLLECTION_ENDPOINT, docs_with_vectors)
-                except Exception as e:
-                    log.error("Reindexing failed: %s", e)
-                    sys.exit(1)
-        elif embeddings and not FORCE_REINDEX:
-            log.info("Embeddings present and FORCE_REINDEX is not set -> skipping indexing")
+        log.info("Skipping indexing as there are already docs indexed. Use FORCE_REINDEX=true to force re-indexing")
 
     return 0
 
