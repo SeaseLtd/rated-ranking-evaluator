@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from rre_tools.shared.data_store import DataStore
-from rre_tools.shared.models import Query, Document, WriterConfig
+from rre_tools.shared.models import Query, Document
+from rre_tools.shared.writers.writer_config import WriterConfig
 from rre_tools.shared.writers.rre_writer import RreWriter, RRE_OUTPUT_FILENAME
 
 

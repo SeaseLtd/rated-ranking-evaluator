@@ -47,8 +47,8 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
     embeddings_dir = tmp_path / "output" / "embeddings"
 
     writer = EmbeddingWriter(
-        corpus_path= resource_folder / "data" / "corpus.jsonl",
-        queries_path= resource_folder / "data" / "queries.jsonl",
+        corpus_path= resource_folder / "corpus.jsonl",
+        queries_path= resource_folder / "queries.jsonl",
         cached=cached_doc,
         cache_path=tmp_path / "cache",
         task_name=TASKS_NAME_MAPPING["retrieval"],
@@ -66,8 +66,8 @@ def test_embeddings_writer_with_valid_inputs__expects__creates_jsonl_files_with_
 
     # recreating again because of fake cached embedding wrapper for queries and corpus vectors
     writer = EmbeddingWriter(
-        corpus_path= resource_folder / "data" / "corpus.jsonl",
-        queries_path= resource_folder / "data" / "queries.jsonl",
+        corpus_path= resource_folder / "corpus.jsonl",
+        queries_path= resource_folder / "queries.jsonl",
         cached=cached_query,
         cache_path=tmp_path / "cache",
         task_name=TASKS_NAME_MAPPING["retrieval"],

@@ -53,9 +53,9 @@ def clean_text(text: str) -> str:
     t = _WS_REGEX.sub(" ", t).strip()
     return t
 
-def join_fields_as_text(fields: dict[str, Any], exclude: list[str] | str) -> str:
+def join_fields_as_text(fields: dict[str, Any], exclude: set[str] | str) -> str:
     if isinstance(exclude, str):
-        exclude = [exclude]
+        exclude = {exclude}
 
     text_parts = []
     for k, v in fields.items():

@@ -29,7 +29,7 @@ class MtebWriter(AbstractWriter):
                 doc_id = str(doc.id)
                 fields = doc.fields
                 title = _to_string(fields.get("title"))
-                text = join_fields_as_text(fields=fields, exclude=['id', 'title'])
+                text = join_fields_as_text(fields=fields, exclude={'id', 'title'})
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")

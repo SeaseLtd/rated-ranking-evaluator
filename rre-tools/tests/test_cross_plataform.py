@@ -4,7 +4,8 @@ from typing import Sequence
 import jsonlines
 
 from rre_tools.shared.data_store import DataStore
-from rre_tools.shared.models import Document, WriterConfig
+from rre_tools.shared.models import Document
+from rre_tools.shared.writers.writer_config import WriterConfig
 from rre_tools.shared.writers.quepid_writer import QuepidWriter
 from rre_tools.embedding_model_evaluator.embedding_writer import EmbeddingWriter
 from rre_tools.embedding_model_evaluator.constants import TASKS_NAME_MAPPING
@@ -60,8 +61,8 @@ def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dir
     cached_query = _FakeCache(vectors=[[1.0, 1.1, 1.2]])
 
     writer = EmbeddingWriter(
-        corpus_path=resource_folder / "data" / "corpus.jsonl",
-        queries_path=resource_folder / "data" / "queries.jsonl",
+        corpus_path=resource_folder / "corpus.jsonl",
+        queries_path=resource_folder / "queries.jsonl",
         cached=cached_doc,
         cache_path=tmp_path / "cache",
         task_name=TASKS_NAME_MAPPING["retrieval"],
@@ -77,8 +78,8 @@ def test_embedding_writer_with_nested_dirs__expects__creates_files_in_nested_dir
         _ = list(r)
 
     writer = EmbeddingWriter(
-        corpus_path=resource_folder / "data" / "corpus.jsonl",
-        queries_path=resource_folder / "data" / "queries.jsonl",
+        corpus_path=resource_folder / "corpus.jsonl",
+        queries_path=resource_folder / "queries.jsonl",
         cached=cached_query,
         cache_path=tmp_path / "cache",
         task_name=TASKS_NAME_MAPPING["retrieval"],
