@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from typing import Dict, Optional, Any
 
 from datasets import Dataset, DatasetDict
@@ -7,6 +6,7 @@ from mteb.abstasks.AbsTask import TaskMetadata
 from mteb.abstasks.AbsTaskReranking import AbsTaskReranking
 from mteb.overview import TASKS_REGISTRY
 
+from rre_tools.embedding_model_evaluator.config import Config
 from rre_tools.embedding_model_evaluator.utils import read_corpus_reranking, read_queries, read_candidates
 
 log = logging.getLogger(__name__)
@@ -81,23 +81,22 @@ class CustomRerankingTask(AbsTaskReranking):
         },
     )
 
-    def load_data(
-            self,
-            corpus_path: Path,
-            queries_path: Path,
-            candidates_path: Path,
-            relevance_scale: str,
-            **kwargs: Any
-    ) -> None:
+    def load_data(self, config: Config, **kwargs: Any) -> None:
         """
         Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
         In our case, we want to use local data files (paths defined in Config), so we override this method.
         """
-        corpus = read_corpus_reranking(corpus_path)
-        queries = read_queries(queries_path)
-        candidates = read_candidates(candidates_path)["candidates"]
 
-        dataset = _build_dataset(corpus, queries, candidates, relevance_scale)
+        if config is None:
+            raise ValueError(
+                "Pass your internal Config via MTEB.run(..., config=Config)."
+            )
+
+        corpus = read_corpus_reranking(config.corpus_path)
+        queries = read_queries(config.queries_path)
+        candidates = read_candidates(config.candidates_path)["candidates"]
+
+        dataset = _build_dataset(corpus, queries, candidates, config.relevance_scale)
 
         self.dataset = DatasetDict({"test": Dataset.from_list(dataset)})
         self.data_loaded = True

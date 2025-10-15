@@ -106,10 +106,7 @@ def main() -> None:
         model=model_with_cache,
         output_folder=config.output_dest,
         overwrite_results=True,
-        corpus_path=config.corpus_path,
-        queries_path=config.queries_path,
-        candidates_path=config.candidates_path,
-        relevance_scale=config.relevance_scale,
+        config=config,
     )
     log.info("Finished MTEB evaluation.")
 
