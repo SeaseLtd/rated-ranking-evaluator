@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 from rre_tools.shared.data_store import DataStore
-from rre_tools.shared.models.writer_config import WriterConfig
+from rre_tools.shared.writers.writer_config import WriterConfig
 
 class AbstractWriter(ABC):
     """

@@ -34,8 +34,8 @@ cd rre-tools
 # install dependencies (for users)
 uv sync
 
-# install optional dev dependencies such as mypy/ruff
-uv sync --extra dev
+# install development dependencies as well (e.g., mypy and ruff)
+uv sync --group dev
 ```
 
 ## Running Dataset Generator (DAGE)

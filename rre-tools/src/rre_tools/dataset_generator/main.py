@@ -14,8 +14,8 @@ from logging import Logger, getLogger
 # project imports
 from rre_tools.shared.logger import setup_logging
 from rre_tools.dataset_generator.llm import LLMConfig, LLMService, LLMServiceFactory
-from rre_tools.shared.models import Document, Query, WriterConfig
-from rre_tools.shared.writers import WriterFactory, AbstractWriter
+from rre_tools.shared.models import Document, Query
+from rre_tools.shared.writers import WriterFactory, AbstractWriter, WriterConfig
 from rre_tools.shared.search_engines import SearchEngineFactory, BaseSearchEngine
 from rre_tools.shared.data_store import DataStore
 from rre_tools.shared.utils import join_fields_as_text
@@ -177,7 +177,7 @@ def main() -> None:
                 doc_id = str(doc.id)
                 fields = doc.fields
                 title = _to_string(fields.get("title"))
-                text = join_fields_as_text(fields=fields, exclude=['id', 'title'])
+                text = join_fields_as_text(fields=fields, exclude={'id', 'title'})
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")

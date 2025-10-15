@@ -3,8 +3,9 @@ import csv
 from pathlib import Path
 
 from rre_tools.shared.data_store import DataStore
+from rre_tools.shared.writers.writer_config import WriterConfig
 from rre_tools.shared.writers.quepid_writer import QuepidWriter, QUEPID_OUTPUT_FILENAME
-from rre_tools.shared.models import Document, WriterConfig
+from rre_tools.shared.models import Document
 
 
 @pytest.fixture
