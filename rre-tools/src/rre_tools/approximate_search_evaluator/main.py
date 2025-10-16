@@ -20,9 +20,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=str,
-        help='Config file path to use for the application [default: "src/rre_tools/approximate_search_evaluator/config.yaml"]',
+        help='Config file path to use for the application [default: "configs/approximate_search_evaluator/approximate_search_evaluator_config.yaml"]',
         required=False,
-        default="src/rre_tools/approximate_search_evaluator/config.yaml",
+        default="configs/approximate_search_evaluator/approximate_search_evaluator_config.yaml",
     )
 
     parser.add_argument('-v', '--verbose', action='store_true',
