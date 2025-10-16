@@ -8,7 +8,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 import requests
 
@@ -52,7 +52,7 @@ def wait_for_solr_core(endpoint: str, timeout: int = 30, interval: float = 1.0) 
 def get_num_found(endpoint: str) -> int:
     """Returns numFound from /select endpoint or 0 in case of exception."""
     select_url = f"{endpoint.rstrip('/')}/select"
-    params = {"q": "*:*", "wt": "json", "rows": 0}
+    params: dict[str, Any] = {"q": "*:*", "wt": "json", "rows": 0}
     try:
         response = requests.get(select_url, params=params, timeout=DEFAULT_TIMEOUT)
         response.raise_for_status()
@@ -64,7 +64,7 @@ def get_num_found(endpoint: str) -> int:
         return 0
 
 
-def load_dataset_to_dict(path: str) -> list[dict[str, any]]:
+def load_dataset_to_dict(path: str) -> list[dict[str, Any]]:
     """Loads dataset (no embeddings) """
     p = Path(path)
     if not p.exists():
@@ -82,7 +82,7 @@ def load_embeddings_to_dict(path: str) -> dict[str, list[float]]:
     Loads embeddings from a jsonl file. Each line: {"id":"...","vector":[...] }
     Returns dict of (id, [vector])
     """
-    vectors = {}
+    vectors: dict[str, list[float]] = {}
     p = Path(path)
     if not p.exists():
         log.info("Embeddings file not found: %s", path)
@@ -111,8 +111,8 @@ def round_vector(vector: list[float], digits: int = 12) -> list[float]:
     return [round(float(x), digits) for x in vector]
 
 
-def merge_docs_with_embeddings(docs: list[dict[str, any]], embeddings: dict[str, list[float]],
-                               output_path: Optional[str] = None) -> list[dict[str, any]]:
+def merge_docs_with_embeddings(docs: list[dict[str, Any]], embeddings: dict[str, list[float]],
+                               output_path: Optional[str] = None) -> list[dict[str, Any]]:
     merged = []
     for d in docs:
         doc = dict(d)
@@ -173,7 +173,7 @@ def create_vector_field(endpoint: str, dimension: int) -> None:
     return
 
 
-def index_documents(endpoint: str, docs: list[dict[str, any]]) -> None:
+def index_documents(endpoint: str, docs: list[dict[str, Any]]) -> None:
     """
     Sends documents to /update endpoint and commit.
     """
@@ -188,7 +188,7 @@ def index_documents(endpoint: str, docs: list[dict[str, any]]) -> None:
         raise
 
 
-def main():
+def main() -> int:
     log.info("Starting solr_init.py")
     try:
         wait_for_solr_core(COLLECTION_ENDPOINT, timeout=60, interval=1.0)

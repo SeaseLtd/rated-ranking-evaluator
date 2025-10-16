@@ -6,10 +6,10 @@ import subprocess
 import argparse
 from pathlib import Path
 
-from commons.writers import RreWriter
-from commons.data_store import DataStore
-from commons.logger import setup_logging
-from commons.model import WriterConfig
+from rre_tools.shared.writers import RreWriter
+from rre_tools.shared.data_store import DataStore
+from rre_tools.shared.logger import setup_logging
+from rre_tools.shared.writers import WriterConfig
 from rre_tools.approximate_search_evaluator.config import Config
 
 log = logging.getLogger(__name__)
@@ -78,10 +78,10 @@ def setup_rre(eval_folder : Path, search_engine_type : str, version : str) -> No
             "-B",
             "-DarchetypeGroupId=io.sease",
             f"-DarchetypeArtifactId=rre-maven-external-{search_engine_type}-archetype",
-            "-DarchetypeVersion=1.0",
+            "-DarchetypeVersion=1.1",
             "-DgroupId=io.sease.approximate-evaluator",
             f"-DartifactId={eval_folder}",
-            "-Dversion=1.0",
+            "-Dversion=1.1",
             f"-D{'es' if search_engine_type == 'elasticsearch' else 'solr'}Version={version}"
         ],
         check=True

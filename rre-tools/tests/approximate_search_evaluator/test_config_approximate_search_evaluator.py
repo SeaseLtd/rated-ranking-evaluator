@@ -10,7 +10,7 @@ def test_good_config_solr__expects__all_parameters_read(resource_folder):
     file_name = resource_folder / "good_config_solr.yaml"
     config = Config.load(resource_folder / file_name)
 
-    assert config.query_template == Path('tests/resources/approximate_search_evaluator/template_solr.json')
+    assert config.query_template == Path('tests/resources/template_solr.json')
     assert config.search_engine_type == "solr"
     assert config.collection_name == "testcore"
     assert config.search_engine_url == HttpUrl("http://localhost:8983/solr/")
@@ -43,7 +43,7 @@ def test_missing_optional_solr_field_values__expects__all_defaults_read(resource
     assert config.query_placeholder == "$query"
 
     assert hasattr(config, "search_engine_version")
-    assert config.search_engine_version == "8.3.0"
+    assert config.search_engine_version == "9.9.0"
 
     assert hasattr(config, "ratings_path")
     assert config.ratings_path is None
@@ -76,7 +76,7 @@ def test__expects__raises_file_not_found_error(resource_folder):
 # --------------- elasticsearch ---------------
 def test_good_config_elasticsearch__expects__all_parameters_read(resource_folder):
     config = Config.load(resource_folder / "good_config_elasticsearch.yaml")
-    assert config.query_template == Path('tests/resources/approximate_search_evaluator/template_elasticsearch.json')
+    assert config.query_template == Path('tests/resources/template_elasticsearch.json')
     assert config.search_engine_type == "elasticsearch"
     assert config.collection_name == "testcore"
     assert config.search_engine_url == HttpUrl("http://localhost:9200/")

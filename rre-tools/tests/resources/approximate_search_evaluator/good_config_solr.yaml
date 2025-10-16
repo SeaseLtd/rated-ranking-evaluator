@@ -1,4 +1,4 @@
-query_template: "tests/resources/approximate_search_evaluator/template_solr.json"
+query_template: "tests/resources/template_solr.json"
 search_engine_type: "solr"
 collection_name: "testcore"
 search_engine_url: "http://localhost:8983/solr/"
