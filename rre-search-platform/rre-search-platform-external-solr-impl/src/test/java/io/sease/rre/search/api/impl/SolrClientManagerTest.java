@@ -16,10 +16,12 @@
  */
 package io.sease.rre.search.api.impl;
 
-import org.apache.solr.client.solrj.embedded.JettyConfig;
+import org.apache.solr.embedded.JettyConfig;
+import org.apache.solr.embedded.JettySolrRunner;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.cloud.MiniSolrCloudCluster;
+import org.apache.solr.core.SolrCore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -59,14 +61,14 @@ public class SolrClientManagerTest {
     }
 
     @Test
-    public void buildsHttpSolrClientForSingleHost() {
+    public void buildsHttp2SolrClientForSingleHost() {
         ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(
                 Collections.singletonList("http://localhost:8983/solr"), null, null, null, null, null);
 
         clientManager.buildSolrClient(TARGET_INDEX, settings);
 
         assertNotNull(clientManager.getSolrClient(TARGET_INDEX));
-        assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof HttpSolrClient);
+        assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof Http2SolrClient);
     }
 
     @Test
