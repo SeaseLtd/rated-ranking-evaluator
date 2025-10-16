@@ -84,7 +84,7 @@ def main() -> None:
              config.task_to_evaluate, config.dataset_name, config.split, config.model_id)
 
     # --- Model + caching wrapper ---
-    model = mteb.get_model(config.model_id)
+    model = mteb.get_model(config.model_id, trust_remote_code=True)
     model_name_additional_path = config.model_id.replace("/", "__").replace(" ", "_")
     model_with_cache_path = CACHE_PATH / model_name_additional_path
     model_with_cache = CachedEmbeddingWrapper(model, cache_path=model_with_cache_path)
