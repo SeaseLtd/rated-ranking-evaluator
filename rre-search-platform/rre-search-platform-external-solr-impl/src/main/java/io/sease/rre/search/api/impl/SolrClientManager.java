@@ -18,8 +18,7 @@ package io.sease.rre.search.api.impl;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.impl.SolrClientBuilder;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +26,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Manager class for Solr Clients in use when connecting to external Solr instances.
@@ -58,7 +58,7 @@ class SolrClientManager implements Closeable {
             final CloudSolrClient.Builder builder = new CloudSolrClient.Builder(settings.getBaseUrls());
             client = applyTimeoutSettings(builder, settings).build();
         } else {
-            final HttpSolrClient.Builder builder = new HttpSolrClient.Builder(settings.getBaseUrls().get(0));
+            final Http2SolrClient.Builder builder = new Http2SolrClient.Builder(settings.getBaseUrls().get(0));
             client = applyTimeoutSettings(builder, settings).build();
         }
 
@@ -74,12 +74,22 @@ class SolrClientManager implements Closeable {
      * @param <C>      the type of SolrClientBuilder in use.
      * @return the SolrClientBuilder with the timeout settings applied.
      */
-    private <C extends SolrClientBuilder> C applyTimeoutSettings(C builder, ExternalApacheSolr.SolrSettings settings) {
+    private CloudSolrClient.Builder applyTimeoutSettings(CloudSolrClient.Builder builder, ExternalApacheSolr.SolrSettings settings) {
         if (settings.getConnectionTimeout() != null) {
-            builder.withConnectionTimeout(settings.getConnectionTimeout());
+            builder.withZkConnectTimeout(settings.getConnectionTimeout(), TimeUnit.MILLISECONDS);
         }
         if (settings.getSocketTimeout() != null) {
-            builder.withSocketTimeout(settings.getSocketTimeout());
+            builder.withZkClientTimeout(settings.getSocketTimeout(), TimeUnit.MILLISECONDS);
+        }
+        return builder;
+    }
+
+    private Http2SolrClient.Builder applyTimeoutSettings(Http2SolrClient.Builder builder, ExternalApacheSolr.SolrSettings settings) {
+        if (settings.getConnectionTimeout() != null) {
+            builder.withRequestTimeout(settings.getConnectionTimeout(), TimeUnit.MILLISECONDS);
+        }
+        if (settings.getSocketTimeout() != null) {
+            builder.withIdleTimeout(settings.getSocketTimeout(), TimeUnit.MILLISECONDS);
         }
         return builder;
     }
