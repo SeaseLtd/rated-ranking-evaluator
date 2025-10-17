@@ -5,7 +5,7 @@
 - Embedding Model Evaluator
 - Approximate Search Evaluator
 
-### [Dataset Generator](docs/dataset_generator/README.md) (DAGE)
+### [Dataset Generator](docs/dataset_generator/README.md) 
 
 This tool provides a flexible command-line tool to generate relevance datasets for search evaluation. It can retrieve
 documents from a search engine, generate synthetic queries, and score the relevance of document-query pairs using LLMs.
@@ -15,7 +15,7 @@ documents from a search engine, generate synthetic queries, and score the releva
 This tool provide a flexible tool to test a HuggingFace embedding model to ensure that works as expected with exact
 vector search.
 
-### Approximate Search Evaluator
+### [Approximate Search Evaluator](docs/approximate_search_evaluator/README.md)
 
 This tool provide a flexible tool to deply RRE and extract metrics to test your search engine collection given a 
 [template](https://github.com/SeaseLtd/rated-ranking-evaluator/wiki/What%20We%20Need%20To%20Provide#query-templates).
@@ -38,33 +38,51 @@ uv sync
 uv sync --group dev
 ```
 
-## Running Dataset Generator (DAGE)
+## Running Dataset Generator
 
 Before running the command below, you need to have running search engine instance 
 (`solr`/`opensearch`/`elasticsearch`/`vespa`). This can be done even with the test collections in folder 
 [docker-services](docker-services/README.md). 
 
-For a detailed description to fill your configuration file (e.g., [Config](configs/dataset_generator/dataset_generator_config.yaml)) you can look 
-at the Dataset Generator [README](docs/dataset_generator/README.md).
+For a detailed description to fill your configuration file (e.g., 
+[Config](configs/dataset_generator/dataset_generator_config.yaml)) you can look at the Dataset Generator 
+[README](docs/dataset_generator/README.md).
 
 Execute the main script via CLI, pointing to your DAGE configuration file:
 ```bash
-uv run dataset-generator --config <path-to-DAGE-config-yaml>
+uv run dataset_generator --config <path-to-config-yaml>
 ```
+By default, the CLI is pointing to the 
+[file](configs/dataset_generator/dataset_generator_config.yaml) inside the `configs/` directory.
+
 To know more about all the possible CLI parameters, execute:
 ```bash
-uv run dataset-generator --help
+uv run dataset_generator --help
 ```
 
 ## Running Embedding Model Evaluator
 
-For a detailed description to fill in configuration file (e.g., [Config](configs/embedding_model_evaluator/embedding_model_evaluator_config.yaml)) you can look 
-at the [README](docs/embedding_model_evaluator/README.md).
+For a detailed description to fill in configuration file (e.g., 
+[Config](configs/embedding_model_evaluator/embedding_model_evaluator_config.yaml)) you can look at the 
+[README](docs/embedding_model_evaluator/README.md).
 
 Execute the main script via CLI, pointing to configuration file:
 ```bash
-uv run embedding-model-evaluator --config <path-to-config-yaml>
+uv run embedding_model_evaluator --config <path-to-config-yaml>
 ```
+By default, the CLI is pointing to the  
+[configs/](configs/embedding_model_evaluator/embedding_model_evaluator_config.yaml) inside the `configs/` directory.
+
+## Running Embedding Model Evaluator
+For a detailed description to fill in configuration file (e.g., 
+[Config](configs/approximate_search_evaluator/approximate_search_evaluator_config.yaml)) you can look at the 
+[README](docs/approximate_search_evaluator/README.md).
+
+```bash
+uv run approximate_search_evaluator --config <path-to-config-yaml>
+```
+By default, the CLI is pointing to the 
+[file](configs/approximate_search_evaluator/approximate_search_evaluator_config.yaml) inside the `configs/` directory.
 
 ## Running tests
 

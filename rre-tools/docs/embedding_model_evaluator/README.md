@@ -22,7 +22,7 @@ uv sync --extra dev
 ### Generate an MTEB Dataset in IR Task Format
 
 ```bash
-cd embedding-model-evaluator
+cd embedding_model_evaluator
 
 # Generate an MTEB dataset in IR task format
 uv run scripts/mteb_retrieval_dataset_generator.py --dataset "nfcorpus" --split "test"
@@ -36,7 +36,7 @@ uv run scripts/mteb_retrieval_dataset_generator.py --dataset "nfcorpus" --split 
 ### Run the Exact Search Evaluator with a YAML Config
 
 ```bash
-uv run embedding-model-evaluator --config "config.yaml"
+uv run embedding_model_evaluator --config <path-to-config-yaml>
 ```
 
 ---
@@ -60,11 +60,11 @@ uv run embedding-model-evaluator --config "config.yaml"
 **Note:** by default the qrels.json of IR dataset **does not** include negative samples -> if we want to include them (simple negative-mining), we need to use the `--negatives-per-query` parameter.
 ---
 
-## `embedding-model-evaluator` Config Parameters - IR dataset
+## `embedding_model_evaluator` Config Parameters - IR dataset
 
 **Required**
 
-* `model_id`: Hugging Face Model ID (e.g. `"sentence-transformers/all-MiniLM-L6-v2"`)
+* `model_id`: Hugging Face Model ID (e.g., `"sentence-transformers/all-MiniLM-L6-v2"`)
 * `task_to_evaluate`: `"retrieval"` or `"reranking"`
 * `corpus_path`: path to `corpus.jsonl`
 * `queries_path`: path to `queries.jsonl`
@@ -112,6 +112,7 @@ to modify the [configuration file](../../configs/embedding_model_evaluator/embed
 A detailed description of the parameter that you must provide in the configuration file is the following:
 
 > - **model_id**: Model ID for [HuggingFace embedding model](https://huggingface.co/models?other=embeddings)
+> (e.g., `"sentence-transformers/all-MiniLM-L6-v2"`)
 > - **task_to_evaluate**: Task name that you need to evaluate
 >   - accepted values: 
 >     - "reranking" (main metric: `MAP`) 
