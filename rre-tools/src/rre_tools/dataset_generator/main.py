@@ -68,7 +68,7 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
     if remaining == 0:
         return
 
-    num_queries_per_doc: int = int((remaining // max(1, config.doc_number)) * 1.5)
+    num_queries_per_doc: int = int( (remaining // max(1, config.doc_number)) + 1)  # always greater or equal to 1
     log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
     log.debug(f"Pending queries to generate: {remaining}")
     log.debug(f"Number of queries per document: {num_queries_per_doc}")
