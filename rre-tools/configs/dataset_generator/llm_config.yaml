@@ -7,7 +7,7 @@ name: openai
 model: gpt-5-nano-2025-08-07
 
 # Maximum number of tokens the model may return
-max_tokens: 2000
+max_tokens: 4000
 
 # Environment variable where LLM API key is stored
 api_key_env: OPENAI_API_KEY

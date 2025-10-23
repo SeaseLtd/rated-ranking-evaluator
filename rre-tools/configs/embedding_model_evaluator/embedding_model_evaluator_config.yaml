@@ -1,5 +1,5 @@
 # Model ID (HuggingFace models).
-model_id: "sentence-transformers/all-MiniLM-L6-v2"
+model_id: "sentence-transformers/all-MiniLM-L12-v2"
 
 # Accepted values: 'retrieval', 'reranking'
 task_to_evaluate: "retrieval"

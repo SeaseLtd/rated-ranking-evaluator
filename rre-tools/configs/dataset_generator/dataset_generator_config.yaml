@@ -39,7 +39,7 @@ doc_fields:
 
 # (Optional) File containing predefined queries to use instead of or alongside generated ones
 # If available, must be in a txt format.
-#queries: "queries.txt"
+#queries: "templates/queries.txt"
 
 # (Optional) Whether to generate queries from documents
 # Default: true; set to false to disable query generation from documents

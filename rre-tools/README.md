@@ -12,12 +12,12 @@ documents from a search engine, generate synthetic queries, and score the releva
 
 ### [Embedding Model Evaluator](docs/embedding_model_evaluator/README.md)
 
-This tool provide a flexible tool to test a HuggingFace embedding model to ensure that works as expected with exact
-vector search.
+This tool extends MTEB benchmarking tool to test a HuggingFace embedding model performance on both Retrieval and Reranking
+tasks based on custom datasets.
 
 ### [Approximate Search Evaluator](docs/approximate_search_evaluator/README.md)
 
-This tool provide a flexible tool to deply RRE and extract metrics to test your search engine collection given a 
+This tool provides a flexible tool to deply RRE and extract metrics to test your search engine collection given a 
 [template](https://github.com/SeaseLtd/rated-ranking-evaluator/wiki/What%20We%20Need%20To%20Provide#query-templates).
 
 ## Quickstart: tools installation
@@ -73,7 +73,7 @@ uv run embedding_model_evaluator --config <path-to-config-yaml>
 By default, the CLI is pointing to the  
 [configs/](configs/embedding_model_evaluator/embedding_model_evaluator_config.yaml) inside the `configs/` directory.
 
-## Running Embedding Model Evaluator
+## Running Approximate Search Evaluator
 For a detailed description to fill in configuration file (e.g., 
 [Config](configs/approximate_search_evaluator/approximate_search_evaluator_config.yaml)) you can look at the 
 [README](docs/approximate_search_evaluator/README.md).

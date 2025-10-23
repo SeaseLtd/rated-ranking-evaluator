@@ -1,7 +1,7 @@
 {
   "q": "$query",
   "defType": "edismax",
-  "qf": "title^2 description content",
+  "qf": "title description content",
   "mm": 1,
   "rows": 10,
   "fl": "id,title,description,content,score"
