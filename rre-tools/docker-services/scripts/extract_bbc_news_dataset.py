@@ -10,15 +10,23 @@ DATASET_SIZE = 100000
 
 
 def truncate_content(txt: str) -> str:
-    if len(txt) > CONTENT_MAX_LEN:
-        truncated: str = txt[:CONTENT_MAX_LEN]
+    if len(txt) <= CONTENT_MAX_LEN:
+        return txt
 
-        next_dot = txt.find('.', CONTENT_MAX_LEN)
-        if next_dot != -1 and next_dot - CONTENT_MAX_LEN < 200:
-            truncated = txt[:next_dot + 1]
+    truncated_txt: str = txt[:CONTENT_MAX_LEN]
+    last_dot_index = truncated_txt.rfind('.')
 
-        return truncated
-    return txt
+    if last_dot_index != -1:
+        # text size <= CONTENT_MAX_LEN
+        return txt[:last_dot_index + 1]
+
+    # find the first dot after CONTENT_MAX_LEN
+    next_dot_index = txt.find('.', CONTENT_MAX_LEN)
+
+    if next_dot_index != -1:
+        return txt[:next_dot_index + 1]
+
+    return truncated_txt
 
 
 if __name__ == '__main__':
@@ -27,24 +35,22 @@ if __name__ == '__main__':
     parser.add_argument('--filename', type=str, default='dataset.json', help='Output filename')
     args = parser.parse_args()
 
-    months = ['2025-06', '2025-05', '2025-04', '2025-03', '2025-02', '2025-01',
-              '2024-12', '2024-11', '2024-10', '2024-09', '2024-08', '2024-07', '2024-06', '2024-05', '2024-04',
-              '2024-03', '2024-02', '2024-01',
-              '2023-12', '2023-11', '2023-10', '2023-09', '2023-08', '2023-07', '2023-06', '2023-05', '2023-04',
-              '2023-03', '2023-02', '2023-01',
-              '2022-12', '2022-11', '2022-10', '2022-09', '2022-08', '2022-07', '2022-06', '2022-05', '2022-04',
-              '2022-03', '2022-02', '2022-01',
-              '2021-12', '2021-11', '2021-10', '2021-09', '2021-08', '2021-07', '2021-06', '2021-05', '2021-04',
-              '2021-03', '2021-02', '2021-01',
-              '2020-12', '2020-11', '2020-10', '2020-09', '2020-08', '2020-07', '2020-06', '2020-05', '2020-04',
-              '2020-03', '2020-02', '2020-01',
-              '2019-12', '2019-11', '2019-10', '2019-09', '2019-08', '2019-07', '2019-06', '2019-05', '2019-04',
-              '2019-03', '2019-02', '2019-01',
-              '2018-12', '2018-11', '2018-10', '2018-09', '2018-08', '2018-07', '2018-06', '2018-05', '2018-04',
-              '2018-03', '2018-02', '2018-01',
-              '2017-12', '2017-11', '2017-10', '2017-09', '2017-08', '2017-07', '2017-06', '2017-05', '2017-04',
-              '2017-03', '2017-02', '2017-01'
-              ]
+    months = []
+    end_year = 2025
+    end_month = 6
+
+    start_year = 2017
+    start_month = 1
+
+    curr_year = end_year
+    curr_month = end_month
+    while curr_year >= start_year and curr_month >= start_month:
+        months.append(f"{curr_year}-{curr_month:02d}")
+        curr_month -= 1
+        if curr_month == 0:
+            curr_month = 12
+            curr_year -= 1
+
     all_results = []
     seen_links = set()
 
@@ -83,7 +89,6 @@ if __name__ == '__main__':
                 break
         if len(all_results) == DATASET_SIZE:
             break
-    print(len(all_results))
 
     # for solr + vespa
     with open(args.filename, "w", encoding="utf-8") as f:
