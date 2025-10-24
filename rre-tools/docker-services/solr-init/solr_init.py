@@ -21,7 +21,7 @@ os.makedirs(EMBEDDINGS_FOLDER, exist_ok=True)
 EMBEDDINGS_FILE = os.path.join(EMBEDDINGS_FOLDER, "documents_embeddings.jsonl")
 TMP_FILE = os.getenv("TMP_FILE", "/tmp/merged_dataset.json")
 
-DEFAULT_TIMEOUT = float(os.getenv("DEFAULT_TIMEOUT", "600"))
+DEFAULT_TIMEOUT = int(os.getenv("DEFAULT_TIMEOUT", "600"))
 FORCE_REINDEX = os.getenv("FORCE_REINDEX", "false").lower() == "true"
 INDEX_BATCH_SIZE = 1000
 
@@ -33,7 +33,7 @@ logging.basicConfig(
 log = logging.getLogger("solr_init")
 
 
-def wait_for_solr_core(endpoint: str, timeout, interval: float = 1.0) -> None:
+def wait_for_solr_core(endpoint: str, timeout: int, interval: float = 1.0) -> None:
     """Waits until Solr core /admin/ping endpoint returns 200 or timeouts."""
     ping_url = f"{endpoint.rstrip('/')}/admin/ping?wt=json"
     log.info("Waiting for Solr core at %s ...", ping_url)

@@ -112,7 +112,7 @@ def main() -> None:
     )
     end = time.time()
     log.info("Finished MTEB evaluation.")
-    print(f"Time took for MTEB evaluation: {end - start:.2f} seconds")
+    log.info(f"Time took for MTEB evaluation: {end - start:.2f} seconds")
 
     # --- Optional: write embeddings (kept for parity with previous behavior) ---
     writer = EmbeddingWriter(
