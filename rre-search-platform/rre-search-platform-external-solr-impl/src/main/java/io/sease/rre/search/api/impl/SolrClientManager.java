@@ -17,7 +17,7 @@
 package io.sease.rre.search.api.impl;
 
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.CloudHttp2SolrClient;
 import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,10 +52,10 @@ class SolrClientManager implements Closeable {
         final SolrClient client;
 
         if (settings.hasZookeeperSettings()) {
-            final CloudSolrClient.Builder builder = new CloudSolrClient.Builder(settings.getZkHosts(), settings.getZkChroot());
+            final CloudHttp2SolrClient.Builder builder = new CloudHttp2SolrClient.Builder(settings.getZkHosts(), settings.getZkChroot());
             client = applyTimeoutSettings(builder, settings).build();
         } else if (settings.getBaseUrls().size() > 1) {
-            final CloudSolrClient.Builder builder = new CloudSolrClient.Builder(settings.getBaseUrls());
+            final CloudHttp2SolrClient.Builder builder = new CloudHttp2SolrClient.Builder(settings.getBaseUrls());
             client = applyTimeoutSettings(builder, settings).build();
         } else {
             final Http2SolrClient.Builder builder = new Http2SolrClient.Builder(settings.getBaseUrls().get(0));
@@ -74,7 +74,7 @@ class SolrClientManager implements Closeable {
      * @param <C>      the type of SolrClientBuilder in use.
      * @return the SolrClientBuilder with the timeout settings applied.
      */
-    private CloudSolrClient.Builder applyTimeoutSettings(CloudSolrClient.Builder builder, ExternalApacheSolr.SolrSettings settings) {
+    private CloudHttp2SolrClient.Builder applyTimeoutSettings(CloudHttp2SolrClient.Builder builder, ExternalApacheSolr.SolrSettings settings) {
         if (settings.getConnectionTimeout() != null) {
             builder.withZkConnectTimeout(settings.getConnectionTimeout(), TimeUnit.MILLISECONDS);
         }
@@ -86,7 +86,7 @@ class SolrClientManager implements Closeable {
 
     private Http2SolrClient.Builder applyTimeoutSettings(Http2SolrClient.Builder builder, ExternalApacheSolr.SolrSettings settings) {
         if (settings.getConnectionTimeout() != null) {
-            builder.withRequestTimeout(settings.getConnectionTimeout(), TimeUnit.MILLISECONDS);
+            builder.withConnectionTimeout(settings.getConnectionTimeout(), TimeUnit.MILLISECONDS);
         }
         if (settings.getSocketTimeout() != null) {
             builder.withIdleTimeout(settings.getSocketTimeout(), TimeUnit.MILLISECONDS);
