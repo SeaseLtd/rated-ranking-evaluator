@@ -17,11 +17,9 @@
 package io.sease.rre.search.api.impl;
 
 import org.apache.solr.embedded.JettyConfig;
-import org.apache.solr.embedded.JettySolrRunner;
-import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.CloudHttp2SolrClient;
 import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.cloud.MiniSolrCloudCluster;
-import org.apache.solr.core.SolrCore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -72,11 +70,11 @@ public class SolrClientManagerTest {
     }
 
     @Test
-    public void buildsCloudSolrClientForMultipleHosts() throws Exception {
+    public void buildsCloudHttp2SolrClientForMultipleHosts() throws Exception {
         // Set a dummy log directory, to stop Solr complaining at start-up
         System.setProperty("solr.log.dir", tempFolder.newFolder("logs").getAbsolutePath());
 
-        // Build a mini cluster to test with - cannot initialise CloudSolrClient without something to connect to
+        // Build a mini cluster to test with - cannot initialise CloudHttp2SolrClient without something to connect to
         MiniSolrCloudCluster cluster =
                 new MiniSolrCloudCluster(2, tempFolder.newFolder().toPath(), JettyConfig.builder().build());
         cluster.startJettySolrRunner();
@@ -90,19 +88,19 @@ public class SolrClientManagerTest {
         clientManager.buildSolrClient(TARGET_INDEX, settings);
 
         assertNotNull(clientManager.getSolrClient(TARGET_INDEX));
-        assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof CloudSolrClient);
+        assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof CloudHttp2SolrClient);
 
         cluster.shutdown();
     }
 
     @Test
-    public void buildsCloudSolrClientForZkHosts() {
+    public void buildsCloudHttp2SolrClientForZkHosts() {
         ExternalApacheSolr.SolrSettings settings = new ExternalApacheSolr.SolrSettings(
                 null, null, asList("localhost:2181", "localhost:2182"), null, null, null);
 
         clientManager.buildSolrClient(TARGET_INDEX, settings);
 
         assertNotNull(clientManager.getSolrClient(TARGET_INDEX));
-        assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof CloudSolrClient);
+        assertTrue(clientManager.getSolrClient(TARGET_INDEX) instanceof CloudHttp2SolrClient);
     }
 }
