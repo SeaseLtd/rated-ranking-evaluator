@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Optional
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -18,18 +19,36 @@ class LLMService:
     def __init__(self, chat_model: BaseChatModel):
         self.chat_model = chat_model
 
-    def generate_queries(self, document: Document, num_queries_generate_per_doc: int) -> LLMQueryResponse:
-        """
-        Generate queries based on the given document and num_queries_generate_per_doc and
-        Returns a list of generated `num_queries_generate_per_doc` queries or throws an exception if LLM hallucinates
-        """
-        schema: type[BaseModel] = create_queries_schema(num_queries_generate_per_doc)
+    @staticmethod
+    def _build_query_generation_prompt(num_queries_generate_per_doc: int, max_query_terms: Optional[int]) -> str:
 
         system_prompt = (
             f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
             "natural language search queries based strictly on the given document."
-            "Avoid duplicates. Return a structured object matching the provided schema."
+            "Queries must be realistic and sound like a real person searching."
         )
+
+        if max_query_terms is not None:
+            system_prompt += (
+                f" **Strict Length Limit:** Each query MUST contain *at most* {max_query_terms} words."
+                f"Do NOT exceed this limit."
+            )
+
+        system_prompt += "Avoid duplicates. Return a structured object matching the provided schema."
+
+        return system_prompt
+
+    def generate_queries(self, document: Document, num_queries_generate_per_doc: int,
+                         max_query_terms: Optional[int]) -> LLMQueryResponse:
+        """
+        Generate queries based on the given document and num_queries_generate_per_doc and max_query_terms. If
+        max_query_terms is not None, then the generated query length is at most max_query_terms.
+        Returns a list of generated `num_queries_generate_per_doc` queries or throws an exception
+        if LLM hallucinates
+        """
+        schema: type[BaseModel] = create_queries_schema(num_queries_generate_per_doc)
+        system_prompt = self._build_query_generation_prompt(num_queries_generate_per_doc=num_queries_generate_per_doc,
+                                                            max_query_terms=max_query_terms)
 
         doc_json = document.model_dump_json(exclude={"is_used_to_generate_queries"})
 
@@ -49,7 +68,7 @@ class LLMService:
         # Remove duplicate generated-queries
         seen = set()
         unique_queries: list[str] = []
-        for query in model_response.queries: # type: ignore[union-attr]
+        for query in model_response.queries:  # type: ignore[union-attr]
             if query not in seen:
                 seen.add(query)
                 unique_queries.append(query)
@@ -102,7 +121,7 @@ class LLMService:
             raise ValueError(f"Invalid LLM response: {e}")
 
         return LLMScoreResponse(
-            score=model_response.score, # type: ignore[union-attr]
+            score=model_response.score,  # type: ignore[union-attr]
             scale=relevance_scale,
-            explanation=(model_response.explanation if explanation else None) # type: ignore[union-attr]
+            explanation=(model_response.explanation if explanation else None)  # type: ignore[union-attr]
         )
