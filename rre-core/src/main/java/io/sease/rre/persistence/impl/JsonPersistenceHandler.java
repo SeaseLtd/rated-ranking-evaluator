@@ -120,7 +120,7 @@ public class JsonPersistenceHandler implements PersistenceHandler {
             ObjectWriter writer = (pretty ? mapper.writerWithDefaultPrettyPrinter() : mapper.writer());
             writer.writeValue(new File(outputFilepath), topLevel);
         } catch (IOException e) {
-            LOGGER.error("Caught IOException writing queries to JSON :: " + e.getMessage());
+            LOGGER.error("Caught IOException writing queries to JSON :: " + e.getMessage(), e);
         }
     }
 

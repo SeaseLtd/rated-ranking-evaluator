@@ -66,15 +66,21 @@ class SolrClientManager implements Closeable {
     }
 
     /**
-     * Apply the timeout settings using methods common to all SolrClientBuilder
-     * implementations.
+     * Apply the timeout settings for cloud implementations involving
+     * CloudHttp2SolrClient.Builder. Uses internally the non-cloud function to
+     * maintain the same timeout configuration.
      *
-     * @param builder  the SolrClientBuilder.
+     * @param builder  the CloudHttp2SolrClient.Builder.
      * @param settings the SolrSettings, containing the (optional) timeout settings.
-     * @param <C>      the type of SolrClientBuilder in use.
-     * @return the SolrClientBuilder with the timeout settings applied.
+     * @return the CloudHttp2SolrClient.Builder with the timeout settings applied.
      */
     private CloudHttp2SolrClient.Builder applyTimeoutSettings(CloudHttp2SolrClient.Builder builder, ExternalApacheSolr.SolrSettings settings) {
+
+        Http2SolrClient.Builder httpBuilder = new Http2SolrClient.Builder();
+        applyTimeoutSettings(httpBuilder, settings);
+
+        builder.withInternalClientBuilder(httpBuilder);
+
         if (settings.getConnectionTimeout() != null) {
             builder.withZkConnectTimeout(settings.getConnectionTimeout(), TimeUnit.MILLISECONDS);
         }
@@ -83,13 +89,21 @@ class SolrClientManager implements Closeable {
         }
         return builder;
     }
-
+    /**
+     * Apply the timeout settings for non-cloud implementations involving
+     * Http2SolrClient.Builder.
+     *
+     * @param builder  the Http2SolrClient.Builder.
+     * @param settings the SolrSettings, containing the (optional) timeout settings.
+     * @return the Http2SolrClient.Builder with the timeout settings applied.
+     */
     private Http2SolrClient.Builder applyTimeoutSettings(Http2SolrClient.Builder builder, ExternalApacheSolr.SolrSettings settings) {
+        builder.withIdleTimeout(30, TimeUnit.SECONDS);
         if (settings.getConnectionTimeout() != null) {
             builder.withConnectionTimeout(settings.getConnectionTimeout(), TimeUnit.MILLISECONDS);
         }
         if (settings.getSocketTimeout() != null) {
-            builder.withIdleTimeout(settings.getSocketTimeout(), TimeUnit.MILLISECONDS);
+            builder.withRequestTimeout(settings.getSocketTimeout(), TimeUnit.MILLISECONDS);
         }
         return builder;
     }
