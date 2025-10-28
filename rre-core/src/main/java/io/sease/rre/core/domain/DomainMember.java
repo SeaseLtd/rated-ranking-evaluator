@@ -145,12 +145,15 @@ public abstract class DomainMember<C extends DomainMember> {
                 .forEach(metric -> initialiseVersions(metric.getName(), new ArrayList<>(metric.getVersions().keySet())));
         metrics.values().stream()
                 .flatMap(metric -> metric.getVersions().entrySet().stream())
-                .forEach(entry ->
-                        ofNullable(parent)
-                                .ifPresent(p -> p.collectLeafMetric(
-                                        entry.getKey(),
-                                        entry.getValue().value(),
-                                        entry.getValue().owner().getName())));
+                .forEach(entry -> {
+                    ofNullable(parent).ifPresent(p ->
+                            p.collectLeafMetric(
+                                    entry.getKey(),
+                                    entry.getValue().value(),
+                                    entry.getValue().owner().getName()
+                            )
+                    );
+                });
     }
 
     public Map<String, Metric> getMetrics() {
