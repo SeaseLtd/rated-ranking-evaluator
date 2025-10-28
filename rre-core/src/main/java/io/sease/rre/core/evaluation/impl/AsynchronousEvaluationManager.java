@@ -47,6 +47,8 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
     private final ThreadPoolExecutor executor;
     private AtomicInteger failedQueries;
 
+    private CompletableFuture<Void> allQueriesFuture = CompletableFuture.completedFuture(null);
+
     /**
      * Construct an asynchronous {@link EvaluationManager} instance to run
      * evaluations using a threadpool of a given size.
@@ -73,8 +75,10 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
 
     @Override
     public void evaluateQuery(Query query, String indexName, JsonNode queryNode, String defaultTemplate, int relevantDocCount) {
-        evaluateQueryAsync(query, indexName, queryNode, defaultTemplate, relevantDocCount)
-                .thenAccept(this::completeQuery);
+        allQueriesFuture = allQueriesFuture.thenCompose(v ->
+                this.evaluateQueryAsync(query, indexName, queryNode, defaultTemplate, relevantDocCount)
+                        .thenAccept(this::completeQuery)
+        );
     }
 
     /**
@@ -116,7 +120,7 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
 
     @Override
     public boolean isRunning() {
-        return executor.getCompletedTaskCount() < executor.getTaskCount();
+        return executor.getCompletedTaskCount() < executor.getTaskCount() && !allQueriesFuture.isDone();
     }
 
     @Override
