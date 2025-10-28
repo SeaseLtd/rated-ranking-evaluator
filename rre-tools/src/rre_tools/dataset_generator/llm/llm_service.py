@@ -22,19 +22,37 @@ class LLMService:
     @staticmethod
     def _build_query_generation_prompt(num_queries_generate_per_doc: int, max_query_terms: Optional[int]) -> str:
 
-        system_prompt = (
-            f"You are a helpful assistant! Generate {num_queries_generate_per_doc} "
-            "natural language search queries based strictly on the given document."
-            "Queries must be realistic and sound like a real person searching."
+        prompt_core = (
+            f"You are an expert search query analyst. Your task is to generate {num_queries_generate_per_doc} "
+            f"unique, high-quality, and *semantically diverse* "
+            f"natural language search queries based strictly on the given document."
         )
 
+        rules = [
+            "1. **Strictly Relevant:** All queries MUST be based *only* on information present in the document.",
+            "2. **Natural:** Queries must sound like a real person searching, not robotic lists of keywords.",
+            "3. **Semantically Diverse (CRITICAL):** Each query must target a different *sub-topic, intent, "
+            "or angle* of the document."
+            "Do NOT generate queries that are just minor variations of each other. "
+            "This includes, but is not limited to:",
+            "    - Simple plural/singular changes (e.g., 'car' vs 'cars').",
+            "    - Minor grammatical changes (e.g., 'extend' vs 'extends').",
+            "    - Adding/removing stop-words (e.g., 'a', 'the', 'for').",
+            "4. **No Duplicates:** Do not generate identical queries."
+        ]
+
         if max_query_terms is not None:
-            system_prompt += (
-                f" **Strict Length Limit:** Each query MUST contain *at most* {max_query_terms} words."
+            rules.append(
+                f"5. **Strict Length Limit:** Each query MUST contain *at most* {max_query_terms} words."
                 f"Do NOT exceed this limit."
             )
 
-        system_prompt += "Avoid duplicates. Return a structured object matching the provided schema."
+        system_prompt = (
+                f"{prompt_core}\n"
+                "**CRITICAL RULES:**\n"
+                + "\n".join(rules) +
+                "\nReturn a structured object matching the provided schema."
+        )
 
         return system_prompt
 
