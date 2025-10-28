@@ -252,16 +252,15 @@ public class Engine {
             // Wait for the evaluations to complete
             while (evaluationManager.isRunning()) {
                 LOGGER.info("  ... completed {} / {} evaluations ...",
-                        (evaluationManager.getTotalQueries() - evaluationManager.getQueriesRemaining()),
-                        evaluationManager.getTotalQueries());
+                        (evaluationManager.getTotalQueryExecutions() - evaluationManager.getQueriesRemaining()),
+                        evaluationManager.getTotalQueryExecutions());
                 try {
                     Thread.sleep(1000);
-                } catch (InterruptedException ignore) {
-                }
+                } catch (InterruptedException ignore) {}
             }
 
-            if (evaluationManager.getTotalQueries() > 0) {
-                LOGGER.info("  ... completed all {} evaluations.", evaluationManager.getTotalQueries());
+            if (evaluationManager.getTotalQueryExecutions() > 0) {
+                LOGGER.info("  ... completed all {} evaluations.", evaluationManager.getTotalQueryExecutions());
             } else {
                 LOGGER.warn("  ... no queries evaluated!");
             }
