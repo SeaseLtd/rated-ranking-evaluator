@@ -21,8 +21,9 @@ os.makedirs(EMBEDDINGS_FOLDER, exist_ok=True)
 EMBEDDINGS_FILE = os.path.join(EMBEDDINGS_FOLDER, "documents_embeddings.jsonl")
 TMP_FILE = os.getenv("TMP_FILE", "/tmp/merged_dataset.json")
 
-DEFAULT_TIMEOUT = float(os.getenv("DEFAULT_TIMEOUT", "10.0"))
+DEFAULT_TIMEOUT = int(os.getenv("DEFAULT_TIMEOUT", "600"))
 FORCE_REINDEX = os.getenv("FORCE_REINDEX", "false").lower() == "true"
+INDEX_BATCH_SIZE = 1000
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -32,7 +33,7 @@ logging.basicConfig(
 log = logging.getLogger("solr_init")
 
 
-def wait_for_solr_core(endpoint: str, timeout: int = 30, interval: float = 1.0) -> None:
+def wait_for_solr_core(endpoint: str, timeout: int, interval: float = 1.0) -> None:
     """Waits until Solr core /admin/ping endpoint returns 200 or timeouts."""
     ping_url = f"{endpoint.rstrip('/')}/admin/ping?wt=json"
     log.info("Waiting for Solr core at %s ...", ping_url)
@@ -175,23 +176,50 @@ def create_vector_field(endpoint: str, dimension: int) -> None:
 
 def index_documents(endpoint: str, docs: list[dict[str, Any]]) -> None:
     """
-    Sends documents to /update endpoint and commit.
+    Sends documents to /update endpoint in batches and commit at the end.
     """
-    update_url = f"{endpoint.rstrip('/')}/update?commit=true"
-    log.info("Indexing %d documents into Solr", len(docs))
-    try:
-        response = requests.post(update_url, json=docs, timeout=60.0)
-        response.raise_for_status()
-        log.info("Indexing successful (status=%s)", response.status_code)
-    except requests.RequestException as e:
-        log.error("Failed to index documents: %s", e)
-        raise
+    total_docs = len(docs)
+    if total_docs == 0:
+        log.info("No documents provided for indexing.")
+        return
+
+    log.info("Indexing %d documents into Solr", total_docs)
+    num_batches = (total_docs + INDEX_BATCH_SIZE - 1) // INDEX_BATCH_SIZE
+
+    update_url_no_commit = f"{endpoint.rstrip('/')}/update?commit=false"
+    update_url_commit = f"{endpoint.rstrip('/')}/update?commit=true"
+
+    for i in range(num_batches):
+        start_index = i * INDEX_BATCH_SIZE
+        end_index = min((i + 1) * INDEX_BATCH_SIZE, total_docs)
+        batch = docs[start_index:end_index]
+
+        if not batch:
+            continue
+
+        is_last_batch = (i == num_batches - 1)
+
+        current_update_url = update_url_commit if is_last_batch else update_url_no_commit
+        commit_status = "true" if is_last_batch else "false"
+
+        log.info(f"Sending Batch {i + 1}/{num_batches} ({len(batch)} docs, commit={commit_status})")
+
+        try:
+            response = requests.post(current_update_url, json=batch, timeout=DEFAULT_TIMEOUT)
+            response.raise_for_status()
+            log.debug(f"Batch {i + 1} indexing successful (status={response.status_code})")
+
+        except requests.RequestException as e:
+            log.error(f"Failed to index batch {i + 1}: {e}")
+            raise Exception(f"Failed during batch {i + 1} indexing.") from e
+
+    log.info("Successfully indexed %d documents in %d batches.", total_docs, num_batches)
 
 
 def main() -> int:
     log.info("Starting solr_init.py")
     try:
-        wait_for_solr_core(COLLECTION_ENDPOINT, timeout=60, interval=1.0)
+        wait_for_solr_core(COLLECTION_ENDPOINT, timeout=DEFAULT_TIMEOUT, interval=1.0)
     except Exception as e:
         log.error("Solr core not available: %s", e)
         sys.exit(1)

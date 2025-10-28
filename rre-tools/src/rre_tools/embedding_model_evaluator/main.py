@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import time
 from typing import Any
 
 import mteb
@@ -101,6 +102,7 @@ def main() -> None:
 
     # --- Evaluation (in-memory) ---
     log.info("Starting MTEB evaluation...")
+    start = time.time()
     evaluation = mteb.MTEB(tasks=[task])
     evaluation.run(
         model=model_with_cache,
@@ -108,7 +110,9 @@ def main() -> None:
         overwrite_results=True,
         config=config,
     )
+    end = time.time()
     log.info("Finished MTEB evaluation.")
+    log.info(f"Time took for MTEB evaluation: {end - start:.2f} seconds")
 
     # --- Optional: write embeddings (kept for parity with previous behavior) ---
     writer = EmbeddingWriter(
