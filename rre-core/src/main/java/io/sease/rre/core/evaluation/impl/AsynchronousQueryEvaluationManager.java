@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
-public class AsynchronousQueryEvaluationManager extends BaseEvaluationManager implements EvaluationManager {
+public class AsynchronousQueryEvaluationManager extends BaseEvaluationManager {
 
     private final static Logger LOGGER = LogManager.getLogger(AsynchronousQueryEvaluationManager.class);
 
@@ -72,6 +72,7 @@ public class AsynchronousQueryEvaluationManager extends BaseEvaluationManager im
 
     @Override
     public void evaluateQuery(Query query, String indexName, JsonNode queryNode, String defaultTemplate, int relevantDocCount) {
+        super.evaluateQuery(query, indexName, queryNode, defaultTemplate, relevantDocCount);
         evaluateQueryAsync(query, indexName, queryNode, defaultTemplate, relevantDocCount)
                 .thenAccept(this::completeQuery);
     }
@@ -115,7 +116,7 @@ public class AsynchronousQueryEvaluationManager extends BaseEvaluationManager im
 
     @Override
     public boolean isRunning() {
-        return executor.getCompletedTaskCount() < executor.getTaskCount();
+        return super.getSubmittedQueries() < super.getCompletedQueries();
     }
 
     @Override
