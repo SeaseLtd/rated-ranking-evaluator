@@ -103,7 +103,6 @@ public class NDCGAtK extends Metric {
                         .ifPresent(judgment -> {
                             final BigDecimal value = gainOrRatingNode(judgment).map(JsonNode::decimalValue).orElse(fairgrade);
                             BigDecimal numerator = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), value.doubleValue())).subtract(BigDecimal.ONE);
-                            //BigDecimal numerator = BigDecimal.valueOf(value.doubleValue());
                             if (rank == 1) {
                                 dcg = numerator;
                             } else {
@@ -153,7 +152,6 @@ public class NDCGAtK extends Metric {
         BigDecimal result = BigDecimal.ZERO;
         for (int i = 1; i <= gains.length; i++) {
             BigDecimal num = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), gains[i-1])).subtract(BigDecimal.ONE);
-            //BigDecimal num = BigDecimal.valueOf(gains[i-1]);
             double den = Math.log(i + 1) / Math.log(2);
             result = result.add((num.divide(new BigDecimal(den), 2, RoundingMode.FLOOR)));
         }

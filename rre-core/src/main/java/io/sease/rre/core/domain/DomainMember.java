@@ -119,14 +119,20 @@ public abstract class DomainMember<C extends DomainMember> {
      */
     private void collectLeafMetric(final String version, final BigDecimal value, final String name) {
         metric(name).collect(version, value);
-        ofNullable(parent).ifPresent(p -> p.collectLeafMetric(version, value, name));
+
+        if (parent != null) {
+            parent.collectLeafMetric(version, value, name);
+        }
     }
 
-    private void initialiseVersions(final String name, final List<String> versions) {
+    private synchronized void initialiseVersions(final String name, final List<String> versions) {
         if (!metrics.containsKey(name)) {
             metric(name).setVersions(versions);
         }
-        ofNullable(parent).ifPresent(p -> p.initialiseVersions(name, versions));
+
+        if (parent != null) {
+            parent.initialiseVersions(name, versions);
+        }
     }
 
     /**
