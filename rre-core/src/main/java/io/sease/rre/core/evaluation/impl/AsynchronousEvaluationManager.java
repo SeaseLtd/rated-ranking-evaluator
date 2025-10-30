@@ -40,14 +40,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
-public class AsynchronousEvaluationManager extends BaseEvaluationManager implements EvaluationManager {
+public class AsynchronousEvaluationManager extends BaseEvaluationManager {
 
     private final static Logger LOGGER = LogManager.getLogger(AsynchronousEvaluationManager.class);
 
     private final ThreadPoolExecutor executor;
     private AtomicInteger failedQueries;
-
-    private CompletableFuture<Void> allQueriesFuture = CompletableFuture.completedFuture(null);
 
     /**
      * Construct an asynchronous {@link EvaluationManager} instance to run
@@ -75,10 +73,13 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
 
     @Override
     public void evaluateQuery(Query query, String indexName, JsonNode queryNode, String defaultTemplate, int relevantDocCount) {
-        allQueriesFuture = allQueriesFuture.thenCompose(v ->
-                this.evaluateQueryAsync(query, indexName, queryNode, defaultTemplate, relevantDocCount)
-                        .thenAccept(this::completeQuery)
-        );
+        super.evaluateQuery(query, indexName, queryNode, defaultTemplate, relevantDocCount);
+        this.evaluateQueryAsync(query, indexName, queryNode, defaultTemplate, relevantDocCount)
+                .thenAccept(this::completeQuery)
+                .exceptionally(error -> {
+                    LOGGER.error("Query FAILED: " + error.getMessage(), error);
+                    return null;
+                });
     }
 
     /**
@@ -120,7 +121,7 @@ public class AsynchronousEvaluationManager extends BaseEvaluationManager impleme
 
     @Override
     public boolean isRunning() {
-        return executor.getCompletedTaskCount() < executor.getTaskCount() && !allQueriesFuture.isDone();
+        return super.getCompletedQueries() < super.getSubmittedQueries();
     }
 
     @Override

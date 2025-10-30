@@ -17,8 +17,8 @@
 package io.sease.rre.core.evaluation.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sease.rre.core.Engine;
 import io.sease.rre.core.domain.Query;
+import io.sease.rre.core.evaluation.EvaluationManager;
 import io.sease.rre.core.template.QueryTemplateManager;
 import io.sease.rre.persistence.PersistenceManager;
 import io.sease.rre.search.api.QueryOrSearchResponse;
@@ -27,6 +27,7 @@ import io.sease.rre.search.api.SearchPlatform;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Optional.ofNullable;
 
@@ -36,7 +37,7 @@ import static java.util.Optional.ofNullable;
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
-abstract class BaseEvaluationManager {
+abstract class BaseEvaluationManager implements EvaluationManager {
 
     private final SearchPlatform platform;
     private final QueryTemplateManager templateManager;
@@ -44,6 +45,8 @@ abstract class BaseEvaluationManager {
     private final String[] fields;
     private final Collection<String> versions;
     private final String versionTimestamp;
+    private final AtomicInteger submittedQueries = new AtomicInteger(0);
+    private final AtomicInteger completedQueries = new AtomicInteger(0);
 
     BaseEvaluationManager(SearchPlatform platform,
                           QueryTemplateManager templateManager,
@@ -81,6 +84,7 @@ abstract class BaseEvaluationManager {
     void completeQuery(Query query) {
         query.notifyCollectedMetrics();
         persistenceManager.recordQuery(query);
+        completedQueries.incrementAndGet();
     }
 
     /**
@@ -127,5 +131,17 @@ abstract class BaseEvaluationManager {
      */
     String persistVersion(final String configVersion) {
         return ofNullable(versionTimestamp).orElse(configVersion);
+    }
+
+    public void evaluateQuery(Query query, String indexName, JsonNode queryNode, String defaultTemplate, int relevantDocCount) {
+        this.submittedQueries.incrementAndGet();
+    }
+
+    public int getSubmittedQueries() {
+        return this.submittedQueries.get();
+    }
+
+    public int getCompletedQueries() {
+        return this.completedQueries.get();
     }
 }

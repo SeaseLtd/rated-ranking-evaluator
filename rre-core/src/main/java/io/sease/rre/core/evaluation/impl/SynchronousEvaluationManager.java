@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Matt Pearce (matt@flax.co.uk)
  */
-public class SynchronousEvaluationManager extends BaseEvaluationManager implements EvaluationManager {
+public class SynchronousEvaluationManager extends BaseEvaluationManager {
 
     private int queryCount;
     private int failedQueries;
