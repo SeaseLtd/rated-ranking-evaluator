@@ -24,7 +24,7 @@ def test_llm_service_generate_queries__expects__response(example_doc):
     fake_llm = FakeListChatModel(responses=['{"queries": ["Car","Auto","Vehicle","Sedan","Toyota"]}'])
     service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
 
-    response = service.generate_queries(example_doc, 5)
+    response = service.generate_queries(example_doc, 5, 2)
 
     assert isinstance(response, LLMQueryResponse)
     assert response.get_queries() == ["Car","Auto","Vehicle","Sedan","Toyota"]

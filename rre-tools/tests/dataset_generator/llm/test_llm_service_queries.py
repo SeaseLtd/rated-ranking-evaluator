@@ -20,7 +20,7 @@ def example_doc():
 def test_llm_service_generate_queries__expects__valid(example_doc):
     fake_llm = FakeListChatModel(responses=['{"queries": ["Toyota", "Best Car"]}'])
     service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
-    response = service.generate_queries(example_doc, 2)
+    response = service.generate_queries(example_doc, 2, None)
 
     assert isinstance(response, LLMQueryResponse)
     assert response.get_queries() == ["Toyota", "Best Car"]
@@ -29,7 +29,7 @@ def test_llm_service_generate_queries__expects__valid(example_doc):
 def test_llm_service_generate_queries__expects__empty_list(example_doc):
     fake_llm = FakeListChatModel(responses=['{"queries":[]}'])
     service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
-    response = service.generate_queries(example_doc, 0)
+    response = service.generate_queries(example_doc, 0, None)
     assert response.get_queries() == []
 
 
@@ -42,18 +42,18 @@ def test_llm_service_generate_queries_with_invalid_responses__expects__error(inv
     fake_llm = FakeListChatModel(responses=[invalid_response])
     service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
     with pytest.raises(ValueError, match=expected_error):
-        service.generate_queries(example_doc, 3)
+        service.generate_queries(example_doc, 3, None)
 
 
 def test_generate_queries_with_unicode_strings__expects__list_of_unicode_strings(example_doc):
     fake_llm = FakeListChatModel(responses=['{"queries":["こんにちは", "你好", "¡Hola!"]}'])
     service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
-    response = service.generate_queries(example_doc, 3)
+    response = service.generate_queries(example_doc, 3, None)
     assert response.get_queries() == ["こんにちは", "你好", "¡Hola!"]
 
 
 def test_generate_queries_with_leading_trailing_whitespace__expects__whitespace_stripped(example_doc):
     fake_llm = FakeListChatModel(responses=['{"queries":["  hello  ", " world "]}'])
     service = LLMService(chat_model=FakeChatModelAdapter(fake_llm))
-    response = service.generate_queries(example_doc, 2)
+    response = service.generate_queries(example_doc, 2, None)
     assert response.get_queries() == ["hello", "world"]

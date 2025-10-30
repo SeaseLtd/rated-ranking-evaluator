@@ -30,6 +30,8 @@ class Config(BaseModel):
     num_queries_needed: int = Field(..., gt=0, description="Total number of queries to generate.")
     relevance_scale: Literal['binary', 'graded']
     llm_configuration_file: FilePath = Field(..., description="Path to the LLM configuration file.")
+    max_query_terms: Optional[int] = Field(None, gt=0, description="Max number of query terms in the LLM-generated "
+                                                                   "query")
     output_format: Literal['quepid', 'rre', 'mteb']
     output_destination: Path = Field(..., description="Path to save the output dataset.")
     save_llm_explanation: bool = False
