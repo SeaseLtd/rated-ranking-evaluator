@@ -10,7 +10,7 @@ from rre_tools.shared.writers import RreWriter
 from rre_tools.shared.data_store import DataStore
 from rre_tools.shared.logger import setup_logging
 from rre_tools.shared.writers import WriterConfig
-from rre_tools.approximate_search_evaluator.config import Config
+from rre_tools.vector_search_doctor.approximate_search_evaluator.config import Config
 
 log = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def run_rre_evaluate(eval_folder : Path) -> None:
     """
     Run `mvn rre:evaluate` inside rre-evaluator-solr-external folder.
     """
-    eval_dir = Path(__file__).parent.parent.parent.parent / eval_folder
+    eval_dir = Path(__file__).parent.parent.parent.parent.parent / eval_folder
     subprocess.run(
         ["mvn", "rre:evaluate"],
         cwd=eval_dir,

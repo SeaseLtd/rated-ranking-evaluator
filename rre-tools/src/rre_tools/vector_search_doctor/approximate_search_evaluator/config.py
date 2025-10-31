@@ -6,7 +6,7 @@ from typing import Optional, Literal
 
 import yaml
 from pydantic import BaseModel, Field, FilePath, HttpUrl, model_validator
-from rre_tools.approximate_search_evaluator.constants import ELASTICSEARCH_SUPPORTED_VERSIONS, SOLR_SUPPORTED_VERSIONS
+from rre_tools.vector_search_doctor.approximate_search_evaluator.constants import ELASTICSEARCH_SUPPORTED_VERSIONS, SOLR_SUPPORTED_VERSIONS
 
 log = logging.getLogger(__name__)
 
