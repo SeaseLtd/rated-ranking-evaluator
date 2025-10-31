@@ -97,10 +97,10 @@ public class NDCGAtTenTestCase extends BaseTestCase {
     }
 
     /**
-     * Scenario: 10 judgments, 15 search results, 5 relevant results in top positions.
+     * Scenario: 10 judgments, 15 search results, 5 relevant results from 6th to 10th position.
      */
     @Test
-    public void _10_judgments_15_search_results_5_relevant_results_from_5th_to_10th() {
+    public void _10_judgments_15_search_results_5_relevant_results_from_6th_to_10th() {
         final ObjectNode judgements = mapper.createObjectNode();
         stream(FIFTEEN_SEARCH_HITS).skip(5).forEach(docid -> judgements.set(docid, createJudgmentNode(3)));
         cut.setRelevantDocuments(judgements);
@@ -136,7 +136,7 @@ public class NDCGAtTenTestCase extends BaseTestCase {
                 .forEach(hit -> cut.collect(hit, counter.incrementAndGet(), A_VERSION));
 
         assertEquals(
-                0.62,
+                0.76,
                 cut.valueFactory(A_VERSION).value().doubleValue(),
                 0);
     }
