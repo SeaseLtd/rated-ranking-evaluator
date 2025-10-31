@@ -108,7 +108,7 @@ public class NDCGAtK extends Metric {
                                 dcg = numerator;
                             } else {
                                 double den = Math.log(rank + 1) / Math.log(2);
-                                dcg = dcg.add(numerator.divide(new BigDecimal(den), 2, RoundingMode.FLOOR));
+                                dcg = dcg.add(numerator.divide(new BigDecimal(den), 5, RoundingMode.FLOOR));
                             }
                         });
             }
@@ -155,7 +155,7 @@ public class NDCGAtK extends Metric {
             //BigDecimal num = BigDecimal.valueOf(Math.pow(TWO.doubleValue(), gains[i-1])).subtract(BigDecimal.ONE);
             BigDecimal num = BigDecimal.valueOf(gains[i-1]);
             double den = Math.log(i + 1) / Math.log(2);
-            result = result.add((num.divide(new BigDecimal(den), 2, RoundingMode.FLOOR)));
+            result = result.add((num.divide(new BigDecimal(den), 5, RoundingMode.FLOOR)));
         }
 
         return result;
