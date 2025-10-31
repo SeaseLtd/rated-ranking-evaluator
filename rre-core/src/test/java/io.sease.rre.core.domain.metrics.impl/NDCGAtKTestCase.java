@@ -199,16 +199,16 @@ public class NDCGAtKTestCase extends BaseTestCase {
 
         Map<Integer, Double> expectations = new HashMap<Integer, Double>()
         {{
-            put(1,0.06);
-            put(2,0.14);
-            put(3,0.3);
-            put(4,0.57);
-            put(5,0.62);
-            put(6,0.62);
-            put(7,0.62);
-            put(8, 0.62);
-            put(9,0.62);
-            put(10, 0.62);
+            put(1,0.25);
+            put(2,0.38);
+            put(3,0.54);
+            put(4,0.7);
+            put(5,0.76);
+            put(6,0.76);
+            put(7,0.76);
+            put(8, 0.76);
+            put(9,0.76);
+            put(10, 0.76);
         }};
 
         assertEquals(
