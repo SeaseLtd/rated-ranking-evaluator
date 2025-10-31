@@ -6,8 +6,8 @@ import jsonlines
 import numpy as np
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
-from rre_tools.embedding_model_evaluator.embedding_writer import EmbeddingWriter
-from rre_tools.embedding_model_evaluator.constants import TASKS_NAME_MAPPING
+from rre_tools.vector_search_doctor.embedding_model_evaluator.embedding_writer import EmbeddingWriter
+from rre_tools.vector_search_doctor.embedding_model_evaluator.constants import TASKS_NAME_MAPPING
 
 
 def _create_fake_cache_wrapper(

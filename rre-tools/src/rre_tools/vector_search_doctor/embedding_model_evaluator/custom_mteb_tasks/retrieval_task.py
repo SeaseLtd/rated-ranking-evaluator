@@ -5,8 +5,8 @@ from mteb.abstasks.AbsTask import TaskMetadata
 from mteb.abstasks.AbsTaskRetrieval import AbsTaskRetrieval
 from mteb.overview import TASKS_REGISTRY
 
-from rre_tools.embedding_model_evaluator.config import Config
-from rre_tools.embedding_model_evaluator.utils import read_corpus_retrieval, read_queries, read_candidates
+from rre_tools.vector_search_doctor.embedding_model_evaluator.config import Config
+from rre_tools.vector_search_doctor.embedding_model_evaluator.utils import read_corpus_retrieval, read_queries, read_candidates
 
 log = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ from pathlib import Path
 from pydantic_core import ValidationError
 import pytest
 
-from rre_tools.approximate_search_evaluator.config import Config
+from rre_tools.vector_search_doctor.approximate_search_evaluator import Config
 
 # --------------- solr ---------------
 def test_good_config_solr__expects__all_parameters_read(resource_folder):

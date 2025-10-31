@@ -45,8 +45,8 @@ addopts = "-v --tb=short"
 
 [project.scripts]
 dataset_generator = "rre_tools.dataset_generator.main:main"
-embedding_model_evaluator = "rre_tools.embedding_model_evaluator.main:main"
-approximate_search_evaluator = "rre_tools.approximate_search_evaluator.main:main"
+embedding_model_evaluator = "rre_tools.vector_search_doctor.embedding_model_evaluator.main:main"
+approximate_search_evaluator = "rre_tools.vector_search_doctor.approximate_search_evaluator.main:main"
 
 
 [build-system]

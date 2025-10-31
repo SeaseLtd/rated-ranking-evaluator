@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import jsonlines
 
-from rre_tools.embedding_model_evaluator.config import Config
+from rre_tools.vector_search_doctor.embedding_model_evaluator.config import Config
 
 
 def _write_jsonl(path: Path, rows: list[dict]) -> None:
@@ -54,7 +54,7 @@ def _create_dataset_and_load_config(
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_custom_retrieval_task_with_valid_data__expects__loads_corpus_queries_and_relevant_docs_correctly(tmp_path: Path) -> None:
-    from rre_tools.embedding_model_evaluator.custom_mteb_tasks.retrieval_task import CustomRetrievalTask
+    from rre_tools.vector_search_doctor.embedding_model_evaluator.custom_mteb_tasks.retrieval_task import CustomRetrievalTask
     config = _create_dataset_and_load_config(tmp_path, "retrieval")
     retrieval_task = CustomRetrievalTask()
     retrieval_task.load_data(config=config)
@@ -78,7 +78,7 @@ def test_custom_retrieval_task_with_valid_data__expects__loads_corpus_queries_an
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_custom_reranking_task_with_valid_data__expects__loads_dataset_with_positive_and_negative_examples(tmp_path: Path) -> None:
-    from rre_tools.embedding_model_evaluator.custom_mteb_tasks.reranking_task import CustomRerankingTask
+    from rre_tools.vector_search_doctor.embedding_model_evaluator.custom_mteb_tasks.reranking_task import CustomRerankingTask
     config = _create_dataset_and_load_config(tmp_path, "reranking")
     reranking_task = CustomRerankingTask()
     reranking_task.load_data(config=config)

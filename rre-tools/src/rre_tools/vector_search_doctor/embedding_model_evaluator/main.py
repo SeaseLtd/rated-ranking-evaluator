@@ -21,13 +21,13 @@ import mteb
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 from mteb.overview import TASKS_REGISTRY
 
-from rre_tools.embedding_model_evaluator.config import Config
-from rre_tools.embedding_model_evaluator.custom_mteb_tasks import (  # noqa: F401 (tasks must be imported to register)
+from rre_tools.vector_search_doctor.embedding_model_evaluator.config import Config
+from rre_tools.vector_search_doctor.embedding_model_evaluator.custom_mteb_tasks import (  # noqa: F401 (tasks must be imported to register)
     CustomRerankingTask,
     CustomRetrievalTask,
 )
-from rre_tools.embedding_model_evaluator.embedding_writer import EmbeddingWriter
-from rre_tools.embedding_model_evaluator.constants import TASKS_NAME_MAPPING, CACHE_PATH
+from rre_tools.vector_search_doctor.embedding_model_evaluator.embedding_writer import EmbeddingWriter
+from rre_tools.vector_search_doctor.embedding_model_evaluator.constants import TASKS_NAME_MAPPING, CACHE_PATH
 from rre_tools.shared.logger import setup_logging  # type: ignore[import]
 
 log = logging.getLogger(__name__)

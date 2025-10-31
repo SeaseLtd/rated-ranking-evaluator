@@ -6,9 +6,9 @@ import numpy as np
 import jsonlines
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
-from rre_tools.embedding_model_evaluator.custom_mteb_tasks.reranking_task import compose_text
-from rre_tools.embedding_model_evaluator.utils import read_corpus_retrieval, read_corpus_reranking, read_queries
-from rre_tools.embedding_model_evaluator.constants import TASKS_NAME_MAPPING
+from rre_tools.vector_search_doctor.embedding_model_evaluator.custom_mteb_tasks.reranking_task import compose_text
+from rre_tools.vector_search_doctor.embedding_model_evaluator.utils import read_corpus_retrieval, read_corpus_reranking, read_queries
+from rre_tools.vector_search_doctor.embedding_model_evaluator.constants import TASKS_NAME_MAPPING
 
 log = logging.getLogger(__name__)
 

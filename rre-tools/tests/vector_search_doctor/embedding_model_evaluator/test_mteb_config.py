@@ -4,7 +4,7 @@ import pytest
 from pydantic import FilePath
 from pydantic_core import ValidationError
 
-from rre_tools.embedding_model_evaluator.config import Config
+from rre_tools.vector_search_doctor.embedding_model_evaluator.config import Config
 
 
 @pytest.fixture

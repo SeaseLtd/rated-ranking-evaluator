@@ -22,7 +22,7 @@ The parameters needed are:
 > - **collection_name**: Name of the search engine index/collection (e.g., "testcore", the one used in Docker containers)
 > - **search_engine_url**: URL of the search engine (e.g., "http://localhost:8983/solr/")
 > - **search_engine_version** (Optional): to see supported releases, take a look at 
-> [constants.py](../../src/rre_tools/approximate_search_evaluator/constants.py). By defaults, uses the latest version supported:
+> [constants.py](../../src/rre_tools/vector_search_doctor/approximate_search_evaluator/constants.py). By defaults, uses the latest version supported:
 > (9.9.0 for Solr and 7.4.2 for Elasticsearch)
 > - id_field (Optional): id field for the unique key. Defaults to "id" for Solr and "_id" for Elasticsearch search
 > search engines
