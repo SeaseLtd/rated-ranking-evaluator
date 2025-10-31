@@ -116,7 +116,7 @@ public class AsynchronousQueryEvaluationManager extends BaseEvaluationManager {
 
     @Override
     public boolean isRunning() {
-        return super.getSubmittedQueries() < super.getCompletedQueries();
+        return executor.getCompletedTaskCount() < executor.getTaskCount();
     }
 
     @Override
