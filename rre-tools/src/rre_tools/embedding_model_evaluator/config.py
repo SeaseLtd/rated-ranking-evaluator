@@ -41,7 +41,7 @@ class Config(BaseModel):
     @model_validator(mode="after")
     def create_default_output_dest(self) -> Config:
         if self.output_dest is None:
-            default_dir = Path("output")
+            default_dir = Path("resources")
             default_dir.mkdir(exist_ok=True)
             self.output_dest = default_dir
         return self
