@@ -80,25 +80,27 @@ def _get_mteb_leaderboard_avg_main_score(model_name: str, task_type: str) -> flo
     # load results from https://github.com/embeddings-benchmark/results
     results = mteb.load_results(models=[model_name], tasks=task).join_revisions()
 
-    scores = []
+    scores: list[float] = []
     for model_results in results.model_results:
         for task_result in model_results.task_results:
             for split_name, split_subsets in task_result.scores.items():
                 for task_subset in split_subsets:
                     if "main_score" in task_subset:
-                        scores.append(task_subset["main_score"])
+                        val = task_subset["main_score"]
+                        if isinstance(val, (int, float)):
+                            scores.append(float(val))
     if len(scores) > 0:
         return sum(scores) / len(scores)
-    return 0
+    return 0.0
 
 
 def _append_mteb_leaderboard_score(file_path: Path, avg_main_score: float) -> None:
-    with open(file_path, "r", encoding="utf-8") as file:
+    with file_path.open("r", encoding="utf-8") as file:
         data = json.load(file)
 
     data["avg_main_score_mteb_leaderboard"] = avg_main_score
 
-    with open(file_path, "w", encoding="utf-8") as file:
+    with file_path.open("w", encoding="utf-8") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
 
 
@@ -150,8 +152,11 @@ def main() -> None:
 
     log.info("Adding mteb leaderboard average main score...")
 
+    if config.output_dest is None:
+        raise ValueError("config.output_dest is not set")
+
     # task result is in {output_folder} / {model_name} / {model_revision} / {task_name}.json
-    task_result_path: Path = (Path(config.output_dest) / model_name_additional_path /
+    task_result_path: Path = (config.output_dest / model_name_additional_path /
                               mteb.get_model_meta(config.model_id).revision / f"{task_name}.json")
     avg_main_score: float = _get_mteb_leaderboard_avg_main_score(model_name=config.model_id,
                                                                  task_type=config.task_to_evaluate.capitalize())

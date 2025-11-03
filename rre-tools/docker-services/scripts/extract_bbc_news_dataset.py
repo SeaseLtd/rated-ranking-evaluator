@@ -3,7 +3,7 @@ import json
 import uuid
 
 from datasets import load_dataset
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 
 CONTENT_MAX_LEN = 1000
 DATASET_SIZE = 100000
