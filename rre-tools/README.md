@@ -2,22 +2,29 @@
 
 ## Overview
 - Dataset Generator
-- Embedding Model Evaluator
-- Approximate Search Evaluator
+- Vector Search Doctor
+  - Embedding Model Evaluator
+  - Approximate Search Evaluator
 
 ### [Dataset Generator](docs/dataset_generator/README.md) 
 
 This tool provides a flexible command-line tool to generate relevance datasets for search evaluation. It can retrieve
 documents from a search engine, generate synthetic queries, and score the relevance of document-query pairs using LLMs.
 
-### [Embedding Model Evaluator](docs/embedding_model_evaluator/README.md)
+### Vector Search Doctor
 
-This tool extends MTEB benchmarking tool to test a HuggingFace embedding model performance on both Retrieval and Reranking
+This tool helps diagnose and optimize vector search performance by evaluating both embedding models and search 
+configurations. It consists of two sub-tools that work together to identify bottlenecks and improve retrieval quality in
+your vector search pipeline.
+
+#### [Embedding Model Evaluator](docs/embedding_model_evaluator/README.md)
+
+This sub-tool extends MTEB benchmarking tool to test a HuggingFace embedding model performance on both Retrieval and Reranking
 tasks based on custom datasets.
 
-### [Approximate Search Evaluator](docs/approximate_search_evaluator/README.md)
+#### [Approximate Search Evaluator](docs/approximate_search_evaluator/README.md)
 
-This tool provides a flexible tool to deply RRE and extract metrics to test your search engine collection given a 
+This sub-tool provides a flexible tool to deply RRE and extract metrics to test your search engine collection given a 
 [template](https://github.com/SeaseLtd/rated-ranking-evaluator/wiki/What%20We%20Need%20To%20Provide#query-templates).
 
 ## Quickstart: tools installation
