@@ -8,7 +8,7 @@ from rre_tools.dataset_generator.config import Config
 from rre_tools.shared.logger import configure_logging
 from rre_tools.shared.models import Document
 from rre_tools.shared.search_engines import OpenSearchEngine
-from rre_tools.shared.search_engines.search_engine_base import DOC_NUMBER_EACH_FETCH
+from rre_tools.shared.search_engines.search_engine_base import NUMBER_OF_DOCS_EACH_FETCH
 from mocks.opensearch import MockResponseOpenSearchEngine
 
 configure_logging(level=logging.DEBUG)
@@ -54,7 +54,7 @@ def test_opensearch_engine_fetch_for_query_generation__expects__result_returned(
 
     result = opensearch.fetch_for_query_generation(
         documents_filter=opensearch_config.documents_filter,
-        doc_number=opensearch_config.doc_number,
+        number_of_docs=opensearch_config.number_of_docs,
         doc_fields=opensearch_config.doc_fields
     )
 
@@ -87,9 +87,9 @@ def test_opensearch_engine_fetch_all__expects__results_returned(monkeypatch, ope
     def mock_post(*args, **kwargs):
         call_counter["count"] += 1
         if call_counter["count"] == 1:
-            return MockResponseOpenSearchEngine(hits_data=[], total_hits =2 * DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseOpenSearchEngine(hits_data=[], total_hits =2 * NUMBER_OF_DOCS_EACH_FETCH, status_code=200)
         elif call_counter["count"] == 2 or call_counter["count"] == 3:
-            return MockResponseOpenSearchEngine(hits_data=[opensearch_hit] * DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseOpenSearchEngine(hits_data=[opensearch_hit] * NUMBER_OF_DOCS_EACH_FETCH, status_code=200)
         else:
             return MockResponseOpenSearchEngine(hits_data=[], status_code=200)
 
@@ -103,7 +103,7 @@ def test_opensearch_engine_fetch_all__expects__results_returned(monkeypatch, ope
     doc_list = [first]
     for doc in result:
         doc_list.append(doc)
-    assert len(doc_list) == 2 * DOC_NUMBER_EACH_FETCH
+    assert len(doc_list) == 2 * NUMBER_OF_DOCS_EACH_FETCH
 
 
 def test_normalize():

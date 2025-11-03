@@ -44,7 +44,7 @@ class OpenSearchEngine(BaseSearchEngine):
 
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   doc_number: int,
+                                   number_of_docs: int,
                                    doc_fields: List[str],
                                    start: int = 0) -> List[Document]:
         """Fetches a list of documents for query generation based on optional filters."""
@@ -75,7 +75,7 @@ class OpenSearchEngine(BaseSearchEngine):
             "query": query,
             "_source": fields,
             "from": start,
-            "size": doc_number
+            "size": number_of_docs
         }
 
         return self._search(payload)

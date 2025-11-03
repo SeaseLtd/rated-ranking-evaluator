@@ -6,7 +6,7 @@ from typing import List, Dict, Any, Union, Iterator
 from pydantic import HttpUrl
 from rre_tools.shared.models.document import Document
 
-DOC_NUMBER_EACH_FETCH = 100
+NUMBER_OF_DOCS_EACH_FETCH = 100
 
 class BaseSearchEngine(ABC):
     def __init__(self, endpoint: HttpUrl):
@@ -31,7 +31,7 @@ class BaseSearchEngine(ABC):
         while start < total_hits:
             batch = self.fetch_for_query_generation(
                 documents_filter=None,
-                doc_number=DOC_NUMBER_EACH_FETCH,
+                number_of_docs=NUMBER_OF_DOCS_EACH_FETCH,
                 doc_fields=doc_fields,
                 start=start
                 )
@@ -39,10 +39,10 @@ class BaseSearchEngine(ABC):
                 break
             for doc in batch:
                 yield doc
-            # if we didn't reach the end of the docs, then len(batch) == DOC_NUMBER_EACH_FETCH
-            # if we reached the end of the docs. then len(batch) <= DOC_NUMBER_EACH_FETCH -> next iteration we exit the
-            # loop since we are adding DOC_NUMBER_EACH_FETCH (not len(batch)) and start becomes greater than total_hits
-            start += DOC_NUMBER_EACH_FETCH
+            # if we didn't reach the end of the docs, then len(batch) == NUMBER_OF_DOCS_EACH_FETCH if we reached the
+            # end of the docs. then len(batch) <= NUMBER_OF_DOCS_EACH_FETCH -> next iteration we exit the loop since
+            # we are adding NUMBER_OF_DOCS_EACH_FETCH (not len(batch)) and start becomes greater than total_hits
+            start += NUMBER_OF_DOCS_EACH_FETCH
 
 
     def _parse_query_template(self, path: Path | str) -> Dict[str, Any]:
@@ -72,7 +72,7 @@ class BaseSearchEngine(ABC):
     @abstractmethod
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   doc_number: int,
+                                   number_of_docs: int,
                                    doc_fields: List[str],
                                    start: int = 0) \
             -> List[Document]:

@@ -9,7 +9,7 @@ from mocks.solr import MockResponseSolrEngine, MockResponseUniqueKey
 
 
 from rre_tools.shared.search_engines import SolrSearchEngine
-from rre_tools.shared.search_engines.search_engine_base import DOC_NUMBER_EACH_FETCH
+from rre_tools.shared.search_engines.search_engine_base import NUMBER_OF_DOCS_EACH_FETCH
 from rre_tools.shared.models import Document
 import logging
 
@@ -46,7 +46,7 @@ def test_solr_search_engine_fetch_for_query_generation__expects__result_returned
 
     # search_engine.extract_documents_to_generate_queries, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_query_generation(documents_filter=solr_config.documents_filter,
-                                                      doc_number=solr_config.doc_number,
+                                                      number_of_docs=solr_config.number_of_docs,
                                                       doc_fields=solr_config.doc_fields)
     assert result[0] == Document(**mock_dict)
 
@@ -74,9 +74,9 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, so
     def mock_get(*args, **kwargs):
         call_counter["count"] += 1
         if call_counter["count"] == 1: # first call is to just get the number of hits, in this case
-            return MockResponseSolrEngine(json_data=[], total_hits=2*DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseSolrEngine(json_data=[], total_hits=2 * NUMBER_OF_DOCS_EACH_FETCH, status_code=200)
         elif call_counter["count"] == 2 or call_counter["count"] == 3:  # second and third are to catch actual docs call is to just get the number of hits, in this case
-            return MockResponseSolrEngine(json_data=[mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseSolrEngine(json_data=[mock_doc] * NUMBER_OF_DOCS_EACH_FETCH, status_code=200)
         else:
             return MockResponseSolrEngine(json_data=[], status_code=200)
 
@@ -90,7 +90,7 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, so
     doc_list = [first]
     for doc in result:
         doc_list.append(doc)
-    assert len(doc_list) == 2 * DOC_NUMBER_EACH_FETCH
+    assert len(doc_list) == 2 * NUMBER_OF_DOCS_EACH_FETCH
 
 def test_solr_search_engine_negative_post_fetch_for_query_generation__expects__raises_http_error(monkeypatch, solr_config):
     for status_code in [400, 401, 402, 403, 500]:
@@ -104,7 +104,7 @@ def test_solr_search_engine_negative_post_fetch_for_query_generation__expects__r
         with pytest.raises(HTTPError):
             search_engine.fetch_for_query_generation(
                 documents_filter=solr_config.documents_filter,
-                doc_number=solr_config.doc_number,
+                number_of_docs=solr_config.number_of_docs,
                 doc_fields=solr_config.doc_fields
             )
 

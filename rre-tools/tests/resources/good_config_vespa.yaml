@@ -9,7 +9,7 @@ documents_filter:
       - "fantasy"
   - type:
       - "news"
-doc_number: 100
+number_of_docs: 100
 doc_fields:
   - "title"
   - "description"

@@ -1,7 +1,7 @@
 search_engine_type: "solr"
 collection_name: "testcore"
 search_engine_url: "http://localhost:8983/solr/"
-doc_number: 100
+number_of_docs: 100
 doc_fields:
   - "title"
   - "description"

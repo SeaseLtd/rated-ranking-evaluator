@@ -2,7 +2,7 @@
 search_engine_type: "solr"
 collection_name: "testcore"
 search_engine_url: "http://localhost"
-doc_number: 10
+number_of_docs: 10
 doc_fields: ["title"]
 num_queries_needed: 5
 relevance_scale: "binary"

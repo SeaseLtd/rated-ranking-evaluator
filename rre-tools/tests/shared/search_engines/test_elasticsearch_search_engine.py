@@ -5,7 +5,7 @@ from pydantic_core import ValidationError
 
 from rre_tools.shared.logger import configure_logging
 from rre_tools.dataset_generator.config import Config
-from rre_tools.shared.search_engines.search_engine_base import DOC_NUMBER_EACH_FETCH
+from rre_tools.shared.search_engines.search_engine_base import NUMBER_OF_DOCS_EACH_FETCH
 from mocks.elasticsearch import MockResponseElasticsearchEngine
 
 from rre_tools.shared.search_engines import ElasticsearchSearchEngine
@@ -47,7 +47,7 @@ def test_elasticsearch_search_engine_fetch_for_query_generation__expects__result
                         )
     # search_engine.extract_documents_to_generate_queries, which contains requests.post, uses the monkeypatch
     result = search_engine.fetch_for_query_generation(documents_filter=elasticsearch_config.documents_filter,
-                                                      doc_number=elasticsearch_config.doc_number,
+                                                      number_of_docs=elasticsearch_config.number_of_docs,
                                                       doc_fields=elasticsearch_config.doc_fields)
     assert result[0] == Document(**mock_dict)
 
@@ -73,9 +73,9 @@ def test_elasticsearch_engine_fetch_all__expects__results_returned(monkeypatch, 
     def mock_post(*args, **kwargs):
         call_counter["count"] += 1
         if call_counter["count"] == 1:
-            return MockResponseElasticsearchEngine(json_data=[], total_hits=2* DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseElasticsearchEngine(json_data=[], total_hits=2 * NUMBER_OF_DOCS_EACH_FETCH, status_code=200)
         elif call_counter["count"] == 2 or call_counter["count"] == 3:
-            return MockResponseElasticsearchEngine(json_data=[mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseElasticsearchEngine(json_data=[mock_doc] * NUMBER_OF_DOCS_EACH_FETCH, status_code=200)
         else:
             return MockResponseElasticsearchEngine(json_data=[], status_code=200)
 
@@ -89,7 +89,7 @@ def test_elasticsearch_engine_fetch_all__expects__results_returned(monkeypatch, 
     doc_list = [first]
     for doc in result:
         doc_list.append(doc)
-    assert len(doc_list) == 2 * DOC_NUMBER_EACH_FETCH
+    assert len(doc_list) == 2 * NUMBER_OF_DOCS_EACH_FETCH
 
 
 def test_elasticsearch_search_engine_negative_post_fetch_for_query_generation__expects__raises_http_error(monkeypatch, elasticsearch_config):
@@ -102,7 +102,7 @@ def test_elasticsearch_search_engine_negative_post_fetch_for_query_generation__e
         with pytest.raises(HTTPError):
             search_engine.fetch_for_query_generation(
                 documents_filter=elasticsearch_config.documents_filter,
-                doc_number=elasticsearch_config.doc_number,
+                number_of_docs=elasticsearch_config.number_of_docs,
                 doc_fields=elasticsearch_config.doc_fields
             )
 
