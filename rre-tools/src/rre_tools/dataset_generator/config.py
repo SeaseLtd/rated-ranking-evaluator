@@ -43,6 +43,10 @@ class Config(BaseModel):
     datastore_autosave_every_n_updates: Optional[int] = Field(None, gt=0,
         description="If set, periodically persist datastore every N successful updates (adds/ratings)."
     )
+    enable_cartesian_product: bool = Field(
+        True,
+        description="Enable cartesian product scoring between queries and documents used to generate queries."
+    )
 
     def build_writer_config(self) -> WriterConfig:
         if self.rre_query_template is not None:

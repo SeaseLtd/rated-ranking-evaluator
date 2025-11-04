@@ -148,7 +148,8 @@ def main() -> None:
     generate_and_add_queries(config, data_store, service, search_engine)
 
     # score initial docset
-    add_cartesian_product_scores(config, data_store, service)
+    if config.enable_cartesian_product:
+        add_cartesian_product_scores(config, data_store, service)
 
     # expand the docset with search engine topK (adding direct ratings)
     expand_docset_with_search_engine_top_k(config, data_store, service, search_engine)
