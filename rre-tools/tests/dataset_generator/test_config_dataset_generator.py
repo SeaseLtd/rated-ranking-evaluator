@@ -32,21 +32,25 @@ def test_good_config__expects__all_parameters_read(config):
     assert config.output_destination == Path("output")
     assert config.save_llm_explanation is True
     assert config.llm_explanation_destination == Path("output/rating_explanation.json")
-
-    # New optional param: defaults to None when not provided
-    assert hasattr(config, "datastore_autosave_every_n_updates")
-    assert config.datastore_autosave_every_n_updates is None
+    assert config.datastore_autosave_every_n_updates == 50
+    assert not config.enable_cartesian_product
 
 
 def test_missing_optional_field_values__expects__all_defaults_read(resource_folder):
     file_name = "missing_optional.yaml"
-    cfg = Config.load(resource_folder / file_name)
+    config = Config.load(resource_folder / file_name)
 
-    assert hasattr(cfg, "queries")
-    assert cfg.queries is None
+    assert hasattr(config, "queries")
+    assert config.queries is None
 
-    assert hasattr(cfg, "query_template")
-    assert cfg.query_template is None
+    assert hasattr(config, "query_template")
+    assert config.query_template is None
+
+    assert hasattr(config, "datastore_autosave_every_n_updates")
+    assert config.datastore_autosave_every_n_updates is None
+
+    assert hasattr(config, "enable_cartesian_product")
+    assert config.enable_cartesian_product
 
 
 def test_missing_required_field__expects__raises_validation_error(resource_folder):

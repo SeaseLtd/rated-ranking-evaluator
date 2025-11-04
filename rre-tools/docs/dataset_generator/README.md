@@ -53,7 +53,9 @@ one fields, the documents are filtered for both fields (AND-like)
 > - **llm_explanation_destination** (Needed only if `save_llm_explanation: true`): File path where it contains 
 > <query, doc_id, rating, explanation> records (e.g., "resources/rating_explanation.json")
 > - **datastore_autosave_every_n_updates** (Optional): Number of successful updates (adds or ratings) after which 
-> - the in-memory datastore is saved. If not given, the datastore is saved at the end of the process.
+> the in-memory datastore is saved. If not given, the datastore is saved at the end of the process.
+> - **enable_cartesian_product** (Optional): Enable cartesian product scoring between queries and documents used to 
+> generate queries. Defaults to `true`
 
 #### Some important things to add
 

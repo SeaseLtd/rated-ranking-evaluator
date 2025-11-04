@@ -89,3 +89,8 @@ output_destination: "resources"
 # (Optional) Periodically persist in-memory datastore every N successful updates
 # Lower values persist more frequently (safer) but can be slower; higher values persist less often (faster)
 #datastore_autosave_every_n_updates: 50
+
+# (Optional) Whether to enable scoring the cartesian product between the queries generated and the documents used to
+# generate the queries.
+# Default: true; the pairs mentioned above are scored.
+enable_cartesian_product: false
