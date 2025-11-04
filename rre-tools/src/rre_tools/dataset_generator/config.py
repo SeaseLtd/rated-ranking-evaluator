@@ -23,7 +23,7 @@ class Config(BaseModel):
         None,
         description="Optional list of filter conditions for documents"
     )
-    doc_number: int = Field(..., gt=0, description="Number of documents to retrieve from the search engine.")
+    number_of_docs: int = Field(..., gt=0, description="Number of documents to retrieve from the search engine.")
     doc_fields: List[str] = Field(..., min_length=1, description="Fields used for context and scoring.")
     queries: Optional[FilePath] = Field(None, description="Optional file containing predefined queries.")
     generate_queries_from_documents: Optional[bool] = True

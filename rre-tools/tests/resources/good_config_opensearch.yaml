@@ -2,7 +2,7 @@ query_template: "tests/resources/template_opensearch.json"
 search_engine_type: "opensearch"
 collection_name: "testcore"
 search_engine_url: "http://localhost:9200/"
-doc_number: 20
+number_of_docs: 20
 doc_fields:
   - "title"
   - "description"

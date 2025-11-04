@@ -21,7 +21,7 @@ def test_good_config__expects__all_parameters_read(config):
         {"genre": ["horror", "fantasy"]},
         {"type": ["book"]}
     ]
-    assert config.doc_number == 100
+    assert config.number_of_docs == 100
     assert config.doc_fields == ["title", "description"]
     assert config.queries == FilePath("tests/resources/queries.txt")
     assert config.generate_queries_from_documents is True
@@ -55,7 +55,7 @@ def test_missing_required_field__expects__raises_validation_error(resource_folde
         _ = Config.load(resource_folder / file_name)
 
 
-def test_invalid_doc_number_type__expects__raises_validation_error(resource_folder):
+def test_invalid_number_of_docs_type__expects__raises_validation_error(resource_folder):
     file_name = "invalid_type.yaml"
     with pytest.raises(ValidationError):
         _ = Config.load(resource_folder / file_name)
@@ -85,7 +85,7 @@ def test_autosave_valid_positive_int__expects__parsed(tmp_path):
         "search_engine_type: \"solr\"\n"
         "collection_name: \"testcore\"\n"
         "search_engine_url: \"http://localhost:8983/solr/\"\n"
-        "doc_number: 2\n"
+        "number_of_docs: 2\n"
         "doc_fields: [\"title\"]\n"
         "num_queries_needed: 2\n"
         "relevance_scale: \"binary\"\n"
@@ -107,7 +107,7 @@ def test_autosave_invalid_non_positive__expects__raises_validation_error(tmp_pat
         "search_engine_type: \"solr\"\n"
         "collection_name: \"testcore\"\n"
         "search_engine_url: \"http://localhost:8983/solr/\"\n"
-        "doc_number: 2\n"
+        "number_of_docs: 2\n"
         "doc_fields: [\"title\"]\n"
         "num_queries_needed: 2\n"
         "relevance_scale: \"binary\"\n"

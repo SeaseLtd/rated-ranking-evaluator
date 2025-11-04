@@ -28,7 +28,7 @@ max_tokens: 16
         collection_name="testcore",
         search_engine_url="http://localhost:8983/solr/",
         documents_filter=None,
-        doc_number=1,
+        number_of_docs=1,
         doc_fields=["title"],
         queries=None,
         generate_queries_from_documents=False,

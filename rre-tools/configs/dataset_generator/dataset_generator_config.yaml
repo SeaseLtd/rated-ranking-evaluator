@@ -27,7 +27,7 @@ search_engine_url: "http://localhost:8983/solr/"
 #      - "book"
 
 # Maximum number of documents to retrieve from the search engine to generate queries
-doc_number: 2
+number_of_docs: 2
 
 # List of fields from documents used to generate queries and relevance scoring
 # These should match fields available in the search engine schema

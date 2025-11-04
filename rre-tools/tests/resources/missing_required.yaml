@@ -2,7 +2,7 @@
 search_engine_type: "solr"
 collection_name: "testcore"
 # Missing: search_engine_url
-doc_number: 100
+number_of_docs: 100
 doc_fields: ["title"]
 num_queries_needed: 5
 relevance_scale: "binary"

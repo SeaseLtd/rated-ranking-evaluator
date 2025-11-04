@@ -114,7 +114,7 @@ def test_dataset_generator_with_nested_paths__expects__handles_paths_cross_platf
     search_engine_type: "solr"
     collection_name: "testcore"
     search_engine_url: "http://localhost:8983/solr/"
-    doc_number: 1
+    number_of_docs: 1
     doc_fields: ["title", "description"]
     num_queries_needed: 1
     relevance_scale: "binary"

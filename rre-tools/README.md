@@ -45,6 +45,10 @@ uv sync
 uv sync --group dev
 ```
 
+# remove all cached packages
+uv cache clean
+```
+
 ## Running Dataset Generator
 
 Before running the command below, you need to have running search engine instance 

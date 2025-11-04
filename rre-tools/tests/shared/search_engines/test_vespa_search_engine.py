@@ -10,7 +10,7 @@ from rre_tools.dataset_generator.config import Config
 from rre_tools.shared.search_engines import VespaSearchEngine
 from rre_tools.shared.models import Document
 from rre_tools.shared.utils import clean_text
-from rre_tools.shared.search_engines.search_engine_base import DOC_NUMBER_EACH_FETCH
+from rre_tools.shared.search_engines.search_engine_base import NUMBER_OF_DOCS_EACH_FETCH
 from mocks.vespa import MockResponseVespaSearch
 
 configure_logging(level="DEBUG")
@@ -112,19 +112,19 @@ def test_fetch_for_query_generation__expects__builds_valid_yql_handles_hits_and_
         {"description": ["BOGOTA", "Colombia"]},
         {"bad-field": ["oops"]},  # invalid due to identifier regex -> should be ignored
     ]
-    doc_number = 42
+    number_of_docs = 42
     doc_fields = ["title", "description"]
 
     docs = engine.fetch_for_query_generation(
         documents_filter=documents_filter,
-        doc_number=doc_number,
+        number_of_docs=number_of_docs,
         doc_fields=doc_fields,
     )
 
     # Endpoint and payload
     assert calls["url"].endswith("/base/doc/search/")
     payload = calls["json"]
-    assert payload["hits"] == doc_number
+    assert payload["hits"] == number_of_docs
 
     # YQL sanity
     yql = payload["yql"]
@@ -175,7 +175,7 @@ def test_fetch_for_query_generation__expects__skip_hits_without_id(monkeypatch):
     _ = _capture_post(monkeypatch, vespa_raw, status_code=200)
 
     engine = VespaSearchEngine("https://fakehost/base/doc/")
-    docs = engine.fetch_for_query_generation(documents_filter=None, doc_number=5, doc_fields=["title"])
+    docs = engine.fetch_for_query_generation(documents_filter=None, number_of_docs=5, doc_fields=["title"])
     assert docs == []
 
 
@@ -189,7 +189,7 @@ def test_http_requests__expects__raise_on_negative_responses(monkeypatch, resour
         _ = _capture_post(monkeypatch, {"root": {}}, status_code=code)
         engine = VespaSearchEngine("https://fakehost/base/doc/")
         with pytest.raises(HTTPError):
-            engine.fetch_for_query_generation(documents_filter=None, doc_number=1, doc_fields=None)
+            engine.fetch_for_query_generation(documents_filter=None, number_of_docs=1, doc_fields=None)
         with pytest.raises(HTTPError):
             template_path = resource_folder / "template_vespa_simple.yql"
             engine.fetch_for_evaluation(
@@ -237,7 +237,7 @@ def test_workflow_with_mocks_and_config__expects__work_with_existing(monkeypatch
     # Generation path
     res = engine.fetch_for_query_generation(
         documents_filter=vespa_config.documents_filter,
-        doc_number=vespa_config.doc_number,
+        number_of_docs=vespa_config.number_of_docs,
         doc_fields=vespa_config.doc_fields,
     )
     expected_fields = {k: VespaSearchEngine._normalize_field_value(v) for k, v in mock_doc["fields"].items()}
@@ -280,9 +280,9 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, ve
     def mock_post(*args, **kwargs):
         call_counter["count"] += 1
         if call_counter["count"] == 1: # first call is to just get the number of hits, in this case
-            return MockResponseVespaSearch(json_data=[], total_hits=2*DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseVespaSearch(json_data=[], total_hits=2 * NUMBER_OF_DOCS_EACH_FETCH, status_code=200)
         elif call_counter["count"] == 2 or call_counter["count"] == 3:  # second and third are to catch actual docs call is to just get the number of hits, in this case
-            return MockResponseVespaSearch(json_data=[mock_doc] * DOC_NUMBER_EACH_FETCH, status_code=200)
+            return MockResponseVespaSearch(json_data=[mock_doc] * NUMBER_OF_DOCS_EACH_FETCH, status_code=200)
         else:
             return MockResponseVespaSearch(json_data=[], status_code=200)
 
@@ -296,4 +296,4 @@ def test_solr_search_engine_fetch_all__expects__results_returned(monkeypatch, ve
     doc_list = [first]
     for doc in result:
         doc_list.append(doc)
-    assert len(doc_list) == 2 * DOC_NUMBER_EACH_FETCH
+    assert len(doc_list) == 2 * NUMBER_OF_DOCS_EACH_FETCH

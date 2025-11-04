@@ -27,7 +27,7 @@ one fields, the documents are filtered for both fields (AND-like)
 >       - "fantasy"
 >     - type:
 >       - "book"
-> - **doc_number**: Maximum number of documents to retrieve from the search engine to generate queries (e.g. 100)
+> - **number_of_docs**: Maximum number of documents to retrieve from the search engine to generate queries (e.g. 100)
 > - **doc_fields**: List of fields from documents used to generate queries and relevance scoring. These should match 
 > fields available in the search engine schema and must be at least one field
 >   - an example could be:

@@ -131,7 +131,7 @@ class VespaSearchEngine(BaseSearchEngine):
     def fetch_for_query_generation(
         self,
         documents_filter: Union[None, List[Dict[str, List[str]]]],
-        doc_number: int,
+        number_of_docs: int,
         doc_fields: Optional[List[str]],
         start: int  = 0,
     ) -> List[Document]:
@@ -140,7 +140,7 @@ class VespaSearchEngine(BaseSearchEngine):
 
         Args:
             documents_filter: Optional list of filter dictionaries for query restriction.
-            doc_number: Number of documents to retrieve.
+            number_of_docs: Number of documents to retrieve.
             doc_fields: Optional list of fields to include in the response.
             start: Optional start index to retrieve documents from.
 
@@ -155,7 +155,7 @@ class VespaSearchEngine(BaseSearchEngine):
         yql = self._build_yql(doc_fields or [], where)
 
         payload["yql"] = yql
-        payload["hits"] = int(doc_number)
+        payload["hits"] = int(number_of_docs)
         payload["presentation.format"] =  "json"
         payload['offset'] = start
 
