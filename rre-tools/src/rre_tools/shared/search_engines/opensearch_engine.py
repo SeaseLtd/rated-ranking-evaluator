@@ -85,7 +85,7 @@ class OpenSearchEngine(BaseSearchEngine):
     def fetch_for_evaluation(self, query_template: Path | str, doc_fields: List[str], keyword: str = "*") -> List[Document]:
         """Fetches documents for evaluation by executing a query built from a template."""
 
-        log.info(f"Fetching documents (size) based on query template for query evaluation")
+        log.info("Fetching documents (size) based on query template for query evaluation")
 
         query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)

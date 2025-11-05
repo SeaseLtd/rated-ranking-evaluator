@@ -181,7 +181,7 @@ class VespaSearchEngine(BaseSearchEngine):
             A list of `Document` instances retrieved from the engine.
         """
 
-        log.info(f"Fetching documents (hits) based on query template for query evaluation")
+        log.info("Fetching documents (hits) based on query template for query evaluation")
 
         # Read the YQL template from file (following the same pattern as other engines)
         if isinstance(query_template, Path):

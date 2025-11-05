@@ -108,7 +108,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents matching the query.
         """
-        log.info(f"Fetching documents (size) based on query template for query evaluation")
+        log.info("Fetching documents (size) based on query template for query evaluation")
 
         query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)
