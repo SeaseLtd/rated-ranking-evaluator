@@ -59,6 +59,5 @@ class RreWriter(AbstractWriter):
         output_path = Path(output_path) / RRE_OUTPUT_FILENAME
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w', newline='', encoding='utf-8') as json_file:
-            log.debug("Started writing RRE formatted records to json file")
             json.dump(self._build_json_doc_records(datastore), json_file, indent=2)
-            log.debug("Finished writing RRE formatted records to json file")
+            log.info(f"RRE formatted records have been written to the json file, {str(output_path)}")

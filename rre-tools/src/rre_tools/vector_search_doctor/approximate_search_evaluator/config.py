@@ -6,7 +6,8 @@ from typing import Optional, Literal
 
 import yaml
 from pydantic import BaseModel, Field, FilePath, HttpUrl, model_validator
-from rre_tools.vector_search_doctor.approximate_search_evaluator.constants import ELASTICSEARCH_SUPPORTED_VERSIONS, SOLR_SUPPORTED_VERSIONS
+from rre_tools.vector_search_doctor.approximate_search_evaluator.constants import ELASTICSEARCH_SUPPORTED_VERSIONS, \
+    SOLR_SUPPORTED_VERSIONS
 
 log = logging.getLogger(__name__)
 
@@ -47,27 +48,28 @@ class Config(BaseModel):
     def collection_name_alias(self) -> str:
         if self.search_engine_type == "solr":
             return "collectionName"
-        else:           # self.search_engine_type == "elasticsearch"
+        else:  # self.search_engine_type == "elasticsearch"
             return "index"
 
     @property
     def search_engine_url_alias(self) -> str:
         if self.search_engine_type == "solr":
             return "baseUrls"
-        else:           # self.search_engine_type == "elasticsearch"
+        else:  # self.search_engine_type == "elasticsearch"
             return "hostUrls"
 
     @model_validator(mode="after")
     def validate_search_engine_version(self) -> "Config":
-        if self.search_engine_type == "solr" :
+        if self.search_engine_type == "solr":
             versions_to_check = SOLR_SUPPORTED_VERSIONS
-        else:           # self.search_engine_type == "elasticsearch"
+        else:  # self.search_engine_type == "elasticsearch"
             versions_to_check = ELASTICSEARCH_SUPPORTED_VERSIONS
 
         if self.search_engine_version == "latest":
             self.search_engine_version = versions_to_check[-1]
         elif self.search_engine_version not in versions_to_check:
-            raise ValueError(f"Search engine version {self.search_engine_version} is not supported for {self.search_engine_type}")
+            raise ValueError(
+                f"Search engine version {self.search_engine_version} is not supported for {self.search_engine_type}")
         return self
 
     @model_validator(mode="after")
@@ -79,7 +81,6 @@ class Config(BaseModel):
                 self.id_field = "_id"
         return self
 
-
     @classmethod
     def load(cls, config_path: str) -> Config:
         """
@@ -90,6 +91,5 @@ class Config(BaseModel):
         """
         with open(config_path, "r") as f:
             raw_config = yaml.safe_load(f)
-
-        log.debug("Approximate Search Evaluator configuration file loaded successfully.")
+            log.debug("Approximate Search Evaluator configuration file loaded successfully.")
         return cls(**raw_config)

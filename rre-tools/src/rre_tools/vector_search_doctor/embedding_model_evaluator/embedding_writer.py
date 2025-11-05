@@ -7,21 +7,22 @@ import jsonlines
 from mteb.models.cache_wrapper import CachedEmbeddingWrapper
 
 from rre_tools.vector_search_doctor.embedding_model_evaluator.custom_mteb_tasks.reranking_task import compose_text
-from rre_tools.vector_search_doctor.embedding_model_evaluator.utils import read_corpus_retrieval, read_corpus_reranking, read_queries
+from rre_tools.vector_search_doctor.embedding_model_evaluator.utils import read_corpus_retrieval, read_corpus_reranking, \
+    read_queries
 from rre_tools.vector_search_doctor.embedding_model_evaluator.constants import TASKS_NAME_MAPPING
 
 log = logging.getLogger(__name__)
 
 
 def _write_embeddings_jsonl(
-    path: Path, items: Iterable[tuple[str, np.ndarray | list[float]]]
+        path: Path, items: Iterable[tuple[str, np.ndarray | list[float]]]
 ) -> None:
     with jsonlines.open(path, mode="w") as jsonl:
         for _id, vector in items:
             if isinstance(vector, np.ndarray):
                 vector = vector.tolist()
             jsonl.write({"id": _id, "vector": vector})
-    log.info(f"Embeddings are saved into {path}")
+        log.info(f"Embeddings are saved into {path}")
 
 
 class EmbeddingWriter:
@@ -33,13 +34,13 @@ class EmbeddingWriter:
     """
 
     def __init__(
-        self,
-        corpus_path: str | Path,
-        queries_path: str | Path,
-        cached: CachedEmbeddingWrapper,
-        cache_path: str | Path,
-        task_name: str,
-        batch_size: int,
+            self,
+            corpus_path: str | Path,
+            queries_path: str | Path,
+            cached: CachedEmbeddingWrapper,
+            cache_path: str | Path,
+            task_name: str,
+            batch_size: int,
     ):
         self.corpus_path = corpus_path
         self.queries_path = queries_path
@@ -59,10 +60,12 @@ class EmbeddingWriter:
         path = Path(embedding_path)
         path.mkdir(parents=True, exist_ok=True)
 
+        log.info(f"Started writing document and query embeddings to {embedding_path}")
+
         # documents
         documents_path = path / "documents_embeddings.jsonl"
         if self.task_name == TASKS_NAME_MAPPING["retrieval"]:
-            doc_dict_retrieval= read_corpus_retrieval(Path(self.corpus_path))
+            doc_dict_retrieval = read_corpus_retrieval(Path(self.corpus_path))
             doc_ids = list(doc_dict_retrieval.keys())
             doc_texts = list(doc_dict_retrieval.values())
         elif self.task_name == TASKS_NAME_MAPPING["reranking"]:
@@ -74,7 +77,6 @@ class EmbeddingWriter:
             ]
         else:
             raise ValueError(f"Unknown task: {self.task_name}")
-
 
         doc_vectors = self.cached.encode(
             texts=doc_texts,
@@ -97,3 +99,4 @@ class EmbeddingWriter:
         _write_embeddings_jsonl(queries_path, zip(query_ids, query_vectors))
 
         self.cached.close()
+        log.info("Finished writing embeddings")

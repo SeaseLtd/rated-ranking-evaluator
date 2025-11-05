@@ -14,13 +14,15 @@ from rre_tools.vector_search_doctor.approximate_search_evaluator.config import C
 
 log = logging.getLogger(__name__)
 
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Parse arguments for CLI.")
 
     parser.add_argument(
         "--config",
         type=str,
-        help='Config file path to use for the application [default: "configs/approximate_search_evaluator/approximate_search_evaluator_config.yaml"]',
+        help='Config file path to use for the application [default: '
+             '"configs/approximate_search_evaluator/approximate_search_evaluator_config.yaml"]',
         required=False,
         default="configs/approximate_search_evaluator/approximate_search_evaluator_config.yaml",
     )
@@ -29,6 +31,7 @@ def _parse_args() -> argparse.Namespace:
                         help='Activate debug mode for logging [default: False]')
 
     return parser.parse_args()
+
 
 def add_vector(rating_filename: str | Path,
                embedding_filename: str | Path,
@@ -70,7 +73,8 @@ def add_vector(rating_filename: str | Path,
     log.debug("Written updated ratings back to %s", rating_filename)
     return
 
-def setup_rre(eval_folder : Path, search_engine_type : str, version : str) -> None:
+
+def setup_rre(eval_folder: Path, search_engine_type: str, version: str) -> None:
     subprocess.run(
         [
             "mvn", "archetype:generate",
@@ -87,7 +91,8 @@ def setup_rre(eval_folder : Path, search_engine_type : str, version : str) -> No
         check=True
     )
 
-def run_rre_evaluate(eval_folder : Path) -> None:
+
+def run_rre_evaluate(eval_folder: Path) -> None:
     """
     Run `mvn rre:evaluate` inside rre-evaluator-solr-external folder.
     """
@@ -126,7 +131,7 @@ def main() -> None:
     shutil.copy(config.query_template, templates_folder / config.query_template.name)
 
     conf_sets_folder.mkdir(parents=True, exist_ok=True)
-    for version in ["v1.0", "v1.1"]: # if we use just one version, it breaks :)
+    for version in ["v1.0", "v1.1"]:  # if we use just one version, it breaks :)
         conf_sets_version_folder = conf_sets_folder / version
         conf_sets_version_folder.mkdir(parents=True, exist_ok=True)
         with open(conf_sets_version_folder / config.conf_sets_filename, "w", encoding="utf-8") as f:
@@ -135,7 +140,6 @@ def main() -> None:
                 config.collection_name_alias: config.collection_name
             }
             json.dump(to_dump, f, indent=2, ensure_ascii=False)
-
 
     log.debug("Initializing DataStore")
     data_store = DataStore()
@@ -170,7 +174,8 @@ def main() -> None:
     run_rre_evaluate(eval_folder)
     log.info("Evaluation finished.")
 
-    shutil.copy(eval_folder / "target" / "rre" / "evaluation.json", config.output_destination / "rre_evaluation_results.json")
+    shutil.copy(eval_folder / "target" / "rre" / "evaluation.json",
+                config.output_destination / "rre_evaluation_results.json")
     log.info(f"Evaluation file saved to `{config.output_destination}/` directory.")
 
     if not args.verbose:

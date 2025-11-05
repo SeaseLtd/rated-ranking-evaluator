@@ -29,9 +29,9 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         sample_creation="created",
         dataset={
             "name": "data",
-            "path": "rre-embeddings/resources/data",
+            "path": "rre-embeddings/resources/",
             "revision": "v1",
-            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data",
+            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/",
         },
     )
 
@@ -46,6 +46,8 @@ class CustomRetrievalTask(AbsTaskRetrieval):
         Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
         In our case, we want to use local data files (paths defined in Config), so we override this method.
         """
+        log.debug("Loading data for CustomRetrievalTask")
+
         if config is None:
             message = "No config is provided. Pass your internal Config via MTEB.run(..., config=Config)."
             log.error(message)

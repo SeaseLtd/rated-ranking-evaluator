@@ -75,9 +75,9 @@ class CustomRerankingTask(AbsTaskReranking):
         main_score="map",
         dataset={
             "name": "data",
-            "path": "rre-embeddings/resources/data",
+            "path": "rre-embeddings/resources/",
             "revision": "v1",
-            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/data",
+            "url": "https://github.com/SeaseLtd/rated-ranking-evaluator/rre-embeddings/resources/",
         },
     )
 
@@ -86,6 +86,7 @@ class CustomRerankingTask(AbsTaskReranking):
         Override AbsTask.load_data. By default, AbsTask.load_data fetches datasets from the Hugging Face Hub.
         In our case, we want to use local data files (paths defined in Config), so we override this method.
         """
+        log.debug("Loading data for CustomRerankingTask")
 
         if config is None:
             raise ValueError(

@@ -33,6 +33,7 @@ class MtebWriter(AbstractWriter):
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
+            log.info(f"Wrote {len(datastore.get_documents())} corpus records to {str(corpus_path)}")
 
     def _write_queries(self, queries_path: Path, datastore: DataStore) -> None:
         """
@@ -43,6 +44,7 @@ class MtebWriter(AbstractWriter):
             for query in datastore.get_queries():
                 row = {"id": query.id, "text": query.text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
+            log.info(f"Wrote {len(datastore.get_queries())} queries to {str(queries_path)}")
 
     def _write_candidates(self, candidates_path: Path, datastore: DataStore) -> None:
         """
@@ -53,6 +55,7 @@ class MtebWriter(AbstractWriter):
             for rating in datastore.get_ratings():
                 row = {"query_id": rating.query_id, "doc_id": rating.doc_id, "rating": rating.score}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
+            log.info(f"Wrote {len(datastore.get_ratings())} candidates to {str(candidates_path)}")
 
     def write(self, output_path: str | Path, datastore: DataStore) -> None:
         """
@@ -66,13 +69,8 @@ class MtebWriter(AbstractWriter):
         path.mkdir(parents=True, exist_ok=True)
         try:
             self._write_corpus(path / "corpus.jsonl", datastore)
-            log.info("Corpus written successfully")
-
             self._write_queries(path / "queries.jsonl", datastore)
-            log.info("Queries written successfully")
-
             self._write_candidates(path / "candidates.jsonl", datastore)
-            log.info("Candidates written successfully")
 
         except Exception as e:
             log.exception("Failed to write MTEB files: %s", e)

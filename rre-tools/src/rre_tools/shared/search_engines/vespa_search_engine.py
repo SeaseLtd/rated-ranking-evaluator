@@ -147,6 +147,7 @@ class VespaSearchEngine(BaseSearchEngine):
         Returns:
             A list of `Document` instances parsed from the response.
         """
+        log.info(f"Fetching {number_of_docs} documents (hits) from the search engine for query generation")
 
         payload: Dict[str, Any] = self._fetch_all_payload
 
@@ -179,6 +180,8 @@ class VespaSearchEngine(BaseSearchEngine):
         Returns:
             A list of `Document` instances retrieved from the engine.
         """
+
+        log.info(f"Fetching documents (hits) based on query template for query evaluation")
 
         # Read the YQL template from file (following the same pattern as other engines)
         if isinstance(query_template, Path):
@@ -243,6 +246,7 @@ class VespaSearchEngine(BaseSearchEngine):
 
             normalized_fields = {k: self._normalize_field_value(v) for k, v in fields.items()}
             docs.append(Document(id=doc_id, fields=normalized_fields))
+        log.info(f"Fetched {len(docs)} documents from the engine")
         return docs
 
     @staticmethod
