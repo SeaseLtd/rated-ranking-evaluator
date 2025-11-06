@@ -87,6 +87,7 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
 
 def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_service: LLMService) -> None:
     """Complete the (query, doc) matrix with LLM scores."""
+    log.debug("Cartesian product is enabled, so adding cartesian product scores")
     for query_obj in data_store.get_queries():
         for doc_obj in data_store.get_cartesian_prod_docs():
             if not data_store.has_rating_score(query_obj.id, doc_obj.id):
@@ -149,7 +150,6 @@ def main() -> None:
 
     # score initial docset
     if config.enable_cartesian_product:
-        log.debug("Cartesian product is enabled, so adding cartesian product scores")
         add_cartesian_product_scores(config, data_store, service)
 
     # expand the docset with search engine topK (adding direct ratings)

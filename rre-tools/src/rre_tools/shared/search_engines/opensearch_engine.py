@@ -28,7 +28,7 @@ class OpenSearchEngine(BaseSearchEngine):
         search_url = f"{self.endpoint}/_search"
         log.debug(f"User-specified fields: {payload.get('_source')}")
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"OpenSearch payload (showing payload 500 first chars): {str(payload)[:500]}")
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
@@ -101,7 +101,7 @@ class OpenSearchEngine(BaseSearchEngine):
         search_url = f"{self.endpoint}/_search"
         log.debug(f"User-specified fields: {payload.get('_source')}")
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"OpenSearch payload (showing payload 500 first chars): {str(payload)[:500]}")
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()

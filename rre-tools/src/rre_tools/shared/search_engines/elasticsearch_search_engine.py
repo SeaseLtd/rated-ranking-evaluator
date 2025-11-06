@@ -29,7 +29,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"Elasticsearch payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
@@ -131,7 +131,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"Elasticsearch payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)

@@ -51,6 +51,8 @@ class VespaSearchEngine(BaseSearchEngine):
     def _get_total_hits(self, payload: Dict[str, Any]) -> int:
         base = str(self.endpoint).rstrip("/")
         search_url = f"{base}/search/"
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Vespa payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.post(
@@ -160,7 +162,7 @@ class VespaSearchEngine(BaseSearchEngine):
         payload["presentation.format"] =  "json"
         payload['offset'] = start
 
-        log.debug(f"Vespa payload (showing payload 1000 first chars): {str(payload)[:1000]}")
+        log.debug(f"Vespa payload (showing payload 500 first chars): {str(payload)[:500]}")
         return self._search(payload)
 
     def fetch_for_evaluation(

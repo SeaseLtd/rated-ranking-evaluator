@@ -45,7 +45,7 @@ class SolrSearchEngine(BaseSearchEngine):
 
         log.debug("Retrieving all docs to count them")
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"Solr payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.get(search_url, headers=self.HEADERS, params=payload)
@@ -131,7 +131,7 @@ class SolrSearchEngine(BaseSearchEngine):
         payload['wt'] = 'json'
 
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"Solr payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.get(search_url, headers=self.HEADERS, params=payload)
