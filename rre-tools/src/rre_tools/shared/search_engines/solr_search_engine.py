@@ -11,12 +11,15 @@ from rre_tools.shared.utils import clean_text
 
 import logging
 import json
+
 log = logging.getLogger(__name__)
+
 
 class SolrSearchEngine(BaseSearchEngine):
     """
     Solr implementation to search into a given collection
     """
+
     def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
@@ -42,7 +45,7 @@ class SolrSearchEngine(BaseSearchEngine):
 
         log.debug("Retrieving all docs to count them")
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"Solr payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.get(search_url, headers=self.HEADERS, params=payload)
@@ -52,8 +55,6 @@ class SolrSearchEngine(BaseSearchEngine):
             raise
 
         return int(response.json().get('response', {}).get('numFound', 0))
-
-
 
     def fetch_for_query_generation(self,
                                    documents_filter: Union[None, List[Dict[str, List[str]]]],
@@ -71,6 +72,8 @@ class SolrSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of retrieved documents as `Document` objects.
         """
+        log.info(f"Fetching {number_of_docs} documents (rows) from the search engine for query generation")
+
         payload: Dict[str, Any] = self._fetch_all_payload
         payload['rows'] = number_of_docs
         payload['start'] = start
@@ -103,6 +106,8 @@ class SolrSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents matching the query.
         """
+        log.info("Fetching documents (rows) based on query template for query evaluation")
+
         query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)
         payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
@@ -126,7 +131,7 @@ class SolrSearchEngine(BaseSearchEngine):
         payload['wt'] = 'json'
 
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"Solr payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.get(search_url, headers=self.HEADERS, params=payload)
@@ -139,14 +144,15 @@ class SolrSearchEngine(BaseSearchEngine):
         hits = response.json().get('response', {}).get('docs', [])
         result = []
         for hit in hits:
-             doc_id = hit.get(self.UNIQUE_KEY)
-             fields = {
-                 key: self._normalize(value)
-                 for key, value in hit.items()
-                 if key != self.UNIQUE_KEY
-             }
+            doc_id = hit.get(self.UNIQUE_KEY)
+            fields = {
+                key: self._normalize(value)
+                for key, value in hit.items()
+                if key != self.UNIQUE_KEY
+            }
 
-             result.append(Document(id=doc_id, fields=fields))
+            result.append(Document(id=doc_id, fields=fields))
+        log.info(f"Fetched {len(result)} documents from the engine")
         return result
 
     @staticmethod

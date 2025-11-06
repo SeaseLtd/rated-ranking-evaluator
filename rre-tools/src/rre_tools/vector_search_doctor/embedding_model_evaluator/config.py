@@ -56,6 +56,5 @@ class Config(BaseModel):
         """
         with open(config_path, "r") as f:
             raw_config = yaml.safe_load(f)
-
-        log.debug("Mteb Configuration file loaded successfully.")
+            log.debug("Embedding Model Evaluator (MTEB) configuration file loaded successfully")
         return cls(**raw_config)

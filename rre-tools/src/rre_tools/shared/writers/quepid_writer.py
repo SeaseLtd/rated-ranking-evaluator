@@ -1,11 +1,15 @@
 import csv
+import logging
 from pathlib import Path
 from typing import List, Tuple
 
 from rre_tools.shared.writers.abstract_writer import AbstractWriter
 from rre_tools.shared.data_store import DataStore
 
+log = logging.getLogger(__name__)
+
 QUEPID_OUTPUT_FILENAME = "quepid.csv"
+
 
 class QuepidWriter(AbstractWriter):
     """
@@ -32,7 +36,8 @@ class QuepidWriter(AbstractWriter):
         with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['query', 'docid', 'rating'])
-            
+
             rated_pairs = self._get_queries_and_ratings(datastore)
             for query_text, doc_id, rating in rated_pairs:
                 writer.writerow([query_text, doc_id, rating])
+            log.info(f"Documents, queries and their ratings have been written to {str(output_path)}")

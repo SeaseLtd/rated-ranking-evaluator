@@ -64,6 +64,9 @@ class LLMService:
         Returns a list of generated `num_queries_generate_per_doc` queries or throws an exception
         if LLM hallucinates
         """
+
+        log.info(f"Generating up to {num_queries_generate_per_doc} queries for document id={document.id}")
+
         schema: type[BaseModel] = create_queries_schema(num_queries_generate_per_doc)
         system_prompt = self._build_query_generation_prompt(num_queries_generate_per_doc=num_queries_generate_per_doc,
                                                             max_query_terms=max_query_terms)
@@ -94,6 +97,8 @@ class LLMService:
         if unique_queries_len != num_queries_generate_per_doc:
             log.warning(f"Expected {num_queries_generate_per_doc} unique queries, got {unique_queries_len}")
 
+        log.info(f"Generated {unique_queries_len} unique queries for document id={document.id}")
+
         return LLMQueryResponse(response_content=json.dumps(unique_queries))
 
     def generate_score(self, document: Document, query: str, relevance_scale: str,
@@ -102,6 +107,9 @@ class LLMService:
         Generates a relevance score for a given document-query pair using a specified relevance scale.
         If explanation flag is set to true, score explanation is generated as well.
         """
+
+        log.debug(f"Generating a rating for document_id={document.id} and query={query}")
+
         if relevance_scale not in {"binary", "graded"}:
             raise ValueError(f"Invalid relevance scale: {relevance_scale}")
 
@@ -137,6 +145,8 @@ class LLMService:
         except (ValidationError, KeyError) as e:
             log.debug("Invalid LLM response.")
             raise ValueError(f"Invalid LLM response: {e}")
+
+        log.debug(f"Generated a rating rating=model_response.score for document_id={document.id} and query={query}")
 
         return LLMScoreResponse(
             score=model_response.score,  # type: ignore[union-attr]

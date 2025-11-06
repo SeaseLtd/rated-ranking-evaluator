@@ -29,7 +29,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"Elasticsearch payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
@@ -62,6 +62,8 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents formatted as `Document` instances.
         """
+        log.info(f"Fetching {number_of_docs} documents (size) from the search engine for query generation")
+
         # Build base query
         query: Dict[str, Any] = self._fetch_all_payload
 
@@ -106,6 +108,8 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents matching the query.
         """
+        log.info("Fetching documents (size) based on query template for query evaluation")
+
         query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)
         payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
@@ -127,7 +131,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         search_url = urljoin(self.endpoint.encoded_string(), '_search')
 
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"Elasticsearch payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
@@ -149,6 +153,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
             }
 
             result.append(Document(id=doc_id, fields=fields))
+        log.info(f"Fetched {len(result)} documents from the engine")
         return result
 
     @staticmethod

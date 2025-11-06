@@ -51,6 +51,8 @@ class VespaSearchEngine(BaseSearchEngine):
     def _get_total_hits(self, payload: Dict[str, Any]) -> int:
         base = str(self.endpoint).rstrip("/")
         search_url = f"{base}/search/"
+        log.debug(f"Search url: {search_url}")
+        log.debug(f"Vespa payload (showing payload 500 first chars): {str(payload)[:500]}")
 
         try:
             response = requests.post(
@@ -147,6 +149,7 @@ class VespaSearchEngine(BaseSearchEngine):
         Returns:
             A list of `Document` instances parsed from the response.
         """
+        log.info(f"Fetching {number_of_docs} documents (hits) from the search engine for query generation")
 
         payload: Dict[str, Any] = self._fetch_all_payload
 
@@ -159,7 +162,7 @@ class VespaSearchEngine(BaseSearchEngine):
         payload["presentation.format"] =  "json"
         payload['offset'] = start
 
-        log.debug(f"Vespa payload (showing payload 1000 first chars): {str(payload)[:1000]}")
+        log.debug(f"Vespa payload (showing payload 500 first chars): {str(payload)[:500]}")
         return self._search(payload)
 
     def fetch_for_evaluation(
@@ -179,6 +182,8 @@ class VespaSearchEngine(BaseSearchEngine):
         Returns:
             A list of `Document` instances retrieved from the engine.
         """
+
+        log.info("Fetching documents (hits) based on query template for query evaluation")
 
         # Read the YQL template from file (following the same pattern as other engines)
         if isinstance(query_template, Path):
@@ -243,6 +248,7 @@ class VespaSearchEngine(BaseSearchEngine):
 
             normalized_fields = {k: self._normalize_field_value(v) for k, v in fields.items()}
             docs.append(Document(id=doc_id, fields=normalized_fields))
+        log.info(f"Fetched {len(docs)} documents from the engine")
         return docs
 
     @staticmethod

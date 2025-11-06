@@ -26,10 +26,11 @@ def build_openai(config: LLMConfig) -> BaseChatModel:
     if not key:
         log.error("OpenAI API key not set %s in the env", config.api_key_env)
         raise ValueError("OpenAI API key not set.")
-    log.debug("Building OpenAI ChatModel using model=%s", config.model)
+    log.debug("Building OpenAI ChatModel using name=%s, model=%s, max_tokens=%s",
+              config.name, config.model, config.max_tokens)
     return ChatOpenAI(
         model=config.model,
-        max_tokens=config.max_tokens, # type: ignore[arg-type]
+        max_tokens=config.max_tokens,  # type: ignore[arg-type]
         api_key=SecretStr(key),
     )
 
@@ -38,14 +39,16 @@ def build_gemini(config: LLMConfig) -> BaseChatModel:
     load_dotenv()  # load .env file
     key = os.getenv(config.api_key_env or "GOOGLE_API_KEY")
     if not key:
-        log.error("Google API key not set %s in the env", config.api_key_env)
-        raise ValueError("Google API key not set.")
-    log.debug("Building Google Gemini ChatModel using model=%s", config.model)
+        log.error("Google Gemini API key not set %s in the env", config.api_key_env)
+        raise ValueError("Google Gemini API key not set.")
+    log.debug("Building Google Gemini ChatModel using name=%s, model=%s, max_tokens=%s",
+              config.name, config.model, config.max_tokens)
     return ChatGoogleGenerativeAI(
         model=config.model,
         max_output_tokens=config.max_tokens,
         google_api_key=key,
     )
+
 
 class LLMServiceFactory:
     PROVIDER_REGISTRY = {
@@ -56,8 +59,9 @@ class LLMServiceFactory:
     @classmethod
     def build(cls, config: LLMConfig) -> BaseChatModel:
         provider_name = config.name
+        provider_model = config.model
         if provider_name not in cls.PROVIDER_REGISTRY:
             log.error("Unsupported LLM provider requested: %s", provider_name)
             raise ValueError(f"Unsupported provider: {provider_name}")
-        log.info("Selected LLM provider: %s", provider_name)
+        log.info("Selected LLM provider=%s, model=%s", provider_name, provider_model)
         return cls.PROVIDER_REGISTRY[provider_name](config)

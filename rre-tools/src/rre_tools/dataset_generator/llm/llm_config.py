@@ -24,4 +24,5 @@ class LLMConfig(BaseModel):
             raise FileNotFoundError(f"LLM config file not found: {path}")
         with open(path, "r") as f:
             raw = yaml.safe_load(f)
+            log.debug("LLM configuration file loaded successfully")
         return cls(**raw)

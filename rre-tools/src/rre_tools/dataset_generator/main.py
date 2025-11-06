@@ -26,7 +26,6 @@ from rre_tools.dataset_generator.config import Config
 log: Logger = getLogger(__name__)
 
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
 
@@ -40,7 +39,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-
 def add_user_queries(config: Config, data_store: DataStore) -> None:
     """Loads queries from file (if exists) and adds them as Query objects."""
     if config.queries is not None:
@@ -49,6 +47,7 @@ def add_user_queries(config: Config, data_store: DataStore) -> None:
                 clean_line = line.strip()
                 if clean_line:
                     data_store.add_query(clean_line)
+            log.info(f"Added user-defined queries from file={config.queries}")
 
 
 def generate_and_add_queries(config: Config, data_store: DataStore, llm_service: LLMService,
@@ -74,7 +73,8 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
     log.debug(f"Number of queries per document: {num_queries_per_doc}")
 
     for doc in docs_to_generate_queries:
-        query_response: LLMQueryResponse = llm_service.generate_queries(doc, num_queries_per_doc, config.max_query_terms)
+        query_response: LLMQueryResponse = llm_service.generate_queries(doc, num_queries_per_doc,
+                                                                        config.max_query_terms)
         for query_ in query_response.get_queries():
             if len(data_store.get_queries()) >= config.num_queries_needed:
                 return
@@ -87,6 +87,7 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
 
 def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_service: LLMService) -> None:
     """Complete the (query, doc) matrix with LLM scores."""
+    log.debug("Cartesian product is enabled, so adding cartesian product scores")
     for query_obj in data_store.get_queries():
         for doc_obj in data_store.get_cartesian_prod_docs():
             if not data_store.has_rating_score(query_obj.id, doc_obj.id):
@@ -182,6 +183,7 @@ def main() -> None:
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
+
 
 if __name__ == "__main__":
     main()

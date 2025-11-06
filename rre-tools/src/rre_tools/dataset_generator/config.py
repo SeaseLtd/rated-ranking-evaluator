@@ -151,6 +151,5 @@ class Config(BaseModel):
         path = Path(config_path)
         with path.open('r') as f:
             raw_config = yaml.safe_load(f)
-
-        log.debug("Configuration file loaded successfully.")
+            log.debug("Dataset Generator configuration file loaded successfully")
         return cls(**raw_config)

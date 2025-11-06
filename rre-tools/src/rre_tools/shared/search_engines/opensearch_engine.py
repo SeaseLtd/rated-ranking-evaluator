@@ -28,7 +28,7 @@ class OpenSearchEngine(BaseSearchEngine):
         search_url = f"{self.endpoint}/_search"
         log.debug(f"User-specified fields: {payload.get('_source')}")
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"OpenSearch payload (showing payload 500 first chars): {str(payload)[:500]}")
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
@@ -48,6 +48,8 @@ class OpenSearchEngine(BaseSearchEngine):
                                    doc_fields: List[str],
                                    start: int = 0) -> List[Document]:
         """Fetches a list of documents for query generation based on optional filters."""
+        log.info(f"Fetching {number_of_docs} documents (size) from the search engine for query generation")
+
         filters: List[Dict[str, Any]] = []
         if documents_filter:
             for field_values in documents_filter:
@@ -82,6 +84,9 @@ class OpenSearchEngine(BaseSearchEngine):
 
     def fetch_for_evaluation(self, query_template: Path | str, doc_fields: List[str], keyword: str = "*") -> List[Document]:
         """Fetches documents for evaluation by executing a query built from a template."""
+
+        log.info("Fetching documents (size) based on query template for query evaluation")
+
         query_template = Path(query_template)
         payload: Dict[str, Any] = self._parse_query_template(query_template)
         payload = self._replace_placeholder(payload, self.QUERY_PLACEHOLDER, keyword)
@@ -96,7 +101,7 @@ class OpenSearchEngine(BaseSearchEngine):
         search_url = f"{self.endpoint}/_search"
         log.debug(f"User-specified fields: {payload.get('_source')}")
         log.debug(f"Search url: {search_url}")
-        log.debug(f"Payload: {payload}")
+        log.debug(f"OpenSearch payload (showing payload 500 first chars): {str(payload)[:500]}")
         try:
             response = requests.post(search_url, headers=self.HEADERS, json=payload)
             response.raise_for_status()
@@ -119,7 +124,7 @@ class OpenSearchEngine(BaseSearchEngine):
             }
 
             result.append(Document(id=doc_id, fields=fields))
-
+        log.info(f"Fetched {len(result)} documents from the engine")
         return result
 
     @staticmethod

@@ -83,14 +83,13 @@ def _get_mteb_leaderboard_avg_main_score(model_name: str, task_type: str) -> flo
     scores: list[float] = []
     for model_results in results.model_results:
         for task_result in model_results.task_results:
-            for split_name, split_subsets in task_result.scores.items():
-                for task_subset in split_subsets:
-                    if "main_score" in task_subset:
-                        val = task_subset["main_score"]
-                        if isinstance(val, (int, float)):
-                            scores.append(float(val))
+            val = task_result.get_score()
+            if isinstance(val, (int, float)):
+                scores.append(float(val))
     if len(scores) > 0:
-        return sum(scores) / len(scores)
+        avg_main_score: float = sum(scores) / len(scores)
+        log.debug(f"Fetched average main score from MTEB leaderboard {avg_main_score}")
+        return avg_main_score
     return 0.0
 
 
@@ -102,6 +101,7 @@ def _append_mteb_leaderboard_score(file_path: Path, avg_main_score: float) -> No
 
     with file_path.open("w", encoding="utf-8") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
+        log.debug(f"Added the average main score {avg_main_score} to the file {file_path}")
 
 
 def main() -> None:
@@ -120,8 +120,13 @@ def main() -> None:
         log.error("Custom task name is not defined: %s", task_name)
         raise ValueError("Custom task name is not defined.")
 
+    if config.output_dest is None:
+        raise ValueError("config.output_dest is not set, default_dir must be `resources`")
+
     model_name_additional_path = config.model_id.replace("/", "__").replace(" ", "_")
     model_with_cache_path = CACHE_PATH / model_name_additional_path
+
+    log.debug(f"Using embedding cache at {model_with_cache_path}")
     model_with_cache = CachedEmbeddingWrapper(model, cache_path=model_with_cache_path)
 
     # --- Task instance (in-memory) ---
@@ -141,7 +146,7 @@ def main() -> None:
     evaluation = mteb.MTEB(tasks=[task])
     evaluation.run(
         model=model_with_cache,
-        output_folder=config.output_dest,
+        output_folder=str(config.output_dest),
         overwrite_results=True,
         config=config,
     )
@@ -151,9 +156,6 @@ def main() -> None:
     log.info(f"Time took for MTEB evaluation: {(end - start) / 60:.2f} minutes")
 
     log.info("Adding mteb leaderboard average main score...")
-
-    if config.output_dest is None:
-        raise ValueError("config.output_dest is not set")
 
     # task result is in {output_folder} / {model_name} / {model_revision} / {task_name}.json
     task_result_path: Path = (config.output_dest / model_name_additional_path /
@@ -171,9 +173,7 @@ def main() -> None:
         task_name=task_name,
         batch_size=256,
     )
-    log.info(f"Writing embeddings to {config.embeddings_dest} ...")
     writer.write(config.embeddings_dest)
-    log.info("Finished writing embeddings.")
 
 
 if __name__ == "__main__":
