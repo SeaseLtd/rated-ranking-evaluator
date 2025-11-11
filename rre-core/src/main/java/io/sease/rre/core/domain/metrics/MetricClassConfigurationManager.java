@@ -15,7 +15,7 @@ public class MetricClassConfigurationManager {
     private static MetricClassConfigurationManager INSTANCE = new MetricClassConfigurationManager();
 
     private BigDecimal defaultMaximumGrade = BigDecimal.valueOf(3);
-    private BigDecimal defaultMissingGrade = BigDecimal.valueOf(2);
+    private BigDecimal defaultMissingGrade = BigDecimal.valueOf(0);
 
     public static MetricClassConfigurationManager getInstance() {
         return INSTANCE;
