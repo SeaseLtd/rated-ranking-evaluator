@@ -19,8 +19,6 @@ class SolrSearchEngine(BaseSearchEngine):
     """
     Solr implementation to search into a given collection
     """
-    SPECIAL_CHARS: set[str] = {'\\', '+', '-', '!', '(', ')', ':', '^', '[', ']', '"',
-                     '{', '}', '~', '*', '?', '|', '&', '/'}
 
     def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
@@ -29,21 +27,11 @@ class SolrSearchEngine(BaseSearchEngine):
         self.UNIQUE_KEY = requests.get(urljoin(self.endpoint.encoded_string(), 'schema/uniquekey')).json()['uniqueKey']
         log.debug(f"uniqueKey found: {self.UNIQUE_KEY}")
 
-
     @property
     def _fetch_all_payload(self) -> Dict[str, Any]:
         return {
             'q': '*:*',
         }
-    @staticmethod
-    def escape(string: str) -> str:
-        """Escape special characters used in query syntax."""
-        sb = []
-        for c in string:
-            if c in SolrSearchEngine.SPECIAL_CHARS:
-                sb.append('\\')
-            sb.append(c)
-        return ''.join(sb)
 
     def _unify_fields(self, doc_fields: List[str]) -> str:
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]

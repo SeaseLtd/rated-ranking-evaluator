@@ -9,10 +9,24 @@ from rre_tools.shared.models.document import Document
 NUMBER_OF_DOCS_EACH_FETCH = 100
 
 class BaseSearchEngine(ABC):
+
+    SPECIAL_CHARS: set[str] = {'\\', '+', '-', '!', '(', ')', ':', '^', '[', ']', '"',
+                               '{', '}', '~', '*', '?', '|', '&', '/'}
+
     def __init__(self, endpoint: HttpUrl):
         self.endpoint = HttpUrl(endpoint)
         self.QUERY_PLACEHOLDER = "$query"
         self.UNIQUE_KEY = 'id'
+
+    @staticmethod
+    def escape(string: str) -> str:
+        """Escape special characters used in query syntax."""
+        sb = []
+        for c in string:
+            if c in BaseSearchEngine.SPECIAL_CHARS:
+                sb.append('\\')
+            sb.append(c)
+        return ''.join(sb)
 
     def fetch_all(self, doc_fields: List[str]) -> Iterator[Document]:
         """Extract all documents from search engine in batches.
