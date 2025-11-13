@@ -27,7 +27,7 @@ search_engine_url: "http://localhost:8983/solr/"
 #      - "book"
 
 # Maximum number of documents to retrieve from the search engine to generate queries
-number_of_docs: 2
+number_of_docs: 20
 
 # List of fields from documents used to generate queries and relevance scoring
 # These should match fields available in the search engine schema
@@ -39,14 +39,14 @@ doc_fields:
 
 # (Optional) File containing predefined queries to use instead of or alongside generated ones
 # If available, must be in a txt format.
-#queries: "templates/queries.txt"
+queries: "templates/queries.txt"
 
 # (Optional) Whether to generate queries from documents
 # Default: true; set to false to disable query generation from documents
 generate_queries_from_documents: true
 
 # Total number of queries to generate (includes predefined queries, if any)
-num_queries_needed: 4
+num_queries_needed: 30
 
 # Relevance scale used for scoring document relevance
 # Accepted values:
@@ -88,7 +88,7 @@ output_destination: "resources"
 
 # (Optional) Periodically persist in-memory datastore every N successful updates
 # Lower values persist more frequently (safer) but can be slower; higher values persist less often (faster)
-#datastore_autosave_every_n_updates: 50
+datastore_autosave_every_n_updates: 50
 
 # (Optional) Whether to enable scoring the cartesian product between the queries generated and the documents used to
 # generate the queries.
