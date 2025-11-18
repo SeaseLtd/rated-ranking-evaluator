@@ -28,7 +28,7 @@ An example `pom.xml`, excluding most RRE configuration, would look like:
     <pluginRepositories>
        <pluginRepository>
           <id>sease</id>
-          <url>https://raw.github.com/SeaseLtd/rated-ranking-evaluator/mvn-repo</url>
+          <url>https://maven.pkg.github.com/SeaseLtd/rated-ranking-evaluator</url>
        </pluginRepository>
     </pluginRepositories>
 
@@ -102,7 +102,7 @@ The `pom.xml` for your adapter project will look similar to:
         <repository>
             <id>sease</id>
             <name>Sease repository</name>
-            <url>https://raw.github.com/SeaseLtd/rated-ranking-evaluator/mvn-repo</url>
+            <url>https://maven.pkg.github.com/SeaseLtd/rated-ranking-evaluator</url>
         </repository>
     </repositories>
 
