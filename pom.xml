@@ -57,9 +57,9 @@
 
     <distributionManagement>
         <repository>
-            <id>internal.repo</id>
-            <url>file://${user.dir}/target/mvn-repo</url>
-            <layout>default</layout>
+            <id>github</id>
+            <name>RRE package</name>
+            <url>https://maven.pkg.github.com/SeaseLtd/rated-ranking-evaluator</url>
         </repository>
     </distributionManagement>
 
