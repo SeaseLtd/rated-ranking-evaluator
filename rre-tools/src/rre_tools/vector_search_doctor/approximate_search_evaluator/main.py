@@ -82,10 +82,10 @@ def setup_rre(eval_folder: Path, search_engine_type: str, version: str) -> None:
             "-B",
             "-DarchetypeGroupId=io.sease",
             f"-DarchetypeArtifactId=rre-maven-external-{search_engine_type}-archetype",
-            "-DarchetypeVersion=1.1",
+            "-DarchetypeVersion=1.2-SNAPSHOT",
             "-DgroupId=io.sease.approximate-evaluator",
             f"-DartifactId={eval_folder}",
-            "-Dversion=1.1",
+            "-Dversion=1.2-SNAPSHOT",
             f"-D{'es' if search_engine_type == 'elasticsearch' else 'solr'}Version={version}"
         ],
         check=True
