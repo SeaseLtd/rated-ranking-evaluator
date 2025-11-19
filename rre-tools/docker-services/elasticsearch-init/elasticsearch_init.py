@@ -1,5 +1,5 @@
 """
-opensearch_init.py
+elasticsearch_init.py
 """
 
 import json
@@ -12,7 +12,7 @@ from typing import Optional, Any
 
 import requests
 
-HOST_ENDPOINT = os.getenv("OPENSEARCH_ENDPOINT", "http://opensearch:9200")
+HOST_ENDPOINT = os.getenv("ELASTICSEARCH_ENDPOINT", "http://elasticsearch:9200")
 INDEX_NAME = os.getenv("INDEX_NAME", "testcore")
 INDEX_ENDPOINT = HOST_ENDPOINT + "/" + INDEX_NAME
 DATASET = os.getenv("DATASET", "/opt/rre-dataset-generator/data/dataset.jsonl")
@@ -32,30 +32,30 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
 )
-log = logging.getLogger("opensearch_init")
+log = logging.getLogger("elasticsearch_init")
 
 
-def wait_for_opensearch(host_endpoint: str, interval: float = 1.0) -> None:
-    """ Waits until OpenSearch /_cluster/health returns 200. """
+def wait_for_elasticsearch(host_endpoint: str, interval: float = 1.0) -> None:
+    """ Waits until Elasticsearch /_cluster/health returns 200. """
     health_url = f"{host_endpoint.rstrip('/')}/_cluster/health"
 
-    log.info("Waiting for OpenSearch at %s ...", health_url)
+    log.info("Waiting for Elasticsearch at %s ...", health_url)
 
     for attempt in range(DEFAULT_TIMEOUT):
         try:
             response = requests.get(health_url, timeout=DEFAULT_TIMEOUT)
             if response.ok:
-                log.info("OpenSearch is ready (attempt %d)", attempt + 1)
+                log.info("Elasticsearch is ready (attempt %d)", attempt + 1)
                 return
         except requests.RequestException:
             pass
         log.debug("  ...still waiting (%d/%d)", attempt + 1, DEFAULT_TIMEOUT)
         time.sleep(interval)
-    raise RuntimeError(f"OpenSearch did not become ready after {DEFAULT_TIMEOUT} seconds: {health_url}")
+    raise RuntimeError(f"Elasticsearch did not become ready after {DEFAULT_TIMEOUT} seconds: {health_url}")
 
 
-def create_knn_index(index_endpoint: str) -> None:
-    """ Creates index with 'index.knn': true using INDEX_ENDPOINT. """
+def create_index(index_endpoint: str) -> None:
+    """ Creates index """
     try:
         if requests.head(index_endpoint, timeout=DEFAULT_TIMEOUT).ok:
             log.info("Index already exists at %s. Skipping creation.", index_endpoint)
@@ -65,11 +65,14 @@ def create_knn_index(index_endpoint: str) -> None:
 
     payload = {
         "settings": {
-            "index.knn": True
+            "index": {
+                "number_of_shards": 1,
+                "number_of_replicas": 0
+            }
         }
     }
 
-    log.info("Creating knn index at %s ...", index_endpoint)
+    log.info("Creating index at %s ...", index_endpoint)
     try:
         response = requests.put(index_endpoint, json=payload, timeout=DEFAULT_TIMEOUT)
         response.raise_for_status()
@@ -80,7 +83,7 @@ def create_knn_index(index_endpoint: str) -> None:
 
 
 def get_count(index_endpoint: str) -> int:
-    """Returns count from OpenSearch /_count endpoint or 0 in case of exception."""
+    """Returns count from Elasticsearch /_count endpoint or 0 in case of exception."""
     count_url = f"{index_endpoint.rstrip('/')}/_count"
     params: dict[str, Any] = {"q": "*:*"}
     try:
@@ -89,7 +92,7 @@ def get_count(index_endpoint: str) -> int:
         body = response.json()
         return int(body.get("count", 0))
     except Exception as e:
-        log.warning("Unable to get _count endpoint from OpenSearch: %s", e)
+        log.warning("Unable to get _count endpoint from Elasticsearch: %s", e)
         return 0
 
 
@@ -173,28 +176,21 @@ def get_embedding_dimension_size(embeddings: dict[str, list[float]]) -> Optional
 
 
 def create_vector_field(index_endpoint: str, dimension: int) -> None:
-    """ Sends PUT to /_mapping to add a 'vector' field with type knn_vector """
+    """ Sends PUT to /_mapping to add a 'vector' field with type dense_vector """
     mapping_url = f"{index_endpoint.rstrip('/')}/_mapping"
 
     payload = {
         "properties": {
             "vector": {
-                "type": "knn_vector",
-                "dimension": dimension,
-                "method": {
-                    "name": "hnsw",
-                    "engine": "lucene",
-                    "space_type": "cosinesimil",
-                    "parameters": {
-                        "ef_construction": 128,
-                        "m": 16
-                    }
-                }
+                "type": "dense_vector",
+                "dims": dimension,
+                "index": True,
+                "similarity": "cosine"
             }
         }
     }
 
-    log.info("Creating vector field (dimension=%d) at %s", dimension, mapping_url)
+    log.info("Creating dense_vector field (dimension=%d) at %s", dimension, mapping_url)
     try:
         response = requests.put(mapping_url, json=payload, timeout=DEFAULT_TIMEOUT)
 
@@ -212,13 +208,13 @@ def create_vector_field(index_endpoint: str, dimension: int) -> None:
 
 
 def index_documents(host_endpoint: str, index_name: str, docs: list[dict[str, Any]]) -> None:
-    """ Sends documents to OpenSearch using /_bulk endpoint in batches. """
+    """ Sends documents to Elasticsearch using /_bulk endpoint in batches. """
     total_docs = len(docs)
     if total_docs == 0:
         log.info("No documents provided for indexing.")
         return
 
-    log.info("Indexing %d documents into OpenSearch index '%s'", total_docs, index_name)
+    log.info("Indexing %d documents into Elasticsearch index '%s'", total_docs, index_name)
 
     num_batches = (total_docs + INDEX_BATCH_SIZE - 1) // INDEX_BATCH_SIZE
 
@@ -267,15 +263,15 @@ def index_documents(host_endpoint: str, index_name: str, docs: list[dict[str, An
 
 
 def main() -> int:
-    log.info("Starting opensearch_init.py")
+    log.info("Starting elasticsearch_init.py")
     try:
-        wait_for_opensearch(HOST_ENDPOINT, interval=1.0)
+        wait_for_elasticsearch(HOST_ENDPOINT, interval=1.0)
     except Exception as e:
-        log.error("OpenSearch is not available: %s", e)
+        log.error("Elasticsearch is not available: %s", e)
         sys.exit(1)
-    create_knn_index(INDEX_ENDPOINT)
+    create_index(INDEX_ENDPOINT)
     count_docs = get_count(INDEX_ENDPOINT)
-    log.info("OpenSearch has count = %d docs", count_docs)
+    log.info("Elasticsearch has count = %d docs", count_docs)
 
     if count_docs == 0 or FORCE_REINDEX:
         docs = load_dataset_to_dict(DATASET)
