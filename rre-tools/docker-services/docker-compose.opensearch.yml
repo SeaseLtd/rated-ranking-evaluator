@@ -25,9 +25,25 @@ services:
     depends_on:
       - opensearch
 
+  prepare-embeddings-dir:
+    build:
+      context: opensearch-init
+    command: [ "sh","-c","mkdir -p /workspace/resources/embeddings" ]
+    volumes:
+      - ../resources:/workspace/resources
+    restart: "no"
+
   opensearch-init:
     build:
       context: opensearch-init
     depends_on:
       - opensearch
-    command: ["sh", "-c", "/opt/rre-dataset-generator/opensearch-init.sh"]
+      - prepare-embeddings-dir
+    environment:
+      - FORCE_REINDEX=false
+    volumes:
+      - ./opensearch-init/data/dataset.jsonl:/opt/rre-dataset-generator/data/dataset.jsonl
+      - ../resources/embeddings:/opt/rre-dataset-generator/embeddings
+    working_dir: /opt/rre-dataset-generator
+    command: [ "python", "/opt/rre-dataset-generator/opensearch_init.py" ]
+

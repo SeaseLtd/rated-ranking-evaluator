@@ -9,8 +9,24 @@ services:
       - xpack.security.enabled=false
       - xpack.security.enrollment.enabled=false
 
+  prepare-embeddings-dir:
+    build:
+      context: elasticsearch-init
+    command: [ "sh","-c","mkdir -p /workspace/resources/embeddings" ]
+    volumes:
+      - ../resources:/workspace/resources
+    restart: "no"
+
   eslasticsearch-init:
     build: ./elasticsearch-init
     depends_on:
       - elasticsearch
-    command: ["sh", "-c", "/opt/rre-dataset-generator/elasticsearch-init.sh"]
+      - prepare-embeddings-dir
+    environment:
+      - FORCE_REINDEX=false
+    volumes:
+      - ./elasticsearch-init/data/dataset.jsonl:/opt/rre-dataset-generator/data/dataset.jsonl
+      - ../resources/embeddings:/opt/rre-dataset-generator/embeddings
+    working_dir: /opt/rre-dataset-generator
+    command: [ "python", "/opt/rre-dataset-generator/elasticsearch_init.py" ]
+

@@ -1,6 +1,18 @@
-FROM alpine:3.22.1
+FROM python:3.10-slim
 
-RUN apk add --no-cache curl jq
+RUN pip install --no-cache-dir requests
 
-COPY data/dataset.jsonl /opt/rre-dataset-generator/data/dataset.jsonl
-COPY --chmod=777 opensearch-init.sh /opt/rre-dataset-generator/opensearch-init.sh
+WORKDIR /opt/rre-dataset-generator
+
+COPY opensearch_init.py /opt/rre-dataset-generator/opensearch_init.py
+COPY data/ /opt/rre-dataset-generator/data/
+
+# create embeddings dir inside the image
+RUN mkdir -p /opt/rre-dataset-generator/embeddings \
+ && chmod 755 /opt/rre-dataset-generator/embeddings
+
+
+RUN chmod +x /opt/rre-dataset-generator/opensearch_init.py
+
+CMD ["python", "/opt/rre-dataset-generator/opensearch_init.py"]
+
