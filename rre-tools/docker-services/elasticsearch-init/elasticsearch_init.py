@@ -273,10 +273,10 @@ def main() -> int:
             log.info("Detected embedding dimension = %d", embedding_dimension)
 
             merged_docs = merge_docs_with_embeddings(docs, embeddings, output_path=TMP_FILE)
-            create_vector_field(index_endpoint=INDEX_ENDPOINT, dimension=embedding_dimension,timeout=DEFAULT_TIMEOUT)
+            create_vector_field(index_endpoint=INDEX_ENDPOINT, dimension=embedding_dimension, timeout=DEFAULT_TIMEOUT)
 
-            index_documents(host_endpoint=HOST_ENDPOINT,index_name=INDEX_NAME,
-                            docs=merged_docs,timeout=DEFAULT_TIMEOUT)
+            index_documents(host_endpoint=HOST_ENDPOINT, index_name=INDEX_NAME,
+                            docs=merged_docs, timeout=DEFAULT_TIMEOUT)
         else:
             log.info("Using plain dataset without embeddings")
             index_documents(host_endpoint=HOST_ENDPOINT, index_name=INDEX_NAME, docs=docs, timeout=DEFAULT_TIMEOUT)
