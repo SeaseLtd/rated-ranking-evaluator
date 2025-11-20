@@ -35,46 +35,39 @@ logging.basicConfig(
 log = logging.getLogger("elasticsearch_init")
 
 
-def wait_for_elasticsearch(host_endpoint: str, interval: float = 1.0) -> None:
-    """ Waits until Elasticsearch /_cluster/health returns 200. """
+def wait_for_elasticsearch(host_endpoint: str, timeout: int, interval: float = 1.0) -> None:
+    """Waits until Elasticsearch /_cluster/health returns 200."""
     health_url = f"{host_endpoint.rstrip('/')}/_cluster/health"
 
     log.info("Waiting for Elasticsearch at %s ...", health_url)
 
-    for attempt in range(DEFAULT_TIMEOUT):
+    for attempt in range(timeout):
         try:
-            response = requests.get(health_url, timeout=DEFAULT_TIMEOUT)
+            response = requests.get(health_url, timeout=timeout)
             if response.ok:
                 log.info("Elasticsearch is ready (attempt %d)", attempt + 1)
                 return
         except requests.RequestException:
             pass
-        log.debug("  ...still waiting (%d/%d)", attempt + 1, DEFAULT_TIMEOUT)
+        log.debug("  ...still waiting (%d/%d)", attempt + 1, timeout)
         time.sleep(interval)
-    raise RuntimeError(f"Elasticsearch did not become ready after {DEFAULT_TIMEOUT} seconds: {health_url}")
+    raise RuntimeError(f"Elasticsearch did not become ready after {timeout} seconds: {health_url}")
 
 
-def create_index(index_endpoint: str) -> None:
-    """ Creates index """
+def create_index(index_endpoint: str, timeout: int) -> None:
+    """Creates index if doesn't exist else skips"""
     try:
-        if requests.head(index_endpoint, timeout=DEFAULT_TIMEOUT).ok:
+        if requests.head(index_endpoint, timeout=timeout).ok:
             log.info("Index already exists at %s. Skipping creation.", index_endpoint)
             return
     except requests.RequestException:
         pass
 
-    payload = {
-        "settings": {
-            "index": {
-                "number_of_shards": 1,
-                "number_of_replicas": 0
-            }
-        }
-    }
+    payload = {"settings": {"index": {"number_of_shards": 1, "number_of_replicas": 0}}}
 
     log.info("Creating index at %s ...", index_endpoint)
     try:
-        response = requests.put(index_endpoint, json=payload, timeout=DEFAULT_TIMEOUT)
+        response = requests.put(index_endpoint, json=payload, timeout=timeout)
         response.raise_for_status()
         log.info("Index created successfully, %s", index_endpoint)
     except requests.RequestException as e:
@@ -82,12 +75,13 @@ def create_index(index_endpoint: str) -> None:
         raise
 
 
-def get_count(index_endpoint: str) -> int:
+def get_count(index_endpoint: str, timeout: int) -> int:
     """Returns count from Elasticsearch /_count endpoint or 0 in case of exception."""
     count_url = f"{index_endpoint.rstrip('/')}/_count"
+
     params: dict[str, Any] = {"q": "*:*"}
     try:
-        response = requests.get(count_url, params=params, timeout=DEFAULT_TIMEOUT)
+        response = requests.get(count_url, params=params, timeout=timeout)
         response.raise_for_status()
         body = response.json()
         return int(body.get("count", 0))
@@ -97,7 +91,7 @@ def get_count(index_endpoint: str) -> int:
 
 
 def load_dataset_to_dict(path: str) -> list[dict[str, Any]]:
-    """Loads dataset from jsonl file to dict (no embeddings). """
+    """Loads dataset from jsonl file to dict (no embeddings)."""
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"Dataset file is not found: {path}")
@@ -166,7 +160,7 @@ def merge_docs_with_embeddings(docs: list[dict[str, Any]], embeddings: dict[str,
     return merged
 
 
-def get_embedding_dimension_size(embeddings: dict[str, list[float]]) -> Optional[int]:
+def get_embedding_dimension(embeddings: dict[str, list[float]]) -> Optional[int]:
     """Returns embedding dimension size or None."""
     if not embeddings:
         return None
@@ -175,8 +169,8 @@ def get_embedding_dimension_size(embeddings: dict[str, list[float]]) -> Optional
     return len(first)
 
 
-def create_vector_field(index_endpoint: str, dimension: int) -> None:
-    """ Sends PUT to /_mapping to add a 'vector' field with type dense_vector """
+def create_vector_field(index_endpoint: str, dimension: int, timeout: int) -> None:
+    """Sends PUT to /_mapping to add a 'vector' field with type dense_vector"""
     mapping_url = f"{index_endpoint.rstrip('/')}/_mapping"
 
     payload = {
@@ -185,30 +179,28 @@ def create_vector_field(index_endpoint: str, dimension: int) -> None:
                 "type": "dense_vector",
                 "dims": dimension,
                 "index": True,
-                "similarity": "cosine"
+                "similarity": "cosine",
             }
         }
     }
 
     log.info("Creating dense_vector field (dimension=%d) at %s", dimension, mapping_url)
     try:
-        response = requests.put(mapping_url, json=payload, timeout=DEFAULT_TIMEOUT)
-
+        response = requests.put(mapping_url, json=payload, timeout=timeout)
         if response.status_code >= 400:
             log.error("Failed to update mapping. Status: %s, Body: %s",
                       response.status_code, response.text)
             return
 
         log.info("Mapping updated successfully (status=%s)", response.status_code)
-
     except requests.RequestException as e:
         log.error("Failed to update mapping: %s", e)
         raise
     return
 
 
-def index_documents(host_endpoint: str, index_name: str, docs: list[dict[str, Any]]) -> None:
-    """ Sends documents to Elasticsearch using /_bulk endpoint in batches. """
+def index_documents(host_endpoint: str, index_name: str, docs: list[dict[str, Any]], timeout: int) -> None:
+    """Sends documents to Elasticsearch using /_bulk endpoint in batches."""
     total_docs = len(docs)
     if total_docs == 0:
         log.info("No documents provided for indexing.")
@@ -230,13 +222,12 @@ def index_documents(host_endpoint: str, index_name: str, docs: list[dict[str, An
 
         body_lines = []
         for doc in batch:
-            action_metadata = {"index": {"_index": index_name}}
+            metadata = {"index": {"_index": index_name}}
 
-            if 'id' in doc:
-                action_metadata["index"]["_id"] = str(doc.pop('id'))
+            if "id" in doc:
+                metadata["index"]["_id"] = str(doc.pop("id"))
 
-            body_lines.append(json.dumps(action_metadata))
-
+            body_lines.append(json.dumps(metadata))
             body_lines.append(json.dumps(doc))
 
         payload = "\n".join(body_lines) + "\n"
@@ -244,13 +235,8 @@ def index_documents(host_endpoint: str, index_name: str, docs: list[dict[str, An
         log.info(f"Sending Batch {i + 1}/{num_batches} ({len(batch)} docs)")
 
         try:
-            headers = {'Content-Type': 'application/x-ndjson'}
-            response = requests.post(
-                bulk_url,
-                data=payload,
-                headers=headers,
-                timeout=DEFAULT_TIMEOUT
-            )
+            headers = {"Content-Type": "application/x-ndjson"}
+            response = requests.post(bulk_url, data=payload, headers=headers, timeout=timeout)
             response.raise_for_status()
 
             log.debug(f"Batch {i + 1} indexing successful (status={response.status_code})")
@@ -259,18 +245,20 @@ def index_documents(host_endpoint: str, index_name: str, docs: list[dict[str, An
             log.error(f"Failed to index batch {i + 1}: {e}")
             raise Exception(f"Failed during batch {i + 1} indexing.") from e
 
-    log.info("Successfully indexed %d documents in %d batches.", total_docs, num_batches)
+    log.info(
+        "Successfully indexed %d documents in %d batches.", total_docs, num_batches
+    )
 
 
 def main() -> int:
     log.info("Starting elasticsearch_init.py")
     try:
-        wait_for_elasticsearch(HOST_ENDPOINT, interval=1.0)
+        wait_for_elasticsearch(host_endpoint=HOST_ENDPOINT, timeout=DEFAULT_TIMEOUT, interval=1.0)
     except Exception as e:
         log.error("Elasticsearch is not available: %s", e)
         sys.exit(1)
-    create_index(INDEX_ENDPOINT)
-    count_docs = get_count(INDEX_ENDPOINT)
+    create_index(index_endpoint=INDEX_ENDPOINT, timeout=DEFAULT_TIMEOUT)
+    count_docs = get_count(index_endpoint=INDEX_ENDPOINT, timeout=DEFAULT_TIMEOUT)
     log.info("Elasticsearch has count = %d docs", count_docs)
 
     if count_docs == 0 or FORCE_REINDEX:
@@ -278,19 +266,20 @@ def main() -> int:
         embeddings = load_embeddings_to_dict(EMBEDDINGS_FILE)
 
         if embeddings:
-            embedding_dimension_size = get_embedding_dimension_size(embeddings)
-            if embedding_dimension_size is None:
+            embedding_dimension = get_embedding_dimension(embeddings)
+            if embedding_dimension is None:
                 log.error("No valid embeddings detected; aborting embedding merge")
                 sys.exit(1)
-            log.info("Detected embedding dimension = %d", embedding_dimension_size)
+            log.info("Detected embedding dimension = %d", embedding_dimension)
 
             merged_docs = merge_docs_with_embeddings(docs, embeddings, output_path=TMP_FILE)
-            create_vector_field(INDEX_ENDPOINT, embedding_dimension_size)
+            create_vector_field(index_endpoint=INDEX_ENDPOINT, dimension=embedding_dimension,timeout=DEFAULT_TIMEOUT)
 
-            index_documents(HOST_ENDPOINT, INDEX_NAME, merged_docs)
+            index_documents(host_endpoint=HOST_ENDPOINT,index_name=INDEX_NAME,
+                            docs=merged_docs,timeout=DEFAULT_TIMEOUT)
         else:
             log.info("Using plain dataset without embeddings")
-            index_documents(HOST_ENDPOINT, INDEX_NAME, docs)
+            index_documents(host_endpoint=HOST_ENDPOINT, index_name=INDEX_NAME, docs=docs, timeout=DEFAULT_TIMEOUT)
             Path(TMP_FILE).unlink(missing_ok=True)
     else:
         log.info("Skipping indexing as there are already docs indexed. Use FORCE_REINDEX=true to force re-indexing")
