@@ -77,7 +77,7 @@
             <plugin>
                 <groupId>io.sease</groupId>
                 <artifactId>rre-maven-report-plugin</artifactId>
-                <version>1.0</version>
+                <version>1.2-SNAPSHOT</version>
                 <configuration>
                     <formats>
                         <param>spreadsheet</param>
