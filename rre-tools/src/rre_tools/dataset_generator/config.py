@@ -114,11 +114,10 @@ class Config(BaseModel):
     def search_engine_collection_endpoint(self) -> HttpUrl:
         """
         Returns the collection endpoint URL for the search engine.
-        For Vespa: uses vespa_schema instead of collection_name in the endpoint.
+        For Vespa: uses vespa_schema in the endpoint, defaulting to collection_name.
         """
         if self.search_engine_type == "vespa":
-            # For Vespa: use vespa_schema in the endpoint path
-            schema_name = self.vespa_schema or "doc"
+            schema_name = self.vespa_schema or self.collection_name
             return HttpUrl(urljoin(self.search_engine_url.encoded_string() + "/", schema_name + "/"))
         else:
             # For other engines: use collection_name
@@ -135,9 +134,9 @@ class Config(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def check_vespa_fields_required(self) -> "Config":
+    def default_vespa_schema_to_collection_name(self) -> "Config":
         if self.search_engine_type == "vespa" and not self.vespa_schema:
-            raise ValueError("vespa_schema is required when search_engine_type='vespa'")
+            self.vespa_schema = self.collection_name
         return self
 
     @classmethod
