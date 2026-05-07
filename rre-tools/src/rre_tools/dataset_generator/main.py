@@ -85,10 +85,23 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
             )
 
 
+def get_queries_within_budget(config: Config, data_store: DataStore) -> List[Query]:
+    queries = data_store.get_queries()
+    queries_within_budget = queries[:config.num_queries_needed]
+    if len(queries) > len(queries_within_budget):
+        log.info(
+            "Processing %s of %s queries due to num_queries_needed=%s",
+            len(queries_within_budget),
+            len(queries),
+            config.num_queries_needed,
+        )
+    return queries_within_budget
+
+
 def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_service: LLMService) -> None:
     """Complete the (query, doc) matrix with LLM scores."""
     log.debug("Cartesian product is enabled, so adding cartesian product scores")
-    for query_obj in data_store.get_queries():
+    for query_obj in get_queries_within_budget(config, data_store):
         for doc_obj in data_store.get_cartesian_prod_docs():
             if not data_store.has_rating_score(query_obj.id, doc_obj.id):
                 score_resp: LLMScoreResponse = llm_service.generate_score(
@@ -105,7 +118,7 @@ def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore
     """Retrieve docs for each query and score the (q, doc) pairs."""
     if config.query_template is not None:
         log.debug(f"Searching for documents with query template in {config.query_template}")
-        for query_obj in data_store.get_queries():
+        for query_obj in get_queries_within_budget(config, data_store):
             docs_eval: List[Document] = search_engine.fetch_for_evaluation(
                 keyword=query_obj.text, query_template=config.query_template, doc_fields=config.doc_fields
             )
