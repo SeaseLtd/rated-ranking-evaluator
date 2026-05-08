@@ -8,7 +8,7 @@ import logging
 from uuid import uuid4
 from pydantic import ValidationError
 from rre_tools.shared.models.document import Document
-from rre_tools.shared.models.query import Query
+from rre_tools.shared.models.query import Query, QuerySource, SOURCE_PRIORITY
 from rre_tools.shared.models.rating import Rating
 from rre_tools.shared.utils import clean_text
 
@@ -103,17 +103,47 @@ class DataStore:
         log.debug(f"[add_document] added doc_id={doc.id}")
         self._count_update_and_maybe_autosave()
 
-    def add_query(self, query_text_str: str, query_id: Optional[str] = None) -> Query:
-        """Adds a new query. If text is cached, returns existing Query. If id is given, it's used."""
+    def mark_document_as_query_seed(self, doc_id: str) -> None:
+        """Flag an already-stored document as a cartesian seed.
+
+        Required because add_document() returns early when doc_id already
+        exists, so a re-fetched doc cannot update the stored object's
+        is_used_to_generate_queries flag through that path.
+        """
+        doc = self.docs.get(doc_id)
+        if doc is None:
+            log.warning(f"[mark_document_as_query_seed] doc_not_found doc_id={doc_id}")
+            return
+        if not doc.is_used_to_generate_queries:
+            doc.is_used_to_generate_queries = True
+            self._count_update_and_maybe_autosave()
+
+    def add_query(self, query_text_str: str, query_id: Optional[str] = None,
+                  source: Optional[QuerySource] = None) -> Query:
+        """Adds a new query. If text is cached, returns existing Query. If id is given, it's used.
+
+        `source` records how the query was asserted in this run. On a dedup hit the existing
+        query is *promoted* if the incoming source has higher priority than the stored one
+        (cached < llm < user/category) — so re-asserting a previously-cached query as e.g. a
+        user-supplied query updates its label.
+        """
         key = clean_text(query_text_str) # Apply general filtering
         if existing_id := self.query_text_to_query_id.get(key):
             log.debug(f"[add_query] exists text='{query_text_str}' key='{key}' existing_id={existing_id}")
             query = self.queries[existing_id]
+            if source is not None and SOURCE_PRIORITY[source] < SOURCE_PRIORITY[query.source]:
+                log.debug(f"[add_query] promote source {query.source}->{source} for query_id={query.id}")
+                query.source = source
         else:
-            query = Query(id=query_id, text=query_text_str) if query_id else Query(text=query_text_str)
+            kwargs: Dict[str, str] = {"text": query_text_str}
+            if query_id:
+                kwargs["id"] = query_id
+            if source is not None:
+                kwargs["source"] = source
+            query = Query(**kwargs)
             self.queries[query.id] = query
             self.query_text_to_query_id[key] = query.id
-            log.debug(f"[add_query] added query_id={query.id}")
+            log.debug(f"[add_query] added query_id={query.id} source={query.source}")
             self._count_update_and_maybe_autosave()
 
         return query

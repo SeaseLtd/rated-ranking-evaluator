@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Union
 
 from rre_tools.shared.search_engines.search_engine_base import BaseSearchEngine
 from rre_tools.shared.models.document import Document
-from rre_tools.shared.utils import clean_text
+from rre_tools.shared.utils import clean_text, normalize_discovered_field_values
 
 import logging
 import json
@@ -114,6 +114,46 @@ class SolrSearchEngine(BaseSearchEngine):
         payload['fl'] = self._unify_fields(doc_fields)
 
         return self._search(payload)
+
+    def fetch_field_values(self, values_query_template: Path | str, field: str) -> List[str]:
+        """Run a Solr facet payload (request-params dict) and return distinct values for ``field``.
+
+        The template is a flat JSON dict of Solr request parameters. ``wt=json`` is injected
+        the same way ``_search`` does, and the request goes out as ``GET /select?<params>``.
+        Response navigation: ``facet_counts.facet_fields.<field>`` is a flat alternating
+        ``[v0, c0, v1, c1, ...]`` array; we drop counts and keep the values.
+        """
+        payload: Dict[str, Any] = self._parse_query_template(values_query_template)
+        payload['wt'] = 'json'
+        search_url = urljoin(self.endpoint.encoded_string(), 'select')
+
+        log.debug(f"[fetch_field_values] Solr GET {search_url} params={str(payload)[:500]}")
+
+        try:
+            response = requests.get(search_url, headers=self.HEADERS, params=payload)
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException, HTTPError) as e:
+            log.error(f"Solr value-discovery query failed: {e}")
+            raise
+
+        body = response.json()
+        fc = body.get("facet_counts")
+        if fc is None or "facet_fields" not in fc or field not in fc["facet_fields"]:
+            raise ValueError(
+                f"Solr value-discovery: expected facet_counts.facet_fields.{field} in response."
+            )
+        arr = fc["facet_fields"][field]
+        if not isinstance(arr, list):
+            raise ValueError(
+                f"Solr value-discovery: facet_counts.facet_fields.{field} must be a list, "
+                f"got {type(arr).__name__}."
+            )
+        if len(arr) % 2 != 0:
+            raise ValueError(
+                f"Solr value-discovery: facet_counts.facet_fields.{field} must have even length "
+                f"(alternating value/count), got len={len(arr)}."
+            )
+        return normalize_discovered_field_values(arr[i] for i in range(0, len(arr), 2))
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """

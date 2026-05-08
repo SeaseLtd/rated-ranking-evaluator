@@ -10,7 +10,7 @@ from pydantic import HttpUrl
 
 from rre_tools.shared.search_engines.search_engine_base import BaseSearchEngine
 from rre_tools.shared.models.document import Document
-from rre_tools.shared.utils import clean_text
+from rre_tools.shared.utils import clean_text, normalize_discovered_field_values
 
 
 log = logging.getLogger(__name__)
@@ -27,6 +27,11 @@ class VespaSearchEngine(BaseSearchEngine):
     Thin HTTP wrapper around the Vespa Query API.
     Assumes an already deployed a schema called `doc`.
     """
+
+    # Vespa YQL uses parameter-binding syntax (e.g. `userInput(@kw)`) rather than the
+    # `$query` string-replace convention used by Solr / Elasticsearch / OpenSearch.
+    QUERY_PLACEHOLDER: str = "@kw"
+
     def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
         # Extract schema from endpoint path: http://host:port/schema_name/
@@ -70,7 +75,16 @@ class VespaSearchEngine(BaseSearchEngine):
         return int(response.json().get("root", {}).get("fields", {}).get("totalCount", 0))
 
     def _build_yql(self, select_fields: List[str], where_clause: str = "true") -> str:
-        fields = ", ".join(select_fields) if select_fields else "*"
+        # Always project Vespa's built-in `documentid` summary field so `_search` can
+        # surface the user document id (`id:ns:type::user`) instead of the internal GID
+        # (`index:schema/0/<hash>`) that `hit["id"]` falls back to under restricted projections.
+        if select_fields:
+            projected = list(select_fields)
+            if "documentid" not in projected:
+                projected.insert(0, "documentid")
+            fields = ", ".join(projected)
+        else:
+            fields = "*"
         return f"select {fields} from {self.schema} where {where_clause}"
 
     @staticmethod
@@ -204,6 +218,80 @@ class VespaSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
 
+    def fetch_field_values(self, values_query_template: Path | str, field: str) -> List[str]:
+        """Run a Vespa grouping query and return distinct values for ``field``.
+
+        The template contains YQL only — the engine wraps it with ``hits=0`` and
+        ``presentation.format=json`` automatically (YQL itself can't express those).
+        Vespa grouping requires the grouped field to be an ``attribute`` in the .sd schema;
+        a non-attribute field will fail at Vespa, not here.
+
+        Response shape (nested under ``group:root:0``):
+            root.children[]
+               group:root:0
+                   children[]
+                       grouplist:<field>
+                           children[]
+                               group:string:<value>
+                                   value: "<value>"
+        We do a recursive walk for any node whose ``id == 'grouplist:<field>'`` or
+        ``label == field`` and return each child's ``value``.
+        """
+        path = Path(values_query_template)
+        yql = path.read_text(encoding="utf-8").strip()
+
+        payload: Dict[str, Any] = {
+            "yql": yql,
+            "hits": 0,
+            "presentation.format": "json",
+        }
+
+        base = str(self.endpoint).rstrip("/")
+        search_url = f"{base}/search/"
+
+        log.debug(f"[fetch_field_values] Vespa POST {search_url} payload={str(payload)[:500]}")
+
+        try:
+            response = requests.post(
+                search_url,
+                headers=self.HEADERS,
+                json=payload,
+                timeout=DEFAULT_TIMEOUT,
+                allow_redirects=False,
+            )
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException) as e:
+            log.error(f"Vespa value-discovery query to {search_url} failed: {e}")
+            raise
+
+        body = response.json()
+        seen: List[str] = []
+        grouplist = self._find_grouplist(body.get("root", {}), field, seen)
+        if grouplist is None:
+            raise ValueError(
+                f"Vespa value-discovery: no grouplist found for field '{field}'. "
+                f"Encountered nodes: {[s for s in seen if s]}. "
+                f"Note: Vespa grouping requires the grouped field to be an attribute in the schema."
+            )
+        return normalize_discovered_field_values(
+            b.get("value") for b in (grouplist.get("children") or [])
+        )
+
+    @staticmethod
+    def _find_grouplist(node: Any, field: str, seen: List[str]) -> Optional[Dict[str, Any]]:
+        if isinstance(node, dict):
+            if str(node.get("id", "")) == f"grouplist:{field}" or node.get("label") == field:
+                return node
+            label = node.get("id") or node.get("label")
+            if label is not None:
+                seen.append(str(label))
+            for child in node.get("children", []) or []:
+                found = VespaSearchEngine._find_grouplist(child, field, seen)
+                if found is not None:
+                    return found
+        return None
+
+
     # ---- low‑level call --------------------------------------------------
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
@@ -240,11 +328,14 @@ class VespaSearchEngine(BaseSearchEngine):
         hits = (raw_response.get("root") or {}).get("children") or []
         docs: List[Document] = []
         for hit in hits:
-            doc_id = hit.get("id")
+            fields = hit.get("fields", {}) or {}
+            # Prefer the user document id from `fields.documentid` (always projected by `_build_yql`).
+            # Fall back to `hit["id"]` so callers that bypass `_build_yql` (or hit a Vespa version
+            # that omits the summary field) still get something usable, even if it's the GID form.
+            doc_id = fields.get("documentid") or hit.get("id")
             if not doc_id:
                 log.debug(f"Potential corrupted entry without id in Vespa _search: {hit}")
                 continue
-            fields = hit.get("fields", {}) or {}
 
             normalized_fields = {k: self._normalize_field_value(v) for k, v in fields.items()}
             docs.append(Document(id=doc_id, fields=normalized_fields))

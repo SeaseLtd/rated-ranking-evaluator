@@ -16,6 +16,7 @@ directory (or modify the existing one). This file controls the entire generation
 >     - "solr"
 >     - "elasticsearch"
 >     - "opensearch"
+>     - "vespa"
 > - **collection_name**: Name of the search engine index/collection (e.g., "testcore", the one used in Docker containers)
 > - **search_engine_url**: URL of the search engine (e.g., "http://localhost:8983/solr/")
 > - **documents_filter**: Filter query to restrict the set of documents used to generate queries. If a field has more 
@@ -37,7 +38,89 @@ one fields, the documents are filtered for both fields (AND-like)
 > available, must be in a txt format (e.g., "queries.txt")
 > - **generate_queries_from_documents** (Optional): Whether to generate queries from documents. Default to `true`; set
 > to `false` to disable query generation from documents
-> - **num_queries_needed**: Total number of queries to generate, including predefined queries, if any (e.g., 20)
+> - **category_queries** (Optional): A list of category-derived query sources. Each entry generates queries from the
+> values of one configured field — for example, `genres=[comedy, action, ...]` produces queries like `"comedy"`,
+> `"action"` (or `"comedy movies"`, `"action movies"` if you wrap them via a template). These queries flow through
+> the same `DataStore` as user-supplied and LLM-generated queries, compose with `generate_queries_from_documents`,
+> and use the existing cartesian-product and top-K expansion paths for scoring.
+>
+>   Each entry has:
+>   - **`fields`** — array of field names. Currently only `fields[0]` is read; every field listed must also appear in
+>     `doc_fields` so the LLM scorer has evidence to grade against.
+>   - **Where the values come from** — exactly one of:
+>     - **`values`** — an explicit list typed by the user (e.g. `["comedy", "action"]`).
+>     - **`values_query_template_file`** — a path to an engine-native facet / aggregation / grouping template. The
+>       engine runs that query at generation time and uses its distinct values for `fields[0]`. The template's limit
+>       (Solr `facet.limit`, ES/OS `terms.size`, Vespa grouping `max(N)`) is the only knob.
+>   - **`query_text_template_file`** (Optional) — a plain-text natural-language template wrapping each value. If
+>     omitted, each value is the query text directly (`comedy` → query `"comedy"`). If provided, the file's contents
+>     must contain the engine's query placeholder — `$query` for Solr/Elasticsearch/OpenSearch, `@kw` for Vespa,
+>     matching the same convention as the engine retrieval `query_template` — and each value is substituted into the
+>     placeholder (e.g. `"$query movies"` + `comedy` → `"comedy movies"`).
+>
+>   **Examples — explicit values:**
+>   ```yaml
+>   # Bare values (queries: "comedy", "action", "horror", "drama")
+>   category_queries:
+>     - fields: ["genres"]
+>       values: ["comedy", "action", "horror", "drama"]
+>
+>   # Wrapped via template (queries: "comedy movies", ...) — Solr placeholder
+>   category_queries:
+>     - fields: ["genres"]
+>       values: ["comedy", "action", "horror", "drama"]
+>       query_text_template_file: "templates/genre_query.tmpl"  # contents: $query movies
+>   ```
+>
+>   **Examples — values discovered from the engine.** Replace `values` with `values_query_template_file`. Each engine
+>   reads the template in the same shape it already uses for retrieval, so you don't learn a second convention per
+>   engine:
+>   - **Solr** — the file is a JSON dict of Solr request parameters (`q`, `facet`, `facet.field`, `facet.limit`,
+>     `rows`). The engine injects `wt=json` and GETs `/select` with `params=<the dict>`. Not a Solr JSON Request API
+>     body. Sample: `templates/genre_facet_solr.json`.
+>   - **Elasticsearch / OpenSearch** — the file is a full JSON request body POSTed to `_search`. **Convention:** in the
+>     *request* body the terms aggregation is declared under `aggs` with a name that must equal `fields[0]` (e.g.
+>     `genres` in the shipped samples); Elasticsearch/OpenSearch return buckets under *response* key `aggregations`
+>     with that same name. The agg's internal `terms.field` may be a keyword subfield (`genres.keyword`) without
+>     requiring `genres.keyword` to be in `doc_fields`. Keyed-bucket aggregations (`"keyed": true`) are not supported.
+>     Samples: `templates/genre_facet_es.json`, `templates/genre_facet_opensearch.json`.
+>   - **Vespa** — the file is YQL only; the engine wraps it with `hits=0` and `presentation.format=json` (YQL itself
+>     can't express those). **Precondition:** the grouped field must be declared as an `attribute` in the `.sd`
+>     schema; a non-attribute field will fail at the engine, not at config-load. Sample:
+>     `templates/genre_facet_vespa.yql`.
+>
+>   ```yaml
+>   # Solr
+>   category_queries:
+>     - fields: ["genres"]
+>       values_query_template_file: "templates/genre_facet_solr.json"
+>       query_text_template_file: "templates/genre_query.tmpl"  # optional
+>
+>   # Elasticsearch / OpenSearch
+>   category_queries:
+>     - fields: ["genres"]
+>       values_query_template_file: "templates/genre_facet_es.json"
+>
+>   # Vespa
+>   category_queries:
+>     - fields: ["genres"]
+>       values_query_template_file: "templates/genre_facet_vespa.yql"
+>   ```
+>
+>   Notes: the category templates (natural-language string and value-discovery payload) are both distinct from the
+>   engine retrieval `query_template` (Solr params JSON / Vespa YQL retrieval payload) — pointing either at the engine
+>   retrieval file is rejected at config load, as is pointing `values_query_template_file` at the same path as
+>   `query_text_template_file` on the same source. Discovered values are normalized to non-empty stripped scalar
+>   strings; container-typed bucket keys (nested aggregations) raise rather than landing as nonsense queries. If more
+>   category values are configured (or discovered) than `num_queries_needed`, the surplus is added to the datastore
+>   but skipped at scoring time.
+> - **num_queries_needed**: Total number of queries to generate, including predefined queries, if any (e.g., 20).
+> When the in-memory queries (user-supplied + category + LLM-generated + previously-cached) exceed this number, the
+> selection is prioritized so that fresh sources from this run win over cached entries. Priority order:
+> user-supplied = category > LLM-generated > queries loaded from `resources/tmp/datastore.json`. Within each tier,
+> insertion order is preserved. Practical implication: if your cache already contains `num_queries_needed` queries from
+> a previous run, the fresh user/category queries you add this run still make the cut; previously they were silently
+> dropped because selection used raw insertion order.
 > - **relevance_scale**: Relevance scale used for scoring document relevance
 >   - accepted values: "binary" or "graded", where
 >     - binary: 0 (not relevant), 1 (relevant)
