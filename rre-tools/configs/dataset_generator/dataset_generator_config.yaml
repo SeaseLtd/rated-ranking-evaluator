@@ -45,6 +45,51 @@ queries: "templates/queries.txt"
 # Default: true; set to false to disable query generation from documents
 generate_queries_from_documents: true
 
+# (Optional) Generate queries from values of one or more configured fields.
+# Each entry in the list defines:
+#   - fields: array (currently only fields[0] is read); every field must also appear in doc_fields above
+#   - exactly one of:
+#       * values: explicit list of values typed by the user
+#       * values_query_template_file: path to an engine-native facet / aggregation / grouping template.
+#         The engine runs that query at generation time and uses its distinct values for fields[0].
+#         Supported shapes: a Solr request-params JSON dict, an ES/OpenSearch JSON request body, or a
+#         Vespa YQL grouping query. The template's limit (Solr facet.limit / ES-OS terms.size /
+#         Vespa max(N)) is the only knob.
+#   - query_text_template_file: (Optional) path to a plain-text natural-language template whose content
+#     includes the engine's query placeholder ('$query' for Solr/Elasticsearch/OpenSearch, '@kw' for
+#     Vespa — same convention as the engine retrieval query_template above). If omitted, each value is
+#     used directly as the query text (e.g. value "comedy" produces query "comedy").
+# Note: this is a *natural-language* query template (e.g., "$query movies"); it is intentionally distinct
+# from the engine retrieval query_template (Solr params JSON / Vespa YQL / etc.). Pointing this field — or
+# values_query_template_file — at the engine retrieval template is rejected at config load.
+# Budget interaction: if the rendered queries plus other sources exceed num_queries_needed, the surplus is
+# added to the datastore but skipped at scoring time. Duplicate rendered strings dedupe automatically.
+#
+# Explicit values:
+#category_queries:
+#  - fields: ["genres"]
+#    values: ["comedy", "action", "horror", "drama"]
+#    # Bare values: queries are "comedy", "action", "horror", "drama".
+#    # Add `query_text_template_file: "templates/genre_query.tmpl"` (with content like `$query movies`)
+#    # to render wrapped queries instead.
+#
+# Values discovered from the engine (Solr facet, ES/OpenSearch terms agg, or Vespa grouping):
+#   Solr — request-params JSON dict (NOT a Solr JSON Request API body):
+#category_queries:
+#  - fields: ["genres"]
+#    values_query_template_file: "templates/genre_facet_solr.json"
+#    query_text_template_file: "templates/genre_query.tmpl"
+#   Elasticsearch / OpenSearch — full JSON request body. Convention: the aggregation result key
+#   under `aggs` must equal fields[0] (the agg's internal terms.field can be a keyword subfield):
+#category_queries:
+#  - fields: ["genres"]
+#    values_query_template_file: "templates/genre_facet_es.json"
+#   Vespa — YQL only; engine wraps with hits=0 and presentation.format=json.
+#   The grouped field must be an `attribute` in the .sd schema:
+#category_queries:
+#  - fields: ["genres"]
+#    values_query_template_file: "templates/genre_facet_vespa.yql"
+
 # Total number of queries to generate (includes predefined queries, if any)
 num_queries_needed: 30
 

@@ -9,6 +9,9 @@ from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestExce
 
 from rre_tools.shared.models.document import Document
 from rre_tools.shared.search_engines.search_engine_base import BaseSearchEngine
+from rre_tools.shared.search_engines.es_opensearch_terms_agg_values import (
+    list_values_from_terms_aggregations,
+)
 from rre_tools.shared.utils import clean_text
 
 log = logging.getLogger(__name__)
@@ -95,6 +98,28 @@ class OpenSearchEngine(BaseSearchEngine):
         payload["_source"] = fields
 
         return self._search(payload)
+
+    def fetch_field_values(self, values_query_template: Path | str, field: str) -> List[str]:
+        """Run an OpenSearch aggregation payload (full JSON request body) and return distinct values.
+
+        Convention mirrors Elasticsearch: the aggregation result key under ``aggregations`` must
+        equal ``field`` (the agg's internal ``terms.field`` may be a keyword subfield).
+
+        Keyed-bucket form (``"keyed": true`` → ``buckets`` is a dict) is unsupported.
+        """
+        payload: Dict[str, Any] = self._parse_query_template(values_query_template)
+        search_url = f"{self.endpoint}/_search"
+
+        log.debug(f"[fetch_field_values] OpenSearch POST {search_url} payload={str(payload)[:500]}")
+
+        try:
+            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException, HTTPError) as e:
+            log.error(f"OpenSearch value-discovery query failed: {e}")
+            raise
+
+        return list_values_from_terms_aggregations(response.json().get("aggregations", {}), field)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """Perform a search to OpenSearch and return matching documents based on the given payload."""

@@ -13,9 +13,12 @@ class BaseSearchEngine(ABC):
     SPECIAL_CHARS: set[str] = {'\\', '+', '-', '!', '(', ')', ':', '^', '[', ']', '"',
                                '{', '}', '~', '*', '?', '|', '&', '/'}
 
+    # Engine-specific placeholder convention used in query templates. Subclasses override
+    # when their engine uses a different convention (e.g. Vespa uses YQL '@kw').
+    QUERY_PLACEHOLDER: str = "$query"
+
     def __init__(self, endpoint: HttpUrl):
         self.endpoint = HttpUrl(endpoint)
-        self.QUERY_PLACEHOLDER = "$query"
         self.UNIQUE_KEY = 'id'
 
     @staticmethod
@@ -100,6 +103,38 @@ class BaseSearchEngine(ABC):
                              keyword: str="*:*") \
             -> List[Document]:
         """Search for documents based on a keyword and a query template to evaluate the system."""
+        pass
+
+    @abstractmethod
+    def fetch_field_values(self, values_query_template: Path | str, field: str) -> List[str]:
+        """Run an engine-native facet/aggregation/grouping payload and return the distinct values
+        produced for ``field``.
+
+        Per-engine transport (deliberately different so each engine matches its existing
+        retrieval convention):
+
+        - **Solr** — the template is a JSON dict of Solr request *parameters* (``q``, ``facet``,
+          ``facet.field``, ``facet.limit``, ``rows``, ...). Parsed with ``_parse_query_template``,
+          ``wt=json`` is injected, and the call is ``GET /select?<params>`` (NOT a Solr JSON
+          Request API body).
+        - **Elasticsearch / OpenSearch** — the template is the full JSON request body, POSTed
+          to ``_search`` unchanged.
+        - **Vespa** — the template is YQL only; the implementation wraps it with
+          ``{"yql": <file>, "hits": 0, "presentation.format": "json"}`` and POSTs.
+
+        The template's limit (Solr ``facet.limit``, ES/OS terms ``size``, Vespa grouping
+        ``max(N)``) is the only knob — there is no separate config option.
+
+        Return values are normalized to non-empty stripped strings via
+        ``shared.utils.normalize_discovered_field_values`` (containers raise).
+
+        Empty result (response path exists but contains zero buckets/values) → return ``[]``
+        *silently*. The single warning lives in ``add_category_queries`` so it carries full
+        source context (``field``, ``values_query_template_file``).
+
+        Missing/wrong-typed/wrong-key response path → raise ``ValueError`` with engine context.
+        HTTP/JSON parse errors propagate or are wrapped with engine context.
+        """
         pass
 
     @abstractmethod

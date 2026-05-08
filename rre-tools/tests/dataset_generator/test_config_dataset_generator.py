@@ -77,6 +77,29 @@ def test_mteb_config__expects__successful_load(resource_folder):
     assert mteb_config.output_format == "mteb"
     assert mteb_config.output_destination == Path("output")
 
+
+def test_vespa_config_without_schema__expects__schema_defaults_to_collection_name(tmp_path):
+    cfg_text = (
+        "search_engine_type: \"vespa\"\n"
+        "collection_name: \"movie\"\n"
+        "search_engine_url: \"http://localhost:8080/search/\"\n"
+        "number_of_docs: 2\n"
+        "doc_fields: [\"title\"]\n"
+        "num_queries_needed: 2\n"
+        "relevance_scale: \"binary\"\n"
+        "llm_configuration_file: \"tests/resources/llm_config.yaml\"\n"
+        "output_format: \"quepid\"\n"
+        "output_destination: \"output\"\n"
+    )
+    cfg_path = tmp_path / "cfg.yaml"
+    cfg_path.write_text(cfg_text, encoding="utf-8")
+
+    cfg = Config.load(str(cfg_path))
+
+    assert cfg.vespa_schema == "movie"
+    assert cfg.search_engine_collection_endpoint == HttpUrl("http://localhost:8080/search/movie/")
+
+
 def test_missing_both_templates_with_rre__expects__raises_validation_error(resource_folder):
     file_name = "missing_both_templates.yaml"
     with pytest.raises(ValidationError):

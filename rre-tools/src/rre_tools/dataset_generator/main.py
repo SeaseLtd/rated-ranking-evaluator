@@ -15,6 +15,7 @@ from logging import Logger, getLogger
 from rre_tools.shared.logger import setup_logging
 from rre_tools.dataset_generator.llm import LLMConfig, LLMService, LLMServiceFactory
 from rre_tools.shared.models import Document, Query
+from rre_tools.shared.models.query import SOURCE_PRIORITY
 from rre_tools.shared.writers import WriterFactory, AbstractWriter, WriterConfig
 from rre_tools.shared.search_engines import SearchEngineFactory, BaseSearchEngine
 from rre_tools.shared.data_store import DataStore
@@ -22,6 +23,7 @@ from rre_tools.shared.utils import join_fields_as_text
 
 from rre_tools.dataset_generator.models import LLMQueryResponse, LLMScoreResponse
 from rre_tools.dataset_generator.config import Config
+from rre_tools.dataset_generator.query_sources import add_category_queries
 
 log: Logger = getLogger(__name__)
 
@@ -46,13 +48,16 @@ def add_user_queries(config: Config, data_store: DataStore) -> None:
             for line in file:
                 clean_line = line.strip()
                 if clean_line:
-                    data_store.add_query(clean_line)
+                    data_store.add_query(clean_line, source="user")
             log.info(f"Added user-defined queries from file={config.queries}")
 
 
-def generate_and_add_queries(config: Config, data_store: DataStore, llm_service: LLMService,
-                             search_engine: BaseSearchEngine) -> None:
-    """Retrieve docs and generate queries with LLM Service. Adds docs, queries and ratings to the datastore."""
+def fetch_and_add_seed_documents(config: Config, data_store: DataStore,
+                                 search_engine: BaseSearchEngine) -> List[Document]:
+    """Fetch seed documents from the search engine and ensure each is flagged as a cartesian seed.
+
+    Returns the list of fetched documents so callers can reuse them without re-fetching.
+    """
     docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
         documents_filter=config.documents_filter,
         number_of_docs=config.number_of_docs,
@@ -62,33 +67,80 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
     for doc in docs_to_generate_queries:
         doc.is_used_to_generate_queries = True
         data_store.add_document(doc)
+        # Cache hit path: add_document() returned early without updating the stored object.
+        data_store.mark_document_as_query_seed(doc.id)
 
-    remaining = max(0, config.num_queries_needed - len(data_store.get_queries()))
+    return docs_to_generate_queries
+
+
+def generate_and_add_queries_from_documents(config: Config, data_store: DataStore, llm_service: LLMService,
+                                            seed_docs: List[Document]) -> None:
+    """Generate queries with the LLM service from already-fetched seed documents.
+
+    Adds queries and pre-rates each generated query against its source document with the max
+    label from the relevance scale: a query produced from a doc is by definition a perfect match.
+
+    Budget accounting honors the source-priority ordering used by `get_queries_within_budget`:
+    only queries with priority <= 'llm' (i.e. user/category/llm) consume budget slots here.
+    Cached queries do *not* — they're displaceable, so a saturated cache must not block fresh
+    LLM generation.
+    """
+    llm_threshold = SOURCE_PRIORITY["llm"]
+
+    def _slots_filled() -> int:
+        return sum(1 for q in data_store.get_queries() if SOURCE_PRIORITY[q.source] <= llm_threshold)
+
+    remaining = max(0, config.num_queries_needed - _slots_filled())
     if remaining == 0:
         return
 
     num_queries_per_doc: int = int((remaining // max(1, config.number_of_docs)) + 1)  # always greater or equal to 1
-    log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
+    log.debug(f"Number of documents retrieved for generation: {len(seed_docs)}")
     log.debug(f"Pending queries to generate: {remaining}")
     log.debug(f"Number of queries per document: {num_queries_per_doc}")
 
-    for doc in docs_to_generate_queries:
+    for doc in seed_docs:
+        # Re-check between outer iterations so we don't burn an LLM call on doc N+1
+        # after the inner loop on doc N already filled the budget.
+        if _slots_filled() >= config.num_queries_needed:
+            return
         query_response: LLMQueryResponse = llm_service.generate_queries(doc, num_queries_per_doc,
                                                                         config.max_query_terms)
         for query_ in query_response.get_queries():
-            if len(data_store.get_queries()) >= config.num_queries_needed:
+            if _slots_filled() >= config.num_queries_needed:
                 return
-            query_obj: Query = data_store.add_query(query_)
+            query_obj: Query = data_store.add_query(query_, source="llm")
             data_store.create_rating_score(
                 query_obj.id, doc.id, max(config.relevance_label_set),
                 "Default max rating is assigned because the query is generated by the document"
             )
 
 
+def get_queries_within_budget(config: Config, data_store: DataStore) -> List[Query]:
+    """Pick the per-run query budget, prioritizing fresh sources over cached ones.
+
+    Stable sort by `(SOURCE_PRIORITY[query.source], insertion_index)` so user/category
+    queries asserted this run always make the cut before queries loaded from the disk
+    cache, while preserving insertion order within each priority tier.
+    """
+    queries = data_store.get_queries()
+    indexed = list(enumerate(queries))
+    indexed.sort(key=lambda iq: (SOURCE_PRIORITY[iq[1].source], iq[0]))
+    queries_within_budget = [q for _, q in indexed[:config.num_queries_needed]]
+    if len(queries) > len(queries_within_budget):
+        log.info(
+            "Processing %s of %s queries due to num_queries_needed=%s",
+            len(queries_within_budget),
+            len(queries),
+            config.num_queries_needed,
+        )
+    return queries_within_budget
+
+
 def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_service: LLMService) -> None:
     """Complete the (query, doc) matrix with LLM scores."""
     log.debug("Cartesian product is enabled, so adding cartesian product scores")
-    for query_obj in data_store.get_queries():
+    for query_obj in get_queries_within_budget(config, data_store):
         for doc_obj in data_store.get_cartesian_prod_docs():
             if not data_store.has_rating_score(query_obj.id, doc_obj.id):
                 score_resp: LLMScoreResponse = llm_service.generate_score(
@@ -105,7 +157,7 @@ def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore
     """Retrieve docs for each query and score the (q, doc) pairs."""
     if config.query_template is not None:
         log.debug(f"Searching for documents with query template in {config.query_template}")
-        for query_obj in data_store.get_queries():
+        for query_obj in get_queries_within_budget(config, data_store):
             docs_eval: List[Document] = search_engine.fetch_for_evaluation(
                 keyword=query_obj.text, query_template=config.query_template, doc_fields=config.doc_fields
             )
@@ -145,8 +197,18 @@ def main() -> None:
     # load user queries
     add_user_queries(config, data_store)
 
-    # generate more queries with LLM service if needed
-    generate_and_add_queries(config, data_store, service, search_engine)
+    # render category-derived queries from each source's explicit values, or from values
+    # discovered by the engine when values_query_template_file is set instead of values.
+    add_category_queries(config, data_store, search_engine)
+
+    # fetch seed documents only when something downstream actually needs them
+    seed_docs: List[Document] = []
+    if config.enable_cartesian_product or config.generate_queries_from_documents:
+        seed_docs = fetch_and_add_seed_documents(config, data_store, search_engine)
+
+    # generate more queries with LLM service from the same seed documents, if enabled
+    if config.generate_queries_from_documents:
+        generate_and_add_queries_from_documents(config, data_store, service, seed_docs)
 
     # score initial docset
     if config.enable_cartesian_product:

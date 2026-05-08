@@ -44,6 +44,7 @@ max_tokens: 16
         rre_query_placeholder=None,
         verbose=False,
         datastore_autosave_every_n_updates=7,
+        enable_cartesian_product=False,
     )
 
     # Patch Config.load to return our in-memory cfg (bypass reading from disk)
@@ -58,8 +59,9 @@ max_tokens: 16
     monkeypatch.setattr(main_mod, "LLMServiceFactory", types.SimpleNamespace(build=lambda _cfg: object()))
     monkeypatch.setattr(main_mod, "WriterFactory", types.SimpleNamespace(build=lambda _cfg: DummyWriter()))
 
-    # No-op the heavy flow functions to keep the test focused on wiring
-    monkeypatch.setattr(main_mod, "generate_and_add_queries", lambda *args, **kwargs: None)
+    # With both `generate_queries_from_documents=False` and `enable_cartesian_product=False`,
+    # seed-fetch and LLM-gen paths are gated off; top-K is short-circuited by `query_template=None`.
+    # Defensive no-ops kept for the remaining flow functions in case gating changes in the future.
     monkeypatch.setattr(main_mod, "add_cartesian_product_scores", lambda *args, **kwargs: None)
     monkeypatch.setattr(main_mod, "expand_docset_with_search_engine_top_k", lambda *args, **kwargs: None)
 
