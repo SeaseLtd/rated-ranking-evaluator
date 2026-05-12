@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 from urllib.parse import urljoin
 
+from rre_tools.dataset_generator.llm.batch_prompt import validate_batch_prompt_template
 from rre_tools.shared.search_engines import SearchEngineFactory
 from rre_tools.shared.writers import WriterConfig
 
@@ -114,6 +115,37 @@ class Config(BaseModel):
     enable_cartesian_product: bool = Field(
         True,
         description="Enable cartesian product scoring between queries and documents used to generate queries."
+    )
+    llm_micro_batch_size: int = Field(
+        1, gt=0,
+        description="Number of (doc) items per LLM relevance-scoring call. "
+                    "1 = single-pair scoring (legacy code path). Set to 2 or "
+                    "more to opt into micro-batching; 10 is a known-good value."
+    )
+    llm_batch_max_retries: int = Field(
+        3, ge=0,
+        description="Per-batch retry budget when llm_micro_batch_size > 1. "
+                    "Any failure (validation error, rate-limit, missing / "
+                    "unknown / duplicate doc_id in the response) triggers a "
+                    "retry with exponential backoff. On exhaustion the run "
+                    "aborts."
+    )
+    llm_batch_score_prompt: Optional[FilePath] = Field(
+        None,
+        description="Optional path to a plain-text prompt template for batch relevance "
+                    "scoring. Must contain '{query}', '{documents_json}', "
+                    "'{relevance_scale}'. If omitted, a built-in default is used. "
+                    "Only used for scoring when llm_micro_batch_size > 1; if "
+                    "provided, it is still validated at config load."
+    )
+    llm_max_workers: int = Field(
+        1, gt=0,
+        description="Number of worker threads for parallel LLM calls: "
+                    "query generation from seed documents (one future per seed doc) "
+                    "and relevance scoring (one future per query in budget). "
+                    "Defaults to 1 (strictly sequential). Increase to overlap "
+                    "network latency on the LLM provider; the throughput win is "
+                    "wall time only — token use is unchanged."
     )
 
     def build_writer_config(self) -> WriterConfig:
@@ -294,6 +326,27 @@ class Config(BaseModel):
                     f"language template (e.g. '{self.category_query_placeholder} movies') that "
                     f"wraps each value into a query string."
                 )
+        return self
+
+    @model_validator(mode="after")
+    def validate_batch_score_prompt(self) -> "Config":
+        """Validate the batch-scoring prompt template at config load.
+
+        Validation runs unconditionally when ``llm_batch_score_prompt`` is set —
+        independent of ``llm_micro_batch_size`` — so a broken template can never
+        slip through to runtime if the operator later flips batching on. Uses
+        ``string.Formatter`` so typos (e.g. ``{documents}``) and unescaped JSON
+        braces are caught here, not on the first batch call.
+        """
+        if self.llm_batch_score_prompt is None:
+            return self
+        content = self.llm_batch_score_prompt.read_text(encoding="utf-8")
+        try:
+            validate_batch_prompt_template(content)
+        except ValueError as e:
+            raise ValueError(
+                f"llm_batch_score_prompt '{self.llm_batch_score_prompt}': {e}"
+            ) from e
         return self
 
     @model_validator(mode="after")

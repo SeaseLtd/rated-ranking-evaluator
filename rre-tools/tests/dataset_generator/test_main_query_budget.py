@@ -34,6 +34,10 @@ def _config(**overrides):
         "doc_fields": ["title"],
         "relevance_scale": "graded",
         "save_llm_explanation": False,
+        "llm_micro_batch_size": 1,
+        "llm_batch_max_retries": 3,
+        "llm_batch_score_prompt": None,
+        "llm_max_workers": 1,
     }
     values.update(overrides)
     return SimpleNamespace(**values)
@@ -47,7 +51,8 @@ def test_expand_docset_with_search_engine_top_k__expects__query_budget_respected
     llm_service = FakeLLMService()
     search_engine = FakeSearchEngine()
 
-    expand_docset_with_search_engine_top_k(_config(), data_store, llm_service, search_engine)
+    expand_docset_with_search_engine_top_k(_config(), data_store, llm_service, search_engine,
+                                           prompt_template="ignored at micro_batch_size=1")
 
     assert search_engine.queries == ["q1", "q2"]
     assert [call[1] for call in llm_service.calls] == ["q1", "q2"]
@@ -62,7 +67,8 @@ def test_add_cartesian_product_scores__expects__query_budget_respected():
 
     llm_service = FakeLLMService()
 
-    add_cartesian_product_scores(_config(), data_store, llm_service)
+    add_cartesian_product_scores(_config(), data_store, llm_service,
+                                 prompt_template="ignored at micro_batch_size=1")
 
     assert [call[1] for call in llm_service.calls] == ["q1", "q1", "q2", "q2"]
 

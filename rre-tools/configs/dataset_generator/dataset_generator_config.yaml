@@ -139,3 +139,50 @@ datastore_autosave_every_n_updates: 50
 # generate the queries.
 # Default: true; the pairs mentioned above are scored.
 enable_cartesian_product: false
+
+# (Optional) Number of (doc) items per LLM relevance-scoring call. Default: 1.
+# 1 = legacy single-pair scoring (one LLM call per (query, doc); equivalent to pre-batching behavior, with one
+# edge case: a provider response of {"score": N, "explanation": ""} is now normalized to explanation=None instead
+# of crashing with ValueError. Shared with the batch path.
+# Set to 2 or more to opt into micro-batching (one LLM call per (query, batch-of-docs)); 10 is a known-good value.
+# NOTE: opting in is a *labeling-behavior* change, not just a transport change. A batch prompt asks the model to
+# score multiple docs in one shared context, which can shift labels for borderline cases compared to per-doc
+# scoring (the model sees siblings and may relativize). Run a small comparison before flipping a production config.
+# Note: enabling `save_llm_explanation` (below) lowers batching ROI because per-doc explanations inflate output
+# length linearly with batch size.
+#llm_micro_batch_size: 10
+
+# (Optional) Per-batch retry budget when llm_micro_batch_size > 1. Default: 3.
+# Any failure (validation error, rate-limit, missing / unknown / duplicate doc_id in the response) triggers a
+# retry with exponential backoff. On exhaustion the run aborts with a non-zero exit; the datastore is still
+# saved on the way out, so a re-run picks up where it stopped.
+#llm_batch_max_retries: 3
+
+# (Optional) Path to a plain-text prompt template for batch relevance scoring.
+# Default: the built-in DEFAULT_BATCH_SCORE_PROMPT, defined in
+# src/rre_tools/dataset_generator/llm/batch_prompt.py.
+# Required placeholders: {query}, {documents_json}, {relevance_scale}.
+# Optional placeholders: {explanation_instruction}, {rating_scale_description}.
+# Uses Python str.format, so any literal `{` / `}` in the template body (e.g. JSON examples) must be escaped as
+# `{{` / `}}`. The template is validated at config load regardless of llm_micro_batch_size — a broken prompt
+# cannot slip through to runtime. The single-doc prompt (used at llm_micro_batch_size=1) is a separate
+# hard-coded prompt inside LLMService.generate_score and is not configurable; the two flows are decoupled.
+#llm_batch_score_prompt: "templates/batch_score_prompt.txt"
+
+# (Optional) Number of worker threads for parallel LLM calls. Default: 1.
+# Drives two independently-parallelized stages through one knob:
+#   - Query generation from seed documents: one future per seed doc; LLM calls overlap across threads,
+#     results are applied on the main thread in seed-doc order so the stored query set matches the
+#     sequential path exactly.
+#   - Relevance scoring: one future per query in budget; both the cartesian and top-K paths use it.
+# Set to 1 to keep both stages strictly sequential. Increase to overlap network latency on the
+# provider. ROI is wall time only — token use is unchanged. Combine with llm_micro_batch_size > 1
+# for both savings: fewer requests AND parallel requests.
+#
+# Worker-failure propagation applies to futures whose result is awaited: every scoring future and every
+# query-generation future up to the point num_queries_needed fills. Post-saturation query-gen futures
+# whose results would have been skipped also have their exceptions skipped — they're logged via Python's
+# Future.__del__ path but do not fail the run (the sequential path would not have started those LLM calls
+# either). In-flight and queued *awaited* workers still finish before main() catches the exception and
+# saves the datastore, so progress is durable on disk and a re-run picks up where it stopped.
+#llm_max_workers: 4

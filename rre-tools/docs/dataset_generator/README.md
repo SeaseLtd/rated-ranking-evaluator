@@ -132,13 +132,90 @@ one fields, the documents are filtered for both fields (AND-like)
 >     - "rre"
 >     - "mteb"
 > - **output_destination**: Path where the output dataset will be saved (e.g., "resources")
-> - **save_llm_explanation**: Whether to save LLM rating score explanation to file. Defaults to `false`
+> - **save_llm_explanation**: Whether to save LLM rating score explanation to file. Defaults to `false`. Note: if
+> the LLM returns a blank or whitespace-only `explanation` (`""`, `" "`, etc.) for an individual rating, it is
+> normalized to "no explanation" rather than aborting the run — `""` is treated the same as the model omitting
+> the field entirely. Both the single-doc and batch flows agree on this normalization.
 > - **llm_explanation_destination** (Needed only if `save_llm_explanation: true`): File path where it contains 
 > <query, doc_id, rating, explanation> records (e.g., "resources/rating_explanation.json")
 > - **datastore_autosave_every_n_updates** (Optional): Number of successful updates (adds or ratings) after which 
 > the in-memory datastore is saved. If not given, the datastore is saved at the end of the process.
 > - **enable_cartesian_product** (Optional): Enable cartesian product scoring between queries and documents used to 
 > generate queries. Defaults to `true`
+> - **llm_micro_batch_size** (Optional): Number of `(doc)` items per LLM relevance-scoring call. Defaults to `1`
+>   (legacy single-pair scoring — one LLM call per `(query, doc)`, equivalent to pre-batching behavior with one
+>   narrow caveat: a provider response of `{"score": N, "explanation": ""}` is now normalized to
+>   `explanation=None` instead of crashing the run with `ValueError`. The change is intentional and is shared
+>   with the batch path, but it means the single-pair path is no longer strictly bit-for-bit with the older code
+>   on that edge case). Set to `2` or more to opt into micro-batching: one LLM call per `(query, batch-of-docs)`,
+>   with a structured list-of-objects response keyed by `doc_id`. A common value is `10`. Applies to **both** the
+>   cartesian and the top-K paths.
+>
+>   **This is a labeling-behavior change, not just a transport change.** A batch prompt asks the model to score
+>   multiple docs in one shared context, which can shift labels for borderline cases compared to per-doc scoring
+>   (the model sees siblings and may relativize). Run a small comparison before flipping a production config.
+>   Also note that enabling `save_llm_explanation` lowers batching ROI because per-doc explanations inflate output
+>   length linearly with batch size.
+> - **llm_batch_max_retries** (Optional): Per-batch retry budget when `llm_micro_batch_size > 1`. Defaults to `3`.
+>   A single uniform rule covers all four failure classes (validation/network/rate-limit error from the provider,
+>   missing `doc_id`, unknown `doc_id`, duplicate `doc_id` in the response): retry the whole batch with
+>   exponential backoff. After `llm_batch_max_retries` additional attempts on top of the initial call, the run
+>   aborts with a `BatchScoringError` and exits non-zero. The datastore is still saved on the way out, so a
+>   re-run picks up where it stopped.
+> - **llm_batch_score_prompt** (Optional): Path to a plain-text prompt template for batch relevance scoring. If
+>   omitted, the built-in default `DEFAULT_BATCH_SCORE_PROMPT` is used — defined in
+>   [src/rre_tools/dataset_generator/llm/batch_prompt.py](../../src/rre_tools/dataset_generator/llm/batch_prompt.py).
+>   The template is a Python `str.format` string. Required placeholders: `{query}`, `{documents_json}`,
+>   `{relevance_scale}`. Optional: `{explanation_instruction}`, `{rating_scale_description}`. Any literal
+>   `{` / `}` in the template body (e.g. JSON examples) must be escaped as `{{` / `}}`. **Validation runs at
+>   config load regardless of `llm_micro_batch_size`** — a broken prompt cannot slip through to runtime if you
+>   flip batching on later.
+>
+>   **How the batch prompt differs from the single-doc prompt.** They are intentionally separate code paths,
+>   not two renderings of the same template:
+>   - **Single-doc** (used at `llm_micro_batch_size=1`): hard-coded inside `LLMService.generate_score`. Sends
+>     a `SystemMessage` ("You are a professional data labeler…return the relevance score…in a scale called
+>     BINARY/GRADED") plus a `HumanMessage` containing one document's JSON and the query. The structured
+>     output is a single `{"score": ..., "explanation": ...}` object (`BinaryScore` / `GradedScore`). The
+>     scale values are not spelled out in the prompt; the schema's `Literal[0, 1]` / `Literal[0, 1, 2]`
+>     enforces them.
+>   - **Batch** (used at `llm_micro_batch_size > 1`): rendered from `DEFAULT_BATCH_SCORE_PROMPT` (or your
+>     override). Sends a single `HumanMessage` containing a JSON *array* of documents (`[{"doc_id": ...,
+>     "fields": ...}, ...]`) and the query. The structured output is a `{"ratings": [{"doc_id": ..., "score":
+>     ..., "explanation": ...}, ...]}` list (`BinaryBatchScore` / `GradedBatchScore`). The prompt **spells out
+>     the rating scale verbatim** via `{rating_scale_description}` (e.g. "0 = not relevant, 1 = maybe
+>     relevant, 2 = exact / strong match") so the model sees the meaning of each label rather than relying
+>     on the schema alone, and it instructs the model to include exactly one item per input doc keyed by
+>     `doc_id` so the service can reorder the response without trusting input order.
+>
+>   The single-doc prompt is **not** configurable; only the batch prompt is. The two flows are decoupled by
+>   design: opting into batching is an intentional labeling-behavior change (the model sees siblings and may
+>   relativize), so the prompts evolve independently.
+> - **llm_max_workers** (Optional): Number of worker threads for parallel LLM calls. Defaults to `1`
+>   (strictly sequential). Set to `2` or more to overlap network latency on the LLM provider across:
+>   - **Query generation** from seed documents (one future per seed doc). LLM calls overlap across threads;
+>     results are applied on the **main thread in original seed-doc order** so the stored query set,
+>     dedupe behavior, and `num_queries_needed` cutoff match the sequential path exactly for the same LLM
+>     responses.
+>   - **Relevance scoring** (one future per query in budget). Both the cartesian and top-K paths run through
+>     the same `ThreadPoolExecutor`. Each worker handles all docs for one query — within a query, scoring is
+>     still single-threaded (and still micro-batched when `llm_micro_batch_size > 1`).
+>
+>   **ROI is wall time only.** Token usage is unchanged compared to the sequential path; combine with
+>   `llm_micro_batch_size > 1` for both savings (fewer requests AND parallel requests).
+>
+>   **On worker failure** the exception propagates out of the executor *for the futures whose result is
+>   awaited* — that's every scoring future (the `as_completed` loop calls `.result()` on each) and every
+>   query-generation future up to the point the query budget fills. In the query-generation path, once
+>   `num_queries_needed` is reached the loop stops awaiting further futures (those LLM calls were never
+>   "needed" — the sequential path would not have started them either). The executor still waits for those
+>   submitted-but-unawaited workers to finish before `main()` exits, but their exceptions go to the
+>   `Future.__del__` log path rather than propagating. Net effect: scoring failures and pre-saturation
+>   query-gen failures both trigger `main()`'s save-and-reraise; post-saturation query-gen failures are
+>   logged-but-not-fatal. In-flight and queued *awaited* workers still finish before `main()` catches the
+>   exception and saves the datastore, so progress is durable on disk and a re-run picks up where it
+>   stopped. The per-batch retry loop inside `LLMService.generate_scores_batch` is just exercised by more
+>   workers — no extra layer is added on top.
 
 #### Some important things to add
 
