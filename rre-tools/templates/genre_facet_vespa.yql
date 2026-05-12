@@ -1,0 +1,1 @@
+select * from sources * where true LIMIT 0 | all(group(genres) max(100) each(output(count())))

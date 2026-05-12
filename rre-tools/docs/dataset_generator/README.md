@@ -16,6 +16,7 @@ directory (or modify the existing one). This file controls the entire generation
 >     - "solr"
 >     - "elasticsearch"
 >     - "opensearch"
+>     - "vespa"
 > - **collection_name**: Name of the search engine index/collection (e.g., "testcore", the one used in Docker containers)
 > - **search_engine_url**: URL of the search engine (e.g., "http://localhost:8983/solr/")
 > - **documents_filter**: Filter query to restrict the set of documents used to generate queries. If a field has more 
@@ -37,7 +38,89 @@ one fields, the documents are filtered for both fields (AND-like)
 > available, must be in a txt format (e.g., "queries.txt")
 > - **generate_queries_from_documents** (Optional): Whether to generate queries from documents. Default to `true`; set
 > to `false` to disable query generation from documents
-> - **num_queries_needed**: Total number of queries to generate, including predefined queries, if any (e.g., 20)
+> - **category_queries** (Optional): A list of category-derived query sources. Each entry generates queries from the
+> values of one configured field — for example, `genres=[comedy, action, ...]` produces queries like `"comedy"`,
+> `"action"` (or `"comedy movies"`, `"action movies"` if you wrap them via a template). These queries flow through
+> the same `DataStore` as user-supplied and LLM-generated queries, compose with `generate_queries_from_documents`,
+> and use the existing cartesian-product and top-K expansion paths for scoring.
+>
+>   Each entry has:
+>   - **`fields`** — array of field names. Currently only `fields[0]` is read; every field listed must also appear in
+>     `doc_fields` so the LLM scorer has evidence to grade against.
+>   - **Where the values come from** — exactly one of:
+>     - **`values`** — an explicit list typed by the user (e.g. `["comedy", "action"]`).
+>     - **`values_query_template_file`** — a path to an engine-native facet / aggregation / grouping template. The
+>       engine runs that query at generation time and uses its distinct values for `fields[0]`. The template's limit
+>       (Solr `facet.limit`, ES/OS `terms.size`, Vespa grouping `max(N)`) is the only knob.
+>   - **`query_text_template_file`** (Optional) — a plain-text natural-language template wrapping each value. If
+>     omitted, each value is the query text directly (`comedy` → query `"comedy"`). If provided, the file's contents
+>     must contain the engine's query placeholder — `$query` for Solr/Elasticsearch/OpenSearch, `@kw` for Vespa,
+>     matching the same convention as the engine retrieval `query_template` — and each value is substituted into the
+>     placeholder (e.g. `"$query movies"` + `comedy` → `"comedy movies"`).
+>
+>   **Examples — explicit values:**
+>   ```yaml
+>   # Bare values (queries: "comedy", "action", "horror", "drama")
+>   category_queries:
+>     - fields: ["genres"]
+>       values: ["comedy", "action", "horror", "drama"]
+>
+>   # Wrapped via template (queries: "comedy movies", ...) — Solr placeholder
+>   category_queries:
+>     - fields: ["genres"]
+>       values: ["comedy", "action", "horror", "drama"]
+>       query_text_template_file: "templates/genre_query.tmpl"  # contents: $query movies
+>   ```
+>
+>   **Examples — values discovered from the engine.** Replace `values` with `values_query_template_file`. Each engine
+>   reads the template in the same shape it already uses for retrieval, so you don't learn a second convention per
+>   engine:
+>   - **Solr** — the file is a JSON dict of Solr request parameters (`q`, `facet`, `facet.field`, `facet.limit`,
+>     `rows`). The engine injects `wt=json` and GETs `/select` with `params=<the dict>`. Not a Solr JSON Request API
+>     body. Sample: `templates/genre_facet_solr.json`.
+>   - **Elasticsearch / OpenSearch** — the file is a full JSON request body POSTed to `_search`. **Convention:** in the
+>     *request* body the terms aggregation is declared under `aggs` with a name that must equal `fields[0]` (e.g.
+>     `genres` in the shipped samples); Elasticsearch/OpenSearch return buckets under *response* key `aggregations`
+>     with that same name. The agg's internal `terms.field` may be a keyword subfield (`genres.keyword`) without
+>     requiring `genres.keyword` to be in `doc_fields`. Keyed-bucket aggregations (`"keyed": true`) are not supported.
+>     Samples: `templates/genre_facet_es.json`, `templates/genre_facet_opensearch.json`.
+>   - **Vespa** — the file is YQL only; the engine wraps it with `hits=0` and `presentation.format=json` (YQL itself
+>     can't express those). **Precondition:** the grouped field must be declared as an `attribute` in the `.sd`
+>     schema; a non-attribute field will fail at the engine, not at config-load. Sample:
+>     `templates/genre_facet_vespa.yql`.
+>
+>   ```yaml
+>   # Solr
+>   category_queries:
+>     - fields: ["genres"]
+>       values_query_template_file: "templates/genre_facet_solr.json"
+>       query_text_template_file: "templates/genre_query.tmpl"  # optional
+>
+>   # Elasticsearch / OpenSearch
+>   category_queries:
+>     - fields: ["genres"]
+>       values_query_template_file: "templates/genre_facet_es.json"
+>
+>   # Vespa
+>   category_queries:
+>     - fields: ["genres"]
+>       values_query_template_file: "templates/genre_facet_vespa.yql"
+>   ```
+>
+>   Notes: the category templates (natural-language string and value-discovery payload) are both distinct from the
+>   engine retrieval `query_template` (Solr params JSON / Vespa YQL retrieval payload) — pointing either at the engine
+>   retrieval file is rejected at config load, as is pointing `values_query_template_file` at the same path as
+>   `query_text_template_file` on the same source. Discovered values are normalized to non-empty stripped scalar
+>   strings; container-typed bucket keys (nested aggregations) raise rather than landing as nonsense queries. If more
+>   category values are configured (or discovered) than `num_queries_needed`, the surplus is added to the datastore
+>   but skipped at scoring time.
+> - **num_queries_needed**: Total number of queries to generate, including predefined queries, if any (e.g., 20).
+> When the in-memory queries (user-supplied + category + LLM-generated + previously-cached) exceed this number, the
+> selection is prioritized so that fresh sources from this run win over cached entries. Priority order:
+> user-supplied = category > LLM-generated > queries loaded from `resources/tmp/datastore.json`. Within each tier,
+> insertion order is preserved. Practical implication: if your cache already contains `num_queries_needed` queries from
+> a previous run, the fresh user/category queries you add this run still make the cut; previously they were silently
+> dropped because selection used raw insertion order.
 > - **relevance_scale**: Relevance scale used for scoring document relevance
 >   - accepted values: "binary" or "graded", where
 >     - binary: 0 (not relevant), 1 (relevant)
@@ -49,13 +132,90 @@ one fields, the documents are filtered for both fields (AND-like)
 >     - "rre"
 >     - "mteb"
 > - **output_destination**: Path where the output dataset will be saved (e.g., "resources")
-> - **save_llm_explanation**: Whether to save LLM rating score explanation to file. Defaults to `false`
+> - **save_llm_explanation**: Whether to save LLM rating score explanation to file. Defaults to `false`. Note: if
+> the LLM returns a blank or whitespace-only `explanation` (`""`, `" "`, etc.) for an individual rating, it is
+> normalized to "no explanation" rather than aborting the run — `""` is treated the same as the model omitting
+> the field entirely. Both the single-doc and batch flows agree on this normalization.
 > - **llm_explanation_destination** (Needed only if `save_llm_explanation: true`): File path where it contains 
 > <query, doc_id, rating, explanation> records (e.g., "resources/rating_explanation.json")
 > - **datastore_autosave_every_n_updates** (Optional): Number of successful updates (adds or ratings) after which 
 > the in-memory datastore is saved. If not given, the datastore is saved at the end of the process.
 > - **enable_cartesian_product** (Optional): Enable cartesian product scoring between queries and documents used to 
 > generate queries. Defaults to `true`
+> - **llm_micro_batch_size** (Optional): Number of `(doc)` items per LLM relevance-scoring call. Defaults to `1`
+>   (legacy single-pair scoring — one LLM call per `(query, doc)`, equivalent to pre-batching behavior with one
+>   narrow caveat: a provider response of `{"score": N, "explanation": ""}` is now normalized to
+>   `explanation=None` instead of crashing the run with `ValueError`. The change is intentional and is shared
+>   with the batch path, but it means the single-pair path is no longer strictly bit-for-bit with the older code
+>   on that edge case). Set to `2` or more to opt into micro-batching: one LLM call per `(query, batch-of-docs)`,
+>   with a structured list-of-objects response keyed by `doc_id`. A common value is `10`. Applies to **both** the
+>   cartesian and the top-K paths.
+>
+>   **This is a labeling-behavior change, not just a transport change.** A batch prompt asks the model to score
+>   multiple docs in one shared context, which can shift labels for borderline cases compared to per-doc scoring
+>   (the model sees siblings and may relativize). Run a small comparison before flipping a production config.
+>   Also note that enabling `save_llm_explanation` lowers batching ROI because per-doc explanations inflate output
+>   length linearly with batch size.
+> - **llm_batch_max_retries** (Optional): Per-batch retry budget when `llm_micro_batch_size > 1`. Defaults to `3`.
+>   A single uniform rule covers all four failure classes (validation/network/rate-limit error from the provider,
+>   missing `doc_id`, unknown `doc_id`, duplicate `doc_id` in the response): retry the whole batch with
+>   exponential backoff. After `llm_batch_max_retries` additional attempts on top of the initial call, the run
+>   aborts with a `BatchScoringError` and exits non-zero. The datastore is still saved on the way out, so a
+>   re-run picks up where it stopped.
+> - **llm_batch_score_prompt** (Optional): Path to a plain-text prompt template for batch relevance scoring. If
+>   omitted, the built-in default `DEFAULT_BATCH_SCORE_PROMPT` is used — defined in
+>   [src/rre_tools/dataset_generator/llm/batch_prompt.py](../../src/rre_tools/dataset_generator/llm/batch_prompt.py).
+>   The template is a Python `str.format` string. Required placeholders: `{query}`, `{documents_json}`,
+>   `{relevance_scale}`. Optional: `{explanation_instruction}`, `{rating_scale_description}`. Any literal
+>   `{` / `}` in the template body (e.g. JSON examples) must be escaped as `{{` / `}}`. **Validation runs at
+>   config load regardless of `llm_micro_batch_size`** — a broken prompt cannot slip through to runtime if you
+>   flip batching on later.
+>
+>   **How the batch prompt differs from the single-doc prompt.** They are intentionally separate code paths,
+>   not two renderings of the same template:
+>   - **Single-doc** (used at `llm_micro_batch_size=1`): hard-coded inside `LLMService.generate_score`. Sends
+>     a `SystemMessage` ("You are a professional data labeler…return the relevance score…in a scale called
+>     BINARY/GRADED") plus a `HumanMessage` containing one document's JSON and the query. The structured
+>     output is a single `{"score": ..., "explanation": ...}` object (`BinaryScore` / `GradedScore`). The
+>     scale values are not spelled out in the prompt; the schema's `Literal[0, 1]` / `Literal[0, 1, 2]`
+>     enforces them.
+>   - **Batch** (used at `llm_micro_batch_size > 1`): rendered from `DEFAULT_BATCH_SCORE_PROMPT` (or your
+>     override). Sends a single `HumanMessage` containing a JSON *array* of documents (`[{"doc_id": ...,
+>     "fields": ...}, ...]`) and the query. The structured output is a `{"ratings": [{"doc_id": ..., "score":
+>     ..., "explanation": ...}, ...]}` list (`BinaryBatchScore` / `GradedBatchScore`). The prompt **spells out
+>     the rating scale verbatim** via `{rating_scale_description}` (e.g. "0 = not relevant, 1 = maybe
+>     relevant, 2 = exact / strong match") so the model sees the meaning of each label rather than relying
+>     on the schema alone, and it instructs the model to include exactly one item per input doc keyed by
+>     `doc_id` so the service can reorder the response without trusting input order.
+>
+>   The single-doc prompt is **not** configurable; only the batch prompt is. The two flows are decoupled by
+>   design: opting into batching is an intentional labeling-behavior change (the model sees siblings and may
+>   relativize), so the prompts evolve independently.
+> - **llm_max_workers** (Optional): Number of worker threads for parallel LLM calls. Defaults to `1`
+>   (strictly sequential). Set to `2` or more to overlap network latency on the LLM provider across:
+>   - **Query generation** from seed documents (one future per seed doc). LLM calls overlap across threads;
+>     results are applied on the **main thread in original seed-doc order** so the stored query set,
+>     dedupe behavior, and `num_queries_needed` cutoff match the sequential path exactly for the same LLM
+>     responses.
+>   - **Relevance scoring** (one future per query in budget). Both the cartesian and top-K paths run through
+>     the same `ThreadPoolExecutor`. Each worker handles all docs for one query — within a query, scoring is
+>     still single-threaded (and still micro-batched when `llm_micro_batch_size > 1`).
+>
+>   **ROI is wall time only.** Token usage is unchanged compared to the sequential path; combine with
+>   `llm_micro_batch_size > 1` for both savings (fewer requests AND parallel requests).
+>
+>   **On worker failure** the exception propagates out of the executor *for the futures whose result is
+>   awaited* — that's every scoring future (the `as_completed` loop calls `.result()` on each) and every
+>   query-generation future up to the point the query budget fills. In the query-generation path, once
+>   `num_queries_needed` is reached the loop stops awaiting further futures (those LLM calls were never
+>   "needed" — the sequential path would not have started them either). The executor still waits for those
+>   submitted-but-unawaited workers to finish before `main()` exits, but their exceptions go to the
+>   `Future.__del__` log path rather than propagating. Net effect: scoring failures and pre-saturation
+>   query-gen failures both trigger `main()`'s save-and-reraise; post-saturation query-gen failures are
+>   logged-but-not-fatal. In-flight and queued *awaited* workers still finish before `main()` catches the
+>   exception and saves the datastore, so progress is durable on disk and a re-run picks up where it
+>   stopped. The per-batch retry loop inside `LLMService.generate_scores_batch` is just exercised by more
+>   workers — no extra layer is added on top.
 
 #### Some important things to add
 

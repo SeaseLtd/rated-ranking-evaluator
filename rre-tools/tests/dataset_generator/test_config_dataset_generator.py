@@ -77,6 +77,29 @@ def test_mteb_config__expects__successful_load(resource_folder):
     assert mteb_config.output_format == "mteb"
     assert mteb_config.output_destination == Path("output")
 
+
+def test_vespa_config_without_schema__expects__schema_defaults_to_collection_name(tmp_path):
+    cfg_text = (
+        "search_engine_type: \"vespa\"\n"
+        "collection_name: \"movie\"\n"
+        "search_engine_url: \"http://localhost:8080/search/\"\n"
+        "number_of_docs: 2\n"
+        "doc_fields: [\"title\"]\n"
+        "num_queries_needed: 2\n"
+        "relevance_scale: \"binary\"\n"
+        "llm_configuration_file: \"tests/resources/llm_config.yaml\"\n"
+        "output_format: \"quepid\"\n"
+        "output_destination: \"output\"\n"
+    )
+    cfg_path = tmp_path / "cfg.yaml"
+    cfg_path.write_text(cfg_text, encoding="utf-8")
+
+    cfg = Config.load(str(cfg_path))
+
+    assert cfg.vespa_schema == "movie"
+    assert cfg.search_engine_collection_endpoint == HttpUrl("http://localhost:8080/search/movie/")
+
+
 def test_missing_both_templates_with_rre__expects__raises_validation_error(resource_folder):
     file_name = "missing_both_templates.yaml"
     with pytest.raises(ValidationError):
@@ -103,6 +126,132 @@ def test_autosave_valid_positive_int__expects__parsed(tmp_path):
 
     cfg = Config.load(str(cfg_path))
     assert cfg.datastore_autosave_every_n_updates == 50
+
+
+_MIN_VALID_CFG = (
+    "search_engine_type: \"solr\"\n"
+    "collection_name: \"testcore\"\n"
+    "search_engine_url: \"http://localhost:8983/solr/\"\n"
+    "number_of_docs: 2\n"
+    "doc_fields: [\"title\"]\n"
+    "num_queries_needed: 2\n"
+    "relevance_scale: \"binary\"\n"
+    "llm_configuration_file: \"tests/resources/llm_config.yaml\"\n"
+    "output_format: \"quepid\"\n"
+    "output_destination: \"output\"\n"
+)
+
+
+def _write_cfg_with(tmp_path, extra_yaml: str):
+    cfg_path = tmp_path / "cfg.yaml"
+    cfg_path.write_text(_MIN_VALID_CFG + extra_yaml, encoding="utf-8")
+    return cfg_path
+
+
+def test_default_llm_micro_batch_size__expects__one(tmp_path):
+    cfg = Config.load(str(_write_cfg_with(tmp_path, "")))
+    assert cfg.llm_micro_batch_size == 1
+
+
+def test_default_llm_batch_max_retries__expects__three(tmp_path):
+    cfg = Config.load(str(_write_cfg_with(tmp_path, "")))
+    assert cfg.llm_batch_max_retries == 3
+
+
+def test_default_llm_batch_score_prompt__expects__none(tmp_path):
+    cfg = Config.load(str(_write_cfg_with(tmp_path, "")))
+    assert cfg.llm_batch_score_prompt is None
+
+
+def test_default_llm_max_workers__expects__one(tmp_path):
+    cfg = Config.load(str(_write_cfg_with(tmp_path, "")))
+    assert cfg.llm_max_workers == 1
+
+
+def test_llm_max_workers_zero__expects__raises_validation_error(tmp_path):
+    cfg_path = _write_cfg_with(tmp_path, "llm_max_workers: 0\n")
+    with pytest.raises(ValidationError):
+        Config.load(str(cfg_path))
+
+
+def test_llm_max_workers_positive__expects__parsed(tmp_path):
+    cfg_path = _write_cfg_with(tmp_path, "llm_max_workers: 4\n")
+    cfg = Config.load(str(cfg_path))
+    assert cfg.llm_max_workers == 4
+
+
+def test_llm_micro_batch_size_zero__expects__raises_validation_error(tmp_path):
+    cfg_path = _write_cfg_with(tmp_path, "llm_micro_batch_size: 0\n")
+    with pytest.raises(ValidationError):
+        Config.load(str(cfg_path))
+
+
+def test_llm_batch_max_retries_negative__expects__raises_validation_error(tmp_path):
+    cfg_path = _write_cfg_with(tmp_path, "llm_batch_max_retries: -1\n")
+    with pytest.raises(ValidationError):
+        Config.load(str(cfg_path))
+
+
+def test_valid_batch_prompt_template__expects__loads(tmp_path):
+    prompt = tmp_path / "batch_prompt.txt"
+    prompt.write_text(
+        "Score the docs on {relevance_scale} for query '{query}'.\n"
+        "Documents:\n{documents_json}\n",
+        encoding="utf-8",
+    )
+    cfg_path = _write_cfg_with(tmp_path, f"llm_batch_score_prompt: \"{prompt}\"\n")
+    cfg = Config.load(str(cfg_path))
+    assert cfg.llm_batch_score_prompt == prompt
+
+
+def test_batch_prompt_missing_required_placeholder__expects__raises_validation_error(tmp_path):
+    # No {documents_json} placeholder.
+    prompt = tmp_path / "bad_prompt.txt"
+    prompt.write_text("Query: {query}, scale: {relevance_scale}\n", encoding="utf-8")
+    cfg_path = _write_cfg_with(tmp_path, f"llm_batch_score_prompt: \"{prompt}\"\n")
+    with pytest.raises(ValidationError, match=r"required placeholder"):
+        Config.load(str(cfg_path))
+
+
+def test_batch_prompt_unknown_placeholder__expects__raises_validation_error(tmp_path):
+    # Typo: {documents} instead of {documents_json}.
+    prompt = tmp_path / "bad_prompt.txt"
+    prompt.write_text(
+        "Query: {query}\nDocs: {documents}\nScale: {relevance_scale}\n",
+        encoding="utf-8",
+    )
+    cfg_path = _write_cfg_with(tmp_path, f"llm_batch_score_prompt: \"{prompt}\"\n")
+    with pytest.raises(ValidationError, match=r"unsupported placeholder"):
+        Config.load(str(cfg_path))
+
+
+def test_batch_prompt_unescaped_json_braces__expects__raises_validation_error(tmp_path):
+    # Unescaped JSON example in the template body — classic str.format footgun.
+    prompt = tmp_path / "bad_prompt.txt"
+    prompt.write_text(
+        "Query: {query}\n"
+        "Docs (example): {\"id\": 1}\n"
+        "Real docs: {documents_json}\n"
+        "Scale: {relevance_scale}\n",
+        encoding="utf-8",
+    )
+    cfg_path = _write_cfg_with(tmp_path, f"llm_batch_score_prompt: \"{prompt}\"\n")
+    with pytest.raises(ValidationError):
+        Config.load(str(cfg_path))
+
+
+def test_batch_prompt_validated_even_when_batch_size_is_one(tmp_path):
+    # The user runs at size=1 today; the broken prompt must still fail at config load
+    # so flipping to size=10 tomorrow doesn't blow up at runtime.
+    prompt = tmp_path / "bad_prompt.txt"
+    prompt.write_text("Only {query}\n", encoding="utf-8")
+    cfg_path = _write_cfg_with(
+        tmp_path,
+        "llm_micro_batch_size: 1\n"
+        f"llm_batch_score_prompt: \"{prompt}\"\n",
+    )
+    with pytest.raises(ValidationError):
+        Config.load(str(cfg_path))
 
 
 def test_autosave_invalid_non_positive__expects__raises_validation_error(tmp_path):

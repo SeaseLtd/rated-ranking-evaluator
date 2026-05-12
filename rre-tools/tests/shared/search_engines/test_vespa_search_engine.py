@@ -126,9 +126,13 @@ def test_fetch_for_query_generation__expects__builds_valid_yql_handles_hits_and_
     payload = calls["json"]
     assert payload["hits"] == number_of_docs
 
-    # YQL sanity
+    # YQL sanity: documentid is always projected (so `_search` can return the user doc id
+    # rather than the internal GID), alongside the requested fields.
     yql = payload["yql"]
-    assert re.search(r"select (title,\s*description|description,\s*title) from doc where ", yql)
+    assert re.search(r"^select [^f]+ from doc where ", yql)
+    assert "documentid" in yql
+    assert "title" in yql
+    assert "description" in yql
     assert 'title contains "Helicopter"' in yql
     assert ('(description contains "BOGOTA" OR description contains "Colombia")' in yql or
             '(description contains "Colombia" OR description contains "BOGOTA")' in yql)

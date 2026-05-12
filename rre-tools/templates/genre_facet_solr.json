@@ -1,0 +1,7 @@
+{
+  "q": "*:*",
+  "facet": "true",
+  "facet.field": "genres",
+  "facet.limit": 100,
+  "rows": 0
+}

@@ -5,6 +5,7 @@ from rre_tools.shared.search_engines.opensearch_engine import OpenSearchEngine
 from rre_tools.shared.search_engines.search_engine_base import BaseSearchEngine
 from rre_tools.shared.search_engines.solr_search_engine import SolrSearchEngine
 from rre_tools.shared.search_engines.elasticsearch_search_engine import ElasticsearchSearchEngine
+from rre_tools.shared.search_engines.vespa_search_engine import VespaSearchEngine
 
 import logging
 
@@ -15,7 +16,8 @@ class SearchEngineFactory:
     SEARCH_ENGINE_REGISTRY: Dict[str, Type[BaseSearchEngine]] = {
         "solr": SolrSearchEngine,
         "opensearch": OpenSearchEngine,
-        "elasticsearch": ElasticsearchSearchEngine
+        "elasticsearch": ElasticsearchSearchEngine,
+        "vespa": VespaSearchEngine,
     }
 
     @classmethod

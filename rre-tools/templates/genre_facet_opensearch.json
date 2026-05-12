@@ -1,0 +1,8 @@
+{
+  "size": 0,
+  "aggs": {
+    "genres": {
+      "terms": { "field": "genres.keyword", "size": 100 }
+    }
+  }
+}

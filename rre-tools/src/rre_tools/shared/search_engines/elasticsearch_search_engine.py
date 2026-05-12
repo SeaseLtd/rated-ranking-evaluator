@@ -9,6 +9,9 @@ from typing import List, Dict, Any, Union, Optional
 
 from rre_tools.shared.search_engines.search_engine_base import BaseSearchEngine
 from rre_tools.shared.models.document import Document
+from rre_tools.shared.search_engines.es_opensearch_terms_agg_values import (
+    list_values_from_terms_aggregations,
+)
 from rre_tools.shared.utils import clean_text
 
 import logging
@@ -117,6 +120,30 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         fields = doc_fields if self.UNIQUE_KEY in doc_fields else doc_fields + [self.UNIQUE_KEY]
         payload["_source"] = fields
         return self._search(payload)
+
+    def fetch_field_values(self, values_query_template: Path | str, field: str) -> List[str]:
+        """Run an ES aggregation payload (full JSON request body) and return distinct values.
+
+        Convention: the aggregation result key under ``aggregations`` must equal ``field``.
+        This is about the *result key in the JSON tree*, not the aggregation's internal
+        ``terms.field`` parameter — users routinely aggregate on ``genres.keyword`` while
+        naming the agg ``genres``, which is supported.
+
+        Keyed-bucket form (``"keyed": true`` → ``buckets`` is a dict) is unsupported.
+        """
+        payload: Dict[str, Any] = self._parse_query_template(values_query_template)
+        search_url = urljoin(self.endpoint.encoded_string(), '_search')
+
+        log.debug(f"[fetch_field_values] Elasticsearch POST {search_url} payload={str(payload)[:500]}")
+
+        try:
+            response = requests.post(search_url, headers=self.HEADERS, json=payload)
+            response.raise_for_status()
+        except (ConnectionError, Timeout, RequestException, HTTPError) as e:
+            log.error(f"Elasticsearch value-discovery query failed: {e}")
+            raise
+
+        return list_values_from_terms_aggregations(response.json().get("aggregations", {}), field)
 
     def _search(self, payload: Dict[str, Any]) -> List[Document]:
         """
